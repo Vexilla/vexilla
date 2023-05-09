@@ -1,0 +1,55 @@
+LanguageName = 'js'
+LanguageDisplayName = "JS/TS"
+InstallInstructions = '''
+Using npm or yarn, install the package. Typescript types are shipped with it.
+
+```sh
+npm install --save @vexilla/client
+```
+
+or
+
+```sh
+yarn add @vexilla/client
+```
+'''
+CustomInstanceHash = "customInstanceHash"
+FetchFlags = "fetchFlags"
+SetupSnippet = '''
+```javascript
+this.client = new VexillaClient({
+  baseUrl: 'https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com',
+  environment: process.env.ENVIRONMENT,
+  customInstanceHash: userId
+});
+this.client.getFlags('features.json');
+```
+'''
+Should = "should"
+UsageSnippet = '''
+```javascript
+client.should(FEATURE_NAME)
+```
+'''
+Example = '''
+```javascript
+import { VexillaClient } from '@vexilla/client';
+
+export class FeatureFlagsService {
+  private client;
+
+  constructor() {
+    this.client = new VexillaClient({
+      baseUrl: 'https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com',
+      environment: process.env.ENVIRONMENT,
+      customInstanceHash: userId
+    });
+    this.client.getFlags('features.json');
+  }
+
+  should(featureName) {
+    return this.client?.should(featureName);
+  }
+}
+```
+'''

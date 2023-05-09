@@ -1,0 +1,23 @@
+{
+  "name": "@vexilla/core",
+  "version": "0.0.1",
+  "organization": "vexilla",
+  "description": "The core of a self hosted feature flag suite",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": {
+    "name": "Chris Griffing",
+    "email": "cmgriffing@gmail.com",
+    "url": "https://chrisgriffing.com"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@aws-sdk/client-s3": "^1.0.0-rc.8",
+    "aws-sdk": "^2.804.0",
+    "axios": "^0.21.0",
+    "dotenv": "^8.2.0",
+    "fs-extra": "^9.0.1"
+  }
+}

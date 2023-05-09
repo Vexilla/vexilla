@@ -1,0 +1,37 @@
+{
+  "name": "@vexilla/client-axios",
+  "version": "0.0.1",
+  "description": "An axios based client for the Vexilla feature flag system",
+  "main": "dist/client.js",
+  "scripts": {
+    "test": "node dist/test_client.js",
+    "compile": "tsc",
+    "prepare": "npm run compile"
+  },
+  "author": {
+    "name": "Chris Griffing",
+    "email": "cmgriffing@gmail.com",
+    "url": "https://chrisgriffing.com"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "husky": "^4.3.8",
+    "ts-loader": "^8.0.11",
+    "typescript": "^4.1.2"
+  },
+  "dependencies": {
+    "@types/node": "^14.14.13",
+    "@vexilla/client": "^0.0.16",
+    "axios": "^0.21.0",
+    "uuid": "^8.3.2",
+    "xxhashjs": "^0.2.2"
+  },
+  "files": [
+    "dist/**/*"
+  ],
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run compile && npm run test"
+    }
+  }
+}

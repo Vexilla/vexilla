@@ -1,0 +1,76 @@
+{
+  "name": "@vexilla/cli",
+  "version": "0.0.20",
+  "private": false,
+  "description": "",
+  "main": "./bin/cli.js",
+  "bin": "./bin/cli.js",
+  "files": [
+    "./bin"
+  ],
+  "scripts": {
+    "dev": "ts-node  --project ./dev.tsconfig.json ./src/cli.ts",
+    "build": "tsc --project ./build.tsconfig.json",
+    "--------------------Package Windows---------------------": "",
+    "package:win:x64:exe": "pkg . -t=node14-win-x64 -o=./dist/vexilla-win-x64.exe -C --no-bytecode --public-packages \"*\" --public",
+    "package:win:x64:zip": "zip ./dist/zips/vexilla-win-x64 ./dist/vexilla-win-x64.exe",
+    "package:win:x64": "npm-run-all -s package:win:x64:exe package:win:x64:zip",
+    "package:win:arm64:exe": "pkg . -t=node14-win-x64 -o=./dist/vexilla-win-arm64.exe -C --no-bytecode --public-packages \"*\" --public",
+    "package:win:arm64:zip": "zip ./dist/zips/vexilla-win-arm64 ./dist/vexilla-win-arm64.exe",
+    "package:win:arm64": "npm-run-all -s package:win:arm64:exe package:win:arm64:zip",
+    "package:win": "npm-run-all -s package:win:x64 package:win:arm64",
+    "--------------------Package Linux---------------------": "",
+    "package:linux:x64:exe": "pkg . -t=node14-linux-x64 -o=./dist/linux-x64/vexilla -C --no-bytecode --public-packages \"*\" --public",
+    "package:linux:x64:zip": "tar -czvf ./dist/zips/vexilla-linux-x64.tar.gz ./dist/linux-x64/vexilla",
+    "package:linux:x64": "npm-run-all -s package:linux:x64:exe package:linux:x64:zip",
+    "package:linux:arm64:exe": "pkg . -t=node14-linux-x64 -o=./dist/linux-arm64/vexilla -C --no-bytecode --public-packages \"*\" --public",
+    "package:linux:arm64:zip": "tar -czvf ./dist/zips/vexilla-linux-arm64.tar.gz ./dist/linux-arm64/vexilla",
+    "package:linux:arm64": "npm-run-all -s package:linux:arm64:exe package:linux:arm64:zip",
+    "package:linux": "npm-run-all -s package:linux:x64 package:linux:arm64",
+    "--------------------Package Mac---------------------": "",
+    "package:mac:x64:exe": "pkg . -t=node14-mac-x64 -o=./dist/mac-x64/vexilla -C --no-bytecode --public-packages \"*\" --public",
+    "package:mac:x64:zip": "tar -czvf ./dist/zips/vexilla-mac-x64.tar.gz ./dist/mac-x64/vexilla",
+    "package:mac:x64": "npm-run-all -s package:mac:x64:exe package:mac:x64:zip",
+    "package:mac:arm64:exe": "pkg . -t=node14-mac-x64 -o=./dist/mac-arm64/vexilla -C --no-bytecode --public-packages \"*\" --public",
+    "package:mac:arm64:zip": "tar -czvf ./dist/zips/vexilla-mac-arm64.tar.gz ./dist/mac-arm64/vexilla",
+    "package:mac:arm64": "npm-run-all -s package:mac:arm64:exe package:mac:arm64:zip",
+    "package:mac": "npm-run-all -s package:mac:x64 package:mac:arm64",
+    "package": "npm-run-all -s package:mac package:win package:linux",
+    "prepackage": "yarn build && mkdir -p ./dist/zips",
+    "prepublish": "yarn build",
+    "isBehind": "git fetch && ts-node scripts/is-behind.ts",
+    "changeset:core": "changeset",
+    "changeset:safe": "npm-run-all -s isBehind changeset:core",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vexilla/cli.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Vexilla/cli/issues"
+  },
+  "homepage": "https://github.com/Vexilla/cli#readme",
+  "dependencies": {
+    "@types/axios": "^0.14.0",
+    "axios": "^0.27.2",
+    "case": "^1.6.3",
+    "fs-extra": "^10.1.0",
+    "quicktype-core": "^6.0.71",
+    "yargs": "^17.5.1"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.21.0",
+    "@types/fs-extra": "^9.0.13",
+    "@types/node": "^18.7.18",
+    "@types/readable-stream": "^2.3.14",
+    "@types/urijs": "^1.19.19",
+    "@vexilla/client": "^0.0.17",
+    "npm-run-all": "^4.1.5",
+    "pkg": "^5.8.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.8.3"
+  }
+}

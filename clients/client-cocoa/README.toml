@@ -1,0 +1,50 @@
+LanguageName = 'cocoa'
+LanguageDisplayName = "Cocoa (iOS and OSX)"
+InstallInstructions = '''
+Add VexillaClient as a dependency via Swift Packages
+[https://developer.apple.com/documentation/xcode/adding_package_dependencies_to_your_app](https://developer.apple.com/documentation/xcode/adding_package_dependencies_to_your_app)
+
+'''
+CustomInstanceHash = "customInstanceHash"
+FetchFlags = "fetchFlags"
+SetupSnippet = '''
+```swift
+var client = VexillaClient(environment: "dev", baseUrl: "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com", customInstanceHash: userId)
+
+client.fetchFlags(fileName: "features.json", fetchCompletionHandler: { flags, error in
+
+    guard flags != nil else {
+        dump("Error: Flags were nil in test")
+        return
+    }
+
+    client.setFlags(flags: flags!)
+    
+)}
+```
+'''
+Should = "Should"
+UsageSnippet = '''
+```swift
+shouldGradual = client.should(FEATURE_NAME)
+```
+'''
+Example = '''
+```swift
+var client = VexillaClient(environment: "dev", baseUrl: "https://streamparrot-feature-flags.s3.amazonaws.com", customInstanceHash: "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a")
+
+client.fetchFlags(fileName: "features.json", fetchCompletionHandler: { flags, error in
+
+    guard flags != nil else {
+        dump("Error: Flags were nil in test")
+        return
+    }
+
+    client.setFlags(flags: flags!)
+    
+    if client.should(FEATURE_NAME) {
+        // Do the thing
+    }
+)}
+```
+'''

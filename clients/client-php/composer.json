@@ -1,0 +1,27 @@
+{
+  "name": "vexilla/client",
+  "description": "A client for the Vexilla Feature Flag System",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Chris Griffing",
+      "email": "cmgriffing@gmail.com"
+    }
+  ],
+  "require": {},
+  "require-dev": {
+    "php": ">=7.0",
+    "phpunit/phpunit": "^8.5.5 || ^9.3.5"
+  },
+  "autoload": {
+    "psr-4": {
+      "Vexilla\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Vexilla\\": "tests/"
+    }
+  }
+}

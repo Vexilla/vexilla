@@ -1,0 +1,90 @@
+import DocumentationLayout from "components/documentation-layout";
+
+import {
+  ContentSection,
+  ClientLibraries,
+  Recipes,
+} from "components/documentation/components";
+
+export const meta = {
+  title: "Documentation | Vexilla",
+};
+
+# Documentation
+
+<h2 id="getting-started">Getting Started</h2>
+
+To get started follow these simple steps.
+
+1. Open the Config application
+2. Create Environments and Features in the app
+3. Generate credentials for uploading from the app based on your provider of choice
+4. Install a client library for your language
+5. Wrap functionality in a "should"
+
+<h2 id="client-libraries">Client Libraries</h2>
+
+The magic happens inside of the client libraries. They consume the static
+json config and perform all the significant logic. We are adding new
+client language support as fast as we can.
+
+<ClientLibraries />
+
+Don't see your language? Help us decide by voting with a thumbs up on the
+Github Project.
+
+<h2 id="config-schema">Config Schema</h2>
+
+This is what the json payload schema looks like.
+
+```typescript
+{
+  environments: {
+    [environmentName: string]: {
+      [featureSetName: string]: { // currently hardcoded to "untagged"
+        [featureName: string]:
+          | VexillaToggleFeature
+          | VexillaGradualFeature
+          | VexillaSelectiveFeature;
+      }
+    };
+  }
+}
+```
+
+<h2 id="feature-types">Feature Types</h2>
+
+Other feature types are being considered.
+
+```typescript
+enum VexillaFeatureType {
+  TOGGLE = "toggle",
+  GRADUAL = "gradual",
+  SELECTIVE = "selective",
+}
+
+interface VexillaToggleFeature {
+  type: VexillaFeatureType.TOGGLE;
+  value: boolean;
+}
+
+interface VexillaGradualFeature {
+  type: VexillaFeatureType.GRADUAL;
+  value: number;
+  seed: number;
+}
+```
+
+<h2 id="recipes">Recipes</h2>
+
+Here you can find patterns, recommendations, examples for how to use Vexilla to accomplish your goals.
+
+<Recipes />
+
+#### Have a recipe you want to add? Let us know in a Github Issue or PR.
+
+## We are looking to improve our documentation all the time. Help us out by making suggestions.
+
+export default ({ children }) => (
+  <DocumentationLayout meta={meta}>{children}</DocumentationLayout>
+);

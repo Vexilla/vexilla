@@ -1,0 +1,45 @@
+LanguageName = 'go'
+LanguageDisplayName = "Go"
+InstallInstructions = '''
+Add the client to your imports.
+
+```go
+import "github.com/vexilla/client-go"
+```
+'''
+CustomInstanceHash = "CustomInstanceHash"
+FetchFlags = "FetchFlags"
+SetupSnippet = '''
+```go
+client := NewVexillaClient("dev", "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com", userId)
+
+flags, err := client.FetchFlags("features.json")
+if err != nil {
+  tester.Fatal(err)
+}
+
+client.SetFlags(flags)
+```
+'''
+Should = "Should"
+UsageSnippet = '''
+```go
+shouldGradual := client.should(FEATURE_NAME)
+```
+'''
+Example = '''
+```go
+client := NewVexillaClient("dev", "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com", userId)
+
+flags, err := client.FetchFlags("features.json")
+if err != nil {
+  tester.Fatal(err)
+}
+
+client.SetFlags(flags)
+
+if client.Should(FEATURE_NAME) {
+  // Do the thing
+}
+```
+'''

@@ -1,0 +1,32 @@
+LanguageName = 'elixir'
+LanguageDisplayName = "Elixir"
+InstallInstructions = '''
+Using mix, install the package from hex.pm by adding the dependency to `mix.exs`.
+
+```elixir
+defp deps do
+  [
+    ...
+    {:vexilla_client_elixir, "~> 0.1.0"}
+  ]
+```
+
+'''
+CustomInstanceHash = "custom_instance_id"
+FetchFlags = "fetch_flags"
+SetupSnippet = '''
+```elixir
+
+```
+'''
+Should = "should?"
+UsageSnippet = '''
+```elixir
+
+```
+'''
+Example = '''
+```elixir
+
+```
+'''

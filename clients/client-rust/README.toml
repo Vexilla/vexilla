@@ -1,0 +1,39 @@
+LanguageName = 'rust'
+LanguageDisplayName = "Rust"
+InstallInstructions = '''
+Add the client to your imports.
+
+```rust
+vexilla_client = "0.0.1"
+```
+'''
+CustomInstanceHash = "custom_instance_hash"
+FetchFlags = "fetch_flags_blocking"
+SetupSnippet = '''
+```rust
+let mut client = VexillaClient::new("dev", "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com", user_id);
+
+let mut flags = client.fetch_flags_blocking("features.json");
+
+client.set_flags(flags);
+```
+'''
+Should = "Should"
+UsageSnippet = '''
+```rust
+let should_gradual = client.should(FEATURE_NAME)
+```
+'''
+Example = '''
+```rust
+let mut client = VexillaClient::new("dev", "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com", user_id);
+
+let mut flags = client.fetch_flags_blocking("features.json");
+
+client.set_flags(flags);
+
+if client.should(FEATURE_NAME) {
+  // Do the thing
+}
+```
+'''

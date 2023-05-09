@@ -1,0 +1,44 @@
+LanguageName = 'lua'
+LanguageDisplayName = "lua"
+InstallInstructions = '''
+Add the client to your dependencies.
+
+```lua
+dependencies = {
+  ...
+  "vexilla_client >= 0.0.1"
+}
+```
+'''
+CustomInstanceHash = "custom_instance_hash"
+FetchFlags = "fetch_flags"
+SetupSnippet = '''
+```lua
+client = Client.new({}, "dev", "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com", userId)
+
+flags = client:fetch_flags("features.json")
+
+client:set_flags(flags)
+```
+'''
+Should = "Should"
+UsageSnippet = '''
+```lua
+should_gradual = client:should(FEATURE_NAME)
+```
+'''
+Example = '''
+```lua
+local Client = require "vexilla_client"
+
+client = Client.new({}, "dev", "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com", userId)
+
+flags = client:fetch_flags("features.json")
+
+client:set_flags(flags)
+
+if client:should(FEATURE_NAME) then
+  -- Do the thing
+end
+```
+'''

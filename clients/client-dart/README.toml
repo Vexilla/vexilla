@@ -1,0 +1,53 @@
+LanguageName = 'dart'
+LanguageDisplayName = "Dart"
+InstallInstructions = '''
+Add the client pubspec.yaml.
+
+```yaml
+dependencies:
+  vexilla_client: ^0.1.0
+```
+
+A version without null safety is also available:
+
+```yaml
+dependencies:
+  vexilla_client: ^0.0.2
+```
+'''
+CustomInstanceHash = "customInstanceHash"
+FetchFlags = "fetchFlags"
+SetupSnippet = '''
+```dart
+var client = VexillaClient(
+    'dev',
+    'https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com',
+    'b7e91cc5-ec76-4ec3-9c1c-075032a13a1a');
+
+var flags = await client.fetchFlags('features.json');
+
+client.setFlags(flags);
+```
+'''
+Should = "should"
+UsageSnippet = '''
+```dart
+var shouldGradual = client.should(FEATURE_NAME)
+```
+'''
+Example = '''
+```dart
+var client = VexillaClient(
+    'dev',
+    'https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com',
+    'b7e91cc5-ec76-4ec3-9c1c-075032a13a1a');
+
+var flags = await client.fetchFlags('features.json');
+
+client.setFlags(flags);
+
+if (client.should('FEATURE_NAME')) {
+  print('User should be able to use this feature.');
+}
+```
+'''

@@ -1,0 +1,26 @@
+import DocumentationLayout from "components/documentation-layout";
+
+export const meta = {
+  title: "Response Codes | Recipes | Vexilla",
+};
+
+# Response Codes
+
+It is possible for your client and server to become out of sync due to caching and long-polling. In this case your server should respond with a specific status code to let the frontend know why a request might not have succeeded.
+
+The recommended status code is **424**.
+
+However, there are several status codes that also make sense.
+
+- 412 - Precondition Failed
+- 417 - Expectation Failed
+- 422 - Unprocessable Entity
+- 426 - Upgrade Required
+
+They all make enough sense that you should just pick one and stay consistent with it.
+
+If you want to look through other possible codes, check out https://http.cat or https://httpstatuses.com/
+
+export default ({ children }) => (
+  <DocumentationLayout meta={meta}>{children}</DocumentationLayout>
+);

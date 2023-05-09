@@ -1,0 +1,71 @@
+name: Publish
+on:
+  push:
+    branches:
+      - "main"
+      - "releases/**"
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - run: yarn
+
+      - run: yarn build
+        if: steps.changesets.outputs.hasChangesets == 'true'
+
+      - run: yarn package
+        if: steps.changesets.outputs.hasChangesets == 'false'
+
+      - name: Editing .npmrc
+        run: |
+          cat << EOF > "$HOME/.npmrc"
+            //registry.npmjs.org/:_authToken=$NPM_TOKEN
+          EOF
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create Release Pull Request or Publish to npm
+        id: changesets
+        uses: changesets/action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set upstream
+        if: steps.changesets.outputs.hasChangesets == 'false'
+        run: git push --set-upstream origin main
+
+      - name: Get Tag Name
+        uses: mathiasvr/command-output@v1
+        id: get_tag_name
+        if: steps.changesets.outputs.hasChangesets == 'false'
+        with:
+          run: echo "v$(node -pe "require('./package.json').version")"
+
+      - name: Tag Commit
+        if: steps.changesets.outputs.hasChangesets == 'false'
+        run: git tag ${{steps.get_tag_name.outputs.stdout}}
+
+      - name: Push Tags
+        if: steps.changesets.outputs.hasChangesets == 'false'
+        run: git push --tags
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: steps.changesets.outputs.hasChangesets == 'false'
+        with:
+          body_path: CHANGELOG.md
+          files: ./dist/zips/*
+          tag_name: ${{steps.get_tag_name.outputs.stdout}}
+
+      - name: Publish
+        if: steps.changesets.outputs.hasChangesets == 'false'
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

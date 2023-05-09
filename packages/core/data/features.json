@@ -1,0 +1,18 @@
+{
+  "environments": {
+    "staging": {
+      "untagged": {
+        "billing": {
+          "type": "toggle",
+          "value": false
+        }
+      },
+      "features": {
+        "billing": {
+          "type": "toggle",
+          "value": false
+        }
+      }
+    }
+  }
+}
