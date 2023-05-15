@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true
+  },
+  "include": ["vite.config.ts", "tsconfig.json"],
+  "baseUrl": ".",
+  "paths": {
+    "~/*": ["src/*"],
+    "~components/*": ["src/components/*"],
+    "~routes/*": ["src/routes/*"],
+    "components/*": ["src/components/*"]
+  }
+}

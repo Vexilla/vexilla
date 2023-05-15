@@ -1,0 +1,11 @@
+@font-face {
+  font-family: "Racing Sans One";
+  src: url("/app/fonts/racing/subset-RacingSansOne-Regular.eot");
+  src: url("/app/fonts/racing/subset-RacingSansOne-Regular.eot?#iefix")
+      format("embedded-opentype"),
+    url("/app/fonts/racing/subset-RacingSansOne-Regular.woff2") format("woff2"),
+    url("/app/fonts/racing/subset-RacingSansOne-Regular.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
