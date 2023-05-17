@@ -22,9 +22,6 @@ export default defineConfig({
   base: "/app",
   plugins: [react()],
   resolve: {
-    alias: {
-      ...alias,
-      components: path.resolve(__dirname, "src/components"),
-    },
+    alias,
   },
 });

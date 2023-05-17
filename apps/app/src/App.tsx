@@ -1,65 +1,9 @@
 import { useState } from "react";
 import "./App.css";
 
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { Outlet, Link } from "react-router-dom";
+
 import { AppShell, Navbar, Header, Flex } from "@mantine/core";
-import { Home } from "./routes/Home";
-import { Environment } from "./routes/Environment";
-import { Feature } from "./routes/Feature";
-import { Configuration } from "./routes/Configuration";
-
-/*
-
-
-  {
-    path: "/environment/:name",
-    name: "Environment",
-    component: () =>
-      import("../views/Environment.vue"),
-    },
-    {
-      path: "/feature/:name",
-      name: "Feature",
-      component: () =>
-        import( "../views/Feature.vue"),
-    },
-    {
-      path: "/configuration",
-      name: "Configuration",
-      component: () =>
-        import(
-           "../views/Configuration.vue"
-        ),
-    },
-
-*/
-
-const router = createBrowserRouter(
-  [
-    {
-      path: "/",
-      element: <Home />,
-    },
-
-    {
-      path: "/environment/:name",
-      element: <Environment />,
-    },
-
-    {
-      path: "/feature/:name",
-      element: <Feature />,
-    },
-
-    {
-      path: "/configuration",
-      element: <Configuration />,
-    },
-  ],
-  {
-    basename: "/app",
-  }
-);
 
 function App() {
   return (
@@ -67,7 +11,9 @@ function App() {
       padding="md"
       navbar={
         <Navbar width={{ base: 300 }} mih={500} p="xs">
-          {/* Navbar content */}
+          <Link to="configuration">Configuration</Link>
+          <Link to="environment/staging">Environments</Link>
+          <Link to="feature/foo">Features</Link>
         </Navbar>
       }
       header={
@@ -84,7 +30,7 @@ function App() {
         </Header>
       }
     >
-      <RouterProvider router={router} />
+      <Outlet />
     </AppShell>
   );
 }
