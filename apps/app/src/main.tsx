@@ -37,28 +37,44 @@ const router = createBrowserRouter(
           element: <Publish />,
         },
         {
-          path: "/environments",
+          path: "/groups",
+          element: <>Groups</>,
           children: [
             {
               path: "new",
-              element: <NewEnvironment />,
+              element: <>New</>,
             },
             {
-              path: "edit/:environmentId",
-              element: <EditEnvironment />,
-            },
-          ],
-        },
-        {
-          path: "/features",
-          children: [
-            {
-              path: "new",
-              element: <NewFeature />,
-            },
-            {
-              path: "edit/:featureId",
-              element: <EditFeature />,
+              path: ":groupId",
+              element: <>Group</>,
+              children: [
+                {
+                  path: "environments",
+                  children: [
+                    {
+                      path: "new",
+                      element: <NewEnvironment />,
+                    },
+                    {
+                      path: ":environmentId",
+                      element: <EditEnvironment />,
+                    },
+                  ],
+                },
+                {
+                  path: "features",
+                  children: [
+                    {
+                      path: "new",
+                      element: <NewFeature />,
+                    },
+                    {
+                      path: ":featureId",
+                      element: <EditFeature />,
+                    },
+                  ],
+                },
+              ],
             },
           ],
         },
@@ -69,6 +85,13 @@ const router = createBrowserRouter(
     basename: "/app",
   }
 );
+
+/*
+
+
+
+
+*/
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>

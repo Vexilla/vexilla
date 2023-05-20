@@ -3,10 +3,6 @@ import { Timeline, Text } from "@mantine/core";
 
 import { PageLayout } from "../components/PageLayout";
 
-// First, enter your hosting configuration. (S3, Azure, GCP, etc.)
-// Next, start creating your environments. (dev, staging, prod, etc.)
-// Then, create your feature flags.
-
 export function Home() {
   return (
     <PageLayout className="pt-16">
