@@ -14,6 +14,8 @@ import {
   VexillaSelectiveFeature,
 } from "@vexilla/client";
 
+import { HostingAdapter } from "@vexilla/hosts";
+
 export type VexillaFeatureTypeString = "gradual" | "toggle" | "selective";
 
 export interface Environment {

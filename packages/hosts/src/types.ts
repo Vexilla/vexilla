@@ -1,3 +1,9 @@
+import { HostingStatusType } from "./enums";
+import { HostingConfigS3 } from "./hosting-adapters/s3.adapter";
+import { HostingConfigAzure } from "./hosting-adapters/azure.adapter";
+import { HostingConfigGcloud } from "./hosting-adapters/gcloud.adapter";
+import { HostingConfigFirebase } from "./hosting-adapters/firebase.adapter";
+
 export type HostingProvider = "s3" | "azure" | "gcloud" | "firebase" | null;
 
 export type HostingConfig =

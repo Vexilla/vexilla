@@ -2,8 +2,9 @@
   "name": "@vexilla/hosts",
   "version": "0.0.1",
   "description": "",
-  "main": "index.js",
+  "main": "./dist/index.js",
   "scripts": {
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -11,8 +12,12 @@
   "license": "ISC",
   "dependencies": {
     "@azure/storage-blob": "^12.3.0",
+    "@vexilla/client": "workspace:^",
     "aws-sdk": "^2.804.0",
     "axios": "^1.4.0",
     "stream": "^0.0.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.4"
   }
 }
