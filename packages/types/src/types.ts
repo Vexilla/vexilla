@@ -1,12 +1,3 @@
-/*
-
-Leaving off:
-
-  - fix type issues
-  - add build script for exporting into other repos
-
-*/
-
 import {
   VexillaToggleFeature,
   VexillaGradualFeature,
@@ -20,6 +11,7 @@ export type VexillaFeatureTypeString = "gradual" | "toggle" | "selective";
 
 export interface Environment {
   name: string;
+  environmentId: string;
 }
 
 export type VexillaFeature =
@@ -31,15 +23,12 @@ export interface Feature {
   name: string;
   type: VexillaFeatureTypeString;
   options: VexillaFeature;
+  featureId: string;
 }
 
 export interface FeatureSettings {
   [key: string]: VexillaFeature;
 }
-
-// export interface DefaultFeatureValues {
-//   [key: VexillaFeatureType]: VexillaFeature;
-// }
 
 export type DefaultFeatureValues = {
   [P in VexillaFeatureTypeString]: VexillaFeature;
@@ -49,11 +38,17 @@ export interface DefaultEnvironmentFeatureValues {
   [key: string]: DefaultFeatureValues;
 }
 
-export interface AppState {
+export interface Group {
+  name: string;
+  groupId: string;
   features: Feature[];
   featuresSettings: FeatureSettings;
   environments: Environment[];
-  hosting: HostingAdapter;
+}
+
+export interface AppState {
+  groups: Group[];
+  hosting?: HostingAdapter;
   defaultEnvironmentFeatureValues: DefaultEnvironmentFeatureValues;
   existingFeatures: any;
 }

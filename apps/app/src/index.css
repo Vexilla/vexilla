@@ -1,7 +1,18 @@
-@tailwind base;
+/* @tailwind base; */
 @tailwind components;
 @tailwind utilities;
 
 * {
   font-family: "Atkinson Hyperlegible";
+}
+
+ul,
+ol,
+li {
+  margin: 0;
+  padding: 0;
+}
+
+li {
+  list-style: none;
 }

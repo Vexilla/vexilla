@@ -1,2 +1,2 @@
-export * as types from "./types";
+export * from "./types";
 // export * as enums from "./enums";

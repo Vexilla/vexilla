@@ -1,9 +1,9 @@
 import localforage from "localforage";
 import { atom } from "jotai";
 
-type StorageValue = string | number | any[] | Object;
+// type StorageValue = string | number | any[] | Object;
 
-export function atomWithStorage(key: string, initialValue: StorageValue) {
+export function atomWithStorage<T>(key: string, initialValue: T) {
   const baseAtom = atom(initialValue);
   baseAtom.onMount = (setValue) => {
     (async () => {
