@@ -1,21 +1,12 @@
 import React, { useCallback, useEffect, useMemo } from "react";
-import {
-  TextInput,
-  Switch,
-  Tooltip,
-  ActionIcon,
-  Flex,
-  Alert,
-} from "@mantine/core";
+import { TextInput, Switch, Flex, Alert } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useAtom } from "jotai";
 import { Link, useParams } from "react-router-dom";
-import merge from "lodash-es/merge";
-import cloneDeep from "lodash-es/cloneDeep";
+import { useSnapshot } from "valtio";
 
 import { Environment, Feature } from "@vexilla/types";
 
-import { groupsStore } from "../../stores/config";
+import { config } from "../../stores/config-valtio";
 
 import { PageLayout } from "../../components/PageLayout";
 import { CustomSlider } from "../../components/CustomSlider";
@@ -25,7 +16,6 @@ import { CustomTooltip } from "../../components/CustomTooltip";
 import { Icon } from "@iconify/react";
 import rewindBackBroken from "@iconify/icons-solar/rewind-back-broken";
 import shieldWarningBroken from "@iconify/icons-solar/shield-warning-broken";
-import { RecursivePartial } from "../../utils/types";
 
 enum FormFields {
   name = "name",
@@ -33,46 +23,16 @@ enum FormFields {
 
 export function EditEnvironment() {
   const params = useParams();
+  useSnapshot(config);
 
-  const [groups, setGroups] = useAtom(groupsStore);
+  const groups = config.groups;
+
   const group = groups.find((_group) => _group.groupId === params.groupId);
   const environments = group?.environments || [];
 
   const environment = environments.find(
     (_environment) => _environment.environmentId === params.environmentId
   );
-
-  console.log({ groups });
-  console.log({ environment });
-
-  const updateEnvironment = (
-    updatedEnvironment: RecursivePartial<Environment>
-  ) => {
-    console.log("groups before updates", groups);
-    const newGroups = groups.map((_group) => {
-      if (_group.groupId !== group?.groupId) {
-        return _group;
-      }
-
-      const editedGroup = cloneDeep(group);
-
-      const newEnvironments = _group.environments.map((_environment) => {
-        if (_environment.environmentId !== environment?.environmentId) {
-          return _environment;
-        }
-
-        return merge(cloneDeep(_environment), updatedEnvironment);
-      });
-
-      editedGroup.environments = newEnvironments;
-
-      return editedGroup;
-    });
-
-    console.log({ groups, newGroups });
-
-    setGroups(newGroups);
-  };
 
   const form = useForm({
     initialValues: {
@@ -93,7 +53,7 @@ export function EditEnvironment() {
 
   useEffect(() => {
     form.setFieldValue(FormFields.name, environment?.name || "");
-  }, [environment]);
+  }, [environment?.name]);
 
   return (
     <PageLayout>
@@ -114,7 +74,9 @@ export function EditEnvironment() {
           {...form.getInputProps(FormFields.name)}
           label={"Name"}
           onChange={(event) => {
-            updateEnvironment({ name: event.target.value });
+            if (environment) {
+              environment.name = event.target.value;
+            }
           }}
         />
       </form>
@@ -141,16 +103,10 @@ export function EditEnvironment() {
         onLabel="ON"
         offLabel="OFF"
         onChange={(event) => {
-          console.log("groups in change:", groups, groupsStore.toString());
-          updateEnvironment({
-            defaultEnvironmentFeatureValues: {
-              ...environment?.defaultEnvironmentFeatureValues,
-              toggle: {
-                type: "toggle",
-                value: event.currentTarget.checked,
-              },
-            },
-          });
+          if (environment) {
+            environment.defaultEnvironmentFeatureValues.toggle.value =
+              event.currentTarget.checked;
+          }
         }}
       />
 
@@ -160,27 +116,9 @@ export function EditEnvironment() {
         label={"Seed"}
         tooltipText="This value is passed to the PRNG to get a specific subset of users."
         onChange={(newSeed) => {
-          console.log("groups in change:", groups);
-          console.log("WTF", { newSeed });
-
-          const update = {
-            defaultEnvironmentFeatureValues: {
-              gradual: {
-                type: "gradual",
-                seed: newSeed,
-              },
-            },
-          };
-
-          console.log({ update });
-          updateEnvironment({
-            defaultEnvironmentFeatureValues: {
-              ...environment?.defaultEnvironmentFeatureValues,
-              gradual: {
-                seed: newSeed,
-              },
-            },
-          });
+          if (environment) {
+            environment.defaultEnvironmentFeatureValues.gradual.seed = newSeed;
+          }
         }}
         showRandomButton
       />
@@ -189,16 +127,10 @@ export function EditEnvironment() {
         label={"Threshold"}
         tooltipText="This value determines what percentage of users should see this feature."
         onChange={(newValue) => {
-          console.log({ newValue });
-          updateEnvironment({
-            defaultEnvironmentFeatureValues: {
-              ...environment?.defaultEnvironmentFeatureValues,
-              gradual: {
-                type: "gradual",
-                value: newValue,
-              },
-            },
-          });
+          if (environment) {
+            environment.defaultEnvironmentFeatureValues.gradual.value =
+              newValue;
+          }
         }}
       />
 

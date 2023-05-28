@@ -1,14 +1,15 @@
 import React, { forwardRef, useCallback, useEffect, useMemo } from "react";
 import { Group, Select, TextInput, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useAtom } from "jotai";
 import { Link, useParams } from "react-router-dom";
 import merge from "lodash-es/merge";
+import { useSnapshot } from "valtio";
 
 import { Feature, VexillaFeatureTypeString } from "@vexilla/types";
 
+import { config } from "../../stores/config-valtio";
+
 import { PageLayout } from "../../components/PageLayout";
-import { groupsStore } from "../../stores/config";
 
 import { Icon } from "@iconify/react";
 import rewindBackBroken from "@iconify/icons-solar/rewind-back-broken";
@@ -61,50 +62,16 @@ const data: {
 
 export function EditFeature() {
   const params = useParams();
+  useSnapshot(config);
 
-  const [groups, setGroups] = useAtom(groupsStore);
-  const group = useMemo(
-    () => groups.find((_group) => _group.groupId === params.groupId),
-    [groups, params]
-  );
-  const environments = useMemo(() => group?.environments || [], [group]);
-  const features = useMemo(() => group?.features || [], [group]);
+  const groups = config.groups;
+  const group = groups.find((_group) => _group.groupId === params.groupId);
+  const environments = group?.environments || [];
+  const features = group?.features || [];
 
   const feature = useMemo(
     () => features.find((_feature) => _feature.featureId === params.featureId),
     [features, params]
-  );
-
-  const updateFeature = useCallback(
-    (updatedFeature: Partial<Feature>) => {
-      const newGroups = groups.map((_group) => {
-        if (_group.groupId !== group?.groupId) {
-          return _group;
-        }
-
-        const newFeatures = _group.features.map((_feature) => {
-          if (_feature.featureId !== feature?.featureId) {
-            return _feature;
-          }
-
-          return merge(
-            {
-              ..._feature,
-            },
-            updatedFeature
-          );
-        });
-
-        group.features = newFeatures;
-
-        return {
-          ...group,
-        };
-      });
-
-      setGroups(newGroups);
-    },
-    [groups, group, feature]
   );
 
   const form = useForm({
@@ -147,7 +114,9 @@ export function EditFeature() {
           {...form.getInputProps(FormFields.name)}
           label={"Name"}
           onChange={(event) => {
-            updateFeature({ name: event.target.value });
+            if (feature) {
+              feature.name = event.target.value;
+            }
           }}
         />
 
@@ -159,8 +128,13 @@ export function EditFeature() {
           maxDropdownHeight={400}
           value={feature?.options.type}
           onChange={(value) => {
-            if (["toggle", "selective", "gradual"].includes(value || "")) {
-              updateFeature({ options: { type: (value || "toggle") as any } });
+            if (
+              (value === "toggle" ||
+                value === "selective" ||
+                value === "gradual") &&
+              feature
+            ) {
+              feature.options.type = value;
             }
           }}
         />

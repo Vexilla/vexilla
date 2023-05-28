@@ -1,18 +1,20 @@
 import { Outlet } from "react-router-dom";
 import { AppShell, Navbar, Header, Flex } from "@mantine/core";
-import { useAtom } from "jotai";
+import { useSnapshot } from "valtio";
 
 import { Group } from "@vexilla/types";
 
-import { groupsStore } from "./stores/config";
 import { nanoid } from "./utils/nanoid";
+import { config } from "./stores/config-valtio";
 
 import { CustomList, CustomListItem } from "./components/CustomList";
 
 import "./App.css";
 
 function App() {
-  const [groups, setGroups] = useAtom(groupsStore);
+  useSnapshot(config);
+
+  const groups = config.groups;
 
   return (
     <AppShell
@@ -25,17 +27,13 @@ function App() {
             items={groups}
             getKey={(group) => group.groupId}
             onAdd={() => {
-              const newGroups: Group[] = [
-                ...groups,
-                {
-                  name: `Group ${groups.length + 1}`,
-                  groupId: nanoid(),
-                  featuresSettings: {},
-                  features: [],
-                  environments: [],
-                },
-              ];
-              setGroups(newGroups);
+              groups.push({
+                name: `Group ${groups.length + 1}`,
+                groupId: nanoid(),
+                featuresSettings: {},
+                features: [],
+                environments: [],
+              });
             }}
             listItem={(group) => (
               <CustomListItem
@@ -46,7 +44,7 @@ function App() {
                   const newGroups = groups.filter(
                     (_group) => _group.groupId !== group.groupId
                   );
-                  setGroups(newGroups);
+                  config.groups = newGroups;
                 }}
               />
             )}

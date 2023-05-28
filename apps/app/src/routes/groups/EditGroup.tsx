@@ -1,6 +1,5 @@
 import React, { useMemo, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { useAtom } from "jotai";
 
 import { Button, TextInput, Flex, Box } from "@mantine/core";
 import { useForm } from "@mantine/form";
@@ -14,8 +13,9 @@ import {
   VexillaSelectiveFeature,
   VexillaToggleFeature,
 } from "@vexilla/types";
+import { useSnapshot } from "valtio";
 
-import { groupsStore } from "../../stores/config";
+import { config } from "../../stores/config-valtio";
 import { nanoid } from "../../utils/nanoid";
 
 import { PageLayout } from "../../components/PageLayout";
@@ -42,31 +42,13 @@ const DefaultEnvironmentDefaults: DefaultFeatureValues = {
 
 export function EditGroup() {
   const params = useParams();
+  useSnapshot(config);
 
-  const [groups, setGroups] = useAtom(groupsStore);
-  const group = useMemo(
-    () => groups.find((_group) => _group.groupId === params.groupId),
-    [groups, params]
-  );
-  const environments = useMemo(() => group?.environments || [], [group]);
-  const features = useMemo(() => group?.features || [], [group]);
+  const groups = config.groups;
 
-  const updateGroup = useCallback(
-    (updatedGroup: Partial<FeatureGroup>) => {
-      const newGroups = groups.map((_group) => {
-        if (_group.groupId !== group?.groupId) {
-          return _group;
-        }
-        return {
-          ...group,
-          ...updatedGroup,
-        };
-      });
-
-      setGroups(newGroups);
-    },
-    [groups, group]
-  );
+  const group = groups.find((_group) => _group.groupId === params.groupId);
+  const environments = group?.environments || [];
+  const features = group?.features || [];
 
   const form = useForm({
     initialValues: {
@@ -105,9 +87,7 @@ export function EditGroup() {
             onSubmit={(event) => {
               event.preventDefault();
             }}
-            onChange={(event) => {
-              updateGroup({ name: (event.target as any).value });
-            }}
+            onChange={(event) => {}}
             className="flex flex-col gap-8 mb-8"
           >
             <TextInput
@@ -123,17 +103,11 @@ export function EditGroup() {
                 items={environments}
                 getKey={(environment) => environment.name}
                 onAdd={() => {
-                  const newEnvironments: Environment[] = [
-                    ...environments,
-                    {
-                      name: `Environment ${environments.length + 1}`,
-                      environmentId: nanoid(),
-                      defaultEnvironmentFeatureValues:
-                        DefaultEnvironmentDefaults,
-                    },
-                  ];
-
-                  updateGroup({ environments: newEnvironments });
+                  group.environments.push({
+                    name: `Environment ${environments.length + 1}`,
+                    environmentId: nanoid(),
+                    defaultEnvironmentFeatureValues: DefaultEnvironmentDefaults,
+                  });
                 }}
                 listItem={(environment) => (
                   <CustomListItem
@@ -141,13 +115,11 @@ export function EditGroup() {
                     itemType="Environment"
                     linkPath={`/groups/${group.groupId}/environments/${environment.environmentId}`}
                     onDelete={() => {
-                      const newEnvironments = environments.filter(
+                      group.environments = environments.filter(
                         (_environment) =>
                           _environment.environmentId !==
                           environment.environmentId
                       );
-
-                      updateGroup({ environments: newEnvironments });
                     }}
                   />
                 )}
@@ -164,19 +136,14 @@ export function EditGroup() {
                 items={features}
                 getKey={(feature) => feature.featureId}
                 onAdd={() => {
-                  const newFeatures: Feature[] = [
-                    ...features,
-                    {
-                      name: `Feature ${features.length + 1}`,
-                      featureId: nanoid(),
-                      options: {
-                        type: "toggle",
-                        value: false,
-                      },
+                  group.features.push({
+                    name: `Feature ${features.length + 1}`,
+                    featureId: nanoid(),
+                    options: {
+                      type: "toggle",
+                      value: false,
                     },
-                  ];
-
-                  updateGroup({ features: newFeatures });
+                  });
                 }}
                 listItem={(feature) => (
                   <CustomListItem
@@ -184,11 +151,9 @@ export function EditGroup() {
                     itemType="Feature"
                     linkPath={`/groups/${group.groupId}/features/${feature.featureId}`}
                     onDelete={() => {
-                      const newFeatures = features.filter(
+                      group.features = features.filter(
                         (_feature) => _feature.featureId !== feature.featureId
                       );
-
-                      updateGroup({ features: newFeatures });
                     }}
                   />
                 )}
