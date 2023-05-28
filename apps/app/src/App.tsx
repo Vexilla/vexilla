@@ -1,22 +1,15 @@
-import { Outlet, Link, NavLink } from "react-router-dom";
-import {
-  AppShell,
-  Navbar,
-  Header,
-  Flex,
-  ActionIcon,
-  Tooltip,
-} from "@mantine/core";
+import { Outlet } from "react-router-dom";
+import { AppShell, Navbar, Header, Flex } from "@mantine/core";
 import { useAtom } from "jotai";
 
 import { Group } from "@vexilla/types";
 
+import { groupsStore } from "./stores/config";
+import { nanoid } from "./utils/nanoid";
+
 import { CustomList, CustomListItem } from "./components/CustomList";
 
-import { groupsStore } from "./stores/config";
-
 import "./App.css";
-import { nanoid } from "./utils/nanoid";
 
 function App() {
   const [groups, setGroups] = useAtom(groupsStore);
@@ -35,7 +28,7 @@ function App() {
               const newGroups: Group[] = [
                 ...groups,
                 {
-                  name: `Group ${groups.length}`,
+                  name: `Group ${groups.length + 1}`,
                   groupId: nanoid(),
                   featuresSettings: {},
                   features: [],

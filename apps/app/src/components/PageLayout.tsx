@@ -7,10 +7,12 @@ export function PageLayout({
   title,
 }: PropsWithChildren<{ className?: string; title?: string }>) {
   return (
-    <div className={`bg-grey flex flex-col ${className || ""}`}>
-      {!!title && (
-        <h2 className="font-body font-bold text-2xl text-left">{title}</h2>
-      )}
+    <div
+      className={`bg-grey flex flex-col text-left max-w-lg mx-auto ${
+        className || ""
+      }`}
+    >
+      {!!title && <h2 className="font-body font-bold text-2xl">{title}</h2>}
       {children}
     </div>
   );

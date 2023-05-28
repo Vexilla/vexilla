@@ -3,8 +3,6 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 import tsConfig from "./tsconfig.json";
 
-// "~components/*": ["src/components/*"],
-
 const alias = Object.entries(tsConfig.paths).reduce(
   (mappedAlias, [pathAlias, [tsPath]]) => {
     const newKey = pathAlias.replace("/*", "");

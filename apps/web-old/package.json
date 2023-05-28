@@ -70,7 +70,7 @@
     "prettier": "^1.19.1",
     "sass": "^1.26.5",
     "sass-loader": "^8.0.2",
-    "typescript": "~3.9.3",
+    "typescript": "^5.0.4",
     "vue-jest": "^5.0.0-0"
   },
   "peerDependencies": {

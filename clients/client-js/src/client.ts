@@ -1,46 +1,13 @@
+import {
+  VexillaClientConfig,
+  VexillaFeatureTypeToggle,
+  VexillaFeatureTypeGradual,
+  VexillaFeatureTypeSelective,
+  VexillaFlags,
+  VexillaGradualFeature,
+} from "@vexilla/types";
+
 import Hasher from "./hasher";
-
-export enum VexillaFeatureType {
-  TOGGLE = "toggle",
-  GRADUAL = "gradual",
-  SELECTIVE = "selective",
-}
-
-export interface VexillaToggleFeature {
-  type: VexillaFeatureType.TOGGLE;
-  value: boolean;
-}
-
-export interface VexillaGradualFeature {
-  type: VexillaFeatureType.GRADUAL;
-  value: number;
-  seed: number;
-}
-
-export interface VexillaSelectiveFeature {
-  type: VexillaFeatureType.SELECTIVE;
-}
-
-export interface VexillaFeatureSet {
-  [key: string]:
-    | VexillaToggleFeature
-    | VexillaGradualFeature
-    | VexillaSelectiveFeature;
-}
-
-export interface VexillaEnvironment {
-  [key: string]: VexillaFeatureSet;
-}
-
-export interface VexillaFlags {
-  [key: string]: VexillaEnvironment;
-}
-
-export interface VexillaClientConfig {
-  baseUrl: string;
-  environment: string;
-  customInstanceHash?: string;
-}
 
 export class VexillaClient {
   protected baseUrl: string;
@@ -84,11 +51,11 @@ export class VexillaClient {
 
     let _should = false;
     switch (flag.type) {
-      case VexillaFeatureType.TOGGLE:
+      case VexillaFeatureTypeToggle:
         _should = flag.value;
         break;
 
-      case VexillaFeatureType.GRADUAL:
+      case VexillaFeatureTypeGradual:
         if (flag.seed <= 0 || flag.seed > 1) {
           console.error(
             "seed must be a number value greater than 0 and less than or equal to 1"

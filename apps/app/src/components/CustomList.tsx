@@ -17,6 +17,7 @@ import infoCircleBroken from "@iconify/icons-solar/info-circle-broken";
 import addCircleBroken from "@iconify/icons-solar/add-circle-broken";
 import trashBinTrashBroken from "@iconify/icons-solar/trash-bin-trash-broken";
 import penBroken from "@iconify/icons-solar/pen-broken";
+import { CustomTooltip } from "./CustomTooltip";
 
 interface CustomListProps<T> {
   onAdd: () => void | Promise<void>;
@@ -38,21 +39,16 @@ export function CustomList<T>({
   itemType,
 }: CustomListProps<T>) {
   return (
-    <>
-      <Flex direction={"row"} justify={"space-between"} align={"center"}>
+    <Box className="rounded bg-slate-50">
+      <Flex
+        direction={"row"}
+        justify={"space-between"}
+        align={"center"}
+        className="p-2 bg-slate-100 rounded-t"
+      >
         <Flex direction="row" align={"center"}>
-          {title}
-          {!!tooltipText && (
-            <Tooltip
-              multiline
-              label={tooltipText}
-              events={{ hover: true, focus: true, touch: false }}
-            >
-              <ActionIcon>
-                <Icon icon={infoCircleBroken} />
-              </ActionIcon>
-            </Tooltip>
-          )}
+          <Text className="font-bold">{title}</Text>
+          {!!tooltipText && <CustomTooltip tooltipText={tooltipText} />}
         </Flex>
         <Flex direction={"row"} align={"center"} gap={2}>
           <Button color="primary" onClick={onAdd}>
@@ -65,8 +61,10 @@ export function CustomList<T>({
         {items?.length > 0 &&
           items.map((item) => <li key={getKey(item)}>{listItem(item)}</li>)}
       </ul>
-      {!items?.length && <>No {itemType}s found.</>}
-    </>
+      <Flex p={"1rem"} align={"center"} justify={"center"}>
+        {!items?.length && <>No {itemType}s found.</>}
+      </Flex>
+    </Box>
   );
 }
 
@@ -122,8 +120,7 @@ export function CustomListItem({
         direction="row"
         align="center"
         justify={"space-between"}
-        py={12}
-        px={4}
+        className="py-4 px-2"
       >
         <Box>
           {!linkPath && <Text>{name}</Text>}
