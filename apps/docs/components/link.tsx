@@ -7,8 +7,6 @@ export default ({ href, children }) => {
 
   let className = children?.props?.className || "";
 
-  console.log({ router });
-
   if (router.pathname === href || router.asPath === href) {
     className = `${className} active`;
   }

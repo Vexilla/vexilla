@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { Button, TextInput, Flex, Box } from "@mantine/core";
 import { useForm } from "@mantine/form";
@@ -21,6 +21,9 @@ import { nanoid } from "../../utils/nanoid";
 import { PageLayout } from "../../components/PageLayout";
 import { CustomList, CustomListItem } from "../../components/CustomList";
 
+import { Icon } from "@iconify/react";
+import rewindBackBroken from "@iconify/icons-solar/rewind-back-broken";
+
 enum FormFields {
   name = "name",
 }
@@ -37,12 +40,16 @@ const DefaultEnvironmentDefaults: DefaultFeatureValues = {
   } as VexillaGradualFeature,
   selective: {
     type: "selective",
+    valueType: "string",
+    value: [],
   } as VexillaSelectiveFeature,
 } as const;
 
 export function EditGroup() {
   const params = useParams();
   useSnapshot(config);
+
+  const navigate = useNavigate();
 
   const groups = config.groups;
 
@@ -73,6 +80,18 @@ export function EditGroup() {
 
   return (
     <PageLayout>
+      <Box>
+        <Button
+          variant="light"
+          onClick={() => {
+            navigate(`/`);
+          }}
+          leftIcon={<Icon icon={rewindBackBroken} />}
+          fullWidth={false}
+        >
+          Back to Home
+        </Button>
+      </Box>
       {!group && (
         <>
           <h2>Group not found</h2>
@@ -107,6 +126,7 @@ export function EditGroup() {
                     name: `Environment ${environments.length + 1}`,
                     environmentId: nanoid(),
                     defaultEnvironmentFeatureValues: DefaultEnvironmentDefaults,
+                    features: {},
                   });
                 }}
                 listItem={(environment) => (
@@ -139,10 +159,7 @@ export function EditGroup() {
                   group.features.push({
                     name: `Feature ${features.length + 1}`,
                     featureId: nanoid(),
-                    options: {
-                      type: "toggle",
-                      value: false,
-                    },
+                    type: "toggle",
                   });
                 }}
                 listItem={(feature) => (

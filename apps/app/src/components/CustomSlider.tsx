@@ -20,7 +20,7 @@ interface SliderProps {
 }
 
 export function CustomSlider({
-  value,
+  value = 0,
   label,
   onChange,
   tooltipText,
@@ -61,11 +61,11 @@ export function CustomSlider({
       </Flex>
       <Flex direction="row" align="center" gap={"1rem"}>
         <Slider
-          value={value}
+          value={value || 0}
           onChange={(event) => {
-            console.log(event);
             onChange(event);
           }}
+          label={(_value) => _value?.toFixed(precision) || 0}
           w={"100%"}
           min={min}
           max={max}
@@ -74,13 +74,13 @@ export function CustomSlider({
         <NumberInput
           name={inputId.current}
           id={inputId.current}
-          value={value}
+          value={value || 0}
           onChange={onChange}
           w={"100px"}
           min={min}
           max={max}
           step={step}
-          precision={precision}
+          precision={precision || 0}
         />
       </Flex>
     </>
