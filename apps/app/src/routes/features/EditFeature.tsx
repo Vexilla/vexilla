@@ -8,6 +8,7 @@ import {
   Button,
   Switch,
   Radio,
+  Flex,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -70,6 +71,11 @@ const data: {
   {
     label: "Selective",
     value: "selective",
+    description: "Release to a specific subset of users",
+  },
+  {
+    label: "Value",
+    value: "value",
     description: "Release to a specific subset of users",
   },
 ];
@@ -153,7 +159,8 @@ export function EditFeature() {
             if (
               (value === "toggle" ||
                 value === "selective" ||
-                value === "gradual") &&
+                value === "gradual" ||
+                value === "value") &&
               feature
             ) {
               feature.type = value;
@@ -163,9 +170,9 @@ export function EditFeature() {
                 }
                 if (!environment?.features?.[feature.featureId]) {
                   environment.features[feature.featureId] = {
-                    ...environment.defaultEnvironmentFeatureValues[
+                    ...(environment.defaultEnvironmentFeatureValues[
                       feature.type
-                    ],
+                    ] as any),
                   };
                 } else {
                   environment.features[feature.featureId] = {
@@ -176,13 +183,39 @@ export function EditFeature() {
                   };
                 }
               });
-              // .type = value;
-              // feature.options.value =
-              //   environment.defaultEnvironmentFeatureValues[value].value;
             }
           }}
         />
       </form>
+      <Switch
+        name="scheduled"
+        label="Scheduled?"
+        checked={feature?.isScheduled || false}
+        onChange={(event) => {
+          if (feature) {
+            feature.isScheduled = event.currentTarget.checked || false;
+          }
+        }}
+      ></Switch>
+      <Radio.Group
+        name="scheduled"
+        label="Scheduled Type"
+        value={feature?.scheduleType || ""}
+        onChange={(event) => {
+          if (
+            (event === "global" || event === "environment" || event === "") &&
+            feature
+          ) {
+            feature.scheduleType = event;
+          }
+        }}
+      >
+        <Flex mt="sm" mb="lg" align="center" justify="center" gap="3rem">
+          <Radio value="" label="None" />
+          <Radio value="global" label="Global" />
+          <Radio value="number" label="Number" />
+        </Flex>
+      </Radio.Group>
 
       {environments?.length > 0 &&
         environments[0].features?.[feature?.featureId || ""]?.type ===

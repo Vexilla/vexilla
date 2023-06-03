@@ -18,11 +18,12 @@ import { config } from "../../stores/config-valtio";
 import { PageLayout } from "../../components/PageLayout";
 import { CustomSlider } from "../../components/CustomSlider";
 import { CustomTooltip } from "../../components/CustomTooltip";
+import { SelectiveList } from "../../components/features/SelectiveList";
+import { ScheduledForm } from "../../components/features/ScheduledForm";
 
 import { Icon } from "@iconify/react";
 import rewindBackBroken from "@iconify/icons-solar/rewind-back-broken";
 import shieldWarningBroken from "@iconify/icons-solar/shield-warning-broken";
-import { SelectiveList } from "../../components/features/SelectiveList";
 
 enum FormFields {
   name = "name",
@@ -145,6 +146,26 @@ export function EditEnvironment() {
           if (environment) {
             environment.defaultEnvironmentFeatureValues.gradual.value =
               newValue;
+          }
+        }}
+      />
+
+      <h4>Scheduled</h4>
+      <ScheduledForm
+        feature={
+          environment?.defaultEnvironmentFeatureValues.scheduled || {
+            type: "scheduled",
+            start: 0,
+            end: 0,
+            timeType: "none",
+            timezone: "UTC",
+            startTime: 0,
+            endTime: 0,
+          }
+        }
+        onChange={(newFeature) => {
+          if (environment) {
+            environment.defaultEnvironmentFeatureValues.scheduled = newFeature;
           }
         }}
       />

@@ -3,12 +3,27 @@ import {
   VexillaFeatureTypeToggle,
   VexillaFeatureTypeGradual,
   VexillaFeatureTypeSelective,
+  VexillaFeatureTypeScheduled,
+  VexillaFeatureTypeValue,
 } from "./consts";
+
+export type VexillaInputType = "number" | "string";
+export type VexillaNumberType = "int" | "float";
 
 export type VexillaFeatureTypeString =
   | typeof VexillaFeatureTypeToggle
   | typeof VexillaFeatureTypeGradual
-  | typeof VexillaFeatureTypeSelective;
+  | typeof VexillaFeatureTypeSelective
+  | typeof VexillaFeatureTypeValue;
+
+export interface VexillaSchedule {
+  start: number | null;
+  end: number | null;
+  timezone: string | "UTC";
+  timeType: "none" | "start/end" | "daily";
+  startTime: number;
+  endTime: number;
+}
 
 export interface Environment {
   name: string;
@@ -30,12 +45,15 @@ export type DefaultFeatureValues = {
   [VexillaFeatureTypeToggle]: VexillaToggleFeature;
   [VexillaFeatureTypeGradual]: VexillaGradualFeature;
   [VexillaFeatureTypeSelective]: VexillaSelectiveFeature;
+  [VexillaFeatureTypeValue]: VexillaValueFeature;
 };
 
 export interface Feature {
   name: string;
   featureId: string;
   type: VexillaFeatureTypeString;
+  isScheduled: boolean;
+  scheduleType: "" | "global" | "environment";
 }
 
 export interface Group {
@@ -68,20 +86,33 @@ export interface DefaultValuesPayload {
   defaultValues: DefaultFeatureValues;
 }
 
-export interface VexillaToggleFeature {
+export interface VexillaFeatureBase {
+  type: VexillaFeatureTypeString;
+  featureId: string;
+  schedule?: VexillaSchedule;
+}
+
+export interface VexillaToggleFeature extends VexillaFeatureBase {
   type: typeof VexillaFeatureTypeToggle;
   value: boolean;
 }
 
-export interface VexillaGradualFeature {
+export interface VexillaGradualFeature extends VexillaFeatureBase {
   type: typeof VexillaFeatureTypeGradual;
   value: number;
   seed: number;
 }
 
-export interface VexillaSelectiveFeatureBase {
+export interface VexillaValueFeature extends VexillaFeatureBase {
+  type: typeof VexillaFeatureTypeValue;
+  value: string;
+  valueType: VexillaInputType;
+  numberType?: "int" | "float";
+}
+
+export interface VexillaSelectiveFeatureBase extends VexillaFeatureBase {
   type: typeof VexillaFeatureTypeSelective;
-  valueType: "number" | "string";
+  valueType: VexillaInputType;
   value: (string | number)[];
 }
 

@@ -12,6 +12,7 @@ import {
   VexillaGradualFeature,
   VexillaSelectiveFeature,
   VexillaToggleFeature,
+  VexillaValueFeature,
 } from "@vexilla/types";
 import { useSnapshot } from "valtio";
 
@@ -23,6 +24,7 @@ import { CustomList, CustomListItem } from "../../components/CustomList";
 
 import { Icon } from "@iconify/react";
 import rewindBackBroken from "@iconify/icons-solar/rewind-back-broken";
+import { cloneDeep } from "lodash-es";
 
 enum FormFields {
   name = "name",
@@ -32,17 +34,26 @@ const DefaultEnvironmentDefaults: DefaultFeatureValues = {
   toggle: {
     type: "toggle",
     value: false,
+    isScheduled: false,
   } as VexillaToggleFeature,
   gradual: {
     type: "gradual",
     seed: 0,
     value: 0,
+    isScheduled: false,
   } as VexillaGradualFeature,
   selective: {
     type: "selective",
     valueType: "string",
     value: [],
+    isScheduled: false,
   } as VexillaSelectiveFeature,
+  value: {
+    type: "value",
+    valueType: "string",
+    value: "",
+    isScheduled: false,
+  } as VexillaValueFeature,
 } as const;
 
 export function EditGroup() {
@@ -125,7 +136,9 @@ export function EditGroup() {
                   group.environments.push({
                     name: `Environment ${environments.length + 1}`,
                     environmentId: nanoid(),
-                    defaultEnvironmentFeatureValues: DefaultEnvironmentDefaults,
+                    defaultEnvironmentFeatureValues: cloneDeep(
+                      DefaultEnvironmentDefaults
+                    ),
                     features: {},
                   });
                 }}
