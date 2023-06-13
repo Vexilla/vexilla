@@ -1,4 +1,4 @@
-import { HostingAdapter } from "@vexilla/hosts";
+import { Hosting } from "@vexilla/hosts";
 import {
   VexillaFeatureTypeToggle,
   VexillaFeatureTypeGradual,
@@ -64,7 +64,7 @@ export interface Group {
 
 export interface AppState {
   groups: Group[];
-  hosting?: HostingAdapter;
+  hosting: Hosting;
   existingFeatures: any;
 }
 

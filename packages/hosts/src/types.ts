@@ -35,12 +35,13 @@ export interface HostingConfigEmpty extends HostingConfigBase {
   providerType: "";
 }
 
-export type HostingConfig = HostingConfigEmpty &
-  HostingConfigS3 &
-  HostingConfigAzure &
-  HostingConfigGcloud &
-  HostingConfigFirebase &
-  HostingConfigGithub;
+export type HostingConfig =
+  | HostingConfigEmpty
+  | HostingConfigS3
+  | HostingConfigAzure
+  | HostingConfigGcloud
+  | HostingConfigFirebase
+  | HostingConfigGithub;
 
 export interface HostingStatus {
   message: string;
@@ -49,11 +50,26 @@ export interface HostingStatus {
   type: HostingStatusType;
 }
 
-export interface HostingAdapter {
+export interface HostingBase {
   provider: HostingProvider;
   config: HostingConfig;
   status?: HostingStatus;
 }
+
+export interface HostingEmpty extends HostingBase {
+  provider: "";
+  config: {
+    provider: "";
+    providerType: "";
+  };
+}
+
+export interface HostingGithub extends HostingBase {
+  provider: "github";
+  config: HostingConfigGithub;
+}
+
+export type Hosting = HostingEmpty | HostingGithub;
 
 export interface HostingAdapterBase {
   fetchFeatures: (config: HostingConfig) => Promise<any>;
@@ -61,6 +77,10 @@ export interface HostingAdapterBase {
   publish: (payload: any, config: HostingConfig) => Promise<void>;
 }
 
+export interface HostingAdapterDirect extends HostingAdapterBase {}
+
 export interface HostingAdapterGit extends HostingAdapterBase {
-  getRepos: (config: HostingConfig) => Promise<any>;
+  getRepos: (config: HostingConfigBase | HostingConfigGitBase) => Promise<any>;
 }
+
+export type HostingAdapter = HostingAdapterDirect | HostingAdapterGit;

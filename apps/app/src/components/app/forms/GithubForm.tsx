@@ -33,7 +33,10 @@ const disabledButtonStyling = {
 };
 
 export function GithubForm({ config, updateConfig }: GithubFormProps) {
-  const { accessToken, installationId, repositoryId } = config?.hosting?.config;
+  const { accessToken, installationId, repositoryId } =
+    config.hosting.provider === "github"
+      ? config.hosting.config
+      : { accessToken: "", installationId: "", repositoryId: "" };
   const [installations, setInstallations] = useState<Installation[]>([]);
   const [repositories, setRepositories] = useState<Repository[]>([]);
   const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now());
@@ -43,15 +46,19 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
   }
 
   function clearHosting() {
-    if (config.hosting) {
+    if (config.hosting.provider === "github") {
       config.hosting.config.accessToken = "";
       config.hosting.config.installationId = "";
       config.hosting.config.repositoryId = "";
-
-      // until we fix the mutability of config in child forms,
-      // this function is not needed
-      // updateConfig(config);
+    } else {
+      console.error(
+        `Wrong hosting provider in github form: ${config.hosting.provider}`
+      );
     }
+
+    // until we fix the mutability of config in child forms,
+    // this function is not needed
+    // updateConfig(config);
   }
 
   let activeElement = 0;
@@ -66,11 +73,11 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
   useEffect(() => {
     async function fetchData() {
       try {
-        if (accessToken && config.hosting) {
+        if (accessToken && config.hosting.provider === "github") {
           const installations = await fetchInstallations(accessToken);
           setInstallations(installations);
           if (installations.length === 1) {
-            config.hosting.config.installationId = installations[0].id;
+            config.hosting.config.installationId = `${installations[0].id}`;
           }
           if (installationId) {
             const repositories = await fetchRepositories(
@@ -79,15 +86,13 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
             );
             setRepositories(repositories);
             if (repositories.length === 1) {
-              config.hosting.config.repositoryId = repositories[0].id;
+              config.hosting.config.repositoryId = `${repositories[0].id}`;
             }
           }
         }
       } catch (e: any) {
         // this should probably only be modifying the snapshot, not the full state
-        if (config.hosting) {
-          clearHosting();
-        }
+        clearHosting();
       }
     }
     fetchData();
@@ -196,7 +201,7 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
           value={repositoryId}
           onChange={(selectedRepositoryId) => {
             console.log({ selectedRepositoryId });
-            if (config.hosting) {
+            if (config.hosting.provider === "github") {
               config.hosting.config.repositoryId = repositoryId;
             }
           }}

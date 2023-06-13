@@ -6,7 +6,7 @@ export interface HostingConfigGithub extends HostingConfigGitBase {
   installationId: string;
 }
 
-export const GitHubAdapter: HostingAdapterGit = {
+export const GitHubAdapter = {
   async fetchFeatures(config: HostingConfigGithub) {
     // const fileUrl = `https://${config.bucketName}.s3.amazonaws.com/features.json`;
     // return axios.get(fileUrl).catch((error) => {
