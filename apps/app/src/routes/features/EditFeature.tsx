@@ -28,6 +28,7 @@ import { Icon } from "@iconify/react";
 import rewindBackBroken from "@iconify/icons-solar/rewind-back-broken";
 import { CustomSlider } from "../../components/CustomSlider";
 import { SelectiveList } from "../../components/features/SelectiveList";
+import { ScheduledForm } from "../../components/features/ScheduledForm";
 
 enum FormFields {
   name = "name",
@@ -96,26 +97,26 @@ export function EditFeature() {
     (_feature) => _feature.featureId === params.featureId
   );
 
-  const form = useForm({
-    initialValues: {
-      [FormFields.name]: feature?.name || "",
-    },
-    validate: {
-      [FormFields.name]: (value) =>
-        (!!value ? null : "Invalid Name") ||
-        features.filter(
-          (_feature) =>
-            _feature.name.toLocaleLowerCase() === value.toLocaleLowerCase()
-        ).length < 1
-          ? null
-          : "Duplicate Name",
-    },
-    validateInputOnChange: true,
-  });
+  // const form = useForm({
+  //   initialValues: {
+  //     [FormFields.name]: feature?.name || "",
+  //   },
+  //   validate: {
+  //     [FormFields.name]: (value) =>
+  //       (!!value ? null : "Invalid Name") ||
+  //       features.filter(
+  //         (_feature) =>
+  //           _feature.name.toLocaleLowerCase() === value.toLocaleLowerCase()
+  //       ).length < 1
+  //         ? null
+  //         : "Duplicate Name",
+  //   },
+  //   validateInputOnChange: true,
+  // });
 
-  useEffect(() => {
-    form.setFieldValue(FormFields.name, feature?.name || "");
-  }, [feature]);
+  // useEffect(() => {
+  //   form.setFieldValue(FormFields.name, feature?.name || "");
+  // }, [feature]);
 
   return (
     <PageLayout>
@@ -132,78 +133,62 @@ export function EditFeature() {
         </Button>
       </Box>
       <h2>Edit Feature</h2>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-        }}
-        className="flex flex-col gap-8 mb-8"
-      >
-        <TextInput
-          {...form.getInputProps(FormFields.name)}
-          label={"Name"}
-          onChange={(event) => {
-            if (feature) {
-              feature.name = event.target.value;
-            }
-          }}
-        />
-
-        <Select
-          label="Feature Type"
-          placeholder="Pick one"
-          itemComponent={SelectItem}
-          data={data}
-          maxDropdownHeight={400}
-          value={feature?.type}
-          onChange={(value) => {
-            if (
-              (value === "toggle" ||
-                value === "selective" ||
-                value === "gradual" ||
-                value === "value") &&
-              feature
-            ) {
-              feature.type = value;
-              environments.forEach((environment) => {
-                if (!environment.features) {
-                  environment.features = {};
-                }
-                if (!environment?.features?.[feature.featureId]) {
-                  environment.features[feature.featureId] = {
-                    ...(environment.defaultEnvironmentFeatureValues[
-                      feature.type
-                    ] as any),
-                  };
-                } else {
-                  environment.features[feature.featureId] = {
-                    ...(environment.defaultEnvironmentFeatureValues[
-                      feature.type
-                    ] as any),
-                    type: value,
-                  };
-                }
-              });
-            }
-          }}
-        />
-      </form>
-      <Switch
-        name="scheduled"
-        label="Scheduled?"
-        checked={feature?.isScheduled || false}
+      <TextInput
+        label={"Name"}
+        defaultValue={feature?.name}
         onChange={(event) => {
           if (feature) {
-            feature.isScheduled = event.currentTarget.checked || false;
+            feature.name = event.target.value;
           }
         }}
-      ></Switch>
+      />
+
+      <Select
+        className="mb-8"
+        label="Feature Type"
+        placeholder="Pick one"
+        itemComponent={SelectItem}
+        data={data}
+        maxDropdownHeight={400}
+        value={feature?.type}
+        onChange={(value) => {
+          if (
+            (value === "toggle" ||
+              value === "selective" ||
+              value === "gradual" ||
+              value === "value") &&
+            feature
+          ) {
+            feature.type = value;
+            environments.forEach((environment) => {
+              if (!environment.features) {
+                environment.features = {};
+              }
+              if (!environment?.features?.[feature.featureId]) {
+                environment.features[feature.featureId] = {
+                  ...(environment.defaultEnvironmentFeatureValues[
+                    feature.type
+                  ] as any),
+                };
+              } else {
+                environment.features[feature.featureId] = {
+                  ...(environment.defaultEnvironmentFeatureValues[
+                    feature.type
+                  ] as any),
+                  type: value,
+                };
+              }
+            });
+          }
+        }}
+      />
       <Radio.Group
         name="scheduled"
-        label="Scheduled Type"
+        label="Schedule Type"
         value={feature?.scheduleType || ""}
         onChange={(event) => {
           if (
-            (event === "global" || event === "environment" || event === "") &&
+            (event === "" || event === "global" || event === "environment") &&
             feature
           ) {
             feature.scheduleType = event;
@@ -213,9 +198,32 @@ export function EditFeature() {
         <Flex mt="sm" mb="lg" align="center" justify="center" gap="3rem">
           <Radio value="" label="None" />
           <Radio value="global" label="Global" />
-          <Radio value="number" label="Number" />
+          <Radio value="environment" label="Per Environment" />
         </Flex>
       </Radio.Group>
+      {!!feature?.scheduleType && feature?.scheduleType === "global" && (
+        <ScheduledForm
+          featureSchedule={
+            environments[0].features?.[feature?.featureId || ""].schedule || {
+              start: Date.now(),
+              end: Date.now(),
+              timezone: "UTC",
+              timeType: "none",
+              startTime: 0,
+              endTime: 0,
+            }
+          }
+          onChange={(newSchedule) => {
+            environments.forEach((environment) => {
+              const environmentFeature =
+                environment.features?.[feature?.featureId || ""];
+              if (environmentFeature) {
+                environmentFeature.schedule = newSchedule;
+              }
+            });
+          }}
+        />
+      )}
 
       {environments?.length > 0 &&
         environments[0].features?.[feature?.featureId || ""]?.type ===
@@ -317,7 +325,6 @@ export function EditFeature() {
                 />
               </>
             )}
-
             {featureDetails?.type === "selective" && (
               <SelectiveList
                 items={
@@ -333,6 +340,25 @@ export function EditFeature() {
                 }}
               />
             )}
+
+            {!!feature?.scheduleType &&
+              feature?.scheduleType === "environment" && (
+                <ScheduledForm
+                  featureSchedule={
+                    featureDetails.schedule || {
+                      start: Date.now(),
+                      end: Date.now(),
+                      timezone: "UTC",
+                      timeType: "none",
+                      startTime: 0,
+                      endTime: 0,
+                    }
+                  }
+                  onChange={(newSchedule) => {
+                    featureDetails.schedule = newSchedule;
+                  }}
+                />
+              )}
           </div>
         );
       })}

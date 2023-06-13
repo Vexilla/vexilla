@@ -7,6 +7,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import App from "./App.tsx";
 
 import { Home } from "./routes/Home";
+import { AuthCallback } from "./routes/auth/AuthCallback";
 import { Configuration } from "./routes/Configuration";
 import { Publish } from "./routes/Publish";
 import { EditEnvironment } from "./routes/environments/EditEnvironment.tsx";
@@ -26,6 +27,10 @@ const router = createBrowserRouter(
         {
           path: "/",
           element: <Home />,
+        },
+        {
+          path: "/auth/callback/:provider",
+          element: <AuthCallback />,
         },
         {
           path: "/configuration",
@@ -56,9 +61,7 @@ const router = createBrowserRouter(
 );
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
-    <MantineProvider withNormalizeCSS withGlobalStyles>
-      <RouterProvider router={router} />
-    </MantineProvider>
-  </React.StrictMode>
+  <MantineProvider withNormalizeCSS withGlobalStyles>
+    <RouterProvider router={router} />
+  </MantineProvider>
 );

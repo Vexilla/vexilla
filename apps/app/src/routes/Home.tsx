@@ -27,7 +27,7 @@ export function Home() {
 
         <Timeline.Item bullet={3} title="Then, create your feature flags.">
           <Text color="dimmed" size="sm">
-            (Toggle, Gradual, Scheduled, etc.)
+            (Toggle, Gradual, Selective, etc.)
           </Text>
         </Timeline.Item>
       </Timeline>

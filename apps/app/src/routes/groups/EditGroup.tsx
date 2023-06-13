@@ -32,27 +32,31 @@ enum FormFields {
 
 const DefaultEnvironmentDefaults: DefaultFeatureValues = {
   toggle: {
+    featureId: nanoid(),
     type: "toggle",
     value: false,
-    isScheduled: false,
+    scheduleType: "",
   } as VexillaToggleFeature,
   gradual: {
+    featureId: nanoid(),
     type: "gradual",
     seed: 0,
     value: 0,
-    isScheduled: false,
+    scheduleType: "",
   } as VexillaGradualFeature,
   selective: {
+    featureId: nanoid(),
     type: "selective",
     valueType: "string",
     value: [],
-    isScheduled: false,
+    scheduleType: "",
   } as VexillaSelectiveFeature,
   value: {
+    featureId: nanoid(),
     type: "value",
     valueType: "string",
     value: "",
-    isScheduled: false,
+    scheduleType: "",
   } as VexillaValueFeature,
 } as const;
 
@@ -68,26 +72,26 @@ export function EditGroup() {
   const environments = group?.environments || [];
   const features = group?.features || [];
 
-  const form = useForm({
-    initialValues: {
-      [FormFields.name]: group?.name || "",
-    },
-    validate: {
-      [FormFields.name]: (value) =>
-        (!!value ? null : "Invalid Name") ||
-        groups.filter(
-          (_group) =>
-            _group.name.toLocaleLowerCase() === value.toLocaleLowerCase()
-        ).length < 1
-          ? null
-          : "Duplicate Name",
-    },
-    validateInputOnChange: true,
-  });
+  // const form = useForm({
+  //   initialValues: {
+  //     [FormFields.name]: group?.name || "",
+  //   },
+  //   validate: {
+  //     [FormFields.name]: (value) =>
+  //       (!!value ? null : "Invalid Name") ||
+  //       groups.filter(
+  //         (_group) =>
+  //           _group.name.toLocaleLowerCase() === value.toLocaleLowerCase()
+  //       ).length < 1
+  //         ? null
+  //         : "Duplicate Name",
+  //   },
+  //   validateInputOnChange: true,
+  // });
 
-  useEffect(() => {
-    form.setFieldValue(FormFields.name, group?.name || "");
-  }, [group]);
+  // useEffect(() => {
+  //   form.setFieldValue(FormFields.name, group?.name || "");
+  // }, [group?.name]);
 
   return (
     <PageLayout>
@@ -113,18 +117,14 @@ export function EditGroup() {
       {!!group && (
         <>
           <h2>Edit Group</h2>
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
+          <TextInput
+            className="mb-8"
+            label={"Name"}
+            defaultValue={group?.name}
+            onChange={(event) => {
+              group.name = event.currentTarget.value;
             }}
-            onChange={(event) => {}}
-            className="flex flex-col gap-8 mb-8"
-          >
-            <TextInput
-              label={"Name"}
-              {...form.getInputProps(FormFields.name)}
-            />
-          </form>
+          />
           <Flex direction="row" gap={"1rem"}>
             <Box w="50%">
               <CustomList<Environment>
@@ -173,6 +173,7 @@ export function EditGroup() {
                     name: `Feature ${features.length + 1}`,
                     featureId: nanoid(),
                     type: "toggle",
+                    scheduleType: "",
                   });
                 }}
                 listItem={(feature) => (

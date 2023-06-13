@@ -6,7 +6,13 @@ const CONFIG_KEY = "config";
 export const config = proxy<AppState>(
   JSON.parse(localStorage.getItem(CONFIG_KEY) || "false") || {
     groups: [],
-    hosting: undefined,
+    hosting: {
+      provider: "",
+      config: {
+        provider: "",
+        providerType: "",
+      },
+    },
     existingFeatures: {},
   }
 );

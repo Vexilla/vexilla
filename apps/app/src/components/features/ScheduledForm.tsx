@@ -30,7 +30,7 @@ import timezone from "dayjs/plugin/timezone";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-import { VexillaScheduledFeature } from "@vexilla/types";
+import { VexillaSchedule } from "@vexilla/types";
 
 import { Icon } from "@iconify/react";
 import clockCircleBroken from "@iconify/icons-solar/clock-circle-broken";
@@ -39,22 +39,28 @@ const timezones = Intl.supportedValuesOf("timeZone");
 timezones.unshift("UTC");
 
 interface ScheduledFormProps {
-  feature: VexillaScheduledFeature;
-  onChange: (newFeature: VexillaScheduledFeature) => void | Promise<void>;
+  featureSchedule: VexillaSchedule;
+  onChange: (newFeature: VexillaSchedule) => void | Promise<void>;
 }
 
-export function ScheduledForm({ feature, onChange }: ScheduledFormProps) {
+export function ScheduledForm({
+  featureSchedule,
+  onChange,
+}: ScheduledFormProps) {
   const startTimeRef = useRef<HTMLInputElement>(null);
   const endTimeRef = useRef<HTMLInputElement>(null);
 
   let datePickerValue: [Date | null, Date | null] | undefined = undefined;
 
-  if (feature.start && feature.end) {
-    datePickerValue = [new Date(feature.start), new Date(feature.end)];
-  } else if (feature.start) {
-    datePickerValue = [new Date(feature.start), null];
-  } else if (feature.end) {
-    datePickerValue = [null, new Date(feature.end)];
+  if (featureSchedule.start && featureSchedule.end) {
+    datePickerValue = [
+      new Date(featureSchedule.start),
+      new Date(featureSchedule.end),
+    ];
+  } else if (featureSchedule.start) {
+    datePickerValue = [new Date(featureSchedule.start), null];
+  } else if (featureSchedule.end) {
+    datePickerValue = [null, new Date(featureSchedule.end)];
   }
 
   return (
@@ -68,7 +74,7 @@ export function ScheduledForm({ feature, onChange }: ScheduledFormProps) {
             console.log("dates", { event });
             const [newStartDate, newEndDate] = event;
             onChange({
-              ...feature,
+              ...featureSchedule,
               start: newStartDate?.getTime() || null,
               end: newEndDate?.getTime() || null,
             });
@@ -79,30 +85,32 @@ export function ScheduledForm({ feature, onChange }: ScheduledFormProps) {
         <Select
           label="Timezone"
           data={timezones}
-          value={feature.timezone || "UTC"}
+          value={featureSchedule.timezone || "UTC"}
         />
         <Input.Label className="block mt-2">Specific times</Input.Label>
         <SegmentedControl
           className="mb-1"
           fullWidth
-          value={feature.timeType}
+          value={featureSchedule.timeType}
           data={["none", "start/end", "daily"].map((value) => ({
             label: Case.capital(value).replace(" ", "/"),
             value,
           }))}
           onChange={(event: "none" | "start/end" | "daily") => {
             onChange({
-              ...feature,
+              ...featureSchedule,
               timeType: event,
             });
           }}
         />
-        {feature.timeType && feature.timeType !== "none" && (
+        {featureSchedule.timeType && featureSchedule.timeType !== "none" && (
           <>
             <TimeInput
               label="Start Time"
               ref={startTimeRef}
-              value={dayjs.utc(feature.startTime).format("HH:mm") || "00:00"}
+              value={
+                dayjs.utc(featureSchedule.startTime).format("HH:mm") || "00:00"
+              }
               rightSection={
                 <ActionIcon onClick={() => startTimeRef?.current?.showPicker()}>
                   <Icon icon={clockCircleBroken} />
@@ -120,7 +128,7 @@ export function ScheduledForm({ feature, onChange }: ScheduledFormProps) {
                 newStartTime = newStartTime.set("minutes", minutes);
 
                 onChange({
-                  ...feature,
+                  ...featureSchedule,
                   startTime: newStartTime.unix() * 1000,
                 });
               }}
@@ -129,7 +137,9 @@ export function ScheduledForm({ feature, onChange }: ScheduledFormProps) {
             <TimeInput
               label="End Time"
               ref={endTimeRef}
-              value={dayjs.utc(feature.endTime).format("HH:mm") || "00:00"}
+              value={
+                dayjs.utc(featureSchedule.endTime).format("HH:mm") || "00:00"
+              }
               rightSection={
                 <ActionIcon onClick={() => endTimeRef?.current?.showPicker()}>
                   <Icon icon={clockCircleBroken} />
@@ -147,7 +157,7 @@ export function ScheduledForm({ feature, onChange }: ScheduledFormProps) {
                 newEndTime = newEndTime.set("minutes", minutes);
 
                 onChange({
-                  ...feature,
+                  ...featureSchedule,
                   endTime: newEndTime.unix() * 1000,
                 });
               }}

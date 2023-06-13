@@ -43,26 +43,26 @@ export function EditEnvironment() {
     (_environment) => _environment.environmentId === params.environmentId
   );
 
-  const form = useForm({
-    initialValues: {
-      [FormFields.name]: environment?.name || "",
-    },
-    validate: {
-      [FormFields.name]: (value) =>
-        (!!value ? null : "Invalid Name") ||
-        environments.filter(
-          (_environment) =>
-            _environment.name.toLocaleLowerCase() === value.toLocaleLowerCase()
-        ).length < 1
-          ? null
-          : "Duplicate Name",
-    },
-    validateInputOnChange: true,
-  });
+  // const form = useForm({
+  //   initialValues: {
+  //     [FormFields.name]: environment?.name || "",
+  //   },
+  //   validate: {
+  //     [FormFields.name]: (value) =>
+  //       (!!value ? null : "Invalid Name") ||
+  //       environments.filter(
+  //         (_environment) =>
+  //           _environment.name.toLocaleLowerCase() === value.toLocaleLowerCase()
+  //       ).length < 1
+  //         ? null
+  //         : "Duplicate Name",
+  //   },
+  //   validateInputOnChange: true,
+  // });
 
-  useEffect(() => {
-    form.setFieldValue(FormFields.name, environment?.name || "");
-  }, [environment?.name]);
+  // useEffect(() => {
+  //   form.setFieldValue(FormFields.name, environment?.name || "");
+  // }, [environment?.name]);
 
   return (
     <PageLayout>
@@ -79,22 +79,16 @@ export function EditEnvironment() {
         </Button>
       </Box>
       <h2>Edit Environment</h2>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
+      <TextInput
+        className="mb-8"
+        defaultValue={environment?.name}
+        label={"Name"}
+        onChange={(event) => {
+          if (environment) {
+            environment.name = event.target.value;
+          }
         }}
-        className="flex flex-col gap-8 mb-8"
-      >
-        <TextInput
-          {...form.getInputProps(FormFields.name)}
-          label={"Name"}
-          onChange={(event) => {
-            if (environment) {
-              environment.name = event.target.value;
-            }
-          }}
-        />
-      </form>
+      />
       <Flex direction="row" align="center">
         <h3>Defaults</h3>
         <CustomTooltip
@@ -146,26 +140,6 @@ export function EditEnvironment() {
           if (environment) {
             environment.defaultEnvironmentFeatureValues.gradual.value =
               newValue;
-          }
-        }}
-      />
-
-      <h4>Scheduled</h4>
-      <ScheduledForm
-        feature={
-          environment?.defaultEnvironmentFeatureValues.scheduled || {
-            type: "scheduled",
-            start: 0,
-            end: 0,
-            timeType: "none",
-            timezone: "UTC",
-            startTime: 0,
-            endTime: 0,
-          }
-        }
-        onChange={(newFeature) => {
-          if (environment) {
-            environment.defaultEnvironmentFeatureValues.scheduled = newFeature;
           }
         }}
       />
