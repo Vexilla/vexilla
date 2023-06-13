@@ -3,15 +3,44 @@ import { HostingConfigS3 } from "./hosting-adapters/s3.adapter";
 import { HostingConfigAzure } from "./hosting-adapters/azure.adapter";
 import { HostingConfigGcloud } from "./hosting-adapters/gcloud.adapter";
 import { HostingConfigFirebase } from "./hosting-adapters/firebase.adapter";
+import { HostingConfigGithub } from "./git-adapters/github";
 
-export type HostingProvider = "s3" | "azure" | "gcloud" | "firebase" | null;
+export type HostingProvider =
+  | ""
+  // git providers
+  | "github"
+  // direct providers
+  | "s3"
+  | "azure"
+  | "gcloud"
+  | "firebase";
 
-export type HostingConfig =
-  | (HostingConfigS3 &
-      HostingConfigAzure &
-      HostingConfigGcloud &
-      HostingConfigFirebase)
-  | null;
+export type HostingProviderType = "" | "git" | "direct";
+
+export interface HostingConfigBase {
+  provider: HostingProvider;
+  providerType: HostingProviderType;
+}
+
+export interface HostingConfigGitBase extends HostingConfigBase {
+  accessToken: string;
+  repositoryId: string;
+  targetBranch: string;
+  shouldCreatePullRequest: boolean;
+  branchNamePrefix: string;
+}
+
+export interface HostingConfigEmpty extends HostingConfigBase {
+  provider: "";
+  providerType: "";
+}
+
+export type HostingConfig = HostingConfigEmpty &
+  HostingConfigS3 &
+  HostingConfigAzure &
+  HostingConfigGcloud &
+  HostingConfigFirebase &
+  HostingConfigGithub;
 
 export interface HostingStatus {
   message: string;
@@ -23,5 +52,15 @@ export interface HostingStatus {
 export interface HostingAdapter {
   provider: HostingProvider;
   config: HostingConfig;
-  status: HostingStatus | null;
+  status?: HostingStatus;
+}
+
+export interface HostingAdapterBase {
+  fetchFeatures: (config: HostingConfig) => Promise<any>;
+  isConfigValid: (config: HostingConfig) => boolean;
+  publish: (payload: any, config: HostingConfig) => Promise<void>;
+}
+
+export interface HostingAdapterGit extends HostingAdapterBase {
+  getRepos: (config: HostingConfig) => Promise<any>;
 }

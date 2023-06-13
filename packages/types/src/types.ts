@@ -52,7 +52,6 @@ export interface Feature {
   name: string;
   featureId: string;
   type: VexillaFeatureTypeString;
-  isScheduled: boolean;
   scheduleType: "" | "global" | "environment";
 }
 

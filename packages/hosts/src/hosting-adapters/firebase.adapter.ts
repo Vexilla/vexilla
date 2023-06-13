@@ -1,8 +1,11 @@
 import { Readable } from "stream";
 // import { Storage } from "@google-cloud/storage";
 import axios from "axios";
+import { HostingConfigBase } from "../types";
 
-export interface HostingConfigFirebase {
+export interface HostingConfigFirebase extends HostingConfigBase {
+  provider: "firebase";
+  providerType: "direct";
   remoteUrl: string;
   bucketName: string;
   apiKey: string;
@@ -22,7 +25,7 @@ export class FirebaseAdapter {
         `https://storage.googleapis.com/upload/storage/v1/b/${config.bucketName}/o?name=features.json&uploadType=media&key=${config.apiKey}`,
         payload
       )
-      .then(result => {
+      .then((result) => {
         console.log({ result });
         return result;
       });
@@ -43,7 +46,7 @@ export class FirebaseAdapter {
     writableStream: any,
     jsonString: string
   ): Promise<any> {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
       console.log("made it into writeWriteable");
       Readable.from(jsonString)
         .pipe(writableStream as any)

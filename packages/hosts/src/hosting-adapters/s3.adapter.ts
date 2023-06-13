@@ -1,9 +1,12 @@
 // import { S3Client, S3ClientConfig, PutObjectCommand } from "@aws-sdk/client-s3";
+import { HostingConfigBase } from "../types";
 
 import { S3 } from "aws-sdk";
 import axios from "axios";
 
-export interface HostingConfigS3 {
+export interface HostingConfigS3 extends HostingConfigBase {
+  provider: "s3";
+  providerType: "direct";
   region: string;
   bucketName: string;
   accessKeyId: string;
@@ -14,7 +17,7 @@ export class S3Adapter {
   static fetchFeatures(config: HostingConfigS3) {
     const fileUrl = `https://${config.bucketName}.s3.amazonaws.com/features.json`;
 
-    return axios.get(fileUrl).catch(error => {
+    return axios.get(fileUrl).catch((error) => {
       console.log("Error fetching Features");
       return "foo";
     });
@@ -37,14 +40,14 @@ export class S3Adapter {
     const s3 = new S3({
       credentials: {
         accessKeyId: config.accessKeyId,
-        secretAccessKey: config.secretAccessKey
-      }
+        secretAccessKey: config.secretAccessKey,
+      },
     });
     const params = {
       ACL: "public-read",
       Body: JSON.stringify(payload),
       Bucket: config.bucketName,
-      Key: "features.json"
+      Key: "features.json",
     };
     const data = await s3
       .putObject(params)

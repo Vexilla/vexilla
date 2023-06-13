@@ -1,4 +1,8 @@
-export interface HostingConfigGcloud {
+import { HostingConfigBase } from "../types";
+
+export interface HostingConfigGcloud extends HostingConfigBase {
+  provider: "gcloud";
+  providerType: "direct";
   bucket: string;
   accessKey: string;
   secretAccessKey: string;

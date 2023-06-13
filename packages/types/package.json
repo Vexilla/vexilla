@@ -6,6 +6,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",
+    "watch": "nodemon -e *.ts -w src --exec \"pnpm build\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -15,6 +16,7 @@
     "@vexilla/hosts": "workspace:*"
   },
   "devDependencies": {
+    "nodemon": "^2.0.22",
     "typescript": "^5.0.4"
   }
 }
