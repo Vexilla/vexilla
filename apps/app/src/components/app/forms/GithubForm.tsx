@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { Button, Timeline, Select, ActionIcon, Flex } from "@mantine/core";
 import { AppState } from "@vexilla/types";
 
-import { fetchInstallations, fetchRepositories } from "./GithubForm.fetchers";
-import { Installation, Repository } from "./GithubForm.types";
+import { GitHubMethods } from "./GithubForm.fetchers";
+import { Branch, Installation, Repository } from "./GithubForm.types";
 
 import { GithubLogo } from "../../logos/GithubLogo";
 
@@ -33,13 +33,32 @@ const disabledButtonStyling = {
 };
 
 export function GithubForm({ config, updateConfig }: GithubFormProps) {
-  const { accessToken, installationId, repositoryId } =
+  const {
+    accessToken,
+    installationId,
+    repositoryId,
+    repositoryName,
+    owner,
+    targetBranch,
+  } =
     config.hosting.provider === "github"
       ? config.hosting.config
-      : { accessToken: "", installationId: "", repositoryId: "" };
+      : {
+          accessToken: "",
+          installationId: "",
+          repositoryId: "",
+          repositoryName: "",
+          owner: "",
+          targetBranch: "",
+        };
   const [installations, setInstallations] = useState<Installation[]>([]);
   const [repositories, setRepositories] = useState<Repository[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
   const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now());
+
+  const githubMethods = useMemo(() => {
+    return new GitHubMethods(accessToken, owner, repositoryName);
+  }, [accessToken, owner, repositoryName]);
 
   function refresh() {
     setRefreshTimestamp(Date.now());
@@ -74,17 +93,17 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
     async function fetchData() {
       try {
         if (accessToken && config.hosting.provider === "github") {
-          const installations = await fetchInstallations(accessToken);
-          setInstallations(installations);
+          const installationsResponse =
+            await githubMethods.fetchInstallations();
+          setInstallations(installationsResponse.installations);
           if (installations.length === 1) {
             config.hosting.config.installationId = `${installations[0].id}`;
           }
           if (installationId) {
-            const repositories = await fetchRepositories(
-              accessToken,
+            const repositoriesResponse = await githubMethods.fetchRepositories(
               installationId
             );
-            setRepositories(repositories);
+            setRepositories(repositoriesResponse.repositories);
             if (repositories.length === 1) {
               config.hosting.config.repositoryId = `${repositories[0].id}`;
             }
@@ -97,6 +116,30 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
     }
     fetchData();
   }, [accessToken, installationId, refreshTimestamp]);
+
+  useEffect(() => {
+    async function getBranches() {
+      if (accessToken && repositoryName && owner) {
+        const fetchedBranches = await githubMethods.fetchBranches();
+
+        setBranches(fetchedBranches);
+        if (
+          fetchedBranches.length === 1 &&
+          config.hosting.provider === "github"
+        ) {
+          console.log("fetchedBranches", fetchedBranches);
+          config.hosting.config.targetBranch = fetchedBranches[0].name;
+        }
+      } else {
+        console.log("One of these isn't what it should be", {
+          accessToken,
+          repositoryName,
+          owner,
+        });
+      }
+    }
+    getBranches();
+  }, [accessToken, owner, repositoryName]);
 
   return (
     <Timeline active={activeElement}>
@@ -202,7 +245,12 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
           onChange={(selectedRepositoryId) => {
             console.log({ selectedRepositoryId });
             if (config.hosting.provider === "github") {
-              config.hosting.config.repositoryId = repositoryId;
+              config.hosting.config.repositoryId = `${selectedRepositoryId}`;
+              const repository = repositories.find(
+                (repository) => `${repository.id}` === selectedRepositoryId
+              );
+              config.hosting.config.owner = repository?.owner.login || "";
+              config.hosting.config.repositoryName = repository?.name || "";
             }
           }}
           data={repositories.map((repository) => ({
@@ -212,11 +260,27 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
         />
 
         <a
+          className="flex p-2 text-center w-full items-center justify-center g q"
           href={`https://github.com/apps/${githubAppName}/installations/new`}
           target="_blank"
         >
-          Edit your installations <Icon icon={squareArrowRightUpBroken} />
+          Edit your installation's repository access{" "}
+          <Icon icon={squareArrowRightUpBroken} />
         </a>
+      </Timeline.Item>
+      <Timeline.Item title="Target Branch">
+        <Select
+          value={targetBranch}
+          onChange={(selectedBranchName) => {
+            if (config.hosting.provider === "github") {
+              config.hosting.config.targetBranch = selectedBranchName || "";
+            }
+          }}
+          data={branches.map((branch) => ({
+            label: branch.name,
+            value: branch.name,
+          }))}
+        />
       </Timeline.Item>
     </Timeline>
   );

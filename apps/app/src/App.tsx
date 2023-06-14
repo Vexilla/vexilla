@@ -21,6 +21,8 @@ import { CustomList, CustomListItem } from "./components/CustomList";
 import { OnboardingForm } from "./components/app/OnboardingForm";
 import { Status } from "./components/Status";
 
+import { Octokit } from "octokit";
+
 import "./App.css";
 
 function App() {
@@ -129,19 +131,10 @@ function App() {
               </Flex>
               <Button
                 onClick={async () => {
-                  const result = await fetch(
-                    "https://api.github.com/user/repos",
-                    {
-                      method: "GET",
-
-                      headers: {
-                        Accept: "application/vnd.github+json",
-                        Authorization: `Bearer ${config.hosting?.config?.accessToken}`,
-                      },
-                    }
-                  );
-
-                  console.log("response", await result.json());
+                  //
+                  // console.log("response", await result.json());
+                  if (config.hosting.provider === "github") {
+                  }
                 }}
               >
                 Publish

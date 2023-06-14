@@ -4,6 +4,8 @@ export interface HostingConfigGithub extends HostingConfigGitBase {
   provider: "github";
   providerType: "git";
   installationId: string;
+  repositoryName: string;
+  owner: string;
 }
 
 export const GitHubAdapter = {

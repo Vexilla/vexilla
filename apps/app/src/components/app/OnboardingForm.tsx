@@ -60,7 +60,12 @@ export function OnboardingForm({
       />
 
       <Flex py={"2rem"} px={"1rem"}>
-        {formComponent({ config })}
+        {formComponent({
+          config,
+          updateConfig: () => {
+            console.log("update config");
+          },
+        })}
       </Flex>
     </div>
   );

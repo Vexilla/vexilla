@@ -69,6 +69,16 @@ export interface HostingGithub extends HostingBase {
   config: HostingConfigGithub;
 }
 
+// export interface HostingBitbucket extends HostingBase {
+//   provider: "github";
+//   config: HostingConfigBitbucket;
+// }
+
+export interface HostingGithub extends HostingBase {
+  provider: "github";
+  config: HostingConfigGithub;
+}
+
 export type Hosting = HostingEmpty | HostingGithub;
 
 export interface HostingAdapterBase {

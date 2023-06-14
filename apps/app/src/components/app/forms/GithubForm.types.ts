@@ -610,3 +610,712 @@ export interface LicenseSimple {
   html_url?: string;
   [k: string]: unknown;
 }
+
+/**
+ * Short Branch
+ */
+export interface Branch {
+  name: string;
+  commit: {
+    sha: string;
+    url: string;
+    [k: string]: unknown;
+  };
+  protected: boolean;
+  protection?: BranchProtection;
+  protection_url?: string;
+  [k: string]: unknown;
+}
+/**
+ * Branch Protection
+ */
+export interface BranchProtection {
+  url?: string;
+  enabled?: boolean;
+  required_status_checks?: ProtectedBranchRequiredStatusCheck;
+  enforce_admins?: ProtectedBranchAdminEnforced;
+  required_pull_request_reviews?: ProtectedBranchPullRequestReview;
+  restrictions?: BranchRestrictionPolicy;
+  required_linear_history?: {
+    enabled?: boolean;
+    [k: string]: unknown;
+  };
+  allow_force_pushes?: {
+    enabled?: boolean;
+    [k: string]: unknown;
+  };
+  allow_deletions?: {
+    enabled?: boolean;
+    [k: string]: unknown;
+  };
+  block_creations?: {
+    enabled?: boolean;
+    [k: string]: unknown;
+  };
+  required_conversation_resolution?: {
+    enabled?: boolean;
+    [k: string]: unknown;
+  };
+  name?: string;
+  protection_url?: string;
+  required_signatures?: {
+    url: string;
+    enabled: boolean;
+    [k: string]: unknown;
+  };
+  /**
+   * Whether to set the branch as read-only. If this is true, users will not be able to push to the branch.
+   */
+  lock_branch?: {
+    enabled?: boolean;
+    [k: string]: unknown;
+  };
+  /**
+   * Whether users can pull changes from upstream when the branch is locked. Set to `true` to allow fork syncing. Set to `false` to prevent fork syncing.
+   */
+  allow_fork_syncing?: {
+    enabled?: boolean;
+    [k: string]: unknown;
+  };
+  [k: string]: unknown;
+}
+/**
+ * Protected Branch Required Status Check
+ */
+export interface ProtectedBranchRequiredStatusCheck {
+  url?: string;
+  enforcement_level?: string;
+  contexts: string[];
+  checks: {
+    context: string;
+    app_id: number | null;
+    [k: string]: unknown;
+  }[];
+  contexts_url?: string;
+  strict?: boolean;
+  [k: string]: unknown;
+}
+/**
+ * Protected Branch Admin Enforced
+ */
+export interface ProtectedBranchAdminEnforced {
+  url: string;
+  enabled: boolean;
+  [k: string]: unknown;
+}
+/**
+ * Protected Branch Pull Request Review
+ */
+export interface ProtectedBranchPullRequestReview {
+  url?: string;
+  dismissal_restrictions?: {
+    /**
+     * The list of users with review dismissal access.
+     */
+    users?: SimpleUser[];
+    /**
+     * The list of teams with review dismissal access.
+     */
+    teams?: Team[];
+    /**
+     * The list of apps with review dismissal access.
+     */
+    apps?: GitHubApp[];
+    url?: string;
+    users_url?: string;
+    teams_url?: string;
+    [k: string]: unknown;
+  };
+  /**
+   * Allow specific users, teams, or apps to bypass pull request requirements.
+   */
+  bypass_pull_request_allowances?: {
+    /**
+     * The list of users allowed to bypass pull request requirements.
+     */
+    users?: SimpleUser[];
+    /**
+     * The list of teams allowed to bypass pull request requirements.
+     */
+    teams?: Team[];
+    /**
+     * The list of apps allowed to bypass pull request requirements.
+     */
+    apps?: GitHubApp[];
+    [k: string]: unknown;
+  };
+  dismiss_stale_reviews: boolean;
+  require_code_owner_reviews: boolean;
+  required_approving_review_count?: number;
+  /**
+   * Whether the most recent push must be approved by someone other than the person who pushed it.
+   */
+  require_last_push_approval?: boolean;
+  [k: string]: unknown;
+}
+/**
+ * Groups of organization members that gives permissions on specified repositories.
+ */
+export interface Team {
+  id: number;
+  node_id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  privacy?: string;
+  notification_setting?: string;
+  permission: string;
+  permissions?: {
+    pull: boolean;
+    triage: boolean;
+    push: boolean;
+    maintain: boolean;
+    admin: boolean;
+    [k: string]: unknown;
+  };
+  url: string;
+  html_url: string;
+  members_url: string;
+  repositories_url: string;
+  parent: null | TeamSimple;
+  [k: string]: unknown;
+}
+/**
+ * Groups of organization members that gives permissions on specified repositories.
+ */
+export interface TeamSimple {
+  /**
+   * Unique identifier of the team
+   */
+  id: number;
+  node_id: string;
+  /**
+   * URL for the team
+   */
+  url: string;
+  members_url: string;
+  /**
+   * Name of the team
+   */
+  name: string;
+  /**
+   * Description of the team
+   */
+  description: string | null;
+  /**
+   * Permission that the team will have for its repositories
+   */
+  permission: string;
+  /**
+   * The level of privacy this team should have
+   */
+  privacy?: string;
+  /**
+   * The notification setting the team has set
+   */
+  notification_setting?: string;
+  html_url: string;
+  repositories_url: string;
+  slug: string;
+  /**
+   * Distinguished Name (DN) that team maps to within LDAP environment
+   */
+  ldap_dn?: string;
+  [k: string]: unknown;
+}
+/**
+ * GitHub apps are a new way to extend GitHub. They can be installed directly on organizations and user accounts and granted access to specific repositories. They come with granular permissions and built-in webhooks. GitHub apps are first class actors within GitHub.
+ */
+export interface GitHubApp {
+  /**
+   * Unique identifier of the GitHub app
+   */
+  id: number;
+  /**
+   * The slug name of the GitHub app
+   */
+  slug?: string;
+  node_id: string;
+  owner: null | SimpleUser;
+  /**
+   * The name of the GitHub app
+   */
+  name: string;
+  description: string | null;
+  external_url: string;
+  html_url: string;
+  created_at: string;
+  updated_at: string;
+  /**
+   * The set of permissions for the GitHub app
+   */
+  permissions: {
+    issues?: string;
+    checks?: string;
+    metadata?: string;
+    contents?: string;
+    deployments?: string;
+    [k: string]: string;
+  };
+  /**
+   * The list of events for the GitHub app
+   */
+  events: string[];
+  /**
+   * The number of installations associated with the GitHub app
+   */
+  installations_count?: number;
+  client_id?: string;
+  client_secret?: string;
+  webhook_secret?: string | null;
+  pem?: string;
+  [k: string]: unknown;
+}
+/**
+ * Branch Restriction Policy
+ */
+export interface BranchRestrictionPolicy {
+  url: string;
+  users_url: string;
+  teams_url: string;
+  apps_url: string;
+  users: {
+    login?: string;
+    id?: number;
+    node_id?: string;
+    avatar_url?: string;
+    gravatar_id?: string;
+    url?: string;
+    html_url?: string;
+    followers_url?: string;
+    following_url?: string;
+    gists_url?: string;
+    starred_url?: string;
+    subscriptions_url?: string;
+    organizations_url?: string;
+    repos_url?: string;
+    events_url?: string;
+    received_events_url?: string;
+    type?: string;
+    site_admin?: boolean;
+    [k: string]: unknown;
+  }[];
+  teams: {
+    id?: number;
+    node_id?: string;
+    url?: string;
+    html_url?: string;
+    name?: string;
+    slug?: string;
+    description?: string | null;
+    privacy?: string;
+    notification_setting?: string;
+    permission?: string;
+    members_url?: string;
+    repositories_url?: string;
+    parent?: string | null;
+    [k: string]: unknown;
+  }[];
+  apps: {
+    id?: number;
+    slug?: string;
+    node_id?: string;
+    owner?: {
+      login?: string;
+      id?: number;
+      node_id?: string;
+      url?: string;
+      repos_url?: string;
+      events_url?: string;
+      hooks_url?: string;
+      issues_url?: string;
+      members_url?: string;
+      public_members_url?: string;
+      avatar_url?: string;
+      description?: string;
+      gravatar_id?: string;
+      html_url?: string;
+      followers_url?: string;
+      following_url?: string;
+      gists_url?: string;
+      starred_url?: string;
+      subscriptions_url?: string;
+      organizations_url?: string;
+      received_events_url?: string;
+      type?: string;
+      site_admin?: boolean;
+      [k: string]: unknown;
+    };
+    name?: string;
+    description?: string;
+    external_url?: string;
+    html_url?: string;
+    created_at?: string;
+    updated_at?: string;
+    permissions?: {
+      metadata?: string;
+      contents?: string;
+      issues?: string;
+      single_file?: string;
+      [k: string]: unknown;
+    };
+    events?: string[];
+    [k: string]: unknown;
+  }[];
+  [k: string]: unknown;
+}
+
+export type TreeObjectType = "blob" | "tree" | "commit";
+export type TreeObjectMode =
+  | "100644"
+  | "100755"
+  | "040000"
+  | "160000"
+  | "120000";
+
+export interface TreeObject {
+  path: string;
+  mode: TreeObjectMode;
+  type: TreeObjectType;
+  size: number;
+  sha: string;
+  url: string;
+}
+
+export interface CreateTreeResponse {
+  sha: string;
+  url: string;
+  tree: TreeObject[];
+  truncated: boolean;
+}
+
+export interface CreateBranchResponse {
+  ref: string;
+  node_id: string;
+  url: string;
+  object: {
+    type: TreeObjectType;
+    sha: string;
+    url: string;
+  };
+}
+
+export type VerificationReason =
+  | "expired_key"
+  | "not_signing_key"
+  | "gpgverify_error"
+  | "gpgverify_unavailable"
+  | "unsigned"
+  | "unknown_signature_type"
+  | "no_user"
+  | "unverified_email"
+  | "bad_email"
+  | "unknown_key"
+  | "malformed_signature"
+  | "invalid"
+  | "valid";
+
+export interface CreateCommitResponse {
+  sha: string;
+  node_id: string;
+  url: string;
+  author: {
+    date: string;
+    name: string;
+    email: string;
+  };
+  committer: {
+    date: string;
+    name: string;
+    email: string;
+  };
+  message: string;
+  tree: {
+    url: string;
+    sha: string;
+  };
+  parents: {
+    url: string;
+    html_url: string;
+  }[];
+  verification: {
+    verified: boolean;
+    reason: VerificationReason;
+    signature: string | null;
+    payload: string | null;
+  };
+  html_url: string;
+}
+
+export interface CreatePullRequestResponse {
+  url: string;
+  id: number;
+  node_id: string;
+  html_url: string;
+  diff_url: string;
+  patch_url: string;
+  issue_url: string;
+  commits_url: string;
+  review_comments_url: string;
+  review_comment_url: string;
+  comments_url: string;
+  statuses_url: string;
+  number: number;
+  state: string;
+  locked: boolean;
+  title: string;
+  user: SimpleUser;
+  body: string;
+  labels: Label[];
+  milestone: Milestone;
+  active_lock_reason: string;
+  created_at: string;
+  updated_at: string;
+  closed_at: string;
+  merged_at: string;
+  merge_commit_sha: string;
+  assignee: SimpleUser;
+  assignees: SimpleUser[];
+  requested_reviewers: SimpleUser[];
+  requested_teams: RequestedTeam[];
+  head: Head;
+  base: Base;
+  _links: Links;
+  author_association: string;
+  auto_merge: any;
+  draft: boolean;
+  merged: boolean;
+  mergeable: boolean;
+  rebaseable: boolean;
+  mergeable_state: string;
+  merged_by: MergedBy;
+  comments: number;
+  review_comments: number;
+  maintainer_can_modify: boolean;
+  commits: number;
+  additions: number;
+  deletions: number;
+  changed_files: number;
+}
+
+interface Label {
+  id: number;
+  node_id: string;
+  url: string;
+  name: string;
+  description: string;
+  color: string;
+  default: boolean;
+}
+
+interface Milestone {
+  url: string;
+  html_url: string;
+  labels_url: string;
+  id: number;
+  node_id: string;
+  number: number;
+  state: string;
+  title: string;
+  description: string;
+  creator: SimpleUser;
+  open_issues: number;
+  closed_issues: number;
+  created_at: string;
+  updated_at: string;
+  closed_at: string;
+  due_on: string;
+}
+
+interface RequestedTeam {
+  id: number;
+  node_id: string;
+  url: string;
+  html_url: string;
+  name: string;
+  slug: string;
+  description: string;
+  privacy: string;
+  notification_setting: string;
+  permission: string;
+  members_url: string;
+  repositories_url: string;
+}
+
+interface Head {
+  label: string;
+  ref: string;
+  sha: string;
+  user: SimpleUser;
+  repo: Repo;
+}
+
+export interface Repo {
+  id: number;
+  node_id: string;
+  name: string;
+  full_name: string;
+  owner: SimpleUser;
+  private: boolean;
+  html_url: string;
+  description: string;
+  fork: boolean;
+  url: string;
+  archive_url: string;
+  assignees_url: string;
+  blobs_url: string;
+  branches_url: string;
+  collaborators_url: string;
+  comments_url: string;
+  commits_url: string;
+  compare_url: string;
+  contents_url: string;
+  contributors_url: string;
+  deployments_url: string;
+  downloads_url: string;
+  events_url: string;
+  forks_url: string;
+  git_commits_url: string;
+  git_refs_url: string;
+  git_tags_url: string;
+  git_url: string;
+  issue_comment_url: string;
+  issue_events_url: string;
+  issues_url: string;
+  keys_url: string;
+  labels_url: string;
+  languages_url: string;
+  merges_url: string;
+  milestones_url: string;
+  notifications_url: string;
+  pulls_url: string;
+  releases_url: string;
+  ssh_url: string;
+  stargazers_url: string;
+  statuses_url: string;
+  subscribers_url: string;
+  subscription_url: string;
+  tags_url: string;
+  teams_url: string;
+  trees_url: string;
+  clone_url: string;
+  mirror_url: string;
+  hooks_url: string;
+  svn_url: string;
+  homepage: string;
+  language: any;
+  forks_count: number;
+  stargazers_count: number;
+  watchers_count: number;
+  size: number;
+  default_branch: string;
+  open_issues_count: number;
+  topics: string[];
+  has_issues: boolean;
+  has_projects: boolean;
+  has_wiki: boolean;
+  has_pages: boolean;
+  has_downloads: boolean;
+  has_discussions: boolean;
+  archived: boolean;
+  disabled: boolean;
+  pushed_at: string;
+  created_at: string;
+  updated_at: string;
+  permissions: Permissions;
+  allow_rebase_merge: boolean;
+  temp_clone_token: string;
+  allow_squash_merge: boolean;
+  allow_merge_commit: boolean;
+  allow_forking: boolean;
+  forks: number;
+  open_issues: number;
+  license: License;
+  watchers: number;
+}
+
+export interface Permissions {
+  admin: boolean;
+  push: boolean;
+  pull: boolean;
+}
+
+export interface License {
+  key: string;
+  name: string;
+  url: string;
+  spdx_id: string;
+  node_id: string;
+}
+
+interface Base {
+  label: string;
+  ref: string;
+  sha: string;
+  user: SimpleUser;
+  repo: Repo;
+}
+
+interface Links {
+  self: Self;
+  html: Html;
+  issue: Issue;
+  comments: Comments;
+  review_comments: ReviewComments;
+  review_comment: ReviewComment;
+  commits: Commits;
+  statuses: Statuses;
+}
+
+interface Self {
+  href: string;
+}
+
+interface Html {
+  href: string;
+}
+
+interface Issue {
+  href: string;
+}
+
+interface Comments {
+  href: string;
+}
+
+interface ReviewComments {
+  href: string;
+}
+
+interface ReviewComment {
+  href: string;
+}
+
+interface Commits {
+  href: string;
+}
+
+interface Statuses {
+  href: string;
+}
+
+interface MergedBy {
+  login: string;
+  id: number;
+  node_id: string;
+  avatar_url: string;
+  gravatar_id: string;
+  url: string;
+  html_url: string;
+  followers_url: string;
+  following_url: string;
+  gists_url: string;
+  starred_url: string;
+  subscriptions_url: string;
+  organizations_url: string;
+  repos_url: string;
+  events_url: string;
+  received_events_url: string;
+  type: string;
+  site_admin: boolean;
+}
