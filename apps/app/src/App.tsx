@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { Outlet } from "react-router-dom";
 import {
   AppShell,
@@ -11,17 +11,18 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useSnapshot } from "valtio";
+import { cloneDeep } from "lodash-es";
 
 import { Group } from "@vexilla/types";
 
 import { nanoid } from "./utils/nanoid";
 import { config } from "./stores/config-valtio";
 
+import { GitHubFetcher } from "./components/app/forms/GithubForm.fetchers";
+
 import { CustomList, CustomListItem } from "./components/CustomList";
 import { OnboardingForm } from "./components/app/OnboardingForm";
 import { Status } from "./components/Status";
-
-import { Octokit } from "octokit";
 
 import "./App.css";
 
@@ -33,11 +34,32 @@ function App() {
     { open: openHostingConfigModal, close: closeHostingConfigModal },
   ] = useDisclosure();
 
+  const {
+    accessToken,
+    repositoryName,
+    owner,
+    targetBranch,
+    shouldCreatePullRequest,
+    branchNamePrefix,
+  } =
+    config.hosting.provider === "github"
+      ? config.hosting.config
+      : {
+          accessToken: "",
+          repositoryName: "",
+          owner: "",
+          targetBranch: "",
+          shouldCreatePullRequest: true,
+          branchNamePrefix: "",
+        };
+
   const groups = config.groups;
 
-  useEffect(() => {
-    console.log("hosting", config.hosting);
+  const githubMethods = useMemo(() => {
+    return new GitHubFetcher(cloneDeep(config));
+  }, [accessToken, owner, repositoryName]);
 
+  useEffect(() => {
     if (!config.hosting?.provider) {
       console.log("No hosting config");
       openHostingConfigModal();
@@ -134,6 +156,12 @@ function App() {
                   //
                   // console.log("response", await result.json());
                   if (config.hosting.provider === "github") {
+                    await githubMethods.publishPullRequest(targetBranch, [
+                      {
+                        filePath: "features.json",
+                        content: JSON.stringify({ foo: "baz" }),
+                      },
+                    ]);
                   }
                 }}
               >

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { PageLayout } from "../../components/PageLayout";
 import { config } from "../../stores/config-valtio";
 
-import { useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { HostingConfig, HostingProvider } from "@vexilla/hosts";
 
 const BASE_URL = `http://localhost:5174`;
@@ -10,6 +10,7 @@ const BASE_URL = `http://localhost:5174`;
 export function AuthCallback() {
   let { provider } = useParams<{ provider: HostingProvider }>();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [isFetching, setIsFetching] = useState(false);
   const [error, setError] = useState("");
 
@@ -55,6 +56,7 @@ export function AuthCallback() {
             config.hosting.config.installationId = installationId;
           }
         }
+        navigate("/");
       } catch (e: any) {
         console.log({ e });
         setError(e?.message || "error");

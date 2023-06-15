@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { Button, Timeline, Select, ActionIcon, Flex } from "@mantine/core";
+import { cloneDeep } from "lodash-es";
+
 import { AppState } from "@vexilla/types";
 
-import { GitHubMethods } from "./GithubForm.fetchers";
+import { GitHubFetcher } from "./GithubForm.fetchers";
 import { Branch, Installation, Repository } from "./GithubForm.types";
 
 import { GithubLogo } from "../../logos/GithubLogo";
@@ -57,7 +59,7 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
   const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now());
 
   const githubMethods = useMemo(() => {
-    return new GitHubMethods(accessToken, owner, repositoryName);
+    return new GitHubFetcher(cloneDeep(config));
   }, [accessToken, owner, repositoryName]);
 
   function refresh() {
@@ -276,10 +278,21 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
               config.hosting.config.targetBranch = selectedBranchName || "";
             }
           }}
-          data={branches.map((branch) => ({
-            label: branch.name,
-            value: branch.name,
-          }))}
+          data={branches
+            .filter((branch) => {
+              if (config.hosting.provider === "github") {
+                return !branch.name.startsWith(
+                  config.hosting.config.branchNamePrefix ||
+                    "__THIS_IS_AN_INVALID_PREFIX__"
+                );
+              } else {
+                return false;
+              }
+            })
+            .map((branch) => ({
+              label: branch.name,
+              value: branch.name,
+            }))}
         />
       </Timeline.Item>
     </Timeline>
