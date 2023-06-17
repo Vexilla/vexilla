@@ -15,6 +15,7 @@ import { GitHubFetcher } from "./GithubForm.fetchers";
 import { Branch, Installation, Repository } from "./GithubForm.types";
 import { DEFAULT_BRANCH_PREFIX } from "../../../utils/constants";
 
+import { TimelineItemTitle } from "../../TimelineItemTitle";
 import { GithubLogo } from "../../logos/GithubLogo";
 
 import { Icon } from "@iconify/react";
@@ -22,8 +23,7 @@ import verifiedCheckBold from "@iconify/icons-solar/verified-check-bold";
 import closeCircleBroken from "@iconify/icons-solar/close-circle-broken";
 import refreshBroken from "@iconify/icons-solar/refresh-broken";
 import squareArrowRightUpBroken from "@iconify/icons-solar/square-arrow-right-up-broken";
-import infoCircleBroken from "@iconify/icons-solar/info-circle-broken";
-import { CustomTooltip } from "../../CustomTooltip";
+import { useSnapshot } from "valtio";
 
 const githubAppName = `vexilla-dev`;
 // const githubAppName = `vexilla`;
@@ -37,14 +37,22 @@ interface GithubFormProps {
   updateConfig: (newConfig: AppState) => void;
 }
 
-const buttonStyling = { backgroundColor: "black", color: "white" };
+const buttonStyling = {
+  backgroundColor: "black",
+  color: "white",
+  width: "100%",
+  maxWidth: "calc(100% - 28px - 0.25rem)",
+};
 const disabledButtonStyling = {
   backgroundColor: "black",
   color: "white",
   opacity: 0.6,
+  width: "100%",
+  maxWidth: "calc(100% - 28px - 0.25rem)",
 };
 
 export function GithubForm({ config, updateConfig }: GithubFormProps) {
+  useSnapshot(config);
   const {
     accessToken,
     installationId,
@@ -99,6 +107,8 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
     activeElement = 1;
   } else if (!repositoryId) {
     activeElement = 2;
+  } else {
+    activeElement = 3;
   }
 
   useEffect(() => {
@@ -108,16 +118,16 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
           const installationsResponse =
             await githubMethods.fetchInstallations();
           setInstallations(installationsResponse.installations);
-          if (installations.length === 1) {
-            config.hosting.config.installationId = `${installations[0].id}`;
+          if (installationsResponse.installations.length === 1) {
+            config.hosting.config.installationId = `${installationsResponse.installations[0].id}`;
           }
-          if (installationId) {
+          if (config.hosting.config.installationId) {
             const repositoriesResponse = await githubMethods.fetchRepositories(
-              installationId
+              config.hosting.config.installationId
             );
             setRepositories(repositoriesResponse.repositories);
-            if (repositories.length === 1) {
-              config.hosting.config.repositoryId = `${repositories[0].id}`;
+            if (repositoriesResponse.repositories.length === 1) {
+              config.hosting.config.repositoryId = `${repositoriesResponse.repositories[0].id}`;
             }
           }
         }
@@ -139,7 +149,6 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
           fetchedBranches.length === 1 &&
           config.hosting.provider === "github"
         ) {
-          console.log("fetchedBranches", fetchedBranches);
           config.hosting.config.targetBranch = fetchedBranches[0].name;
         }
       } else {
@@ -156,13 +165,11 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
   return (
     <Timeline active={activeElement}>
       <Timeline.Item>
-        <Flex direction="row" gap="0.5rem">
-          <h4 className="m-0 p-0">Login</h4>
-          <CustomTooltip
-            tooltipText="You need to login via Github so that the app can make PRs on your
-            behalf."
-          />
-        </Flex>
+        <TimelineItemTitle
+          title="Login"
+          tooltipText="You need to login via Github so that the app can make PRs on your
+          behalf."
+        />
 
         <Flex direction="row" gap="0.5rem" align={"center"}>
           {!accessToken && (
@@ -205,11 +212,13 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
         </Flex>
       </Timeline.Item>
 
-      <Timeline.Item title="Installation">
-        <p>The app must be installed into a repo via the Github marketplace.</p>
+      <Timeline.Item>
+        <TimelineItemTitle
+          title="Installation"
+          tooltipText="The app must be installed into a repo via the Github marketplace."
+        />
         <Flex direction="row" align="center" gap="0.5rem">
-          {!installationId && "No Installation"}
-          {!installationId && installations.length === 0 && (
+          {(!installationId || installations.length === 0) && (
             <Button
               style={buttonStyling}
               leftIcon={<GithubLogo />}
@@ -254,59 +263,84 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
         </Flex>
       </Timeline.Item>
 
-      <Timeline.Item title="Repository">
-        <Select
-          value={repositoryId}
-          onChange={(selectedRepositoryId) => {
-            console.log({ selectedRepositoryId });
-            if (config.hosting.provider === "github") {
-              config.hosting.config.repositoryId = `${selectedRepositoryId}`;
-              const repository = repositories.find(
-                (repository) => `${repository.id}` === selectedRepositoryId
-              );
-              config.hosting.config.owner = repository?.owner.login || "";
-              config.hosting.config.repositoryName = repository?.name || "";
-            }
-          }}
-          data={repositories.map((repository) => ({
-            label: repository.name,
-            value: `${repository.id}`,
-          }))}
+      <Timeline.Item>
+        <TimelineItemTitle
+          title="Repository"
+          tooltipText="This depends on which repos you installed the Github App into."
+        />
+        <Flex direction="row" align="center" gap="0.5rem">
+          <Select
+            value={repositoryId}
+            onChange={(selectedRepositoryId) => {
+              if (config.hosting.provider === "github") {
+                config.hosting.config.repositoryId = `${selectedRepositoryId}`;
+                const repository = repositories.find(
+                  (repository) => `${repository.id}` === selectedRepositoryId
+                );
+                config.hosting.config.owner = repository?.owner.login || "";
+                config.hosting.config.repositoryName = repository?.name || "";
+              }
+            }}
+            data={repositories.map((repository) => ({
+              label: repository.name,
+              value: `${repository.id}`,
+            }))}
+          />
+
+          <ActionIcon
+            title="Edit your installation's repository access"
+            onClick={() => {
+              window
+                ?.open(
+                  `https://github.com/apps/${githubAppName}/installations/new`,
+                  "_blank"
+                )
+                ?.focus();
+            }}
+          >
+            <Icon icon={squareArrowRightUpBroken} width={24} />
+          </ActionIcon>
+        </Flex>
+      </Timeline.Item>
+      <Timeline.Item>
+        <TimelineItemTitle
+          title="Target Branch"
+          tooltipText="Choose the branch that you would like to publish changes to."
         />
 
-        <a
-          className="flex p-2 text-center w-full items-center justify-center g q"
-          href={`https://github.com/apps/${githubAppName}/installations/new`}
-          target="_blank"
-        >
-          Edit your installation's repository access{" "}
-          <Icon icon={squareArrowRightUpBroken} />
-        </a>
-      </Timeline.Item>
-      <Timeline.Item title="Target Branch">
-        <Select
-          value={targetBranch}
-          onChange={(selectedBranchName) => {
-            if (config.hosting.provider === "github") {
-              config.hosting.config.targetBranch = selectedBranchName || "";
-            }
-          }}
-          data={branches
-            .filter((branch) => {
+        <Flex direction="row" align="center" gap="0.5rem">
+          <Select
+            value={targetBranch}
+            onChange={(selectedBranchName) => {
               if (config.hosting.provider === "github") {
-                return !branch.name.startsWith(
-                  config.hosting.config.branchNamePrefix ||
-                    DEFAULT_BRANCH_PREFIX
-                );
-              } else {
-                return false;
+                config.hosting.config.targetBranch = selectedBranchName || "";
               }
-            })
-            .map((branch) => ({
-              label: branch.name,
-              value: branch.name,
-            }))}
-        />
+            }}
+            data={branches
+              .filter((branch) => {
+                if (config.hosting.provider === "github") {
+                  return !branch.name.startsWith(
+                    config.hosting.config.branchNamePrefix ||
+                      DEFAULT_BRANCH_PREFIX
+                  );
+                } else {
+                  return false;
+                }
+              })
+              .map((branch) => ({
+                label: branch.name,
+                value: branch.name,
+              }))}
+          />
+
+          <ActionIcon
+            onClick={() => {
+              refresh();
+            }}
+          >
+            <Icon icon={refreshBroken} width={24} />
+          </ActionIcon>
+        </Flex>
       </Timeline.Item>
     </Timeline>
   );
