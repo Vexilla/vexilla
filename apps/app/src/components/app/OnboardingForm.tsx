@@ -33,11 +33,11 @@ const providers = [
   { value: "", label: "No Provider Selected", group: " " },
   { value: "github", label: "GitHub", group: providerLabels.git },
 
-  { value: "bitbucket", label: "BitBucket", group: providerLabels.git },
+  // { value: "bitbucket", label: "BitBucket", group: providerLabels.git },
 
   { value: "s3", label: "AWS S3", group: providerLabels.direct },
-  { value: "gcloud", label: "Google Cloud", group: providerLabels.direct },
-  { value: "azure", label: "MS Azure", group: providerLabels.direct },
+  // { value: "gcloud", label: "Google Cloud", group: providerLabels.direct },
+  // { value: "azure", label: "MS Azure", group: providerLabels.direct },
 ];
 
 export function OnboardingForm({

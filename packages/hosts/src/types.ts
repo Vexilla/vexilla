@@ -9,11 +9,12 @@ export type HostingProvider =
   | ""
   // git providers
   | "github"
+  // | "bitbucket"
   // direct providers
-  | "s3"
-  | "azure"
-  | "gcloud"
-  | "firebase";
+  // | "azure"
+  // | "gcloud"
+  // | "firebase"
+  | "s3";
 
 export type HostingProviderType = "" | "git" | "direct";
 
@@ -38,9 +39,9 @@ export interface HostingConfigEmpty extends HostingConfigBase {
 export type HostingConfig =
   | HostingConfigEmpty
   | HostingConfigS3
-  | HostingConfigAzure
-  | HostingConfigGcloud
-  | HostingConfigFirebase
+  // | HostingConfigAzure
+  // | HostingConfigGcloud
+  // | HostingConfigFirebase
   | HostingConfigGithub;
 
 export interface HostingStatus {
@@ -58,10 +59,12 @@ export interface HostingBase {
 
 export interface HostingEmpty extends HostingBase {
   provider: "";
-  config: {
-    provider: "";
-    providerType: "";
-  };
+  config: HostingConfigEmpty;
+}
+
+export interface HostingS3 extends HostingBase {
+  provider: "s3";
+  config: HostingConfigS3;
 }
 
 export interface HostingGithub extends HostingBase {
@@ -74,12 +77,7 @@ export interface HostingGithub extends HostingBase {
 //   config: HostingConfigBitbucket;
 // }
 
-export interface HostingGithub extends HostingBase {
-  provider: "github";
-  config: HostingConfigGithub;
-}
-
-export type Hosting = HostingEmpty | HostingGithub;
+export type Hosting = HostingEmpty | HostingS3 | HostingGithub;
 
 export interface HostingAdapterBase {
   fetchFeatures: (config: HostingConfig) => Promise<any>;

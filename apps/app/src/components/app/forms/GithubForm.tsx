@@ -1,11 +1,19 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
-import { Button, Timeline, Select, ActionIcon, Flex } from "@mantine/core";
+import {
+  Button,
+  Timeline,
+  Select,
+  ActionIcon,
+  Flex,
+  Tooltip,
+} from "@mantine/core";
 import { cloneDeep } from "lodash-es";
 
 import { AppState } from "@vexilla/types";
 
 import { GitHubFetcher } from "./GithubForm.fetchers";
 import { Branch, Installation, Repository } from "./GithubForm.types";
+import { DEFAULT_BRANCH_PREFIX } from "../../../utils/constants";
 
 import { GithubLogo } from "../../logos/GithubLogo";
 
@@ -14,6 +22,8 @@ import verifiedCheckBold from "@iconify/icons-solar/verified-check-bold";
 import closeCircleBroken from "@iconify/icons-solar/close-circle-broken";
 import refreshBroken from "@iconify/icons-solar/refresh-broken";
 import squareArrowRightUpBroken from "@iconify/icons-solar/square-arrow-right-up-broken";
+import infoCircleBroken from "@iconify/icons-solar/info-circle-broken";
+import { CustomTooltip } from "../../CustomTooltip";
 
 const githubAppName = `vexilla-dev`;
 // const githubAppName = `vexilla`;
@@ -145,11 +155,14 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
 
   return (
     <Timeline active={activeElement}>
-      <Timeline.Item title="Login">
-        <p>
-          You need to login via Github so that the app can make PRs on your
-          behalf.
-        </p>
+      <Timeline.Item>
+        <Flex direction="row" gap="0.5rem">
+          <h4 className="m-0 p-0">Login</h4>
+          <CustomTooltip
+            tooltipText="You need to login via Github so that the app can make PRs on your
+            behalf."
+          />
+        </Flex>
 
         <Flex direction="row" gap="0.5rem" align={"center"}>
           {!accessToken && (
@@ -283,7 +296,7 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
               if (config.hosting.provider === "github") {
                 return !branch.name.startsWith(
                   config.hosting.config.branchNamePrefix ||
-                    "__THIS_IS_AN_INVALID_PREFIX__"
+                    DEFAULT_BRANCH_PREFIX
                 );
               } else {
                 return false;

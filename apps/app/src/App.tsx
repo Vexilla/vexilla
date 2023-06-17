@@ -11,9 +11,9 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useSnapshot } from "valtio";
-import { cloneDeep } from "lodash-es";
+import { cloneDeep, omit } from "lodash-es";
 
-import { Group } from "@vexilla/types";
+import { Group, PublishedGroup } from "@vexilla/types";
 
 import { nanoid } from "./utils/nanoid";
 import { config } from "./stores/config-valtio";
@@ -153,13 +153,57 @@ function App() {
               </Flex>
               <Button
                 onClick={async () => {
-                  //
-                  // console.log("response", await result.json());
                   if (config.hosting.provider === "github") {
+                    const groupFiles = config.groups.map((group) => {
+                      const scrubbedGroup: PublishedGroup = {
+                        ...group,
+                        meta: {
+                          version: "v1",
+                        },
+                        environments: group.environments.map((environment) =>
+                          omit(environment, "defaultEnvironmentFeatureValues")
+                        ),
+                      };
+
+                      return {
+                        filePath: `${group.groupId}.json`,
+                        content: JSON.stringify(scrubbedGroup, null, 2),
+                      };
+                    });
+
+                    const manifestFile = {
+                      filePath: "manifest.json",
+                      content: JSON.stringify(
+                        {
+                          version: "v1",
+                          groups: config.groups.map((group) => {
+                            return {
+                              name: group.name,
+                              groupId: group.groupId,
+                            };
+                          }),
+                        },
+                        null,
+                        2
+                      ),
+                    };
+
+                    const cleanConfig = cloneDeep(config);
+                    if (cleanConfig.hosting.config.providerType === "git") {
+                      cleanConfig.hosting.config.accessToken = "";
+                    } else if (
+                      cleanConfig.hosting.config.providerType === "direct"
+                    ) {
+                      cleanConfig.hosting.config.accessKeyId = "";
+                      cleanConfig.hosting.config.secretAccessKey = "";
+                    }
+
                     await githubMethods.publishPullRequest(targetBranch, [
+                      manifestFile,
+                      ...groupFiles,
                       {
-                        filePath: "features.json",
-                        content: JSON.stringify({ foo: "baz" }),
+                        filePath: "config.json",
+                        content: JSON.stringify(cleanConfig),
                       },
                     ]);
                   }

@@ -62,6 +62,19 @@ export interface Group {
   environments: Environment[];
 }
 
+export type PublishedEnvironment = Omit<
+  Environment,
+  "defaultEnvironmentFeatureValues"
+>;
+
+export interface PublishedGroup {
+  name: string;
+  groupId: string;
+  features: Feature[];
+  environments: PublishedEnvironment[];
+  meta: { version: "v1" };
+}
+
 export interface AppState {
   groups: Group[];
   hosting: Hosting;
