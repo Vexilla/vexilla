@@ -1,8 +1,7 @@
-import React, { useMemo, useEffect, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { Button, TextInput, Flex, Box } from "@mantine/core";
-import { useForm } from "@mantine/form";
 
 import {
   DefaultFeatureValues,
@@ -25,10 +24,6 @@ import { CustomList, CustomListItem } from "../../components/CustomList";
 import { Icon } from "@iconify/react";
 import rewindBackBroken from "@iconify/icons-solar/rewind-back-broken";
 import { cloneDeep } from "lodash-es";
-
-enum FormFields {
-  name = "name",
-}
 
 const DefaultEnvironmentDefaults: DefaultFeatureValues = {
   toggle: {
@@ -67,10 +62,15 @@ export function EditGroup() {
   const navigate = useNavigate();
 
   const groups = config.groups;
-
   const group = groups.find((_group) => _group.groupId === params.groupId);
   const environments = group?.environments || [];
   const features = group?.features || [];
+
+  const [groupName, setGroupName] = useState(group?.name);
+
+  useEffect(() => {
+    setGroupName(group?.name);
+  }, [group?.name]);
 
   // const form = useForm({
   //   initialValues: {
@@ -88,10 +88,6 @@ export function EditGroup() {
   //   },
   //   validateInputOnChange: true,
   // });
-
-  // useEffect(() => {
-  //   form.setFieldValue(FormFields.name, group?.name || "");
-  // }, [group?.name]);
 
   return (
     <PageLayout>
@@ -120,9 +116,10 @@ export function EditGroup() {
           <TextInput
             className="mb-8"
             label={"Name"}
-            defaultValue={group?.name}
+            value={groupName}
             onChange={(event) => {
               group.name = event.currentTarget.value;
+              setGroupName(event.currentTarget.value);
             }}
           />
           <Flex direction="row" gap={"1rem"}>

@@ -122,7 +122,7 @@ export function CustomListItem({
         justify={"space-between"}
         className="py-4 px-2"
       >
-        <Box>
+        <Box className="truncate w-[calc(100%-80px)] text-left">
           {!linkPath && <Text>{name}</Text>}
           {!!linkPath && <Link to={linkPath}>{name}</Link>}
         </Box>
