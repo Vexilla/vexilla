@@ -71,7 +71,6 @@ export function ScheduledForm({
           allowSingleDateInRange
           value={datePickerValue}
           onChange={(event) => {
-            console.log("dates", { event });
             const [newStartDate, newEndDate] = event;
             onChange({
               ...featureSchedule,

@@ -1,18 +1,21 @@
-export interface GetInstallationsResponse {
+export interface GitHubGetInstallationsResponse {
   total_count: number;
-  installations: Installation[];
+  installations: GitHubInstallation[];
   [k: string]: unknown;
 }
 /**
  * Installation
  */
-export interface Installation {
+export interface GitHubInstallation {
   /**
    * The ID of the installation.
    */
   id: number;
-  account: (SimpleUser | Enterprise) &
-    (((SimpleUser | Enterprise) & null) | (SimpleUser | Enterprise));
+  account: (GitHubSimpleUser | GitHubEnterprise) &
+    (
+      | ((GitHubSimpleUser | GitHubEnterprise) & null)
+      | (GitHubSimpleUser | GitHubEnterprise)
+    );
   /**
    * Describe whether all repositories have been selected or there's a selection involved
    */
@@ -26,7 +29,7 @@ export interface Installation {
    */
   target_id: number;
   target_type: string;
-  permissions: AppPermissions;
+  permissions: GitHubAppPermissions;
   events: string[];
   created_at: string;
   updated_at: string;
@@ -34,7 +37,7 @@ export interface Installation {
   has_multiple_single_files?: boolean;
   single_file_paths?: string[];
   app_slug: string;
-  suspended_by: null | SimpleUser;
+  suspended_by: null | GitHubSimpleUser;
   suspended_at: string | null;
   contact_email?: string | null;
   [k: string]: unknown;
@@ -42,7 +45,7 @@ export interface Installation {
 /**
  * A GitHub user.
  */
-export interface SimpleUser {
+export interface GitHubSimpleUser {
   name?: string | null;
   email?: string | null;
   login: string;
@@ -69,7 +72,7 @@ export interface SimpleUser {
 /**
  * An enterprise on GitHub.
  */
-export interface Enterprise {
+export interface GitHubEnterprise {
   /**
    * A short description of the enterprise.
    */
@@ -100,7 +103,7 @@ export interface Enterprise {
 /**
  * The permissions granted to the user-to-server access token.
  */
-export interface AppPermissions {
+export interface GitHubAppPermissions {
   /**
    * The level of permission to grant the access token for GitHub Actions workflows, workflow runs, and artifacts.
    */
@@ -240,16 +243,16 @@ export interface AppPermissions {
   [k: string]: unknown;
 }
 
-export interface GetInstallationRepositoriesResponse {
+export interface GitHubGetInstallationRepositoriesResponse {
   total_count: number;
-  repositories: Repository[];
+  repositories: GitHubRepository[];
   repository_selection?: string;
   [k: string]: unknown;
 }
 /**
  * A repository on GitHub.
  */
-export interface Repository {
+export interface GitHubRepository {
   /**
    * Unique identifier of the repository
    */
@@ -260,8 +263,8 @@ export interface Repository {
    */
   name: string;
   full_name: string;
-  license: null | LicenseSimple;
-  organization?: null | SimpleUser;
+  license: null | GitHubLicenseSimple;
+  organization?: null | GitHubSimpleUser;
   forks: number;
   permissions?: {
     admin: boolean;
@@ -271,7 +274,7 @@ export interface Repository {
     maintain?: boolean;
     [k: string]: unknown;
   };
-  owner: SimpleUser;
+  owner: GitHubSimpleUser;
   /**
    * Whether the repository is private or public.
    */
@@ -601,7 +604,7 @@ export interface Repository {
 /**
  * License Simple
  */
-export interface LicenseSimple {
+export interface GitHubLicenseSimple {
   key: string;
   name: string;
   url: string | null;
@@ -614,7 +617,7 @@ export interface LicenseSimple {
 /**
  * Short Branch
  */
-export interface Branch {
+export interface GitHubBranch {
   name: string;
   commit: {
     sha: string;
@@ -622,20 +625,20 @@ export interface Branch {
     [k: string]: unknown;
   };
   protected: boolean;
-  protection?: BranchProtection;
+  protection?: GitHubBranchProtection;
   protection_url?: string;
   [k: string]: unknown;
 }
 /**
  * Branch Protection
  */
-export interface BranchProtection {
+export interface GitHubBranchProtection {
   url?: string;
   enabled?: boolean;
-  required_status_checks?: ProtectedBranchRequiredStatusCheck;
-  enforce_admins?: ProtectedBranchAdminEnforced;
-  required_pull_request_reviews?: ProtectedBranchPullRequestReview;
-  restrictions?: BranchRestrictionPolicy;
+  required_status_checks?: GitHubProtectedBranchRequiredStatusCheck;
+  enforce_admins?: GitHubProtectedBranchAdminEnforced;
+  required_pull_request_reviews?: GitHubProtectedBranchPullRequestReview;
+  restrictions?: GitHubBranchRestrictionPolicy;
   required_linear_history?: {
     enabled?: boolean;
     [k: string]: unknown;
@@ -682,7 +685,7 @@ export interface BranchProtection {
 /**
  * Protected Branch Required Status Check
  */
-export interface ProtectedBranchRequiredStatusCheck {
+export interface GitHubProtectedBranchRequiredStatusCheck {
   url?: string;
   enforcement_level?: string;
   contexts: string[];
@@ -698,7 +701,7 @@ export interface ProtectedBranchRequiredStatusCheck {
 /**
  * Protected Branch Admin Enforced
  */
-export interface ProtectedBranchAdminEnforced {
+export interface GitHubProtectedBranchAdminEnforced {
   url: string;
   enabled: boolean;
   [k: string]: unknown;
@@ -706,17 +709,17 @@ export interface ProtectedBranchAdminEnforced {
 /**
  * Protected Branch Pull Request Review
  */
-export interface ProtectedBranchPullRequestReview {
+export interface GitHubProtectedBranchPullRequestReview {
   url?: string;
   dismissal_restrictions?: {
     /**
      * The list of users with review dismissal access.
      */
-    users?: SimpleUser[];
+    users?: GitHubSimpleUser[];
     /**
      * The list of teams with review dismissal access.
      */
-    teams?: Team[];
+    teams?: GitHubTeam[];
     /**
      * The list of apps with review dismissal access.
      */
@@ -733,11 +736,11 @@ export interface ProtectedBranchPullRequestReview {
     /**
      * The list of users allowed to bypass pull request requirements.
      */
-    users?: SimpleUser[];
+    users?: GitHubSimpleUser[];
     /**
      * The list of teams allowed to bypass pull request requirements.
      */
-    teams?: Team[];
+    teams?: GitHubTeam[];
     /**
      * The list of apps allowed to bypass pull request requirements.
      */
@@ -756,7 +759,7 @@ export interface ProtectedBranchPullRequestReview {
 /**
  * Groups of organization members that gives permissions on specified repositories.
  */
-export interface Team {
+export interface GitHubTeam {
   id: number;
   node_id: string;
   name: string;
@@ -777,13 +780,13 @@ export interface Team {
   html_url: string;
   members_url: string;
   repositories_url: string;
-  parent: null | TeamSimple;
+  parent: null | GitHubTeamSimple;
   [k: string]: unknown;
 }
 /**
  * Groups of organization members that gives permissions on specified repositories.
  */
-export interface TeamSimple {
+export interface GitHubTeamSimple {
   /**
    * Unique identifier of the team
    */
@@ -836,7 +839,7 @@ export interface GitHubApp {
    */
   slug?: string;
   node_id: string;
-  owner: null | SimpleUser;
+  owner: null | GitHubSimpleUser;
   /**
    * The name of the GitHub app
    */
@@ -874,7 +877,7 @@ export interface GitHubApp {
 /**
  * Branch Restriction Policy
  */
-export interface BranchRestrictionPolicy {
+export interface GitHubBranchRestrictionPolicy {
   url: string;
   users_url: string;
   teams_url: string;
@@ -965,42 +968,42 @@ export interface BranchRestrictionPolicy {
   [k: string]: unknown;
 }
 
-export type TreeObjectType = "blob" | "tree" | "commit";
-export type TreeObjectMode =
+export type GitHubTreeObjectType = "blob" | "tree" | "commit";
+export type GitHubTreeObjectMode =
   | "100644"
   | "100755"
   | "040000"
   | "160000"
   | "120000";
 
-export interface TreeObject {
+export interface GitHubTreeObject {
   path: string;
-  mode: TreeObjectMode;
-  type: TreeObjectType;
+  mode: GitHubTreeObjectMode;
+  type: GitHubTreeObjectType;
   size: number;
   sha: string;
   url: string;
 }
 
-export interface CreateTreeResponse {
+export interface GitHubCreateTreeResponse {
   sha: string;
   url: string;
-  tree: TreeObject[];
+  tree: GitHubTreeObject[];
   truncated: boolean;
 }
 
-export interface CreateBranchResponse {
+export interface GitHubCreateBranchResponse {
   ref: string;
   node_id: string;
   url: string;
   object: {
-    type: TreeObjectType;
+    type: GitHubTreeObjectType;
     sha: string;
     url: string;
   };
 }
 
-export type VerificationReason =
+export type GitHubVerificationReason =
   | "expired_key"
   | "not_signing_key"
   | "gpgverify_error"
@@ -1015,7 +1018,7 @@ export type VerificationReason =
   | "invalid"
   | "valid";
 
-export interface CreateCommitResponse {
+export interface GitHubCreateCommitResponse {
   sha: string;
   node_id: string;
   url: string;
@@ -1040,14 +1043,14 @@ export interface CreateCommitResponse {
   }[];
   verification: {
     verified: boolean;
-    reason: VerificationReason;
+    reason: GitHubVerificationReason;
     signature: string | null;
     payload: string | null;
   };
   html_url: string;
 }
 
-export interface CreatePullRequestResponse {
+export interface GitHubCreatePullRequestResponse {
   url: string;
   id: number;
   node_id: string;
@@ -1064,23 +1067,23 @@ export interface CreatePullRequestResponse {
   state: string;
   locked: boolean;
   title: string;
-  user: SimpleUser;
+  user: GitHubSimpleUser;
   body: string;
-  labels: Label[];
-  milestone: Milestone;
+  labels: GitHubLabel[];
+  milestone: GitHubMilestone;
   active_lock_reason: string;
   created_at: string;
   updated_at: string;
   closed_at: string;
   merged_at: string;
   merge_commit_sha: string;
-  assignee: SimpleUser;
-  assignees: SimpleUser[];
-  requested_reviewers: SimpleUser[];
-  requested_teams: RequestedTeam[];
-  head: Head;
-  base: Base;
-  _links: Links;
+  assignee: GitHubSimpleUser;
+  assignees: GitHubSimpleUser[];
+  requested_reviewers: GitHubSimpleUser[];
+  requested_teams: GitHubRequestedTeam[];
+  head: GitHubHead;
+  base: GitHubBase;
+  _links: GitHubLinks;
   author_association: string;
   auto_merge: any;
   draft: boolean;
@@ -1088,7 +1091,7 @@ export interface CreatePullRequestResponse {
   mergeable: boolean;
   rebaseable: boolean;
   mergeable_state: string;
-  merged_by: MergedBy;
+  merged_by: GitHubMergedBy;
   comments: number;
   review_comments: number;
   maintainer_can_modify: boolean;
@@ -1098,7 +1101,7 @@ export interface CreatePullRequestResponse {
   changed_files: number;
 }
 
-interface Label {
+interface GitHubLabel {
   id: number;
   node_id: string;
   url: string;
@@ -1108,7 +1111,7 @@ interface Label {
   default: boolean;
 }
 
-interface Milestone {
+interface GitHubMilestone {
   url: string;
   html_url: string;
   labels_url: string;
@@ -1118,7 +1121,7 @@ interface Milestone {
   state: string;
   title: string;
   description: string;
-  creator: SimpleUser;
+  creator: GitHubSimpleUser;
   open_issues: number;
   closed_issues: number;
   created_at: string;
@@ -1127,7 +1130,7 @@ interface Milestone {
   due_on: string;
 }
 
-interface RequestedTeam {
+interface GitHubRequestedTeam {
   id: number;
   node_id: string;
   url: string;
@@ -1142,20 +1145,20 @@ interface RequestedTeam {
   repositories_url: string;
 }
 
-interface Head {
+interface GitHubHead {
   label: string;
   ref: string;
   sha: string;
-  user: SimpleUser;
-  repo: Repo;
+  user: GitHubSimpleUser;
+  repo: GitHubRepo;
 }
 
-export interface Repo {
+export interface GitHubRepo {
   id: number;
   node_id: string;
   name: string;
   full_name: string;
-  owner: SimpleUser;
+  owner: GitHubSimpleUser;
   private: boolean;
   html_url: string;
   description: string;
@@ -1222,7 +1225,7 @@ export interface Repo {
   pushed_at: string;
   created_at: string;
   updated_at: string;
-  permissions: Permissions;
+  permissions: GitHubPermissions;
   allow_rebase_merge: boolean;
   temp_clone_token: string;
   allow_squash_merge: boolean;
@@ -1230,17 +1233,17 @@ export interface Repo {
   allow_forking: boolean;
   forks: number;
   open_issues: number;
-  license: License;
+  license: GitHubLicense;
   watchers: number;
 }
 
-export interface Permissions {
+export interface GitHubPermissions {
   admin: boolean;
   push: boolean;
   pull: boolean;
 }
 
-export interface License {
+export interface GitHubLicense {
   key: string;
   name: string;
   url: string;
@@ -1248,58 +1251,58 @@ export interface License {
   node_id: string;
 }
 
-interface Base {
+interface GitHubBase {
   label: string;
   ref: string;
   sha: string;
-  user: SimpleUser;
-  repo: Repo;
+  user: GitHubSimpleUser;
+  repo: GitHubRepo;
 }
 
-interface Links {
-  self: Self;
-  html: Html;
-  issue: Issue;
-  comments: Comments;
-  review_comments: ReviewComments;
-  review_comment: ReviewComment;
-  commits: Commits;
-  statuses: Statuses;
+interface GitHubLinks {
+  self: GitHubSelf;
+  html: GitHubHtml;
+  issue: GitHubIssue;
+  comments: GitHubComments;
+  review_comments: GitHubReviewComments;
+  review_comment: GitHubReviewComment;
+  commits: GitHubCommits;
+  statuses: GitHubStatuses;
 }
 
-interface Self {
+interface GitHubSelf {
   href: string;
 }
 
-interface Html {
+interface GitHubHtml {
   href: string;
 }
 
-interface Issue {
+interface GitHubIssue {
   href: string;
 }
 
-interface Comments {
+interface GitHubComments {
   href: string;
 }
 
-interface ReviewComments {
+interface GitHubReviewComments {
   href: string;
 }
 
-interface ReviewComment {
+interface GitHubReviewComment {
   href: string;
 }
 
-interface Commits {
+interface GitHubCommits {
   href: string;
 }
 
-interface Statuses {
+interface GitHubStatuses {
   href: string;
 }
 
-interface MergedBy {
+interface GitHubMergedBy {
   login: string;
   id: number;
   node_id: string;
@@ -1318,4 +1321,13 @@ interface MergedBy {
   received_events_url: string;
   type: string;
   site_admin: boolean;
+}
+
+export interface GetBlobResponse {
+  content: string;
+  encoding: string;
+  url: string;
+  sha: string;
+  size: number;
+  node_id: string;
 }

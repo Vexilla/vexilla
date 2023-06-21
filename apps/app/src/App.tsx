@@ -91,9 +91,10 @@ function App() {
         <Box>
           <OnboardingForm
             config={config}
-            updateProvider={(newProvider) => {
+            updateProvider={({ provider, providerType }) => {
               if (config.hosting) {
-                config.hosting.provider = newProvider;
+                config.hosting.provider = provider;
+                config.hosting.providerType = providerType;
               }
             }}
           />
@@ -198,7 +199,7 @@ function App() {
                       cleanConfig.hosting.config.secretAccessKey = "";
                     }
 
-                    await githubMethods.publishPullRequest(targetBranch, [
+                    await githubMethods.publish(targetBranch, [
                       manifestFile,
                       ...groupFiles,
                       {

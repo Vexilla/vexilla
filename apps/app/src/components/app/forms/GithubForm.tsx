@@ -11,10 +11,15 @@ import { cloneDeep } from "lodash-es";
 
 import { AppState } from "@vexilla/types";
 
+import { Branch, Repository } from "./_GitForm.types";
 import { GitHubFetcher } from "./GithubForm.fetchers";
-import { Branch, Installation, Repository } from "./GithubForm.types";
-import { DEFAULT_BRANCH_PREFIX } from "../../../utils/constants";
+import {
+  GitHubBranch,
+  GitHubInstallation,
+  GitHubRepository,
+} from "./GithubForm.types";
 
+import { GitForm } from "./_GitForm";
 import { TimelineItemTitle } from "../../TimelineItemTitle";
 import { GithubLogo } from "../../logos/GithubLogo";
 
@@ -22,8 +27,6 @@ import { Icon } from "@iconify/react";
 import verifiedCheckBold from "@iconify/icons-solar/verified-check-bold";
 import closeCircleBroken from "@iconify/icons-solar/close-circle-broken";
 import refreshBroken from "@iconify/icons-solar/refresh-broken";
-import squareArrowRightUpBroken from "@iconify/icons-solar/square-arrow-right-up-broken";
-import { useSnapshot } from "valtio";
 
 const githubAppName = `vexilla-dev`;
 // const githubAppName = `vexilla`;
@@ -52,7 +55,6 @@ const disabledButtonStyling = {
 };
 
 export function GithubForm({ config, updateConfig }: GithubFormProps) {
-  useSnapshot(config);
   const {
     accessToken,
     installationId,
@@ -71,7 +73,7 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
           owner: "",
           targetBranch: "",
         };
-  const [installations, setInstallations] = useState<Installation[]>([]);
+  const [installations, setInstallations] = useState<GitHubInstallation[]>([]);
   const [repositories, setRepositories] = useState<Repository[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now());
@@ -125,7 +127,13 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
             const repositoriesResponse = await githubMethods.fetchRepositories(
               config.hosting.config.installationId
             );
-            setRepositories(repositoriesResponse.repositories);
+            setRepositories(
+              repositoriesResponse.repositories.map((_repository) => ({
+                name: _repository.name,
+                id: `${_repository.id}`,
+                owner: _repository.owner.login,
+              }))
+            );
             if (repositoriesResponse.repositories.length === 1) {
               config.hosting.config.repositoryId = `${repositoriesResponse.repositories[0].id}`;
             }
@@ -144,7 +152,12 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
       if (accessToken && repositoryName && owner) {
         const fetchedBranches = await githubMethods.fetchBranches();
 
-        setBranches(fetchedBranches);
+        setBranches(
+          fetchedBranches.map((_branch) => ({
+            name: _branch.name,
+            id: `${_branch.id}`,
+          }))
+        );
         if (
           fetchedBranches.length === 1 &&
           config.hosting.provider === "github"
@@ -163,185 +176,125 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
   }, [accessToken, owner, repositoryName]);
 
   return (
-    <Timeline active={activeElement}>
-      <Timeline.Item>
-        <TimelineItemTitle
-          title="Login"
-          tooltipText="You need to login via Github so that the app can make PRs on your
+    <>
+      <Button
+        onClick={async () => {
+          const fetchedConfig = await githubMethods.getCurrentConfig();
+          console.log({ fetchedConfig });
+        }}
+      >
+        Get Config
+      </Button>
+      <GitForm
+        config={config}
+        updateConfig={() => {}}
+        activeElement={activeElement}
+        totalElements={4}
+        branches={branches}
+        targetBranch={targetBranch}
+        repositories={repositories}
+        repositoryId={repositoryId}
+        refresh={refresh}
+      >
+        <Timeline.Item>
+          <TimelineItemTitle
+            title="Login"
+            tooltipText="You need to login via Github so that the app can make PRs on your
           behalf."
-        />
+          />
 
-        <Flex direction="row" gap="0.5rem" align={"center"}>
-          {!accessToken && (
-            <Button
-              style={buttonStyling}
-              leftIcon={<GithubLogo />}
-              onClick={() => {
-                window.location.href = `https://github.com/login/oauth/authorize?client_id=${githubClientId}&redirect_uri=${encodeURIComponent(
-                  `${baseAuthCallbackUrl}/github?logged_in=true`
-                )}`;
-              }}
-            >
-              Login
-            </Button>
-          )}
-
-          {!!accessToken && (
-            <>
+          <Flex direction="row" gap="0.5rem" align={"center"}>
+            {!accessToken && (
               <Button
-                style={disabledButtonStyling}
+                style={buttonStyling}
+                leftIcon={<GithubLogo />}
+                onClick={() => {
+                  window.location.href = `https://github.com/login/oauth/authorize?client_id=${githubClientId}&redirect_uri=${encodeURIComponent(
+                    `${baseAuthCallbackUrl}/github?logged_in=true`
+                  )}`;
+                }}
+              >
+                Login
+              </Button>
+            )}
+
+            {!!accessToken && (
+              <>
+                <Button
+                  style={disabledButtonStyling}
+                  variant="outline"
+                  leftIcon={<GithubLogo />}
+                  rightIcon={
+                    <Icon width={20} icon={verifiedCheckBold} color="green" />
+                  }
+                  disabled
+                >
+                  Logged in
+                </Button>
+
+                <ActionIcon
+                  onClick={() => {
+                    clearHosting();
+                  }}
+                >
+                  <Icon icon={closeCircleBroken} width={24} />
+                </ActionIcon>
+              </>
+            )}
+          </Flex>
+        </Timeline.Item>
+
+        <Timeline.Item>
+          <TimelineItemTitle
+            title="Installation"
+            tooltipText="The app must be installed into a repo via the Github marketplace."
+          />
+          <Flex direction="row" align="center" gap="0.5rem">
+            {(!installationId || installations.length === 0) && (
+              <Button
+                style={buttonStyling}
+                leftIcon={<GithubLogo />}
+                onClick={() => {
+                  window.location.href = `https://github.com/apps/${githubAppName}/installations/new`;
+                }}
+              >
+                Install
+              </Button>
+            )}
+
+            {!!installationId && installations.length === 1 && (
+              <Button
                 variant="outline"
+                style={disabledButtonStyling}
                 leftIcon={<GithubLogo />}
                 rightIcon={
                   <Icon width={20} icon={verifiedCheckBold} color="green" />
                 }
                 disabled
               >
-                Logged in
+                Installed
               </Button>
+            )}
+            {!!installationId && installations.length > 1 && (
+              <Select
+                value={installationId}
+                data={installations.map((installation) => ({
+                  label: installation.html_url,
+                  value: `${installation.id}`,
+                }))}
+              />
+            )}
 
-              <ActionIcon
-                onClick={() => {
-                  clearHosting();
-                }}
-              >
-                <Icon icon={closeCircleBroken} width={24} />
-              </ActionIcon>
-            </>
-          )}
-        </Flex>
-      </Timeline.Item>
-
-      <Timeline.Item>
-        <TimelineItemTitle
-          title="Installation"
-          tooltipText="The app must be installed into a repo via the Github marketplace."
-        />
-        <Flex direction="row" align="center" gap="0.5rem">
-          {(!installationId || installations.length === 0) && (
-            <Button
-              style={buttonStyling}
-              leftIcon={<GithubLogo />}
+            <ActionIcon
               onClick={() => {
-                window.location.href = `https://github.com/apps/${githubAppName}/installations/new`;
+                refresh();
               }}
             >
-              Install
-            </Button>
-          )}
-
-          {!!installationId && installations.length === 1 && (
-            <Button
-              variant="outline"
-              style={disabledButtonStyling}
-              leftIcon={<GithubLogo />}
-              rightIcon={
-                <Icon width={20} icon={verifiedCheckBold} color="green" />
-              }
-              disabled
-            >
-              Installed
-            </Button>
-          )}
-          {!!installationId && installations.length > 1 && (
-            <Select
-              value={installationId}
-              data={installations.map((installation) => ({
-                label: installation.html_url,
-                value: `${installation.id}`,
-              }))}
-            />
-          )}
-
-          <ActionIcon
-            onClick={() => {
-              refresh();
-            }}
-          >
-            <Icon icon={refreshBroken} width={24} />
-          </ActionIcon>
-        </Flex>
-      </Timeline.Item>
-
-      <Timeline.Item>
-        <TimelineItemTitle
-          title="Repository"
-          tooltipText="This depends on which repos you installed the Github App into."
-        />
-        <Flex direction="row" align="center" gap="0.5rem">
-          <Select
-            value={repositoryId}
-            onChange={(selectedRepositoryId) => {
-              if (config.hosting.provider === "github") {
-                config.hosting.config.repositoryId = `${selectedRepositoryId}`;
-                const repository = repositories.find(
-                  (repository) => `${repository.id}` === selectedRepositoryId
-                );
-                config.hosting.config.owner = repository?.owner.login || "";
-                config.hosting.config.repositoryName = repository?.name || "";
-              }
-            }}
-            data={repositories.map((repository) => ({
-              label: repository.name,
-              value: `${repository.id}`,
-            }))}
-          />
-
-          <ActionIcon
-            title="Edit your installation's repository access"
-            onClick={() => {
-              window
-                ?.open(
-                  `https://github.com/apps/${githubAppName}/installations/new`,
-                  "_blank"
-                )
-                ?.focus();
-            }}
-          >
-            <Icon icon={squareArrowRightUpBroken} width={24} />
-          </ActionIcon>
-        </Flex>
-      </Timeline.Item>
-      <Timeline.Item>
-        <TimelineItemTitle
-          title="Target Branch"
-          tooltipText="Choose the branch that you would like to publish changes to."
-        />
-
-        <Flex direction="row" align="center" gap="0.5rem">
-          <Select
-            value={targetBranch}
-            onChange={(selectedBranchName) => {
-              if (config.hosting.provider === "github") {
-                config.hosting.config.targetBranch = selectedBranchName || "";
-              }
-            }}
-            data={branches
-              .filter((branch) => {
-                if (config.hosting.provider === "github") {
-                  return !branch.name.startsWith(
-                    config.hosting.config.branchNamePrefix ||
-                      DEFAULT_BRANCH_PREFIX
-                  );
-                } else {
-                  return false;
-                }
-              })
-              .map((branch) => ({
-                label: branch.name,
-                value: branch.name,
-              }))}
-          />
-
-          <ActionIcon
-            onClick={() => {
-              refresh();
-            }}
-          >
-            <Icon icon={refreshBroken} width={24} />
-          </ActionIcon>
-        </Flex>
-      </Timeline.Item>
-    </Timeline>
+              <Icon icon={refreshBroken} width={24} />
+            </ActionIcon>
+          </Flex>
+        </Timeline.Item>
+      </GitForm>
+    </>
   );
 }

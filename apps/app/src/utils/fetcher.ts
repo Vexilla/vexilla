@@ -7,17 +7,27 @@ export class Fetcher {
     this.config = config;
   }
 
-  publish() {
+  async publish(
+    branchName: string,
+    files: {
+      content: string;
+      filePath: string;
+    }[]
+  ) {
     throw new Error("publish() not implemented");
+  }
+
+  async getCurrentConfig(): Promise<AppState> {
+    throw new Error("getCurrentConfig() not implemented");
   }
 }
 
 export class GitFetcher extends Fetcher {
-  getRepositories() {
+  async getRepositories() {
     throw new Error("getRepositories() not implemented");
   }
 
-  getBranches(branch: string) {
+  async getBranches(branch: string) {
     throw new Error("getBranches() not implemented");
   }
 }

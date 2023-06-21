@@ -3,7 +3,6 @@ import {
   VexillaFeatureTypeToggle,
   VexillaFeatureTypeGradual,
   VexillaFeatureTypeSelective,
-  VexillaFeatureTypeScheduled,
   VexillaFeatureTypeValue,
 } from "./consts";
 

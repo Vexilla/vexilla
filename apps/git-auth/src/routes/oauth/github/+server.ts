@@ -15,12 +15,8 @@ export async function POST({ request }: { request: Request }) {
 	try {
 		const body = await request.json();
 
-		console.log('foo');
-
 		validator.parse(body);
 		const { code } = body;
-
-		console.log({ code }, env.GITHUB_CLIENT_ID);
 
 		const formData = new FormData();
 		formData.set('client_id', env.GITHUB_CLIENT_ID);
@@ -43,7 +39,6 @@ export async function POST({ request }: { request: Request }) {
 		});
 
 		const responseBody = await response.json();
-		console.log({ responseBody }, response.status);
 		if (responseBody.error_description) {
 			throw new Error(responseBody.error_description);
 		}

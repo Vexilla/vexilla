@@ -51,34 +51,6 @@ export interface HostingStatus {
   type: HostingStatusType;
 }
 
-export interface HostingBase {
-  provider: HostingProvider;
-  config: HostingConfig;
-  status?: HostingStatus;
-}
-
-export interface HostingEmpty extends HostingBase {
-  provider: "";
-  config: HostingConfigEmpty;
-}
-
-export interface HostingS3 extends HostingBase {
-  provider: "s3";
-  config: HostingConfigS3;
-}
-
-export interface HostingGithub extends HostingBase {
-  provider: "github";
-  config: HostingConfigGithub;
-}
-
-// export interface HostingBitbucket extends HostingBase {
-//   provider: "github";
-//   config: HostingConfigBitbucket;
-// }
-
-export type Hosting = HostingEmpty | HostingS3 | HostingGithub;
-
 export interface HostingAdapterBase {
   fetchFeatures: (config: HostingConfig) => Promise<any>;
   isConfigValid: (config: HostingConfig) => boolean;
