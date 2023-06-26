@@ -4,7 +4,7 @@ import { AppState } from "@vexilla/types";
 import { snapshot, useSnapshot } from "valtio";
 import { EmptyForm } from "./forms/_EmptyForm";
 import { GithubForm } from "./forms/GithubForm";
-import { Hosting, HostingProvider, HostingProviderType } from "@vexilla/hosts";
+import { HostingProvider, HostingProviderType } from "@vexilla/hosts";
 import { omit } from "lodash-es";
 
 const formMap = {
@@ -69,7 +69,7 @@ export function OnboardingForm({
 }: OnboardingFormProps) {
   const configSnapshot = useSnapshot(config);
   const [providerType, setProviderType] = useState(
-    configSnapshot?.hosting?.provider
+    configSnapshot?.hosting?.providerType
   );
 
   const FormComponent = formMap[configSnapshot?.hosting?.provider || ""];

@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 import { HostingStatusType } from "./enums";
 import { HostingConfigS3 } from "./hosting-adapters/s3.adapter";
 import { HostingConfigAzure } from "./hosting-adapters/azure.adapter";
@@ -5,18 +7,24 @@ import { HostingConfigGcloud } from "./hosting-adapters/gcloud.adapter";
 import { HostingConfigFirebase } from "./hosting-adapters/firebase.adapter";
 import { HostingConfigGithub } from "./git-adapters/github";
 
-export type HostingProvider =
-  | ""
+const HostingProviderValidator = z.enum([
   // git providers
-  | "github"
-  // | "bitbucket"
+  "github",
+  // | "bitbucket",
   // direct providers
-  // | "azure"
-  // | "gcloud"
-  // | "firebase"
-  | "s3";
+  "azure",
+  "gcloud",
+  "firebase",
+  "s3",
+]);
 
-export type HostingProviderType = "" | "git" | "direct";
+const HostingProviderTypeValidator = z.enum(["git", "direct"]);
+
+export type HostingProvider = z.infer<typeof HostingProviderValidator> | "";
+
+export type HostingProviderType =
+  | z.infer<typeof HostingProviderTypeValidator>
+  | "";
 
 export interface HostingConfigBase {
   provider: HostingProvider;
@@ -39,9 +47,9 @@ export interface HostingConfigEmpty extends HostingConfigBase {
 export type HostingConfig =
   | HostingConfigEmpty
   | HostingConfigS3
-  // | HostingConfigAzure
-  // | HostingConfigGcloud
-  // | HostingConfigFirebase
+  | HostingConfigAzure
+  | HostingConfigGcloud
+  | HostingConfigFirebase
   | HostingConfigGithub;
 
 export interface HostingStatus {

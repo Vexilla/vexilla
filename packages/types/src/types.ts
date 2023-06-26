@@ -1,4 +1,8 @@
-import { Hosting } from "@vexilla/hosts";
+import {
+  HostingConfig,
+  HostingProvider,
+  HostingProviderType,
+} from "@vexilla/hosts";
 import {
   VexillaFeatureTypeToggle,
   VexillaFeatureTypeGradual,
@@ -75,9 +79,9 @@ export interface PublishedGroup {
 }
 
 export interface AppState {
+  modifiedAt: number;
   groups: Group[];
-  hosting: Hosting;
-  existingFeatures: any;
+  hosting: HostingConfig;
 }
 
 export interface UpdatePayload<T> {

@@ -19,6 +19,8 @@ import { Icon } from "@iconify/react";
 import refreshBroken from "@iconify/icons-solar/refresh-broken";
 import squareArrowRightUpBroken from "@iconify/icons-solar/square-arrow-right-up-broken";
 import { Branch, Repository } from "./_GitForm.types";
+import { HostingConfigGitBase } from "@vexilla/hosts";
+import { HostingConfigGithub } from "@vexilla/hosts";
 
 const githubAppName = `vexilla-dev`;
 // const githubAppName = `vexilla`;
@@ -45,6 +47,8 @@ export function GitForm({
   branches: Branch[];
   refresh: () => void;
 }>) {
+  const hosting = config?.hosting as HostingConfigGitBase;
+
   return (
     <Box>
       <Timeline active={activeElement + 1}>
@@ -52,20 +56,19 @@ export function GitForm({
           <TimelineItemTitle title="Git-specific Config" />
           <Flex direction="column" gap="0.5rem">
             <Switch
-              checked={config?.hosting.config.shouldCreatePullRequest}
+              checked={hosting.shouldCreatePullRequest}
               label="Create pull Request?"
               onChange={(event) => {
-                config.hosting.config.shouldCreatePullRequest =
-                  event.currentTarget.checked;
+                hosting.shouldCreatePullRequest = event.currentTarget.checked;
               }}
             />
-            {!!config.hosting.config.shouldCreatePullRequest && (
+            {!!hosting.shouldCreatePullRequest && (
               <TextInput
                 label="Branch Name Prefix"
-                value={config.hosting.config.branchNamePrefix || "vexilla_"}
+                value={hosting.branchNamePrefix || ""}
+                required
                 onInput={(event) => {
-                  config.hosting.config.shouldCreatePullRequest =
-                    event.currentTarget.value;
+                  hosting.branchNamePrefix = event.currentTarget.value;
                 }}
               />
             )}
@@ -83,13 +86,14 @@ export function GitForm({
             <Select
               value={repositoryId}
               onChange={(selectedRepositoryId) => {
-                if (config.hosting.provider === "github") {
-                  config.hosting.config.repositoryId = `${selectedRepositoryId}`;
+                if (hosting.provider === "github") {
+                  const githubHosting = hosting as HostingConfigGithub;
+                  hosting.repositoryId = `${selectedRepositoryId}`;
                   const repository = repositories.find(
                     (repository) => `${repository.id}` === selectedRepositoryId
                   );
-                  config.hosting.config.owner = repository?.owner || "";
-                  config.hosting.config.repositoryName = repository?.name || "";
+                  githubHosting.owner = repository?.owner || "";
+                  githubHosting.repositoryName = repository?.name || "";
                 }
               }}
               data={repositories.map((repository) => ({
@@ -123,16 +127,15 @@ export function GitForm({
             <Select
               value={targetBranch}
               onChange={(selectedBranchName) => {
-                if (config.hosting.provider === "github") {
-                  config.hosting.config.targetBranch = selectedBranchName || "";
+                if (hosting.provider === "github") {
+                  hosting.targetBranch = selectedBranchName || "";
                 }
               }}
               data={branches
                 .filter((branch) => {
-                  if (config.hosting.provider === "github") {
+                  if (hosting.provider === "github") {
                     return !branch.name.startsWith(
-                      config.hosting.config.branchNamePrefix ||
-                        DEFAULT_BRANCH_PREFIX
+                      hosting.branchNamePrefix || DEFAULT_BRANCH_PREFIX
                     );
                   } else {
                     return false;

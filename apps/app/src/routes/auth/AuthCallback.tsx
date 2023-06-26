@@ -43,17 +43,14 @@ export function AuthCallback() {
         } as HostingConfig;
 
         if (!config.hosting) {
-          config.hosting = {
-            provider,
-            config: newHostingConfig,
-          };
+          config.hosting = newHostingConfig;
         } else if (config.hosting.provider !== provider) {
           config.hosting.provider = provider;
-          config.hosting.config = newHostingConfig;
+          config.hosting = newHostingConfig;
         } else {
-          config.hosting.config.accessToken = accessToken;
+          config.hosting.accessToken = accessToken;
           if (installationId) {
-            config.hosting.config.installationId = installationId;
+            config.hosting.installationId = installationId;
           }
         }
         navigate("/");

@@ -1,4 +1,3 @@
-import { Readable } from "stream";
 // import { Storage } from "@google-cloud/storage";
 import axios from "axios";
 import { HostingConfigBase } from "../types";
@@ -42,22 +41,22 @@ export class FirebaseAdapter {
     // throw new Error("Firebase upload not implemented");
   }
 
-  static writeWritableStream(
-    writableStream: any,
-    jsonString: string
-  ): Promise<any> {
-    return new Promise(function (resolve, reject) {
-      console.log("made it into writeWriteable");
-      Readable.from(jsonString)
-        .pipe(writableStream as any)
-        .on("error", (error: any) => {
-          console.log("error in stream");
-          reject(error);
-        })
-        .on("finish", () => {
-          console.log("stream finished");
-          resolve("success");
-        });
-    });
-  }
+  // static writeWritableStream(
+  //   writableStream: any,
+  //   jsonString: string
+  // ): Promise<any> {
+  //   return new Promise(function (resolve, reject) {
+  //     console.log("made it into writeWriteable");
+  //     Readable.from(jsonString)
+  //       .pipe(writableStream as any)
+  //       .on("error", (error: any) => {
+  //         console.log("error in stream");
+  //         reject(error);
+  //       })
+  //       .on("finish", () => {
+  //         console.log("stream finished");
+  //         resolve("success");
+  //       });
+  //   });
+  // }
 }

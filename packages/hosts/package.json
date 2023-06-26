@@ -15,7 +15,8 @@
     "@azure/storage-blob": "^12.3.0",
     "aws-sdk": "^2.804.0",
     "axios": "^1.4.0",
-    "stream": "^0.0.2"
+    "stream": "^0.0.2",
+    "zod": "^3.21.4"
   },
   "devDependencies": {
     "nodemon": "^2.0.22",

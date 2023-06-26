@@ -27,6 +27,9 @@ import { Icon } from "@iconify/react";
 import verifiedCheckBold from "@iconify/icons-solar/verified-check-bold";
 import closeCircleBroken from "@iconify/icons-solar/close-circle-broken";
 import refreshBroken from "@iconify/icons-solar/refresh-broken";
+import { fetchersMap } from "../../../utils/fetchers.map";
+import { HostingProvider } from "@vexilla/hosts";
+import { useSnapshot } from "valtio";
 
 const githubAppName = `vexilla-dev`;
 // const githubAppName = `vexilla`;
@@ -55,6 +58,7 @@ const disabledButtonStyling = {
 };
 
 export function GithubForm({ config, updateConfig }: GithubFormProps) {
+  const configSnapshot = useSnapshot(config);
   const {
     accessToken,
     installationId,
@@ -62,9 +66,11 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
     repositoryName,
     owner,
     targetBranch,
+    provider,
+    providerType,
   } =
-    config.hosting.provider === "github"
-      ? config.hosting.config
+    configSnapshot.hosting.provider === "github"
+      ? configSnapshot.hosting
       : {
           accessToken: "",
           installationId: "",
@@ -72,6 +78,8 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
           repositoryName: "",
           owner: "",
           targetBranch: "",
+          provider: "",
+          providerType: "",
         };
   const [installations, setInstallations] = useState<GitHubInstallation[]>([]);
   const [repositories, setRepositories] = useState<Repository[]>([]);
@@ -79,6 +87,8 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
   const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now());
 
   const githubMethods = useMemo(() => {
+    console.log("inside useMemo", { accessToken, owner, repositoryName });
+    console.log("whole config", cloneDeep(config));
     return new GitHubFetcher(cloneDeep(config));
   }, [accessToken, owner, repositoryName]);
 
@@ -88,12 +98,12 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
 
   function clearHosting() {
     if (config.hosting.provider === "github") {
-      config.hosting.config.accessToken = "";
-      config.hosting.config.installationId = "";
-      config.hosting.config.repositoryId = "";
+      config.hosting.accessToken = "";
+      config.hosting.installationId = "";
+      config.hosting.repositoryId = "";
     } else {
       console.error(
-        `Wrong hosting provider in github form: ${config.hosting.provider}`
+        `Wrong hosting provider in github form: ${configSnapshot.hosting.provider}`
       );
     }
 
@@ -121,11 +131,11 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
             await githubMethods.fetchInstallations();
           setInstallations(installationsResponse.installations);
           if (installationsResponse.installations.length === 1) {
-            config.hosting.config.installationId = `${installationsResponse.installations[0].id}`;
+            config.hosting.installationId = `${installationsResponse.installations[0].id}`;
           }
-          if (config.hosting.config.installationId) {
+          if (config.hosting.installationId) {
             const repositoriesResponse = await githubMethods.fetchRepositories(
-              config.hosting.config.installationId
+              config.hosting.installationId
             );
             setRepositories(
               repositoriesResponse.repositories.map((_repository) => ({
@@ -135,7 +145,9 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
               }))
             );
             if (repositoriesResponse.repositories.length === 1) {
-              config.hosting.config.repositoryId = `${repositoriesResponse.repositories[0].id}`;
+              config.hosting.repositoryId = `${repositoriesResponse.repositories[0].id}`;
+              config.hosting.owner = `${repositoriesResponse.repositories[0].owner.login}`;
+              config.hosting.repositoryName = `${repositoriesResponse.repositories[0].name}`;
             }
           }
         }
@@ -152,6 +164,8 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
       if (accessToken && repositoryName && owner) {
         const fetchedBranches = await githubMethods.fetchBranches();
 
+        console.log({ fetchedBranches });
+
         setBranches(
           fetchedBranches.map((_branch) => ({
             name: _branch.name,
@@ -162,7 +176,7 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
           fetchedBranches.length === 1 &&
           config.hosting.provider === "github"
         ) {
-          config.hosting.config.targetBranch = fetchedBranches[0].name;
+          config.hosting.targetBranch = fetchedBranches[0].name;
         }
       } else {
         console.log("One of these isn't what it should be", {
@@ -175,16 +189,43 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
     getBranches();
   }, [accessToken, owner, repositoryName]);
 
+  useEffect(() => {
+    console.log("fetch config values", {
+      provider,
+      providerType,
+      accessToken,
+      owner,
+      repositoryName,
+    });
+    if (provider && providerType && accessToken && owner && repositoryName) {
+      async function fetchCurrentConfig() {
+        if (configSnapshot.hosting?.providerType === "git") {
+          console.log("Fetching current config");
+          const fetcher =
+            fetchersMap[configSnapshot.hosting.provider as HostingProvider]?.(
+              config
+            );
+
+          if (fetcher) {
+            const result = await fetcher.getCurrentConfig();
+            console.log("fetched current config", { result });
+          } else {
+            console.log("no fetcher");
+          }
+        } else {
+          console.log(
+            "Initial provider type was not git",
+            configSnapshot.hosting?.providerType
+          );
+        }
+      }
+
+      fetchCurrentConfig();
+    }
+  }, [provider, providerType, accessToken, owner, repositoryName]);
+
   return (
     <>
-      <Button
-        onClick={async () => {
-          const fetchedConfig = await githubMethods.getCurrentConfig();
-          console.log({ fetchedConfig });
-        }}
-      >
-        Get Config
-      </Button>
       <GitForm
         config={config}
         updateConfig={() => {}}

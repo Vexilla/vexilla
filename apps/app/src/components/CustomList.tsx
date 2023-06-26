@@ -2,7 +2,6 @@ import React, { ReactNode } from "react";
 import { Outlet, Link, NavLink } from "react-router-dom";
 import {
   Flex,
-  Tooltip,
   ActionIcon,
   Button,
   Box,
@@ -13,11 +12,10 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 
 import { Icon } from "@iconify/react";
-import infoCircleBroken from "@iconify/icons-solar/info-circle-broken";
 import addCircleBroken from "@iconify/icons-solar/add-circle-broken";
 import trashBinTrashBroken from "@iconify/icons-solar/trash-bin-trash-broken";
 import penBroken from "@iconify/icons-solar/pen-broken";
-import { CustomTooltip } from "./CustomTooltip";
+import { CustomCard } from "./CustomCard";
 
 interface CustomListProps<T> {
   onAdd: () => void | Promise<void>;
@@ -39,24 +37,18 @@ export function CustomList<T>({
   itemType,
 }: CustomListProps<T>) {
   return (
-    <Box className="rounded bg-slate-50">
-      <Flex
-        direction={"row"}
-        justify={"space-between"}
-        align={"center"}
-        className="p-2 bg-slate-100 rounded-t"
-      >
-        <Flex direction="row" align={"center"}>
-          <Text className="font-bold">{title}</Text>
-          {!!tooltipText && <CustomTooltip tooltipText={tooltipText} />}
-        </Flex>
-        <Flex direction={"row"} align={"center"} gap={2}>
+    <CustomCard
+      title={title}
+      tooltipText={tooltipText}
+      titleButtonSection={
+        <>
           <Button color="primary" onClick={onAdd}>
             <Icon icon={addCircleBroken} />
             <Box ml={2}>New</Box>
           </Button>
-        </Flex>
-      </Flex>
+        </>
+      }
+    >
       <ul>
         {items?.length > 0 &&
           items.map((item) => <li key={getKey(item)}>{listItem(item)}</li>)}
@@ -64,7 +56,7 @@ export function CustomList<T>({
       <Flex p={"1rem"} align={"center"} justify={"center"}>
         {!items?.length && <>No {itemType}s found.</>}
       </Flex>
-    </Box>
+    </CustomCard>
   );
 }
 

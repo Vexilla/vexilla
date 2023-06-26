@@ -1,4 +1,4 @@
-import { HostingAdapterGit, HostingConfigGitBase } from "../types";
+import { HostingConfigGitBase } from "../types";
 
 export interface HostingConfigGithub extends HostingConfigGitBase {
   provider: "github";
