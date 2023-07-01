@@ -28,6 +28,9 @@ importers:
       '@iconify/icons-game-icons':
         specifier: ^1.2.1
         version: 1.2.1
+      '@iconify/icons-octicon':
+        specifier: ^1.2.42
+        version: 1.2.42
       '@iconify/icons-solar':
         specifier: ^1.2.0
         version: 1.2.0
@@ -61,9 +64,6 @@ importers:
       '@vexilla/hosts':
         specifier: workspace:*
         version: link:../../packages/hosts
-      '@vexilla/validators':
-        specifier: workspace:*
-        version: link:../../packages/validators
       case:
         specifier: ^1.6.3
         version: 1.6.3
@@ -4956,6 +4956,12 @@ packages:
 
   /@iconify/icons-game-icons@1.2.1:
     resolution: {integrity: sha512-heO/4Veq5SOE7Ho1AiPn1HbSavl7ISIgiC7Ww6J2NNZ5mw+hVuTCzOQ77ImkWSjNKZZ4oEX6A6ibZEcK15J8Hg==}
+    dependencies:
+      '@iconify/types': 2.0.0
+    dev: false
+
+  /@iconify/icons-octicon@1.2.42:
+    resolution: {integrity: sha512-UjDGYqh7ljW9jYLdKtXDdZyzY8wOewOHciq+7eEnJy+uu8Yd7NlQGz6uTDgMlwwP6CYt1v038b3Mv7ybqZNytA==}
     dependencies:
       '@iconify/types': 2.0.0
     dev: false

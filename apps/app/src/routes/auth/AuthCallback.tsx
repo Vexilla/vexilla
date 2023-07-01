@@ -47,13 +47,13 @@ export function AuthCallback() {
         } else if (config.hosting.provider !== provider) {
           config.hosting.provider = provider;
           config.hosting = newHostingConfig;
-        } else {
+        } else if (config.hosting.provider === "github") {
           config.hosting.accessToken = accessToken;
           if (installationId) {
             config.hosting.installationId = installationId;
           }
         }
-        navigate("/");
+        navigate("/?logged_in");
       } catch (e: any) {
         console.log({ e });
         setError(e?.message || "error");

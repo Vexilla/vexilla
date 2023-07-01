@@ -21,11 +21,17 @@ export const config = proxy<AppState>(
   }
 );
 
-subscribe(config, () => {
+subscribe(config, (changes) => {
+  let changingModifiedAt = changes.find(
+    (change) => change[1][0] === "modifiedAt"
+  );
+  if (!changingModifiedAt) {
+    config.modifiedAt = Date.now();
+  }
   localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
 });
 
-export const previousConfig = proxy<AppState>({
+export const remoteConfig = proxy<AppState>({
   modifiedAt: 0,
   groups: [],
   hosting: {
@@ -33,17 +39,6 @@ export const previousConfig = proxy<AppState>({
     providerType: "",
   },
 });
-
-// export const HostingConfigValidators: Record<
-//   z.infer<typeof HostingProviderValidator>,
-//   z.AnyZodObject
-// > = {
-//   github: HostingConfigGithubValidator,
-//   s3: HostingConfigS3Validator,
-//   azure: HostingConfigAzureValidator,
-//   gcloud: HostingConfigGcloudValidator,
-//   firebase: HostingConfigFirebaseValidator,
-// };
 
 export const validation = derive({
   result: (get) => {
@@ -73,8 +68,8 @@ export const validation = derive({
 export const differences = derive({
   result: (get) => {
     const currentConfig = get(config);
-    const currentPreviousConfig = get(previousConfig);
+    const currentRemoteConfig = get(remoteConfig);
 
-    return microdiff(currentConfig, currentPreviousConfig);
+    return microdiff(currentConfig, currentRemoteConfig);
   },
 });

@@ -16,7 +16,7 @@ import { cloneDeep, omit } from "lodash-es";
 import { Group, PublishedGroup } from "@vexilla/types";
 
 import { nanoid } from "./utils/nanoid";
-import { config, previousConfig } from "./stores/config-valtio";
+import { config, remoteConfig } from "./stores/config-valtio";
 
 import { GitHubFetcher } from "./components/app/forms/GithubForm.fetchers";
 
@@ -30,12 +30,20 @@ import { HostingProvider } from "@vexilla/hosts";
 
 function App() {
   const configSnapshot = useSnapshot(config);
-  const previousConfigSnapshot = useSnapshot(previousConfig);
+  const remoteConfigSnapshot = useSnapshot(remoteConfig);
 
   const [
     hostingConfigModalOpened,
     { open: openHostingConfigModal, close: closeHostingConfigModal },
   ] = useDisclosure();
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    console.log(`search params: ${searchParams}`);
+    if (searchParams.has("logged_in")) {
+      openHostingConfigModal();
+    }
+  }, []);
 
   const {
     accessToken,
