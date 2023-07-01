@@ -1,4 +1,3 @@
-import { AppState } from "@vexilla/types";
 import { proxy, subscribe } from "valtio";
 
 const GITHUB_KEY = "github";

@@ -8,7 +8,6 @@ import {
   Box,
   TextInput,
 } from "@mantine/core";
-import { useSnapshot } from "valtio";
 
 import { AppState } from "@vexilla/types";
 
