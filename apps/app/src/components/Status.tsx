@@ -13,6 +13,7 @@ import {
   Collapse,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import dayjs from "dayjs";
 
 import { AppState } from "@vexilla/types";
 
@@ -23,6 +24,7 @@ import { Icon } from "@iconify/react";
 import settingsBroken from "@iconify/icons-solar/settings-broken";
 import closeCircleBroken from "@iconify/icons-solar/close-circle-broken";
 import checkCircleBroken from "@iconify/icons-solar/check-circle-broken";
+import roundDoubleAltArrowRightBoldDuotone from "@iconify/icons-solar/round-double-alt-arrow-right-bold-duotone";
 
 import chevronRight from "@iconify/icons-octicon/chevron-right-12";
 import chevronDown from "@iconify/icons-octicon/chevron-down-12";
@@ -30,12 +32,20 @@ import chevronDown from "@iconify/icons-octicon/chevron-down-12";
 interface StatusProps {
   config: AppState;
   showConfig: () => void;
-  publish: () => Promise<void>;
+  publish: (
+    changes: Difference[],
+    approvals: Record<string, boolean>
+  ) => Promise<void>;
 }
 
 export function Status({ config, showConfig, publish }: StatusProps) {
   const validationSnapshot = useSnapshot(validation);
   const differencesSnapshot = useSnapshot(differences);
+
+  const [
+    publishModalOpened,
+    { open: openPublishModal, close: closePublishModal },
+  ] = useDisclosure();
 
   let validationStatus = StatusItemStatus.Good;
   let validationErrors: string[] = [];
@@ -46,9 +56,16 @@ export function Status({ config, showConfig, publish }: StatusProps) {
     );
   }
 
+  const modifiedAtChange = differences.result.find(
+    (change) => change.path.join(".") === "modifiedAt"
+  );
+
+  const changes = differences.result.filter(
+    (change) => change.path.join(".") !== "modifiedAt"
+  );
+
   let diffStatus = StatusItemStatus.Error;
-  const diffErrors = differences.result;
-  if (diffErrors.length > 0) {
+  if (changes.length > 0) {
     diffStatus = StatusItemStatus.Good;
   }
 
@@ -81,14 +98,33 @@ export function Status({ config, showConfig, publish }: StatusProps) {
         BAAAR
       </StatusItem>
 
-      <ChangesStatusItem diffErrors={diffErrors} />
+      {/* <ChangesStatusItem
+        changes={changes}
+        modifiedAtChange={modifiedAtChange}
+      /> */}
+
+      <StatusItem
+        title="Changes"
+        status={diffStatus}
+        issueCount={changes.length || 0}
+        onViewButtonClick={() => {}}
+        viewButtonDisabled={true}
+      />
+
+      <PublishModal
+        changes={changes}
+        modifiedAtChange={modifiedAtChange}
+        opened={publishModalOpened}
+        closeModal={closePublishModal}
+        publish={publish}
+      />
 
       <div className="w-full p-2">
         <Button
           className="w-full"
           disabled={!isPublishable}
           onClick={() => {
-            publish();
+            openPublishModal();
           }}
         >
           Publish
@@ -187,24 +223,29 @@ const changeResultColors = {
 };
 
 interface ChangesStatusItemProps {
-  diffErrors: Difference[];
+  changes: Difference[];
+  modifiedAtChange?: Difference;
+  opened: boolean;
+  closeModal: () => void;
+  publish: (
+    changes: Difference[],
+    approvals: Record<string, boolean>
+  ) => Promise<void>;
 }
 
-function ChangesStatusItem({ diffErrors }: ChangesStatusItemProps) {
-  const [opened, { open: openModal, close: closeModal }] = useDisclosure();
+function PublishModal({
+  changes,
+  modifiedAtChange,
+  opened,
+  closeModal,
+  publish,
+}: ChangesStatusItemProps) {
   const [approvals, setApprovals] = useState<Record<string, boolean>>({});
-  // leaving off, make this actually useful
   const [collapsedDiffs, setCollapsedDiffs] = useState<Record<string, boolean>>(
     {}
   );
 
-  let diffStatus = StatusItemStatus.Error;
-  if (diffErrors.length > 0) {
-    diffStatus = StatusItemStatus.Good;
-  }
-
   const approvalCount = Object.keys(approvals).length;
-
   const acceptedCount = Object.values(approvals).filter(
     (approvalValue) => approvalValue === true
   ).length;
@@ -221,7 +262,7 @@ function ChangesStatusItem({ diffErrors }: ChangesStatusItemProps) {
     const newApprovals: Record<string, boolean> = {};
     const newCollapsedDiffs: Record<string, boolean> = {};
 
-    diffErrors.forEach((change) => {
+    changes.forEach((change) => {
       const changePath = change.path.join(".");
       newApprovals[changePath] = true;
       newCollapsedDiffs[changePath] = true;
@@ -233,7 +274,7 @@ function ChangesStatusItem({ diffErrors }: ChangesStatusItemProps) {
   const rejectAll = () => {
     const newApprovals: Record<string, boolean> = {};
     const newCollapsedDiffs: Record<string, boolean> = {};
-    diffErrors.forEach((change) => {
+    changes.forEach((change) => {
       const changePath = change.path.join(".");
       newApprovals[changePath] = false;
       newCollapsedDiffs[changePath] = true;
@@ -266,201 +307,217 @@ function ChangesStatusItem({ diffErrors }: ChangesStatusItemProps) {
     });
   };
 
+  const dateFormat = "MMM DD, YYYY hh:mma";
+
   return (
-    <>
-      <Modal
-        opened={opened}
-        onClose={() => {
-          closeModal();
-          clearApprovals();
-        }}
-        title={"Changes"}
-      >
-        <Flex direction="column">
-          <Flex direction="row" gap="1rem" justify={"center"} align={"center"}>
-            <Box>
-              <RingProgress
-                size={72}
-                thickness={8}
-                label={
-                  <Text size="xs" align="center" className="whitespace-nowrap">
-                    {approvalCount}/{diffErrors.length}
-                  </Text>
-                }
-                sections={[
-                  {
-                    value: (acceptedCount / diffErrors.length) * 100,
-                    color: "blue",
-                  },
-                  {
-                    value: (rejectedCount / diffErrors.length) * 100,
-                    color: "red",
-                  },
-                ]}
-              />
-            </Box>
-            <Button
-              variant="outline"
-              onClick={clearApprovals}
-              disabled={approvalCount === 0}
-            >
-              Reset
-            </Button>
-            <Button
-              variant="filled"
-              onClick={acceptAll}
-              disabled={approvalCount === diffErrors.length}
-            >
-              Accept All
-            </Button>
-            <Button
-              variant="filled"
-              color="red"
-              onClick={rejectAll}
-              disabled={approvalCount === diffErrors.length}
-            >
-              Reject All
-            </Button>
-          </Flex>
-          <div className="max-h-[400px] overflow-y-auto">
-            {diffErrors.map((change) => {
-              const changePath = change.path.join(".");
-              const approved = typeof approvals[changePath] === "undefined";
-              const bgColor = approved
-                ? "bg-gray-100"
-                : changeResultColors[`${approvals[changePath]}`];
-
-              return (
-                <Flex
-                  direction="row"
-                  justify={"space-between"}
-                  p={"0.5rem"}
-                  my={"0.5rem"}
-                  className={`w-full  ${bgColor} rounded`}
-                >
-                  <Box className="w-full truncate">
-                    <Flex direction="row" gap="1rem" justify={"space-between"}>
-                      <Flex
-                        direction="row"
-                        gap="1rem"
-                        align="center"
-                        justify={"flex-start"}
-                        className="w-[calc(100%-100px)]"
-                      >
-                        <ActionIcon
-                          variant="subtle"
-                          color="gray"
-                          title={
-                            collapsedDiffs[changePath] ? "Expand" : "Collapse"
-                          }
-                          onClick={() => {
-                            const newCollapsedDiffs = {
-                              ...collapsedDiffs,
-                              [changePath]: !collapsedDiffs[changePath],
-                            };
-
-                            setCollapsedDiffs(newCollapsedDiffs);
-                          }}
-                        >
-                          {collapsedDiffs[changePath] ? (
-                            <Icon icon={chevronRight} />
-                          ) : (
-                            <Icon icon={chevronDown} />
-                          )}
-                        </ActionIcon>
-                        <Text
-                          className={`${
-                            changeTypeColors[change.type].label
-                          } font-bold`}
-                        >
-                          {change.type}
-                        </Text>
-                        <Text title={changePath} className="truncate">
-                          {changePath}
-                        </Text>
-                      </Flex>
-                      <Group className="w-[100px] justify-end pr-[0.5rem]">
-                        <ActionIcon
-                          size={"sm"}
-                          variant="filled"
-                          color="blue"
-                          title="Accept Change"
-                          onClick={() => {
-                            acceptOne(change);
-                          }}
-                        >
-                          <Icon icon={checkCircleBroken} />
-                        </ActionIcon>
-                        <ActionIcon
-                          size={"sm"}
-                          variant="filled"
-                          color="red"
-                          title="Reject Change"
-                          onClick={() => {
-                            rejectOne(change);
-                          }}
-                        >
-                          <Icon icon={closeCircleBroken} />
-                        </ActionIcon>
-                      </Group>
-                    </Flex>
-
-                    <Collapse in={!collapsedDiffs[changePath]}>
-                      <Text className="truncate bg-slate-50 px-2 mt-2">
-                        <pre>
-                          <code>{formatDifferenceText(change)}</code>
-                        </pre>
-                      </Text>
-                    </Collapse>
-                  </Box>
-                </Flex>
-              );
-            })}
-          </div>
-          <Flex direction="column" pt="1rem">
-            {approvalCount !== diffErrors.length && (
-              <Flex direction="row" justify={"flex-end"} pb="0.5rem">
-                <Text color="red" align="right">
-                  You must accept or reject all changes before merging.
+    <Modal
+      opened={opened}
+      onClose={() => {
+        closeModal();
+        clearApprovals();
+      }}
+      title={"Changes"}
+    >
+      <Flex direction="column">
+        {!!modifiedAtChange &&
+          (modifiedAtChange.type === "CHANGE" ||
+            modifiedAtChange.type === "CREATE") && (
+            <Flex direction="row" justify={"space-between"} align={"center"}>
+              <Flex direction="column" align="center" w={"40%"}>
+                <Text color="gray" size="sm">
+                  Remote Timestamp
                 </Text>
+                {modifiedAtChange.type === "CHANGE" && (
+                  <Text>
+                    {(modifiedAtChange.oldValue &&
+                      dayjs(modifiedAtChange.oldValue).format(dateFormat)) ||
+                      "NULL"}
+                  </Text>
+                )}
+                {modifiedAtChange.type === "CREATE" && <Text>NULL</Text>}
               </Flex>
-            )}
-            <Flex
-              direction="row"
-              justify={"flex-end"}
-              align="center"
-              gap="1rem"
-            >
-              <Button
-                variant="subtle"
-                color="gray"
-                onClick={() => {
-                  closeModal();
-                  clearApprovals();
-                }}
-              >
-                Cancel
-              </Button>
-
-              <Button
-                variant="filled"
-                onClick={() => {}}
-                disabled={approvalCount !== diffErrors.length}
-              >
-                Merge Changes
-              </Button>
+              <Icon width={"2rem"} icon={roundDoubleAltArrowRightBoldDuotone} />
+              <Flex direction="column" align="center" w={"40%"}>
+                <Text color="gray" size="sm">
+                  Local Timestamp
+                </Text>
+                <Text>{dayjs(modifiedAtChange.value).format(dateFormat)}</Text>
+              </Flex>
             </Flex>
+          )}
+        <Flex direction="row" gap="1rem" justify={"center"} align={"center"}>
+          <Box>
+            <RingProgress
+              size={72}
+              thickness={8}
+              label={
+                <Text size="xs" align="center" className="whitespace-nowrap">
+                  {approvalCount}/{changes.length}
+                </Text>
+              }
+              sections={[
+                {
+                  value: (acceptedCount / changes.length) * 100,
+                  color: "blue",
+                },
+                {
+                  value: (rejectedCount / changes.length) * 100,
+                  color: "red",
+                },
+              ]}
+            />
+          </Box>
+          <Button
+            variant="outline"
+            onClick={clearApprovals}
+            disabled={approvalCount === 0}
+          >
+            Reset
+          </Button>
+          <Button
+            variant="filled"
+            onClick={acceptAll}
+            disabled={approvalCount === changes.length}
+          >
+            Accept All
+          </Button>
+          <Button
+            variant="filled"
+            color="red"
+            onClick={rejectAll}
+            disabled={approvalCount === changes.length}
+          >
+            Reject All
+          </Button>
+        </Flex>
+        <div className="max-h-[400px] overflow-y-auto">
+          {changes.map((change) => {
+            const changePath = change.path.join(".");
+            const approved = typeof approvals[changePath] === "undefined";
+            const bgColor = approved
+              ? "bg-gray-100"
+              : changeResultColors[`${approvals[changePath]}`];
+
+            return (
+              <Flex
+                direction="row"
+                justify={"space-between"}
+                p={"0.5rem"}
+                my={"0.5rem"}
+                className={`w-full  ${bgColor} rounded`}
+              >
+                <Box className="w-full truncate">
+                  <Flex direction="row" gap="1rem" justify={"space-between"}>
+                    <Flex
+                      direction="row"
+                      gap="1rem"
+                      align="center"
+                      justify={"flex-start"}
+                      className="w-[calc(100%-100px)]"
+                    >
+                      <ActionIcon
+                        variant="subtle"
+                        color="gray"
+                        title={
+                          collapsedDiffs[changePath] ? "Expand" : "Collapse"
+                        }
+                        onClick={() => {
+                          const newCollapsedDiffs = {
+                            ...collapsedDiffs,
+                            [changePath]: !collapsedDiffs[changePath],
+                          };
+
+                          setCollapsedDiffs(newCollapsedDiffs);
+                        }}
+                      >
+                        {collapsedDiffs[changePath] ? (
+                          <Icon icon={chevronRight} />
+                        ) : (
+                          <Icon icon={chevronDown} />
+                        )}
+                      </ActionIcon>
+                      <Text
+                        className={`${
+                          changeTypeColors[change.type].label
+                        } font-bold`}
+                      >
+                        {change.type}
+                      </Text>
+                      <Text title={changePath} className="truncate">
+                        {changePath}
+                      </Text>
+                    </Flex>
+                    <Group className="w-[100px] justify-end pr-[0.5rem]">
+                      <ActionIcon
+                        size={"sm"}
+                        variant="filled"
+                        color="blue"
+                        title="Accept Change"
+                        onClick={() => {
+                          acceptOne(change);
+                        }}
+                      >
+                        <Icon icon={checkCircleBroken} />
+                      </ActionIcon>
+                      <ActionIcon
+                        size={"sm"}
+                        variant="filled"
+                        color="red"
+                        title="Reject Change"
+                        onClick={() => {
+                          rejectOne(change);
+                        }}
+                      >
+                        <Icon icon={closeCircleBroken} />
+                      </ActionIcon>
+                    </Group>
+                  </Flex>
+
+                  <Collapse in={!collapsedDiffs[changePath]}>
+                    <Text className="truncate bg-slate-50 px-2 mt-2">
+                      <pre>
+                        <code>{formatDifferenceText(change)}</code>
+                      </pre>
+                    </Text>
+                  </Collapse>
+                </Box>
+              </Flex>
+            );
+          })}
+        </div>
+        <Flex direction="column" pt="1rem">
+          {approvalCount !== changes.length && (
+            <Flex direction="row" justify={"flex-end"} pb="0.5rem">
+              <Text color="red" align="right">
+                You must accept or reject each change before merging.
+              </Text>
+            </Flex>
+          )}
+          <Flex direction="row" justify={"flex-end"} align="center" gap="1rem">
+            <Button
+              variant="subtle"
+              color="gray"
+              onClick={() => {
+                closeModal();
+                clearApprovals();
+              }}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              variant="filled"
+              onClick={() => {
+                publish(changes, approvals);
+              }}
+              disabled={approvalCount !== changes.length}
+            >
+              Publish Changes
+            </Button>
           </Flex>
         </Flex>
-      </Modal>
-      <StatusItem
-        title="Changes"
-        status={diffStatus}
-        issueCount={diffErrors.length || 0}
-        onViewButtonClick={openModal}
-        viewButtonDisabled={!diffErrors.length}
-      />
-    </>
+      </Flex>
+    </Modal>
   );
 }
 

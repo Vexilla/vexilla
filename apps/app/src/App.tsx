@@ -11,11 +11,14 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useSnapshot } from "valtio";
-import { cloneDeep, omit } from "lodash-es";
+import { cloneDeep, omit, set as lodashSet } from "lodash-es";
+import { Difference } from "microdiff";
 
-import { Group, PublishedGroup } from "@vexilla/types";
+import { AppState, Group, PublishedGroup } from "@vexilla/types";
+import { HostingProvider } from "@vexilla/hosts";
 
 import { nanoid } from "./utils/nanoid";
+import { fetchersMap } from "./utils/fetchers.map";
 import { config, remoteConfig } from "./stores/config-valtio";
 
 import { GitHubFetcher } from "./components/app/forms/GithubForm.fetchers";
@@ -25,8 +28,6 @@ import { OnboardingForm } from "./components/app/OnboardingForm";
 import { Status } from "./components/Status";
 
 import "./App.css";
-import { fetchersMap } from "./utils/fetchers.map";
-import { HostingProvider } from "@vexilla/hosts";
 
 function App() {
   const configSnapshot = useSnapshot(config);
@@ -98,6 +99,9 @@ function App() {
         if (fetcher) {
           const result = await fetcher.getCurrentConfig();
           console.log({ result });
+          remoteConfig.groups = result.groups;
+          remoteConfig.hosting = result.hosting;
+          remoteConfig.modifiedAt = result.modifiedAt;
         }
       } else {
         console.log(
@@ -147,9 +151,12 @@ function App() {
                 showConfig={() => {
                   openHostingConfigModal();
                 }}
-                publish={async () => {
-                  if (config.hosting.provider === "github") {
-                    const groupFiles = config.groups.map((group) => {
+                publish={async (changes, approvals) => {
+                  // rationalize approvals/changes into current config
+                  const newConfig = mergeChanges(config, changes, approvals);
+
+                  if (newConfig.hosting.provider === "github") {
+                    const groupFiles = newConfig.groups.map((group) => {
                       const scrubbedGroup: PublishedGroup = {
                         ...group,
                         meta: {
@@ -171,7 +178,7 @@ function App() {
                       content: JSON.stringify(
                         {
                           version: "v1",
-                          groups: config.groups.map((group) => {
+                          groups: newConfig.groups.map((group) => {
                             return {
                               name: group.name,
                               groupId: group.groupId,
@@ -183,7 +190,7 @@ function App() {
                       ),
                     };
 
-                    const cleanConfig = cloneDeep(config);
+                    const cleanConfig = cloneDeep(newConfig);
                     if (cleanConfig.hosting.providerType === "git") {
                       cleanConfig.hosting.accessToken = "";
                     } else if (cleanConfig.hosting.providerType === "direct") {
@@ -253,6 +260,34 @@ function App() {
       </AppShell>
     </>
   );
+}
+
+// assumes that the Remote is the old Value and Local is the new Value
+function mergeChanges(
+  localConfig: AppState,
+  changes: Difference[],
+  approvals: Record<string, boolean>
+) {
+  changes.forEach((change) => {
+    const changePathString = change.path.join(".");
+    const approved = approvals[changePathString];
+
+    if (!approved) {
+      switch (change.type) {
+        case "CHANGE":
+          lodashSet(localConfig, change.path, change.oldValue);
+          break;
+        case "CREATE":
+          lodashSet(localConfig, change.path, undefined);
+          break;
+        case "REMOVE":
+          lodashSet(localConfig, change.path, change.oldValue);
+          break;
+      }
+    }
+  });
+
+  return localConfig;
 }
 
 export default App;

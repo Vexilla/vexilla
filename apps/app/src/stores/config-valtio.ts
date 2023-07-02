@@ -4,6 +4,7 @@ import { derive } from "valtio/utils";
 import { z } from "zod";
 import microdiff from "microdiff";
 import { HostingConfigValidators } from "../utils/validators";
+import { omit } from "lodash-es";
 
 const CONFIG_KEY = "config";
 
@@ -70,6 +71,8 @@ export const differences = derive({
     const currentConfig = get(config);
     const currentRemoteConfig = get(remoteConfig);
 
-    return microdiff(currentConfig, currentRemoteConfig);
+    return microdiff(currentRemoteConfig, currentConfig).filter((diff) => {
+      return diff.path.join(".") !== "hosting.accessToken";
+    });
   },
 });
