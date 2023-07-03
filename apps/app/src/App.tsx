@@ -91,17 +91,22 @@ function App() {
 
   useEffect(() => {
     async function fetchCurrentConfig() {
-      if (config.hosting?.providerType === "git") {
+      if (config.hosting?.providerType === "git" && accessToken) {
         console.log("Fetching current config");
         const fetcher =
           fetchersMap[config.hosting.provider as HostingProvider]?.(config);
 
         if (fetcher) {
-          const result = await fetcher.getCurrentConfig();
-          console.log({ result });
-          remoteConfig.groups = result.groups;
-          remoteConfig.hosting = result.hosting;
-          remoteConfig.modifiedAt = result.modifiedAt;
+          try {
+            const result = await fetcher.getCurrentConfig();
+            console.log("current config", { result });
+            remoteConfig.groups = result.groups;
+            remoteConfig.hosting = result.hosting;
+            remoteConfig.modifiedAt = result.modifiedAt;
+          } catch (e: any) {
+            console.log("Failed to fetch current config. Invalidating token.");
+            config.hosting.accessToken = "";
+          }
         }
       } else {
         console.log(
@@ -112,7 +117,7 @@ function App() {
     }
 
     fetchCurrentConfig();
-  }, []);
+  }, [accessToken]);
 
   return (
     <>

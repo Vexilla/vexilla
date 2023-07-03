@@ -24,7 +24,7 @@ import { Icon } from "@iconify/react";
 import settingsBroken from "@iconify/icons-solar/settings-broken";
 import closeCircleBroken from "@iconify/icons-solar/close-circle-broken";
 import checkCircleBroken from "@iconify/icons-solar/check-circle-broken";
-import roundDoubleAltArrowRightBoldDuotone from "@iconify/icons-solar/round-double-alt-arrow-right-bold-duotone";
+import arrowRightBroken from "@iconify/icons-solar/arrow-right-broken";
 
 import chevronRight from "@iconify/icons-octicon/chevron-right-12";
 import chevronDown from "@iconify/icons-octicon/chevron-down-12";
@@ -92,11 +92,10 @@ export function Status({ config, showConfig, publish }: StatusProps) {
         title="Validation"
         status={validationStatus}
         issueCount={validationErrors.length || 0}
-        onViewButtonClick={() => {}}
-        viewButtonDisabled={!validationErrors.length}
-      >
-        BAAAR
-      </StatusItem>
+        actionButtonLabel="Edit"
+        onActionButtonClick={showConfig}
+        actionButtonDisabled={!validationErrors.length}
+      />
 
       {/* <ChangesStatusItem
         changes={changes}
@@ -107,8 +106,9 @@ export function Status({ config, showConfig, publish }: StatusProps) {
         title="Changes"
         status={diffStatus}
         issueCount={changes.length || 0}
-        onViewButtonClick={() => {}}
-        viewButtonDisabled={true}
+        onActionButtonClick={() => {}}
+        actionButtonDisabled={true}
+        disabled={validationErrors.length > 0}
       />
 
       <PublishModal
@@ -118,6 +118,16 @@ export function Status({ config, showConfig, publish }: StatusProps) {
         closeModal={closePublishModal}
         publish={publish}
       />
+
+      {!isPublishable && (
+        <Flex align="center" justify="center">
+          <Text color="red" p={"0.5rem"} align="center">
+            {validationErrors.length > 0
+              ? "There are errors with your hosting/git config."
+              : "There are no changes to publish."}
+          </Text>
+        </Flex>
+      )}
 
       <div className="w-full p-2">
         <Button
@@ -139,14 +149,6 @@ enum StatusItemStatus {
   Info = "info",
   Warning = "warning",
   Error = "error",
-}
-
-interface StatusItemProps {
-  title: string;
-  status: StatusItemStatus;
-  issueCount: number;
-  onViewButtonClick: () => void;
-  viewButtonDisabled?: boolean;
 }
 
 const statusColorMap: Record<
@@ -174,30 +176,48 @@ const statusColorMap: Record<
   },
 };
 
+interface StatusItemProps {
+  title: string;
+  status: StatusItemStatus;
+  issueCount: number;
+  actionButtonLabel?: string;
+  onActionButtonClick: () => void;
+  actionButtonDisabled?: boolean;
+  disabled?: boolean;
+}
+
 function StatusItem({
   title,
   status,
   issueCount,
-  viewButtonDisabled = false,
-  onViewButtonClick,
+  actionButtonLabel = "View",
+  actionButtonDisabled = false,
+  onActionButtonClick,
+  disabled = false,
 }: PropsWithChildren<StatusItemProps>) {
-  const bgColor = statusColorMap[status].bg || "bg-slate-200";
+  let bgColor = statusColorMap[status].bg || "bg-slate-200";
   const countColor = statusColorMap[status].count || "bg-slate-500";
+
+  if (disabled) {
+    bgColor = "bg-slate-200";
+  }
 
   return (
     <Box className={`m-2 p-2 ${bgColor} rounded-lg`}>
       <Flex direction="row" align={"center"} justify={"space-between"}>
         <Flex direction="row" align="center">
           <span className="m-0">{title}</span>
-          <div
-            className={`h-6 w-6 p-1 ${countColor} rounded-full shadow-sm text-white  flex items-center justify-center ml-2 text-xs`}
-          >
-            {issueCount}
-          </div>
+          {!disabled && (
+            <div
+              className={`h-6 w-6 p-1 ${countColor} rounded-full shadow-sm text-white  flex items-center justify-center ml-2 text-xs`}
+            >
+              {issueCount}
+            </div>
+          )}
         </Flex>
-        {!viewButtonDisabled && (
-          <Button variant="subtle" color="dark" onClick={onViewButtonClick}>
-            View
+        {!actionButtonDisabled && (
+          <Button variant="subtle" color="dark" onClick={onActionButtonClick}>
+            {actionButtonLabel}
           </Button>
         )}
       </Flex>
@@ -336,7 +356,9 @@ function PublishModal({
                 )}
                 {modifiedAtChange.type === "CREATE" && <Text>NULL</Text>}
               </Flex>
-              <Icon width={"2rem"} icon={roundDoubleAltArrowRightBoldDuotone} />
+              <Text color="blue">
+                <Icon width={"2rem"} icon={arrowRightBroken} />
+              </Text>
               <Flex direction="column" align="center" w={"40%"}>
                 <Text color="gray" size="sm">
                   Local Timestamp
@@ -404,7 +426,7 @@ function PublishModal({
                 justify={"space-between"}
                 p={"0.5rem"}
                 my={"0.5rem"}
-                className={`w-full  ${bgColor} rounded`}
+                className={`w-full ${bgColor} rounded`}
               >
                 <Box className="w-full truncate">
                   <Flex direction="row" gap="1rem" justify={"space-between"}>
@@ -485,7 +507,7 @@ function PublishModal({
             );
           })}
         </div>
-        <Flex direction="column" pt="1rem">
+        <Flex direction="column">
           {approvalCount !== changes.length && (
             <Flex direction="row" justify={"flex-end"} pb="0.5rem">
               <Text color="red" align="right">
