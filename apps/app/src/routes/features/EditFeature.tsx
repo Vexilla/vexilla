@@ -169,6 +169,7 @@ export function EditFeature() {
                   ...(environment.defaultEnvironmentFeatureValues[
                     feature.type
                   ] as any),
+                  featureId: feature.featureId,
                 };
               } else {
                 environment.features[feature.featureId] = {
@@ -176,6 +177,7 @@ export function EditFeature() {
                     feature.type
                   ] as any),
                   type: value,
+                  featureId: feature.featureId,
                 };
               }
             });

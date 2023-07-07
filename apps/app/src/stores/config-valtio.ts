@@ -49,7 +49,6 @@ export const validation = derive({
     if (provider !== "") {
       const validator = HostingConfigValidators[provider];
       const result = validator.safeParse(currentConfig.hosting);
-      console.log({ result });
       return result;
     } else {
       return {

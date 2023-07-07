@@ -10,11 +10,18 @@ import {
   Button,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 import { useSnapshot } from "valtio";
 import { cloneDeep, omit, set as lodashSet } from "lodash-es";
 import { Difference } from "microdiff";
 
-import { AppState, Group, PublishedGroup } from "@vexilla/types";
+import {
+  AppState,
+  Environment,
+  Group,
+  PublishedEnvironment,
+  PublishedGroup,
+} from "@vexilla/types";
 import { HostingProvider } from "@vexilla/hosts";
 
 import { nanoid } from "./utils/nanoid";
@@ -40,7 +47,6 @@ function App() {
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
-    console.log(`search params: ${searchParams}`);
     if (searchParams.has("logged_in")) {
       openHostingConfigModal();
     }
@@ -73,7 +79,6 @@ function App() {
 
   useEffect(() => {
     if (!config.hosting?.provider) {
-      console.log("No hosting config");
       openHostingConfigModal();
     } else {
       if (config.hosting?.providerType === "git") {
@@ -92,14 +97,12 @@ function App() {
   useEffect(() => {
     async function fetchCurrentConfig() {
       if (config.hosting?.providerType === "git" && accessToken) {
-        console.log("Fetching current config");
         const fetcher =
           fetchersMap[config.hosting.provider as HostingProvider]?.(config);
 
         if (fetcher) {
           try {
             const result = await fetcher.getCurrentConfig();
-            console.log("current config", { result });
             remoteConfig.groups = result.groups;
             remoteConfig.hosting = result.hosting;
             remoteConfig.modifiedAt = result.modifiedAt;
@@ -208,9 +211,15 @@ function App() {
                       ...groupFiles,
                       {
                         filePath: "config.json",
-                        content: JSON.stringify(cleanConfig),
+                        content: JSON.stringify(cleanConfig, null, 2),
                       },
                     ]);
+
+                    closeHostingConfigModal();
+                    // spawn toast
+                    // notifications.show({
+                    //   message: "PR Created",
+                    // });
                   }
                 }}
               />

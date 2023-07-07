@@ -27,27 +27,27 @@ import { cloneDeep } from "lodash-es";
 
 const DefaultEnvironmentDefaults: DefaultFeatureValues = {
   toggle: {
-    featureId: nanoid(),
+    featureId: "null",
     type: "toggle",
     value: false,
     scheduleType: "",
   } as VexillaToggleFeature,
   gradual: {
-    featureId: nanoid(),
+    featureId: "null",
     type: "gradual",
     seed: 0,
     value: 0,
     scheduleType: "",
   } as VexillaGradualFeature,
   selective: {
-    featureId: nanoid(),
+    featureId: "null",
     type: "selective",
     valueType: "string",
     value: [],
     scheduleType: "",
   } as VexillaSelectiveFeature,
   value: {
-    featureId: nanoid(),
+    featureId: "null",
     type: "value",
     valueType: "string",
     value: "",

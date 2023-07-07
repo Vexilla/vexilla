@@ -87,8 +87,6 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
   const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now());
 
   const githubMethods = useMemo(() => {
-    console.log("inside useMemo", { accessToken, owner, repositoryName });
-    console.log("whole config", cloneDeep(config));
     return new GitHubFetcher(cloneDeep(config));
   }, [accessToken, owner, repositoryName]);
 
@@ -164,8 +162,6 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
       if (accessToken && repositoryName && owner) {
         const fetchedBranches = await githubMethods.fetchBranches();
 
-        console.log({ fetchedBranches });
-
         setBranches(
           fetchedBranches.map((_branch) => ({
             name: _branch.name,
@@ -190,17 +186,9 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
   }, [accessToken, owner, repositoryName]);
 
   useEffect(() => {
-    console.log("fetch config values", {
-      provider,
-      providerType,
-      accessToken,
-      owner,
-      repositoryName,
-    });
     if (provider && providerType && accessToken && owner && repositoryName) {
       async function fetchCurrentConfig() {
         if (configSnapshot.hosting?.providerType === "git") {
-          console.log("Fetching current config");
           const fetcher =
             fetchersMap[configSnapshot.hosting.provider as HostingProvider]?.(
               config
@@ -208,7 +196,6 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
 
           if (fetcher) {
             const result = await fetcher.getCurrentConfig();
-            console.log("fetched current config", { result });
           } else {
             console.log("no fetcher");
           }
