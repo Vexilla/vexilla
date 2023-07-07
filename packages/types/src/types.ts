@@ -169,3 +169,11 @@ export interface VexillaClientConfig {
   environment: string;
   customInstanceHash?: string;
 }
+
+export interface VexillaManifest {
+  version: string;
+  groups: {
+    name: string;
+    groupId: string;
+  }[];
+}
