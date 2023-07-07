@@ -1,11 +1,11 @@
 {
   "name": "@vexilla/client",
-  "version": "0.0.18",
+  "version": "1.0.0",
   "description": "A client for the Vexilla feature flag system",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "node dist/test_client.js",
+    "test": "ts-node src/test_client.ts",
     "compile": "tsc",
     "prepare": "npm run compile"
   },
@@ -20,10 +20,12 @@
     "axios": "^0.21.0",
     "husky": "^4.3.8",
     "ts-loader": "^8.0.11",
+    "ts-node": "^10.9.1",
     "typescript": "^5.0.4"
   },
   "dependencies": {
     "@vexilla/types": "workspace:*",
+    "case": "^1.6.3",
     "uuid": "^8.3.2",
     "xxhashjs": "^0.2.2"
   },
