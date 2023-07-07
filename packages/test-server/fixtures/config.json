@@ -1,0 +1,86 @@
+{
+  "modifiedAt": 1688251134539,
+  "groups": [
+    {
+      "name": "Group 2",
+      "groupId": "T28zziidkrUWCp4oOPCsy",
+      "features": [
+        {
+          "name": "Feature 1",
+          "featureId": "QAcHvF58CB2s6mjCZg2Ag",
+          "type": "value",
+          "scheduleType": ""
+        }
+      ],
+      "environments": [
+        {
+          "name": "Environment 1",
+          "environmentId": "qc9vJFaWjE-MYEias-_dj",
+          "defaultEnvironmentFeatureValues": {
+            "toggle": {
+              "featureId": "nde3z0LpLIVpf_iiKxzPo",
+              "type": "toggle",
+              "value": false,
+              "scheduleType": ""
+            },
+            "gradual": {
+              "featureId": "avFZjSyXumRa5oHBxDmWu",
+              "type": "gradual",
+              "seed": 0,
+              "value": 0,
+              "scheduleType": ""
+            },
+            "selective": {
+              "featureId": "TEKc467jbnkg-bpLjl2k6",
+              "type": "selective",
+              "valueType": "string",
+              "value": [],
+              "scheduleType": ""
+            },
+            "value": {
+              "featureId": "7ymG-8wAzhEnFtZ6x5Dla",
+              "type": "value",
+              "valueType": "string",
+              "value": "",
+              "scheduleType": ""
+            }
+          },
+          "features": {
+            "QAcHvF58CB2s6mjCZg2Ag": {
+              "featureId": "7ymG-8wAzhEnFtZ6x5Dla",
+              "type": "value",
+              "valueType": "string",
+              "value": "",
+              "scheduleType": ""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Group",
+      "groupId": "nroeqG54HNr-vebjivMva",
+      "features": [],
+      "environments": []
+    },
+    {
+      "name": "Group 3",
+      "groupId": "8RjKeU8lq09ARBQX3HPT-",
+      "features": [],
+      "environments": []
+    }
+  ],
+  "hosting": {
+    "provider": "github",
+    "config": { "provider": "", "providerType": "" },
+    "providerType": "git",
+    "shouldCreatePullRequest": true,
+    "accessToken": "",
+    "installationId": "38448948",
+    "repositoryId": "649135827",
+    "owner": "styrofoam-pad",
+    "repositoryName": "feature-flags",
+    "targetBranch": "main",
+    "branchNamePrefix": "vexilla_"
+  }
+}
