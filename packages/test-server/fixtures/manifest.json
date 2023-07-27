@@ -2,12 +2,16 @@
   "version": "v1",
   "groups": [
     {
-      "name": "Group 1",
+      "name": "Gradual",
       "groupId": "9V8VF4tMPPZcnh3lABFku"
     },
     {
-      "name": "Group 2",
+      "name": "Scheduled",
       "groupId": "jBLhtTlml6gAnewk1ma7b"
+    },
+    {
+      "name": "Value",
+      "groupId": "QUaEyaY-xmgEHR0B4cejA"
     }
   ]
 }

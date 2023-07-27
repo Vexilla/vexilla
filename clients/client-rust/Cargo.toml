@@ -1,6 +1,6 @@
 [package]
 name = "vexilla_client"
-version = "0.0.1"
+version = "1.0.0"
 authors = ["Chris Griffing <cmgriffing@gmail.com>"]
 edition = "2018"
 description = "A Rust client for the Vexilla Feature Flag System"
@@ -12,3 +12,9 @@ reqwest = { version = "0.10", features = ["blocking"] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 tokio = { version = "0.2", features = ["full"] }
+strum = "0.25"
+strum_macros = "0.25"
+convert_case = "^0.3.2"
+thiserror = "1.0"
+chrono = { version = "0.4.26" }
+chrono-tz = "0.8.3"

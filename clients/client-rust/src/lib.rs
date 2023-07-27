@@ -1,236 +1,415 @@
-use reqwest::Url;
-use serde::Deserialize;
-use serde_json::map::Map;
-use serde_json::{Result, Value};
+use convert_case::{Case, Casing};
+use serde_json::Result;
 use std::collections::HashMap;
 
-#[derive(Debug, Deserialize)]
+mod hashing;
+mod scheduling;
+mod types;
+
+use crate::hashing::*;
+use crate::scheduling::*;
+use crate::types::*;
+
+type VexillaResult<T, E = VexillaError> = std::result::Result<T, E>;
+type Callback = fn(url: &str) -> String;
+
+#[derive(Clone, Debug, Default)]
 pub struct VexillaClient {
-    environment: String,
-    base_url: String,
-    custom_instance_hash: String,
-    flags: VexillaFlags,
-}
+    environment: &'static str,
+    base_url: &'static str,
+    instance_id: &'static str,
 
-const VEXILLA_FLAG_TYPE_TOGGLE: &str = "toggle";
-const VEXILLA_FLAG_TYPE_GRADUAL: &str = "gradual";
+    show_logs: bool,
 
-#[derive(Debug, Clone, Deserialize)]
-struct VexillaFlagBase {
-    flag_type: String,
-}
+    manifest: Manifest,
+    flag_groups: HashMap<String, FlagGroup>,
 
-#[derive(Debug, Deserialize)]
-struct VexillaFlagToggle {
-    flag_type: String,
-    value: bool,
-}
-
-#[derive(Debug, Deserialize)]
-struct VexillaFlagGradual {
-    flag_type: String,
-    value: u8,
-    seed: f64,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct VexillaFlags {
-    base_flags: HashMap<String, HashMap<String, HashMap<String, VexillaFlagBase>>>,
-    toggle_flags: HashMap<String, HashMap<String, HashMap<String, VexillaFlagToggle>>>,
-    gradual_flags: HashMap<String, HashMap<String, HashMap<String, VexillaFlagGradual>>>,
-}
-
-#[derive(Deserialize)]
-pub struct VexillaFlagsResponse {
-    environments: Map<String, Value>,
+    group_lookup_table: HashMap<String, String>,
+    flag_lookup_table: HashMap<String, HashMap<String, String>>,
+    environment_lookup_table: HashMap<String, HashMap<String, String>>,
 }
 
 impl VexillaClient {
-    pub fn new(environment: &str, base_url: &str, custom_instance_hash: &str) -> VexillaClient {
+    pub fn new(
+        environment: &'static str,
+        base_url: &'static str,
+        instance_id: &'static str,
+    ) -> VexillaClient {
         VexillaClient {
-            environment: environment.to_owned(),
-            base_url: base_url.to_owned(),
-            custom_instance_hash: custom_instance_hash.to_owned(),
-            flags: VexillaFlags {
-                base_flags: HashMap::new(),
-                toggle_flags: HashMap::new(),
-                gradual_flags: HashMap::new(),
-            },
+            manifest: Manifest::default(),
+            show_logs: false,
+            environment: environment,
+            base_url: base_url,
+            instance_id: instance_id,
+            flag_groups: HashMap::new(),
+            group_lookup_table: HashMap::new(),
+            flag_lookup_table: HashMap::new(),
+            environment_lookup_table: HashMap::new(),
         }
     }
 
-    #[tokio::main]
-    pub async fn fetch_flags(&self, file_name: &str) -> Result<VexillaFlags> {
+    pub fn get_manifest(&self, fetch: Callback) -> Result<Manifest> {
+        let url = format!("{}/manifest.json", self.base_url);
+        let response_text = fetch(&url);
+        let manifest: Manifest = serde_json::from_str(response_text.as_ref())?;
+
+        Ok(manifest)
+    }
+
+    pub fn set_manifest(&mut self, manifest: Manifest) {
+        self.group_lookup_table = create_group_lookup_table(manifest);
+    }
+
+    pub fn sync_manifest(&mut self, fetch: Callback) {
+        let manifest = self.get_manifest(fetch).unwrap();
+        let lookup_table = create_group_lookup_table(manifest.clone());
+        self.manifest = manifest;
+        self.group_lookup_table = lookup_table;
+    }
+
+    pub fn get_flags(&self, file_name: &str, fetch: Callback) -> VexillaResult<FlagGroup> {
         let url = format!("{}/{}", self.base_url, file_name);
+        let response_text = fetch(&url);
 
-        let response_text = reqwest::get(Url::parse(url.as_ref()).unwrap())
-            .await
-            .unwrap()
-            .text()
-            .await
-            .unwrap();
+        let flags: Result<FlagGroup> = serde_json::from_str(response_text.as_str());
 
-        let flags = self.flags_from_string(response_text).unwrap();
-
-        Ok(flags)
-    }
-
-    pub fn fetch_flags_blocking(&self, file_name: &str) -> Result<VexillaFlags> {
-        let url = format!("{}/{}", self.base_url, file_name);
-        let parsed_url = Url::parse(url.as_ref()).unwrap();
-
-        let response_text = reqwest::blocking::get(parsed_url).unwrap().text().unwrap();
-
-        let flags = self.flags_from_string(response_text).unwrap();
-
-        Ok(flags)
-    }
-
-    pub fn set_flags(&mut self, flags: VexillaFlags) {
-        self.flags = flags;
-    }
-
-    pub fn should(&self, feature_name: &str) -> bool {
-        let untagged = "untagged".to_owned();
-        let flag_type = self.flags.base_flags[&self.environment][&untagged][feature_name]
-            .flag_type
-            .clone();
-
-        match flag_type.as_ref() {
-            VEXILLA_FLAG_TYPE_TOGGLE => {
-                self.flags.toggle_flags[&self.environment][&untagged][feature_name].value
-            }
-
-            VEXILLA_FLAG_TYPE_GRADUAL => {
-                self.hash_instance_id(
-                    self.flags.gradual_flags[&self.environment][&untagged][feature_name].seed,
-                ) < self.flags.gradual_flags[&self.environment][&untagged][feature_name].value
-            }
-
-            _ => false,
+        if flags.is_err() {
+            VexillaResult::Err(VexillaError::Unknown)
+        } else {
+            Ok(flags.unwrap())
         }
     }
 
-    fn hash_instance_id(&self, seed: f64) -> u8 {
-        let total = &self
-            .custom_instance_hash
-            .chars()
-            .fold(0, |total, character| total + character as u32);
+    pub fn set_flags(&mut self, group_id: &str, flags: FlagGroup) {
+        let scrubbed_file_name = group_id.to_string().replace(".json", "");
+        let coerced_group_id = &self.group_lookup_table[scrubbed_file_name.as_str()];
+        self.flag_groups
+            .insert(coerced_group_id.to_string(), flags.clone());
 
-        let calculated = (f64::from(total.to_owned()) * seed * 42.0).floor();
+        let group_flag_table = create_feature_lookup_table(flags.clone());
+        self.flag_lookup_table
+            .insert(coerced_group_id.to_string(), group_flag_table);
 
-        (calculated as u64 % 100) as u8
+        let environment_table = create_environment_lookup_table(flags);
+        self.environment_lookup_table
+            .insert(coerced_group_id.to_string(), environment_table);
     }
 
-    fn flags_from_string(&self, response_text: String) -> Result<VexillaFlags> {
-        let flags_response: VexillaFlagsResponse = serde_json::from_str(response_text.as_ref())?;
+    pub fn sync_flags(
+        &mut self,
+        file_name: &str,
+        fetch: Callback,
+    ) -> VexillaResult<(), VexillaError> {
+        let scrubbed_file_name = file_name.to_string().replace(".json", "");
+        let cloned_self = self.clone();
+        let group_id = cloned_self
+            .group_lookup_table
+            .get(scrubbed_file_name.as_str())
+            .ok_or(VexillaError::GroupLookupKeyNotFound)?;
+        let flag_group = self.get_flags(scrubbed_file_name.as_str(), fetch)?;
+        self.set_flags(group_id, flag_group);
+        Ok(())
+    }
 
-        let mut base_flags: HashMap<String, HashMap<String, HashMap<String, VexillaFlagBase>>> =
-            HashMap::new();
-        let mut toggle_flags: HashMap<String, HashMap<String, HashMap<String, VexillaFlagToggle>>> =
-            HashMap::new();
-        let mut gradual_flags: HashMap<
-            String,
-            HashMap<String, HashMap<String, VexillaFlagGradual>>,
-        > = HashMap::new();
+    pub fn should(
+        &self,
+        group_id: &'static str,
+        feature_name: &'static str,
+    ) -> VexillaResult<bool> {
+        let feature = self.get_feature(group_id, feature_name)?;
 
-        for environment_key in flags_response.environments.keys() {
-            let environment = flags_response.environments[environment_key].clone();
-            for feature_set_key in Map::from(environment.as_object().unwrap().clone()).keys() {
-                let feature_set = environment[feature_set_key].clone();
-                for feature_key in Map::from(feature_set.as_object().unwrap().clone()).keys() {
-                    let feature = feature_set[feature_key].clone();
+        let is_within_schedule = is_scheduled_feature_active(feature.to_owned().clone());
 
-                    if !base_flags.contains_key(environment_key) {
-                        base_flags.insert(environment_key.to_owned(), HashMap::new());
-                    }
-
-                    if !base_flags[environment_key].contains_key(feature_set_key) {
-                        base_flags
-                            .get_mut(environment_key)
-                            .unwrap()
-                            .insert(feature_set_key.to_owned(), HashMap::new());
-                    }
-
-                    let feature_type_string = feature["type"].as_str().unwrap().to_string();
-
-                    base_flags
-                        .get_mut(environment_key)
-                        .unwrap()
-                        .get_mut(feature_set_key)
-                        .unwrap()
-                        .insert(
-                            feature_key.to_owned(),
-                            VexillaFlagBase {
-                                flag_type: feature_type_string.clone(),
-                            },
-                        );
-
-                    match feature_type_string.as_ref() {
-                        VEXILLA_FLAG_TYPE_TOGGLE => {
-                            if !toggle_flags.contains_key(environment_key) {
-                                toggle_flags.insert(environment_key.to_owned(), HashMap::new());
-                            }
-
-                            if !toggle_flags[environment_key].contains_key(feature_set_key) {
-                                toggle_flags
-                                    .get_mut(environment_key)
-                                    .unwrap()
-                                    .insert(feature_set_key.to_owned(), HashMap::new());
-                            }
-
-                            toggle_flags
-                                .get_mut(environment_key)
-                                .unwrap()
-                                .get_mut(feature_set_key)
-                                .unwrap()
-                                .insert(
-                                    feature_key.to_owned(),
-                                    VexillaFlagToggle {
-                                        flag_type: feature_type_string.clone(),
-                                        value: feature["value"].as_bool().unwrap(),
-                                    },
-                                );
-                        }
-
-                        VEXILLA_FLAG_TYPE_GRADUAL => {
-                            if !gradual_flags.contains_key(environment_key) {
-                                gradual_flags.insert(environment_key.to_owned(), HashMap::new());
-                            }
-
-                            if !gradual_flags[environment_key].contains_key(feature_set_key) {
-                                gradual_flags
-                                    .get_mut(environment_key)
-                                    .unwrap()
-                                    .insert(feature_set_key.to_owned(), HashMap::new());
-                            }
-
-                            gradual_flags
-                                .get_mut(environment_key)
-                                .unwrap()
-                                .get_mut(feature_set_key)
-                                .unwrap()
-                                .insert(
-                                    feature_key.to_owned(),
-                                    VexillaFlagGradual {
-                                        flag_type: feature_type_string.clone(),
-                                        value: feature["value"].as_u64().unwrap() as u8,
-                                        seed: feature["seed"].as_f64().unwrap(),
-                                    },
-                                );
-                        }
-
-                        _ => (),
-                    }
+        match (feature.clone(), is_within_schedule) {
+            (Feature::Toggle(feature), true) => Ok(feature.value),
+            (Feature::Gradual(feature), true) => {
+                Ok(self.hash_instance_id(feature.seed) < feature.value)
+            }
+            (Feature::Selective(feature), true) => match feature {
+                SelectiveFeature::String { value, .. } => {
+                    Ok(value.contains(&self.instance_id.to_owned()))
                 }
-            }
-        }
+                _ => Err(VexillaError::InvalidShouldFeatureType(feature.value_type())),
+            },
 
-        Ok(VexillaFlags {
-            base_flags: base_flags,
-            toggle_flags: toggle_flags,
-            gradual_flags: gradual_flags,
+            (_, _) => Err(VexillaError::InvalidShouldFeatureType(
+                feature.feature_type(),
+            )),
+        }
+    }
+
+    pub fn should_custom_str(
+        &self,
+        group_id: &str,
+        feature_name: &str,
+        custom_id: &str,
+    ) -> VexillaResult<bool> {
+        let feature = self.get_feature(group_id, feature_name)?;
+
+        let is_within_schedule = is_scheduled_feature_active(feature.to_owned());
+
+        match (feature.clone(), is_within_schedule) {
+            (Feature::Toggle(feature), true) => Ok(feature.value),
+            (Feature::Gradual(feature), true) => {
+                Ok(hash_value(custom_id, feature.seed) < feature.value)
+            }
+            (Feature::Selective(feature), true) => match feature {
+                SelectiveFeature::String { value, .. } => Ok(value.contains(&custom_id.to_owned())),
+                _ => Err(VexillaError::InvalidShouldCustomStr(feature.value_type())),
+            },
+
+            (_, _) => Err(VexillaError::InvalidShouldFeatureType(
+                feature.feature_type(),
+            )),
+        }
+    }
+
+    pub fn should_custom_int(
+        &self,
+        group_id: &str,
+        feature_name: &str,
+        custom_id: i64,
+    ) -> VexillaResult<bool> {
+        let feature = self.get_feature(group_id, feature_name)?;
+
+        let is_within_schedule = is_scheduled_feature_active(feature.to_owned());
+
+        match (feature.clone(), is_within_schedule) {
+            (Feature::Toggle(feature), true) => Ok(feature.value),
+            (Feature::Gradual(_feature), true) => Err(VexillaError::Unknown),
+            (Feature::Selective(feature), true) => match feature {
+                SelectiveFeature::Number(SelectiveFeatureNumber::Int { value, .. }) => {
+                    Ok(value.contains(&custom_id))
+                }
+                _ => Err(VexillaError::InvalidShouldCustomInt(feature.value_type())),
+            },
+
+            (_, _) => Err(VexillaError::InvalidShouldFeatureType(
+                feature.feature_type(),
+            )),
+        }
+    }
+
+    pub fn should_custom_float(
+        &self,
+        group_id: &str,
+        feature_name: &str,
+        custom_id: f64,
+    ) -> VexillaResult<bool> {
+        let feature = self.get_feature(group_id, feature_name)?;
+
+        let is_within_schedule = is_scheduled_feature_active(feature.to_owned());
+
+        match (feature.clone(), is_within_schedule) {
+            (Feature::Toggle(feature), true) => Ok(feature.value),
+            (Feature::Gradual(_feature), true) => Err(VexillaError::Unknown),
+            (Feature::Selective(feature), true) => match feature {
+                SelectiveFeature::Number(SelectiveFeatureNumber::Float { value, .. }) => {
+                    Ok(value.contains(&custom_id))
+                }
+                _ => Err(VexillaError::InvalidShouldCustomInt(feature.value_type())),
+            },
+
+            (_, _) => Err(VexillaError::InvalidShouldFeatureType(
+                feature.feature_type(),
+            )),
+        }
+    }
+
+    pub fn value_str(
+        &self,
+        group_id: &str,
+        feature_name: &str,
+        default: &'static str,
+    ) -> VexillaResult<String> {
+        let feature = self.get_feature(group_id, feature_name)?;
+        let is_within_schedule = is_scheduled_feature_active(feature.to_owned());
+
+        match (feature.clone(), is_within_schedule) {
+            (Feature::Value(feature), true) => match feature {
+                ValueFeature::String { value, .. } => Ok(value.clone()),
+                _ => Err(VexillaError::InvalidValueStringType(feature.value_type())),
+            },
+
+            (_, true) => Err(VexillaError::InvalidValueFeatureType(
+                feature.feature_type(),
+            )),
+
+            (_, false) => Ok(default.to_string()),
+        }
+    }
+
+    pub fn value_int(
+        &self,
+        group_id: &str,
+        feature_name: &str,
+        default: i64,
+    ) -> VexillaResult<i64> {
+        let feature = self.get_feature(group_id, feature_name)?;
+
+        let is_within_schedule = is_scheduled_feature_active(feature.to_owned());
+
+        match (feature.clone(), is_within_schedule) {
+            (Feature::Value(feature), true) => match feature {
+                ValueFeature::Number(ValueFeatureNumber::Int { value, .. }) => Ok(value.to_owned()),
+                _ => Err(VexillaError::InvalidValueI64Type(feature.value_type())),
+            },
+
+            (_, true) => Err(VexillaError::InvalidValueFeatureType(
+                feature.feature_type(),
+            )),
+
+            (_, false) => Ok(default),
+        }
+    }
+
+    pub fn value_float(
+        &self,
+        group_id: &str,
+        feature_name: &str,
+        default: f64,
+    ) -> VexillaResult<f64> {
+        let feature = self.get_feature(group_id, feature_name)?;
+
+        let is_within_schedule = is_scheduled_feature_active(feature.to_owned());
+
+        match (feature.clone(), is_within_schedule) {
+            (Feature::Value(feature), true) => match feature {
+                ValueFeature::Number(ValueFeatureNumber::Float { value, .. }) => {
+                    Ok(value.to_owned())
+                }
+                _ => Err(VexillaError::InvalidValueF64Type(feature.value_type())),
+            },
+
+            (_, true) => Err(VexillaError::InvalidValueFeatureType(
+                feature.feature_type(),
+            )),
+
+            (_, false) => Ok(default),
+        }
+    }
+
+    fn hash_instance_id(&self, seed: f64) -> f64 {
+        hash_value(self.instance_id, seed)
+    }
+
+    fn get_feature(&self, group_id: &str, feature_name: &str) -> VexillaResult<Feature> {
+        let ids = self.get_real_ids(group_id, feature_name)?;
+
+        let group = &self
+            .flag_groups
+            .get(&ids.real_group_id)
+            .ok_or(VexillaError::FlagGroupKeyNotFound)?;
+
+        let environment = group
+            .environments
+            .get(&ids.real_environment_id)
+            .ok_or(VexillaError::EnvironmentLookupKeyNotFound)?;
+
+        let feature = environment
+            .features
+            .get(&ids.real_feature_id)
+            .ok_or(VexillaError::EnvironmentFeatureKeyNotFound)?;
+
+        Ok(feature.clone())
+    }
+
+    fn get_real_ids(&self, group_id: &str, feature_name: &str) -> VexillaResult<RealIds> {
+        let real_group_id = self
+            .group_lookup_table
+            .get(group_id)
+            .ok_or(VexillaError::GroupLookupKeyNotFound)?
+            .to_string();
+
+        let real_feature_id = self
+            .flag_lookup_table
+            .get(group_id)
+            .ok_or(VexillaError::GroupLookupKeyNotFound)?
+            .get(feature_name)
+            .ok_or(VexillaError::FlagLookupKeyNotFound)?
+            .to_string();
+
+        let real_environment_id = "".to_string();
+
+        Ok(RealIds {
+            real_group_id,
+            real_feature_id,
+            real_environment_id,
         })
+    }
+}
+
+fn create_group_lookup_table(manifest: Manifest) -> HashMap<String, String> {
+    let mut new_lookup_table: HashMap<String, String> = HashMap::new();
+
+    manifest.groups.iter().for_each(|group| {
+        new_lookup_table.insert(group.group_id.clone(), group.group_id.clone());
+        new_lookup_table.insert(group.name.clone(), group.group_id.clone());
+        new_lookup_table.insert(
+            group.group_id.to_case(Case::Kebab).clone(),
+            group.group_id.clone(),
+        );
+    });
+
+    new_lookup_table
+}
+
+fn create_feature_lookup_table(flag_group: FlagGroup) -> HashMap<String, String> {
+    let mut new_lookup_table: HashMap<String, String> = HashMap::new();
+
+    flag_group
+        .features
+        .iter()
+        .for_each(|(feature_id, feature)| {
+            let feature_name = get_feature_name(feature.to_owned());
+
+            new_lookup_table.insert(feature_id.clone(), feature_id.clone());
+            new_lookup_table.insert(feature_name.clone(), feature_id.clone());
+            new_lookup_table.insert(
+                feature_name.to_case(Case::Kebab).clone(),
+                feature_id.clone(),
+            );
+        });
+
+    new_lookup_table
+}
+
+fn create_environment_lookup_table(flag_group: FlagGroup) -> HashMap<String, String> {
+    let mut new_lookup_table: HashMap<String, String> = HashMap::new();
+
+    flag_group
+        .environments
+        .iter()
+        .for_each(|(environment_id, environment)| {
+            new_lookup_table.insert(environment_id.clone(), environment_id.clone());
+            new_lookup_table.insert(environment.name.clone(), environment_id.clone());
+            new_lookup_table.insert(
+                environment.name.to_case(Case::Kebab).clone(),
+                environment_id.clone(),
+            );
+        });
+
+    new_lookup_table
+}
+
+fn get_feature_name(feature: Feature) -> String {
+    match feature {
+        Feature::Toggle(_feature) => _feature.name,
+        Feature::Gradual(_feature) => _feature.name,
+        Feature::Selective(_feature) => match _feature {
+            SelectiveFeature::String { name, .. } => name,
+            SelectiveFeature::Number(_feature) => match _feature {
+                SelectiveFeatureNumber::Float { name, .. } => name,
+                SelectiveFeatureNumber::Int { name, .. } => name,
+            },
+        },
+        Feature::Value(_feature) => match _feature {
+            ValueFeature::String { name, .. } => name,
+            ValueFeature::Number(_feature) => match _feature {
+                ValueFeatureNumber::Float { name, .. } => name,
+                ValueFeatureNumber::Int { name, .. } => name,
+            },
+        },
     }
 }
 
@@ -239,29 +418,28 @@ mod tests {
 
     use super::*;
 
-    // #[test]
-    // fn client_works() {
-
-    // }
-
     #[test]
-    fn hashing_works() {
+    fn end_to_end() {
         let mut client = VexillaClient::new(
             "dev",
-            "https://streamparrot-feature-flags.s3.amazonaws.com",
+            "http://localhost:3000",
             "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a",
         );
 
-        let flags = client.fetch_flags_blocking("features.json").unwrap();
+        let manifest = client
+            .get_manifest(|url| reqwest::blocking::get(url).unwrap().text().unwrap())
+            .unwrap();
 
-        client.set_flags(flags);
+        assert_eq!(manifest.version.len() > 0, true);
 
-        let should = client.should("testingWorkingGradual");
+        client.sync_manifest(|url| reqwest::blocking::get(url).unwrap().text().unwrap());
 
-        assert_eq!(should, true);
+        // let flags = client
+        //     .get_flags("Gradual", |url| {
+        //         reqwest::blocking::get(url).unwrap().text().unwrap()
+        //     })
+        //     .unwrap();
 
-        let should_not = client.should("testingNonWorkingGradual");
-
-        assert_eq!(should_not, false);
+        // assert_eq!(flags.name, "Gradual");
     }
 }
