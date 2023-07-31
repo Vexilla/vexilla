@@ -61,9 +61,16 @@ pub enum VexillaError {
 #[serde(tag = "featureType")]
 #[strum(serialize_all = "camelCase")]
 pub enum Feature {
+    #[serde(rename = "gradual")]
     Gradual(GradualFeature),
+
+    #[serde(rename = "selective")]
     Selective(SelectiveFeature),
+
+    #[serde(rename = "toggle")]
     Toggle(ToggleFeature),
+
+    #[serde(rename = "value")]
     Value(ValueFeature),
 }
 
@@ -88,12 +95,26 @@ impl Feature {
 #[strum(serialize_all = "camelCase")]
 pub enum ScheduleType {
     #[default]
+    #[serde(rename = "")]
     Empty,
+    #[serde(rename = "global")]
     Global,
+    #[serde(rename = "environment")]
     Environment,
 }
 
 #[derive(Clone, Debug, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct GroupFeature {
+    pub name: String,
+    pub feature_id: String,
+    pub feature_type: String,
+    pub schedule_type: ScheduleType,
+    pub schedule: VexillaSchedule,
+}
+
+#[derive(Clone, Debug, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
 pub struct ToggleFeature {
     pub name: String,
     pub feature_id: String,
@@ -103,6 +124,7 @@ pub struct ToggleFeature {
 }
 
 #[derive(Clone, Debug, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
 pub struct GradualFeature {
     pub name: String,
     pub feature_id: String,
@@ -116,6 +138,7 @@ pub struct GradualFeature {
 #[serde(tag = "value_type")]
 #[strum(serialize_all = "camelCase")]
 pub enum ValueFeature {
+    #[serde(rename_all = "camelCase")]
     String {
         name: String,
         feature_id: String,
@@ -155,6 +178,7 @@ impl ValueFeature {
 #[serde(tag = "value_type")]
 #[strum(serialize_all = "camelCase")]
 pub enum ValueFeatureNumber {
+    #[serde(rename_all = "camelCase")]
     Int {
         name: String,
         feature_id: String,
@@ -162,6 +186,8 @@ pub enum ValueFeatureNumber {
         schedule: VexillaSchedule,
         value: i64,
     },
+
+    #[serde(rename_all = "camelCase")]
     Float {
         name: String,
         feature_id: String,
@@ -187,6 +213,7 @@ impl Default for ValueFeatureNumber {
 #[serde(tag = "number_type")]
 #[strum(serialize_all = "camelCase")]
 pub enum SelectiveFeatureNumber {
+    #[serde(rename_all = "camelCase")]
     Int {
         name: String,
         feature_id: String,
@@ -194,6 +221,8 @@ pub enum SelectiveFeatureNumber {
         schedule: VexillaSchedule,
         value: Vec<i64>,
     },
+
+    #[serde(rename_all = "camelCase")]
     Float {
         name: String,
         feature_id: String,
@@ -219,6 +248,7 @@ impl Default for SelectiveFeatureNumber {
 #[serde(tag = "valueType")]
 #[strum(serialize_all = "camelCase")]
 pub enum SelectiveFeature {
+    #[serde(rename_all = "camelCase")]
     String {
         name: String,
         feature_id: String,
@@ -258,8 +288,11 @@ impl SelectiveFeature {
 #[strum(serialize_all = "camelCase")]
 pub enum ScheduleTimeType {
     #[default]
+    #[serde(rename = "none")]
     None,
+    #[serde(rename = "startEnd")]
     StartEnd,
+    #[serde(rename = "daily")]
     Daily,
 }
 
@@ -282,6 +315,7 @@ pub struct ManifestGroup {
 }
 
 #[derive(Clone, Debug, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
 pub struct PublishedGroupMeta {
     pub version: String,
 }
@@ -300,21 +334,11 @@ pub struct DefaultFeatureValues {
 pub struct PublishedEnvironment {
     pub name: String,
     pub environment_id: String,
-    pub default_environment_feature_values: DefaultFeatureValues,
     pub features: HashMap<String, Feature>,
 }
 
 #[derive(Clone, Debug, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
-pub struct PublishedGroup {
-    pub name: String,
-    pub group_id: String,
-    pub features: Vec<Feature>,
-    pub environments: Vec<PublishedEnvironment>,
-    pub meta: PublishedGroupMeta,
-}
-
-#[derive(Clone, Debug, Deserialize, Default)]
 pub struct Manifest {
     pub version: String,
     pub groups: Vec<ManifestGroup>,
@@ -326,7 +350,8 @@ pub struct FlagGroup {
     pub name: String,
     pub group_id: String,
     pub environments: HashMap<String, PublishedEnvironment>,
-    pub features: HashMap<String, Feature>,
+    pub features: HashMap<String, GroupFeature>,
+    pub meta: PublishedGroupMeta,
 }
 
 #[derive(Clone, Debug, Deserialize, Default)]

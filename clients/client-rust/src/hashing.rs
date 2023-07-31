@@ -5,7 +5,7 @@ pub fn hash_value(value: &str, seed: f64) -> f64 {
 
     let calculated = (f64::from(total.to_owned()) * seed * 42.0).floor();
 
-    (calculated as u64 % 100) as f64
+    calculated % 100.0 / 100.0
 }
 
 #[cfg(test)]
@@ -24,8 +24,8 @@ mod tests {
         let should_seed = 0.11;
         let should_not_seed = 0.22;
 
-        let should = hash_value(user_id, should_seed) < 40.0;
-        let should_not = hash_value(user_id, should_not_seed) < 40.0;
+        let should = hash_value(user_id, should_seed) < 0.4;
+        let should_not = hash_value(user_id, should_not_seed) < 0.4;
 
         assert_eq!(should, true);
         assert_eq!(should_not, false);

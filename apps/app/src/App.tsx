@@ -1,23 +1,13 @@
 import React, { useEffect, useMemo } from "react";
 import { Outlet } from "react-router-dom";
-import {
-  AppShell,
-  Navbar,
-  Header,
-  Flex,
-  Modal,
-  Box,
-  Button,
-} from "@mantine/core";
+import { AppShell, Navbar, Header, Flex, Modal, Box } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
 import { useSnapshot } from "valtio";
 import { cloneDeep, omit, set as lodashSet } from "lodash-es";
 import { Difference } from "microdiff";
 
 import {
   AppState,
-  Environment,
   Group,
   PublishedEnvironment,
   PublishedGroup,
@@ -76,6 +66,8 @@ function App() {
   const githubMethods = useMemo(() => {
     return new GitHubFetcher(cloneDeep(config));
   }, [accessToken, owner, repositoryName]);
+
+  console.log({ groups: JSON.parse(JSON.stringify(groups)) });
 
   useEffect(() => {
     if (!config.hosting?.provider) {
@@ -170,8 +162,19 @@ function App() {
                         meta: {
                           version: "v1",
                         },
-                        environments: group.environments.map((environment) =>
-                          omit(environment, "defaultEnvironmentFeatureValues")
+                        environments: Object.values(group.environments).reduce(
+                          (scrubbedEnvironments, environment) => {
+                            const scrubbedEnvironment = omit(
+                              environment,
+                              "defaultEnvironmentFeatureValues"
+                            );
+
+                            scrubbedEnvironments[environment.environmentId] =
+                              scrubbedEnvironment;
+
+                            return scrubbedEnvironments;
+                          },
+                          {} as Record<string, PublishedEnvironment>
                         ),
                       };
 
@@ -232,8 +235,8 @@ function App() {
                   groups.push({
                     name: `Group ${groups.length + 1}`,
                     groupId: nanoid(),
-                    features: [],
-                    environments: [],
+                    features: {},
+                    environments: {},
                   });
                 }}
                 listItem={(group) => (

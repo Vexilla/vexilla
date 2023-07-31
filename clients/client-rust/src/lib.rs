@@ -68,12 +68,20 @@ impl VexillaClient {
     }
 
     pub fn get_flags(&self, file_name: &str, fetch: Callback) -> VexillaResult<FlagGroup> {
-        let url = format!("{}/{}", self.base_url, file_name);
+        let scrubbed_file_name = file_name.to_string().replace(".json", "");
+        let coerced_group_id = &self
+            .group_lookup_table
+            .get(scrubbed_file_name.as_str())
+            .ok_or(VexillaError::GroupLookupKeyNotFound)?;
+        let url = format!("{}/{}.json", self.base_url, coerced_group_id);
         let response_text = fetch(&url);
+
+        println!("{}", response_text);
 
         let flags: Result<FlagGroup> = serde_json::from_str(response_text.as_str());
 
         if flags.is_err() {
+            println!("{:?}", flags);
             VexillaResult::Err(VexillaError::Unknown)
         } else {
             Ok(flags.unwrap())
@@ -119,6 +127,9 @@ impl VexillaClient {
         let feature = self.get_feature(group_id, feature_name)?;
 
         let is_within_schedule = is_scheduled_feature_active(feature.to_owned().clone());
+
+        println!("feature: {:?}", feature);
+        println!("is_within_schedule: {:?}", is_within_schedule);
 
         match (feature.clone(), is_within_schedule) {
             (Feature::Toggle(feature), true) => Ok(feature.value),
@@ -323,13 +334,19 @@ impl VexillaClient {
 
         let real_feature_id = self
             .flag_lookup_table
-            .get(group_id)
+            .get(&real_group_id)
             .ok_or(VexillaError::GroupLookupKeyNotFound)?
             .get(feature_name)
             .ok_or(VexillaError::FlagLookupKeyNotFound)?
             .to_string();
 
-        let real_environment_id = "".to_string();
+        let real_environment_id = self
+            .environment_lookup_table
+            .get(&real_group_id)
+            .ok_or(VexillaError::GroupLookupKeyNotFound)?
+            .get(self.environment)
+            .ok_or(VexillaError::FlagLookupKeyNotFound)?
+            .to_string();
 
         Ok(RealIds {
             real_group_id,
@@ -361,12 +378,10 @@ fn create_feature_lookup_table(flag_group: FlagGroup) -> HashMap<String, String>
         .features
         .iter()
         .for_each(|(feature_id, feature)| {
-            let feature_name = get_feature_name(feature.to_owned());
-
             new_lookup_table.insert(feature_id.clone(), feature_id.clone());
-            new_lookup_table.insert(feature_name.clone(), feature_id.clone());
+            new_lookup_table.insert(feature.name.clone(), feature_id.clone());
             new_lookup_table.insert(
-                feature_name.to_case(Case::Kebab).clone(),
+                feature.name.to_case(Case::Kebab).clone(),
                 feature_id.clone(),
             );
         });
@@ -392,27 +407,6 @@ fn create_environment_lookup_table(flag_group: FlagGroup) -> HashMap<String, Str
     new_lookup_table
 }
 
-fn get_feature_name(feature: Feature) -> String {
-    match feature {
-        Feature::Toggle(_feature) => _feature.name,
-        Feature::Gradual(_feature) => _feature.name,
-        Feature::Selective(_feature) => match _feature {
-            SelectiveFeature::String { name, .. } => name,
-            SelectiveFeature::Number(_feature) => match _feature {
-                SelectiveFeatureNumber::Float { name, .. } => name,
-                SelectiveFeatureNumber::Int { name, .. } => name,
-            },
-        },
-        Feature::Value(_feature) => match _feature {
-            ValueFeature::String { name, .. } => name,
-            ValueFeature::Number(_feature) => match _feature {
-                ValueFeatureNumber::Float { name, .. } => name,
-                ValueFeatureNumber::Int { name, .. } => name,
-            },
-        },
-    }
-}
-
 #[cfg(test)]
 mod tests {
 
@@ -434,12 +428,35 @@ mod tests {
 
         client.sync_manifest(|url| reqwest::blocking::get(url).unwrap().text().unwrap());
 
-        // let flags = client
-        //     .get_flags("Gradual", |url| {
-        //         reqwest::blocking::get(url).unwrap().text().unwrap()
-        //     })
-        //     .unwrap();
+        let flags = client
+            .get_flags("Gradual", |url| {
+                reqwest::blocking::get(url).unwrap().text().unwrap()
+            })
+            .unwrap();
 
-        // assert_eq!(flags.name, "Gradual");
+        assert_eq!(flags.name, "Gradual");
+
+        client
+            .sync_flags("Gradual", |url| {
+                reqwest::blocking::get(url).unwrap().text().unwrap()
+            })
+            .unwrap();
+
+        let working_gradual_by_id = client.should("Gradual", "oIVHzosp0ao3HN0fmFwwr");
+        assert_eq!(true, working_gradual_by_id.is_ok());
+        println!("uh wat? {:?}", working_gradual_by_id);
+        assert_eq!(true, working_gradual_by_id.unwrap());
+
+        let working_gradual_by_name = client.should("Gradual", "testingWorkingGradual");
+        assert_eq!(true, working_gradual_by_name.is_ok());
+        assert_eq!(true, working_gradual_by_name.unwrap());
+
+        let non_working_gradual_by_id = client.should("Gradual", "-T2se1u9jyj1HNkbJ9Cdr");
+        assert_eq!(true, non_working_gradual_by_id.is_ok());
+        assert_eq!(false, non_working_gradual_by_id.unwrap());
+
+        let non_working_gradual_by_name = client.should("Gradual", "testingNonWorkingGradual");
+        assert_eq!(true, non_working_gradual_by_name.is_ok());
+        assert_eq!(false, non_working_gradual_by_name.unwrap());
     }
 }

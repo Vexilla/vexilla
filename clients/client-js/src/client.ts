@@ -115,9 +115,14 @@ export class VexillaClient {
     this.flagGroups[groupId] = flags;
   }
 
-  // combined getter and setter
-  async updateFlags(fileName: string, fetchHook: FetchHook<VexillaFlags>) {
-    const flags = await this.getFlags(fileName, fetchHook);
+  async syncFlags(fileName: string, fetchHook: FetchHook<VexillaFlags>) {
+    let flagFileName = fileName.replace(".json", "");
+    let groupId = flagFileName;
+    if (this.manifest) {
+      groupId = this.groupLookupTable[flagFileName];
+    }
+    const flags = await this.getFlags(groupId, fetchHook);
+    this.setFlags(groupId, flags);
   }
 
   should(flagName: string, groupName: string) {

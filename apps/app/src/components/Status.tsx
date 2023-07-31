@@ -422,6 +422,7 @@ function PublishModal({
 
             return (
               <Flex
+                key={change.path.join("")}
                 direction="row"
                 justify={"space-between"}
                 p={"0.5rem"}

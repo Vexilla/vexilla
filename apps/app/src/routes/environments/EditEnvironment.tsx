@@ -37,11 +37,9 @@ export function EditEnvironment() {
   const groups = config.groups;
 
   const group = groups.find((_group) => _group.groupId === params.groupId);
-  const environments = group?.environments || [];
+  const environments = group?.environments || {};
 
-  const environment = environments.find(
-    (_environment) => _environment.environmentId === params.environmentId
-  );
+  const environment = environments[params.environmentId || ""];
 
   return (
     <PageLayout>
@@ -132,10 +130,8 @@ export function EditEnvironment() {
           "string"
         }
         onChange={(event) => {
-          environments.forEach((environment) => {
-            environment.defaultEnvironmentFeatureValues.selective.valueType =
-              event as "string" | "number";
-          });
+          environment.defaultEnvironmentFeatureValues.selective.valueType =
+            event as "string" | "number";
         }}
       >
         <Group mt="sm" mb="lg" align="center" position="center">

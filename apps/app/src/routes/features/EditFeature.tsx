@@ -15,7 +15,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useSnapshot } from "valtio";
 
 import {
-  Feature,
+  VexillaFeature,
   VexillaFeatureTypeString,
   VexillaSelectiveFeature,
 } from "@vexilla/types";
@@ -29,6 +29,7 @@ import rewindBackBroken from "@iconify/icons-solar/rewind-back-broken";
 import { CustomSlider } from "../../components/CustomSlider";
 import { SelectiveList } from "../../components/features/SelectiveList";
 import { ScheduledForm } from "../../components/features/ScheduledForm";
+import { logProxy } from "../../utils/logging";
 
 enum FormFields {
   name = "name",
@@ -53,7 +54,7 @@ const SelectItem = forwardRef<HTMLDivElement, ItemProps>(
     </div>
   )
 );
-const data: {
+const featureTypeOptions: {
   label: string;
   value: VexillaFeatureTypeString;
   description: string;
@@ -90,33 +91,11 @@ export function EditFeature() {
   const groups = config.groups;
   const group = groups.find((_group) => _group.groupId === params.groupId);
 
-  const environments = group?.environments || [];
+  const rawEnvironments = group?.environments || {};
+  const environments = Object.values(rawEnvironments);
 
-  const features = group?.features || [];
-  const feature = features.find(
-    (_feature) => _feature.featureId === params.featureId
-  );
-
-  // const form = useForm({
-  //   initialValues: {
-  //     [FormFields.name]: feature?.name || "",
-  //   },
-  //   validate: {
-  //     [FormFields.name]: (value) =>
-  //       (!!value ? null : "Invalid Name") ||
-  //       features.filter(
-  //         (_feature) =>
-  //           _feature.name.toLocaleLowerCase() === value.toLocaleLowerCase()
-  //       ).length < 1
-  //         ? null
-  //         : "Duplicate Name",
-  //   },
-  //   validateInputOnChange: true,
-  // });
-
-  // useEffect(() => {
-  //   form.setFieldValue(FormFields.name, feature?.name || "");
-  // }, [feature]);
+  const features = group?.features || {};
+  const feature = features[params.featureId || ""];
 
   return (
     <PageLayout>
@@ -139,6 +118,20 @@ export function EditFeature() {
         onChange={(event) => {
           if (feature) {
             feature.name = event.target.value;
+
+            environments.forEach((environment) => {
+              environment.features = Object.values(environment.features).reduce(
+                (newFeatures, envFeature) => {
+                  if (feature.featureId === envFeature.featureId) {
+                    envFeature.name = event.target.value;
+                  }
+                  newFeatures[envFeature.featureId] = envFeature;
+
+                  return newFeatures;
+                },
+                {} as Record<string, VexillaFeature>
+              );
+            });
           }
         }}
       />
@@ -148,9 +141,9 @@ export function EditFeature() {
         label="Feature Type"
         placeholder="Pick one"
         itemComponent={SelectItem}
-        data={data}
+        data={featureTypeOptions}
         maxDropdownHeight={400}
-        value={feature?.type}
+        value={feature?.featureType}
         onChange={(value) => {
           if (
             (value === "toggle" ||
@@ -159,7 +152,7 @@ export function EditFeature() {
               value === "value") &&
             feature
           ) {
-            feature.type = value;
+            feature.featureType = value;
             environments.forEach((environment) => {
               if (!environment.features) {
                 environment.features = {};
@@ -167,16 +160,17 @@ export function EditFeature() {
               if (!environment?.features?.[feature.featureId]) {
                 environment.features[feature.featureId] = {
                   ...(environment.defaultEnvironmentFeatureValues[
-                    feature.type
+                    feature.featureType
                   ] as any),
                   featureId: feature.featureId,
+                  name: feature.name,
                 };
               } else {
                 environment.features[feature.featureId] = {
                   ...(environment.defaultEnvironmentFeatureValues[
-                    feature.type
+                    feature.featureType
                   ] as any),
-                  type: value,
+                  featureType: value,
                   featureId: feature.featureId,
                 };
               }
@@ -206,7 +200,7 @@ export function EditFeature() {
       {!!feature?.scheduleType && feature?.scheduleType === "global" && (
         <ScheduledForm
           featureSchedule={
-            environments[0].features?.[feature?.featureId || ""].schedule || {
+            environments[0]?.features?.[feature?.featureId || ""]?.schedule || {
               start: Date.now(),
               end: Date.now(),
               timezone: "UTC",
@@ -228,7 +222,7 @@ export function EditFeature() {
       )}
 
       {environments?.length > 0 &&
-        environments[0].features?.[feature?.featureId || ""]?.type ===
+        environments[0].features?.[feature?.featureId || ""]?.featureType ===
           "selective" && (
           <Radio.Group
             name="valueType"
@@ -266,49 +260,61 @@ export function EditFeature() {
         const featureDetails =
           environment?.features?.[feature?.featureId || ""];
 
-        function setDefault() {
-          const details =
-            environment.defaultEnvironmentFeatureValues[featureDetails?.type];
+        function safelySetDetails(newDetails: Partial<VexillaFeature> = {}) {
+          const defaultDetails =
+            environment.defaultEnvironmentFeatureValues[
+              featureDetails?.featureType
+            ];
           if (!environment.features) {
             environment.features = {};
           }
-          if (!featureDetails && feature && details) {
-            environment.features[feature.featureId] = { ...details };
-          } else if (feature) {
+
+          if (!feature) {
+            console.error(
+              "Looks like somebody forgot their towel. feature should NOT have been undefined"
+            );
+            return;
+          }
+
+          if (!featureDetails && defaultDetails) {
+            environment.features[feature.featureId] = {
+              ...defaultDetails,
+              ...newDetails,
+            } as VexillaFeature;
+          } else if (!featureDetails && !defaultDetails) {
             // TODO: find global defaults to fall back to
             environment.features[feature.featureId] = {} as any;
+          } else {
+            const envFeature = environment.features[feature.featureId];
+            Object.entries(newDetails).forEach(([key, value]) => {
+              const featureKey = key as keyof VexillaFeature;
+              (envFeature as any)[featureKey] = value;
+            });
           }
         }
 
         return (
           <div key={environment.environmentId}>
             <h4>{environment.name}</h4>
-            {(!featureDetails?.type || featureDetails?.type === "toggle") && (
+            {(!featureDetails?.featureType ||
+              featureDetails?.featureType === "toggle") && (
               <Switch
                 checked={featureDetails?.value || false}
                 onLabel="ON"
                 offLabel="OFF"
                 onChange={(event) => {
-                  if (featureDetails) {
-                    featureDetails.value = event.currentTarget.checked;
-                  } else {
-                    setDefault();
-                  }
+                  safelySetDetails({ value: event.currentTarget.checked });
                 }}
               />
             )}
-            {featureDetails?.type === "gradual" && (
+            {featureDetails?.featureType === "gradual" && (
               <>
                 <CustomSlider
-                  value={featureDetails.seed || 0}
+                  value={featureDetails?.seed || 0}
                   label={"Seed"}
                   tooltipText="This value is passed to the PRNG to get a specific subset of users."
                   onChange={(newSeed) => {
-                    if (featureDetails) {
-                      featureDetails.seed = newSeed;
-                    } else {
-                      setDefault();
-                    }
+                    safelySetDetails({ seed: newSeed });
                   }}
                   showRandomButton
                 />
@@ -318,16 +324,12 @@ export function EditFeature() {
                   label={"Threshold"}
                   tooltipText="This value determines what percentage of users should see this feature."
                   onChange={(newValue) => {
-                    if (featureDetails) {
-                      featureDetails.value = newValue;
-                    } else {
-                      setDefault();
-                    }
+                    safelySetDetails({ value: newValue });
                   }}
                 />
               </>
             )}
-            {featureDetails?.type === "selective" && (
+            {featureDetails?.featureType === "selective" && (
               <SelectiveList
                 items={
                   (environment.features[feature?.featureId || ""]?.value as (
@@ -336,9 +338,9 @@ export function EditFeature() {
                   )[]) || []
                 }
                 onListChange={(newList) => {
-                  (
-                    environment.features[feature?.featureId || ""] as any
-                  ).value = newList || ([] as string[]);
+                  safelySetDetails({
+                    value: (newList || ([] as string[])) as any,
+                  });
                 }}
               />
             )}
@@ -347,7 +349,7 @@ export function EditFeature() {
               feature?.scheduleType === "environment" && (
                 <ScheduledForm
                   featureSchedule={
-                    featureDetails.schedule || {
+                    featureDetails?.schedule || {
                       start: Date.now(),
                       end: Date.now(),
                       timezone: "UTC",
@@ -357,7 +359,7 @@ export function EditFeature() {
                     }
                   }
                   onChange={(newSchedule) => {
-                    featureDetails.schedule = newSchedule;
+                    safelySetDetails({ schedule: newSchedule });
                   }}
                 />
               )}

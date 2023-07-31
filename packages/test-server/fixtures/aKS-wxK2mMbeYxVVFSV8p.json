@@ -1,0 +1,79 @@
+{
+  "name": "Gradual",
+  "groupId": "aKS-wxK2mMbeYxVVFSV8p",
+  "features": {
+    "oIVHzosp0ao3HN0fmFwwr": {
+      "name": "testingWorkingGradual",
+      "featureId": "oIVHzosp0ao3HN0fmFwwr",
+      "featureType": "gradual",
+      "value": false,
+      "scheduleType": "",
+      "schedule": {
+        "start": 0,
+        "end": 0,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      }
+    },
+    "-T2se1u9jyj1HNkbJ9Cdr": {
+      "name": "testingNonWorkingGradual",
+      "featureId": "-T2se1u9jyj1HNkbJ9Cdr",
+      "featureType": "gradual",
+      "value": false,
+      "scheduleType": "",
+      "schedule": {
+        "start": 0,
+        "end": 0,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      }
+    }
+  },
+  "environments": {
+    "zq-d4W97nyNo3mELbO_LT": {
+      "name": "dev",
+      "environmentId": "zq-d4W97nyNo3mELbO_LT",
+      "features": {
+        "oIVHzosp0ao3HN0fmFwwr": {
+          "name": "",
+          "featureId": "oIVHzosp0ao3HN0fmFwwr",
+          "featureType": "gradual",
+          "seed": 0.11,
+          "value": 0.4,
+          "scheduleType": "",
+          "schedule": {
+            "start": 0,
+            "end": 0,
+            "timezone": "UTC",
+            "timeType": "none",
+            "startTime": 0,
+            "endTime": 0
+          }
+        },
+        "-T2se1u9jyj1HNkbJ9Cdr": {
+          "name": "",
+          "featureId": "-T2se1u9jyj1HNkbJ9Cdr",
+          "featureType": "gradual",
+          "seed": 0.22,
+          "value": 0.4,
+          "scheduleType": "",
+          "schedule": {
+            "start": 0,
+            "end": 0,
+            "timezone": "UTC",
+            "timeType": "none",
+            "startTime": 0,
+            "endTime": 0
+          }
+        }
+      }
+    }
+  },
+  "meta": {
+    "version": "v1"
+  }
+}

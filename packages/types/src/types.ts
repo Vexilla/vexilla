@@ -10,6 +10,7 @@ import {
   VexillaFeatureTypeValue,
 } from "./consts";
 
+export type VexillaScheduleType = "" | "global" | "environment";
 export type VexillaInputType = "number" | "string";
 export type VexillaNumberType = "int" | "float";
 
@@ -38,7 +39,8 @@ export interface Environment {
 export type VexillaFeature =
   | VexillaToggleFeature
   | VexillaGradualFeature
-  | VexillaSelectiveFeature;
+  | VexillaSelectiveFeature
+  | VexillaValueFeature;
 
 export interface FeatureSettings {
   [key: string]: VexillaFeature;
@@ -51,18 +53,19 @@ export type DefaultFeatureValues = {
   [VexillaFeatureTypeValue]: VexillaValueFeature;
 };
 
-export interface Feature {
-  name: string;
-  featureId: string;
-  type: VexillaFeatureTypeString;
-  scheduleType: "" | "global" | "environment";
-}
+// export interface Feature {
+//   name: string;
+//   featureId: string;
+//   featureType: VexillaFeatureTypeString;
+//   scheduleType: VexillaScheduleType;
+//   schedule: VexillaSchedule;
+// }
 
 export interface Group {
   name: string;
   groupId: string;
-  features: Feature[];
-  environments: Environment[];
+  features: Record<string, VexillaFeature>;
+  environments: Record<string, Environment>;
 }
 
 export type PublishedEnvironment = Omit<
@@ -73,8 +76,8 @@ export type PublishedEnvironment = Omit<
 export interface PublishedGroup {
   name: string;
   groupId: string;
-  features: Feature[];
-  environments: PublishedEnvironment[];
+  features: Record<string, VexillaFeature>;
+  environments: Record<string, PublishedEnvironment>;
   meta: { version: "v1" };
 }
 
@@ -89,58 +92,53 @@ export interface UpdatePayload<T> {
   current: T;
 }
 
-export interface FeatureSettingPayload {
-  feature: Feature;
-  environment: Environment;
-  type: VexillaFeatureTypeString;
-  settings: VexillaFeature;
-}
-
 export interface DefaultValuesPayload {
   environment: Environment;
   defaultValues: DefaultFeatureValues;
 }
 
 export interface VexillaFeatureBase {
-  type: VexillaFeatureTypeString;
+  name: string;
+  featureType: VexillaFeatureTypeString;
   featureId: string;
+  scheduleType: VexillaScheduleType;
   schedule?: VexillaSchedule;
 }
 
 export interface VexillaToggleFeature extends VexillaFeatureBase {
-  type: typeof VexillaFeatureTypeToggle;
+  featureType: typeof VexillaFeatureTypeToggle;
   value: boolean;
 }
 
 export interface VexillaGradualFeature extends VexillaFeatureBase {
-  type: typeof VexillaFeatureTypeGradual;
+  featureType: typeof VexillaFeatureTypeGradual;
   value: number;
   seed: number;
 }
 
 export interface VexillaValueFeature extends VexillaFeatureBase {
-  type: typeof VexillaFeatureTypeValue;
+  featureType: typeof VexillaFeatureTypeValue;
   value: string;
   valueType: VexillaInputType;
   numberType?: "int" | "float";
 }
 
 export interface VexillaSelectiveFeatureBase extends VexillaFeatureBase {
-  type: typeof VexillaFeatureTypeSelective;
+  featureType: typeof VexillaFeatureTypeSelective;
   valueType: VexillaInputType;
   value: (string | number)[];
 }
 
 export interface VexillaSelectiveFeatureStrings
   extends VexillaSelectiveFeatureBase {
-  type: typeof VexillaFeatureTypeSelective;
+  featureType: typeof VexillaFeatureTypeSelective;
   valueType: "string";
   value: string[];
 }
 
 export interface VexillaSelectiveFeatureNumbers
   extends VexillaSelectiveFeatureBase {
-  type: typeof VexillaFeatureTypeSelective;
+  featureType: typeof VexillaFeatureTypeSelective;
   valueType: "number";
   value: number[];
 }
