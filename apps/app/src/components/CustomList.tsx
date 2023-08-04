@@ -25,6 +25,7 @@ interface CustomListProps<T> {
   getKey: (item: T) => string | number;
   itemType: string;
   tooltipText?: string;
+  showCount?: boolean;
 }
 
 export function CustomList<T>({
@@ -35,16 +36,20 @@ export function CustomList<T>({
   getKey,
   listItem,
   itemType,
+  showCount,
 }: CustomListProps<T>) {
   return (
     <CustomCard
       title={title}
       tooltipText={tooltipText}
+      count={showCount ? items.length : undefined}
       titleButtonSection={
         <>
-          <Button color="primary" onClick={onAdd}>
-            <Icon icon={addCircleBroken} />
-            <Box ml={2}>New</Box>
+          <Button px={6} color="primary" onClick={onAdd}>
+            <Icon icon={addCircleBroken} width={24} />
+            <Box ml={2} className="sr-only">
+              New
+            </Box>
           </Button>
         </>
       }

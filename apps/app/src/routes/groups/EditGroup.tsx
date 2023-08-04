@@ -173,6 +173,7 @@ export function EditGroup() {
                 itemType="Environment"
                 items={Object.values(environments)}
                 getKey={(environment) => environment.name}
+                showCount
                 onAdd={() => {
                   const features: Record<string, VexillaFeature> = {};
                   Object.values(group.features).forEach((feature) => {
@@ -213,6 +214,7 @@ export function EditGroup() {
                 itemType="Feature"
                 items={Object.values(features)}
                 getKey={(feature) => feature?.featureId}
+                showCount
                 onAdd={() => {
                   const featureId = nanoid();
                   const featureName = `Feature ${

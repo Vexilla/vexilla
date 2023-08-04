@@ -28,6 +28,7 @@ import arrowRightBroken from "@iconify/icons-solar/arrow-right-broken";
 
 import chevronRight from "@iconify/icons-octicon/chevron-right-12";
 import chevronDown from "@iconify/icons-octicon/chevron-down-12";
+import { ItemCountBadge } from "./ItemCountBadge";
 
 interface StatusProps {
   config: AppState;
@@ -208,11 +209,7 @@ function StatusItem({
         <Flex direction="row" align="center">
           <span className="m-0">{title}</span>
           {!disabled && (
-            <div
-              className={`h-6 w-6 p-1 ${countColor} rounded-full shadow-sm text-white  flex items-center justify-center ml-2 text-xs`}
-            >
-              {issueCount}
-            </div>
+            <ItemCountBadge count={issueCount} color={countColor} />
           )}
         </Flex>
         {!actionButtonDisabled && (
