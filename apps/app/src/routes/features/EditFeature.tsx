@@ -188,6 +188,20 @@ export function EditFeature() {
             feature
           ) {
             feature.scheduleType = event;
+
+            environments.forEach((environment) => {
+              environment.features = Object.values(environment.features).reduce(
+                (newFeatures, envFeature) => {
+                  if (feature.featureId === envFeature.featureId) {
+                    envFeature.scheduleType = event;
+                  }
+                  newFeatures[envFeature.featureId] = envFeature;
+
+                  return newFeatures;
+                },
+                {} as Record<string, VexillaFeature>
+              );
+            });
           }
         }}
       >
