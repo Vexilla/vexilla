@@ -5,9 +5,10 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "test:gradual": "ts-node src/test_gradual.ts",
+    "test:scheduling": "ts-node src/test_scheduling.ts",
     "test": "ts-node src/test_client.ts",
-    "compile": "tsc",
-    "prepare": "npm run compile"
+    "compile": "tsc"
   },
   "author": {
     "name": "Chris Griffing",
@@ -26,6 +27,7 @@
   "dependencies": {
     "@vexilla/types": "workspace:*",
     "case": "^1.6.3",
+    "dayjs": "^1.11.7",
     "uuid": "^8.3.2",
     "xxhashjs": "^0.2.2"
   },

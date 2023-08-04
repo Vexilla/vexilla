@@ -2,6 +2,7 @@
   "include": ["src/**/*"],
   "compilerOptions": {
     "declaration": true,
+    "esModuleInterop": true,
     "outDir": "dist"
   }
 }

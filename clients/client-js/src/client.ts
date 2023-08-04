@@ -8,9 +8,13 @@ import {
   VexillaManifest,
   PublishedGroup,
 } from "@vexilla/types";
-import * as Case from "case";
 
 import Hasher from "./hasher";
+import {
+  createEnvironmentLookupTable,
+  createFeatureLookupTable,
+  createGroupLookupTable,
+} from "./utils/lookup_tables";
 
 const LATEST_MANIFEST_VERSION = 1;
 
@@ -25,8 +29,10 @@ export class VexillaClient {
   protected manifest: VexillaManifest;
   protected flagGroups: Record<string, PublishedGroup> = {};
   protected groupLookupTable: Record<string, string> = {};
+  protected featureLookupTable: Record<string, Record<string, string>> = {};
+  protected environmentLookupTable: Record<string, Record<string, string>> = {};
 
-  constructor(config: VexillaClientConfig, suppressLogs = false) {
+  constructor(config: VexillaClientConfig, suppressLogs = true) {
     this.suppressLogs = suppressLogs;
     this.baseUrl = config.baseUrl;
     this.environment = config.environment || "prod";
@@ -35,31 +41,18 @@ export class VexillaClient {
 
   async getManifest(
     fetchHook: FetchHook<VexillaManifest>
-  ): Promise<[VexillaManifest, Record<string, string>]> {
+  ): Promise<VexillaManifest> {
     try {
-      const manifestResponse = await fetchHook(`${this.baseUrl}/manifest.json`);
-
-      const groupLookupTable: Record<string, string> = {};
-
-      manifestResponse.groups.forEach((_group) => {
-        const scrubbedName = _group.name.replace(".json", "");
-        groupLookupTable[_group.groupId] = _group.groupId;
-        groupLookupTable[scrubbedName] = _group.groupId;
-        groupLookupTable[Case.kebab(scrubbedName)] = _group.groupId;
-      });
-
-      return [manifestResponse, groupLookupTable];
+      return fetchHook(`${this.baseUrl}/manifest.json`);
     } catch (e: any) {
-      return [{ version: "v0", groups: [] }, {}];
+      this.warn("Error: failed to fetch manifest", e);
+      return { version: "v0", groups: {} };
     }
   }
 
-  async setManifest(
-    manifest: VexillaManifest,
-    groupLookupTable: Record<string, string>
-  ) {
+  async setManifest(manifest: VexillaManifest) {
     this.manifest = manifest;
-    this.groupLookupTable = groupLookupTable;
+    this.groupLookupTable = createGroupLookupTable(manifest.groups);
 
     const currentVersion = this.manifest.version
       ? parseInt(this.manifest.version.replace("v", ""))
@@ -70,38 +63,30 @@ export class VexillaClient {
         `Manifest version mismatch. Current: ${currentVersion} - Required: ${LATEST_MANIFEST_VERSION}. You must either use an appropriate client or you must update your schema.`
       );
     }
-
-    const fetchedFlags = await Promise.all(
-      this.manifest.groups.map((group) =>
-        this.getFlags(group.name, async (url) => {
-          const response = await fetch(url);
-          return response.json();
-        })
-      )
-    );
-
-    fetchedFlags.forEach((flagGroup) => {
-      this.flagGroups[flagGroup.groupId] = flagGroup;
-    });
   }
 
   async syncManifest() {
-    const [manifest, groupLookupTable] = await this.getManifest(async (url) => {
+    const manifest = await this.getManifest(async (url) => {
       const response = await fetch(url);
       return response.json();
     });
 
-    this.setManifest(manifest, groupLookupTable);
+    this.setManifest(manifest);
   }
 
   async getFlags(
     fileName: string,
     fetchHook: FetchHook<VexillaFlags>
   ): Promise<PublishedGroup> {
+    if (!this.manifest) {
+      throw new Error("Manifest is not fetched");
+    }
+
     let flagFileName = fileName.replace(".json", "");
-    let groupId = flagFileName;
-    if (this.manifest) {
-      groupId = this.groupLookupTable[flagFileName];
+    let groupId = this.groupLookupTable[flagFileName];
+
+    if (!groupId) {
+      throw new Error("FlagGroup not found in manifest.");
     }
 
     const flagsResponse: any = await fetchHook(
@@ -110,71 +95,77 @@ export class VexillaClient {
     return flagsResponse;
   }
 
-  setFlags(groupId: string, flags: PublishedGroup) {
-    groupId = this.groupLookupTable[groupId];
+  setFlags(groupName: string, flags: PublishedGroup) {
+    let flagFileName = groupName.replace(".json", "");
+    let groupId = this.groupLookupTable[flagFileName];
+
+    this.featureLookupTable[groupId] = createFeatureLookupTable(flags.features);
+    this.environmentLookupTable[groupId] = createEnvironmentLookupTable(
+      flags.environments
+    );
+
     this.flagGroups[groupId] = flags;
   }
 
   async syncFlags(fileName: string, fetchHook: FetchHook<VexillaFlags>) {
-    let flagFileName = fileName.replace(".json", "");
-    let groupId = flagFileName;
-    if (this.manifest) {
-      groupId = this.groupLookupTable[flagFileName];
+    if (!this.manifest) {
+      throw new Error("Manifest is not fetched");
     }
-    const flags = await this.getFlags(groupId, fetchHook);
-    this.setFlags(groupId, flags);
+
+    const flags = await this.getFlags(fileName, fetchHook);
+    this.setFlags(fileName, flags);
   }
 
-  should(flagName: string, groupName: string) {
-    const groupId = this.groupLookupTable[groupName];
+  should(groupName: string, featureName: string) {
+    const scrubbedGroupName = groupName.replace(".json", "");
+    const groupId = this.groupLookupTable[scrubbedGroupName];
     if (!this.flagGroups[groupId]) {
       this.warn("should() called before flags were fetched for this group");
       return false;
     }
 
-    // const environmentId =
-    const environment = this.flagGroups[groupId].environments.find(
-      (_environment) =>
-        _environment.environmentId === this.environment ||
-        _environment.name === this.environment ||
-        _environment.name === Case.kebab(this.environment)
-    );
+    const environmentId =
+      this.environmentLookupTable[groupId][this.environment];
+    if (!environmentId) {
+      this.warn("Environment could not be found", this.environment);
+      return false;
+    }
 
+    const environment = this.flagGroups[groupId].environments[environmentId];
     if (!environment) {
-      console.error(
+      this.warn(
         `Environment (${this.environment}) not found in group (${groupName}, ${groupId}).`
       );
 
       return false;
     }
 
-    const feature = this.flagGroups[groupId].features.find(
-      (_feature) =>
-        _feature.featureId === flagName ||
-        _feature.name === flagName ||
-        _feature.name === Case.kebab(flagName)
-    );
+    const featureId = this.featureLookupTable[groupId][featureName];
+    if (!featureId) {
+      this.warn("Environment could not be found", this.environment);
+      return false;
+    }
 
-    let flag = environment.features[feature.featureId];
+    let feature = environment.features[featureId];
 
-    if (!flag) {
-      console.error(
-        "flag is undefined for: ",
+    if (!feature) {
+      this.warn(
+        "feature is undefined for: ",
         this.environment,
         groupName,
-        flagName
+        featureName
       );
       return false;
     }
 
     let _should = false;
-    switch (flag.type) {
+    switch (feature.featureType) {
       case VexillaFeatureTypeToggle:
-        _should = flag.value;
+        _should = feature.value;
         break;
 
       case VexillaFeatureTypeGradual:
-        if (flag.seed <= 0 || flag.seed > 1) {
+        if (feature.seed <= 0 || feature.seed > 1) {
           console.error(
             "seed must be a number value greater than 0 and less than or equal to 1"
           );
@@ -187,12 +178,14 @@ export class VexillaClient {
           );
           return false;
         }
-        flag = flag as VexillaGradualFeature;
-        _should = this.getInstancePercentile(flag.seed) <= flag.value * 100;
+        feature = feature as VexillaGradualFeature;
+
+        _should =
+          this.getInstancePercentile(feature.seed) <= feature.value * 100;
         break;
 
       default:
-        throw Error(`Unsupported Feature Type: ${flag.type}`);
+        throw Error(`Unsupported Feature Type: ${feature.featureType}`);
     }
 
     return _should;
