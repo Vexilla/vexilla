@@ -38,9 +38,9 @@ impl VexillaClient {
         VexillaClient {
             manifest: Manifest::default(),
             show_logs: false,
-            environment: environment,
-            base_url: base_url,
-            instance_id: instance_id,
+            environment,
+            base_url,
+            instance_id,
             flag_groups: HashMap::new(),
             group_lookup_table: HashMap::new(),
             flag_lookup_table: HashMap::new(),
@@ -76,15 +76,12 @@ impl VexillaClient {
         let url = format!("{}/{}.json", self.base_url, coerced_group_id);
         let response_text = fetch(&url);
 
-        println!("{}", response_text);
-
         let flags: Result<FlagGroup> = serde_json::from_str(response_text.as_str());
 
-        if flags.is_err() {
-            println!("{:?}", flags);
-            VexillaResult::Err(VexillaError::Unknown)
-        } else {
+        if let Ok(..) = flags {
             Ok(flags.unwrap())
+        } else {
+            VexillaResult::Err(VexillaError::Unknown)
         }
     }
 
@@ -126,10 +123,7 @@ impl VexillaClient {
     ) -> VexillaResult<bool> {
         let feature = self.get_feature(group_id, feature_name)?;
 
-        let is_within_schedule = is_scheduled_feature_active(feature.to_owned().clone());
-
-        println!("feature: {:?}", feature);
-        println!("is_within_schedule: {:?}", is_within_schedule);
+        let is_within_schedule = is_scheduled_feature_active(feature.to_owned());
 
         match (feature.clone(), is_within_schedule) {
             (Feature::Toggle(feature), true) => Ok(feature.value),
@@ -142,6 +136,8 @@ impl VexillaClient {
                 }
                 _ => Err(VexillaError::InvalidShouldFeatureType(feature.value_type())),
             },
+
+            (_, false) => Ok(false),
 
             (_, _) => Err(VexillaError::InvalidShouldFeatureType(
                 feature.feature_type(),
@@ -169,6 +165,8 @@ impl VexillaClient {
                 _ => Err(VexillaError::InvalidShouldCustomStr(feature.value_type())),
             },
 
+            (_, false) => Ok(false),
+
             (_, _) => Err(VexillaError::InvalidShouldFeatureType(
                 feature.feature_type(),
             )),
@@ -194,6 +192,8 @@ impl VexillaClient {
                 }
                 _ => Err(VexillaError::InvalidShouldCustomInt(feature.value_type())),
             },
+
+            (_, false) => Ok(false),
 
             (_, _) => Err(VexillaError::InvalidShouldFeatureType(
                 feature.feature_type(),
@@ -221,6 +221,8 @@ impl VexillaClient {
                 _ => Err(VexillaError::InvalidShouldCustomInt(feature.value_type())),
             },
 
+            (_, false) => Ok(false),
+
             (_, _) => Err(VexillaError::InvalidShouldFeatureType(
                 feature.feature_type(),
             )),
@@ -238,15 +240,15 @@ impl VexillaClient {
 
         match (feature.clone(), is_within_schedule) {
             (Feature::Value(feature), true) => match feature {
-                ValueFeature::String { value, .. } => Ok(value.clone()),
+                ValueFeature::String { value, .. } => Ok(value),
                 _ => Err(VexillaError::InvalidValueStringType(feature.value_type())),
             },
 
-            (_, true) => Err(VexillaError::InvalidValueFeatureType(
+            (_, false) => Ok(default.to_string()),
+
+            (_, _) => Err(VexillaError::InvalidValueFeatureType(
                 feature.feature_type(),
             )),
-
-            (_, false) => Ok(default.to_string()),
         }
     }
 
@@ -266,11 +268,11 @@ impl VexillaClient {
                 _ => Err(VexillaError::InvalidValueI64Type(feature.value_type())),
             },
 
-            (_, true) => Err(VexillaError::InvalidValueFeatureType(
+            (_, false) => Ok(default),
+
+            (_, _) => Err(VexillaError::InvalidValueFeatureType(
                 feature.feature_type(),
             )),
-
-            (_, false) => Ok(default),
         }
     }
 
@@ -292,11 +294,11 @@ impl VexillaClient {
                 _ => Err(VexillaError::InvalidValueF64Type(feature.value_type())),
             },
 
-            (_, true) => Err(VexillaError::InvalidValueFeatureType(
+            (_, false) => Ok(default),
+
+            (_, _) => Err(VexillaError::InvalidValueFeatureType(
                 feature.feature_type(),
             )),
-
-            (_, false) => Ok(default),
         }
     }
 
@@ -362,10 +364,7 @@ fn create_group_lookup_table(manifest: Manifest) -> HashMap<String, String> {
     manifest.groups.iter().for_each(|group| {
         new_lookup_table.insert(group.group_id.clone(), group.group_id.clone());
         new_lookup_table.insert(group.name.clone(), group.group_id.clone());
-        new_lookup_table.insert(
-            group.group_id.to_case(Case::Kebab).clone(),
-            group.group_id.clone(),
-        );
+        new_lookup_table.insert(group.group_id.to_case(Case::Kebab), group.group_id.clone());
     });
 
     new_lookup_table
@@ -380,10 +379,7 @@ fn create_feature_lookup_table(flag_group: FlagGroup) -> HashMap<String, String>
         .for_each(|(feature_id, feature)| {
             new_lookup_table.insert(feature_id.clone(), feature_id.clone());
             new_lookup_table.insert(feature.name.clone(), feature_id.clone());
-            new_lookup_table.insert(
-                feature.name.to_case(Case::Kebab).clone(),
-                feature_id.clone(),
-            );
+            new_lookup_table.insert(feature.name.to_case(Case::Kebab), feature_id.clone());
         });
 
     new_lookup_table
@@ -399,7 +395,7 @@ fn create_environment_lookup_table(flag_group: FlagGroup) -> HashMap<String, Str
             new_lookup_table.insert(environment_id.clone(), environment_id.clone());
             new_lookup_table.insert(environment.name.clone(), environment_id.clone());
             new_lookup_table.insert(
-                environment.name.to_case(Case::Kebab).clone(),
+                environment.name.to_case(Case::Kebab),
                 environment_id.clone(),
             );
         });
@@ -420,13 +416,21 @@ mod tests {
             "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a",
         );
 
+        /*
+            Manifest
+        */
+
         let manifest = client
             .get_manifest(|url| reqwest::blocking::get(url).unwrap().text().unwrap())
             .unwrap();
 
-        assert_eq!(manifest.version.len() > 0, true);
+        assert!(!manifest.version.is_empty());
 
         client.sync_manifest(|url| reqwest::blocking::get(url).unwrap().text().unwrap());
+
+        /*
+            Get Flags
+        */
 
         let flags = client
             .get_flags("Gradual", |url| {
@@ -436,27 +440,82 @@ mod tests {
 
         assert_eq!(flags.name, "Gradual");
 
+        /*
+            Gradual
+        */
+
         client
             .sync_flags("Gradual", |url| {
                 reqwest::blocking::get(url).unwrap().text().unwrap()
             })
             .unwrap();
 
-        let working_gradual_by_id = client.should("Gradual", "oIVHzosp0ao3HN0fmFwwr");
-        assert_eq!(true, working_gradual_by_id.is_ok());
-        println!("uh wat? {:?}", working_gradual_by_id);
-        assert_eq!(true, working_gradual_by_id.unwrap());
+        let working_gradual_by_id = client.should("Gradual", "oIVHzosp0ao3HN0fmFwwr").unwrap();
+        assert!(working_gradual_by_id);
 
-        let working_gradual_by_name = client.should("Gradual", "testingWorkingGradual");
-        assert_eq!(true, working_gradual_by_name.is_ok());
-        assert_eq!(true, working_gradual_by_name.unwrap());
+        let working_gradual_by_name = client.should("Gradual", "testingWorkingGradual").unwrap();
+        assert!(working_gradual_by_name);
 
-        let non_working_gradual_by_id = client.should("Gradual", "-T2se1u9jyj1HNkbJ9Cdr");
-        assert_eq!(true, non_working_gradual_by_id.is_ok());
-        assert_eq!(false, non_working_gradual_by_id.unwrap());
+        let non_working_gradual_by_id = client.should("Gradual", "-T2se1u9jyj1HNkbJ9Cdr").unwrap();
+        assert!(!non_working_gradual_by_id);
 
-        let non_working_gradual_by_name = client.should("Gradual", "testingNonWorkingGradual");
-        assert_eq!(true, non_working_gradual_by_name.is_ok());
-        assert_eq!(false, non_working_gradual_by_name.unwrap());
+        let non_working_gradual_by_name = client
+            .should("Gradual", "testingNonWorkingGradual")
+            .unwrap();
+        assert!(!non_working_gradual_by_name);
+
+        /*
+           Scheduled
+        */
+
+        client
+            .sync_flags("Scheduled", |url| {
+                reqwest::blocking::get(url).unwrap().text().unwrap()
+            })
+            .unwrap();
+
+        /*
+           Scheduled (Global timeless)
+        */
+
+        let before_global_scheduled = client.should("Scheduled", "beforeGlobal").unwrap();
+        assert!(!before_global_scheduled);
+
+        let during_global_scheduled = client.should("Scheduled", "duringGlobal").unwrap();
+        assert!(during_global_scheduled);
+
+        let after_global_scheduled = client.should("Scheduled", "afterGlobal").unwrap();
+        assert!(!after_global_scheduled);
+
+        /*
+           Scheduled (Global Start/End)
+        */
+
+        let before_global_startend_scheduled =
+            client.should("Scheduled", "beforeGlobalStartEnd").unwrap();
+        assert!(!before_global_startend_scheduled);
+
+        let during_global_startend_scheduled =
+            client.should("Scheduled", "duringGlobalStartEnd").unwrap();
+        assert!(during_global_startend_scheduled);
+
+        let after_global_startend_scheduled =
+            client.should("Scheduled", "afterGlobalStartEnd").unwrap();
+        assert!(!after_global_startend_scheduled);
+
+        /*
+           Scheduled (Global Daily)
+        */
+
+        let before_global_daily_scheduled =
+            client.should("Scheduled", "beforeGlobalDaily").unwrap();
+        assert!(!before_global_daily_scheduled);
+
+        let during_global_daily_scheduled =
+            client.should("Scheduled", "duringGlobalDaily").unwrap();
+        assert!(during_global_daily_scheduled);
+
+        let after_global_daily_scheduled = client.should("Scheduled", "afterGlobalDaily").unwrap();
+        assert!(!after_global_daily_scheduled);
     }
 }

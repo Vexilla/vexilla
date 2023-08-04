@@ -290,7 +290,7 @@ pub enum ScheduleTimeType {
     #[default]
     #[serde(rename = "none")]
     None,
-    #[serde(rename = "startEnd")]
+    #[serde(rename = "start/end")]
     StartEnd,
     #[serde(rename = "daily")]
     Daily,

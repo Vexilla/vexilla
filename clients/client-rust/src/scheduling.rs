@@ -201,7 +201,7 @@ mod tests {
 
         let active = safe_is_schedule_active(schedule, ScheduleType::Empty);
 
-        assert_eq!(active, true);
+        assert!(active);
     }
 
     #[test]
@@ -241,18 +241,16 @@ mod tests {
 
         let after_schedule_active = safe_is_schedule_active(after_schedule, ScheduleType::Global);
 
-        assert_eq!(before_schedule_active, false);
-        assert_eq!(during_schedule_active, true);
-        assert_eq!(after_schedule_active, false);
+        assert!(!before_schedule_active);
+        assert!(during_schedule_active);
+        assert!(!after_schedule_active);
     }
 
     #[test]
     fn safe_is_schedule_active_daily() {
-        println!("Testing now");
         let now = Utc::now();
         safe_is_schedule_active_daily_with_now(now);
 
-        println!("Testing today_at_9am");
         let today_at_9am = now
             .with_hour(9)
             .unwrap()
@@ -264,7 +262,6 @@ mod tests {
             .unwrap();
         safe_is_schedule_active_daily_with_now(today_at_9am);
 
-        println!("Testing today_at_1130pm");
         let today_at_1130pm = now
             .with_hour(23)
             .unwrap()
@@ -350,15 +347,10 @@ mod tests {
         let after_day_schedule_active =
             safe_is_schedule_active_with_now(after_day_schedule, ScheduleType::Global, now);
 
-        println!("before_whole_schedule_active");
-        assert_eq!(before_whole_schedule_active, false);
-        println!("before_day_schedule_active");
-        assert_eq!(before_day_schedule_active, false);
-        println!("during_schedule_active");
-        assert_eq!(during_schedule_active, true);
-        println!("after_day_schedule_active");
-        assert_eq!(after_day_schedule_active, false);
-        println!("after_whole_schedule_active");
-        assert_eq!(after_whole_schedule_active, false);
+        assert!(!before_whole_schedule_active);
+        assert!(!before_day_schedule_active);
+        assert!(during_schedule_active);
+        assert!(!after_day_schedule_active);
+        assert!(!after_whole_schedule_active);
     }
 }

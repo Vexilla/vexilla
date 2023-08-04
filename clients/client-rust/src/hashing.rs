@@ -27,7 +27,7 @@ mod tests {
         let should = hash_value(user_id, should_seed) < 0.4;
         let should_not = hash_value(user_id, should_not_seed) < 0.4;
 
-        assert_eq!(should, true);
-        assert_eq!(should_not, false);
+        assert!(should);
+        assert!(!should_not);
     }
 }
