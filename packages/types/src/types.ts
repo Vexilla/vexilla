@@ -102,7 +102,7 @@ export interface VexillaFeatureBase {
   featureType: VexillaFeatureTypeString;
   featureId: string;
   scheduleType: VexillaScheduleType;
-  schedule?: VexillaSchedule;
+  schedule: VexillaSchedule;
 }
 
 export interface VexillaToggleFeature extends VexillaFeatureBase {
@@ -168,10 +168,12 @@ export interface VexillaClientConfig {
   customInstanceHash?: string;
 }
 
+export interface ManifestGroup {
+  name: string;
+  groupId: string;
+}
+
 export interface VexillaManifest {
   version: string;
-  groups: {
-    name: string;
-    groupId: string;
-  }[];
+  groups: Record<string, ManifestGroup>;
 }
