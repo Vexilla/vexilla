@@ -1,7 +1,9 @@
 import React from "react";
-import { Timeline, Text } from "@mantine/core";
+import { Timeline, Text, Button } from "@mantine/core";
 
 import { PageLayout } from "../components/PageLayout";
+import { useSnapshot } from "valtio";
+import { config } from "../stores/config-valtio";
 
 export function Home() {
   return (

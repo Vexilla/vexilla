@@ -83,6 +83,8 @@ export interface PublishedGroup {
 
 export interface AppState {
   modifiedAt: number;
+  remoteModifiedAt: number;
+  remoteMergedAt: number;
   groups: Group[];
   hosting: HostingConfig;
 }

@@ -25,6 +25,7 @@ import { OnboardingForm } from "./components/app/OnboardingForm";
 import { Status } from "./components/Status";
 
 import "./App.css";
+import { notifications } from "@mantine/notifications";
 
 function App() {
   const configSnapshot = useSnapshot(config);
@@ -111,7 +112,15 @@ function App() {
       }
     }
 
+    const interval = setInterval(() => {
+      fetchCurrentConfig();
+    }, 30000);
+
     fetchCurrentConfig();
+
+    return () => {
+      clearInterval(interval);
+    };
   }, [accessToken]);
 
   return (
@@ -150,6 +159,9 @@ function App() {
                 config={config}
                 showConfig={() => {
                   openHostingConfigModal();
+                }}
+                updateLocal={() => {
+                  console.log("TODO: update local config");
                 }}
                 publish={async (changes, approvals) => {
                   // rationalize approvals/changes into current config
@@ -218,12 +230,13 @@ function App() {
                       },
                     ]);
 
-                    closeHostingConfigModal();
-                    // spawn toast
-                    // notifications.show({
-                    //   message: "PR Created",
-                    // });
+                    notifications.show({
+                      message: "PR Created",
+                    });
                   }
+                }}
+                mergeRemoteConfig={async (changes, approvals) => {
+                  console.log({ changes, approvals });
                 }}
               />
               <CustomList<Group>
@@ -231,6 +244,7 @@ function App() {
                 itemType="Group"
                 items={groups}
                 getKey={(group) => group.groupId}
+                showCount={true}
                 onAdd={() => {
                   groups.push({
                     name: `Group ${groups.length + 1}`,

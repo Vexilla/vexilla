@@ -34,6 +34,8 @@ subscribe(config, (changes) => {
 
 export const remoteConfig = proxy<AppState>({
   modifiedAt: 0,
+  remoteModifiedAt: 0,
+  remoteMergedAt: 0,
   groups: [],
   hosting: {
     provider: "",
@@ -65,7 +67,18 @@ export const validation = derive({
   },
 });
 
-export const differences = derive({
+export const remoteDifferences = derive({
+  result: (get) => {
+    const currentConfig = get(config);
+    const currentRemoteConfig = get(remoteConfig);
+
+    return microdiff(currentConfig, currentRemoteConfig).filter((diff) => {
+      return diff.path.join(".") !== "hosting.accessToken";
+    });
+  },
+});
+
+export const localDifferences = derive({
   result: (get) => {
     const currentConfig = get(config);
     const currentRemoteConfig = get(remoteConfig);

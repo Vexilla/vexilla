@@ -17,31 +17,58 @@ import dayjs from "dayjs";
 
 import { AppState } from "@vexilla/types";
 
-import { differences, validation } from "../stores/config-valtio";
+import {
+  validation,
+  localDifferences,
+  remoteDifferences,
+} from "../stores/config-valtio";
 import { CustomCard } from "./CustomCard";
 
 import { Icon } from "@iconify/react";
 import settingsBroken from "@iconify/icons-solar/settings-broken";
 import closeCircleBroken from "@iconify/icons-solar/close-circle-broken";
 import checkCircleBroken from "@iconify/icons-solar/check-circle-broken";
+import arrowLeftBroken from "@iconify/icons-solar/arrow-left-broken";
 import arrowRightBroken from "@iconify/icons-solar/arrow-right-broken";
 
 import chevronRight from "@iconify/icons-octicon/chevron-right-12";
 import chevronDown from "@iconify/icons-octicon/chevron-down-12";
 import { ItemCountBadge } from "./ItemCountBadge";
 
+const IGNORED_CHANGE_PATHS = [
+  "modifiedAt",
+  "remoteModifiedAt",
+  "remoteMergedAt",
+];
+
 interface StatusProps {
   config: AppState;
   showConfig: () => void;
+  updateLocal: () => void;
   publish: (
+    changes: Difference[],
+    approvals: Record<string, boolean>
+  ) => Promise<void>;
+  mergeRemoteConfig: (
     changes: Difference[],
     approvals: Record<string, boolean>
   ) => Promise<void>;
 }
 
-export function Status({ config, showConfig, publish }: StatusProps) {
+export function Status({
+  config,
+  showConfig,
+  publish,
+  mergeRemoteConfig,
+}: StatusProps) {
   const validationSnapshot = useSnapshot(validation);
-  const differencesSnapshot = useSnapshot(differences);
+  const localDifferencesSnapshot = useSnapshot(localDifferences);
+  const remoteDifferencesSnapshot = useSnapshot(remoteDifferences);
+
+  const [
+    remoteChangesModalOpened,
+    { open: openRemoteChangesModal, close: closeRemoteChangesModal },
+  ] = useDisclosure();
 
   const [
     publishModalOpened,
@@ -57,22 +84,31 @@ export function Status({ config, showConfig, publish }: StatusProps) {
     );
   }
 
-  const modifiedAtChange = differences.result.find(
-    (change) => change.path.join(".") === "modifiedAt"
+  const remoteChanges = remoteDifferences.result.filter(
+    (change) => !IGNORED_CHANGE_PATHS.includes(change.path.join("."))
   );
 
-  const changes = differences.result.filter(
-    (change) => change.path.join(".") !== "modifiedAt"
+  const localChanges = localDifferences.result.filter(
+    (change) => !IGNORED_CHANGE_PATHS.includes(change.path.join("."))
   );
 
   let diffStatus = StatusItemStatus.Error;
-  if (changes.length > 0) {
+  if (remoteChanges.length === 0 && localChanges.length > 0) {
     diffStatus = StatusItemStatus.Good;
   }
 
   const isPublishable =
     validationStatus === StatusItemStatus.Good &&
     diffStatus === StatusItemStatus.Good;
+
+  let publishErrorText = "";
+  if (validationErrors.length > 0) {
+    publishErrorText = "There are errors with your hosting/git config.";
+  } else if (remoteChanges.length > 0) {
+    publishErrorText = "There are remote changes to merge.";
+  } else if (localChanges.length > 0) {
+    publishErrorText = "There are no local changes to publish.";
+  }
 
   return (
     <CustomCard
@@ -98,34 +134,52 @@ export function Status({ config, showConfig, publish }: StatusProps) {
         actionButtonDisabled={!validationErrors.length}
       />
 
-      {/* <ChangesStatusItem
-        changes={changes}
-        modifiedAtChange={modifiedAtChange}
-      /> */}
-
       <StatusItem
-        title="Changes"
-        status={diffStatus}
-        issueCount={changes.length || 0}
-        onActionButtonClick={() => {}}
-        actionButtonDisabled={true}
+        title="Remote"
+        status={StatusItemStatus.Error}
+        issueCount={remoteChanges.length}
+        onActionButtonClick={() => {
+          openRemoteChangesModal();
+        }}
+        actionButtonDisabled={
+          validationErrors.length > 0 || remoteChanges.length === 0
+        }
         disabled={validationErrors.length > 0}
       />
 
-      <PublishModal
-        changes={changes}
-        modifiedAtChange={modifiedAtChange}
+      <DiffModal
+        changes={remoteChanges}
+        opened={remoteChangesModalOpened}
+        closeModal={closeRemoteChangesModal}
+        primaryAction={mergeRemoteConfig}
+        primaryActionLabel="Merge Remote Changes"
+        direction="incoming"
+        config={config}
+      />
+
+      <StatusItem
+        title="Local"
+        status={diffStatus}
+        issueCount={localChanges.length || 0}
+        onActionButtonClick={() => {}}
+        actionButtonDisabled={true}
+        disabled={validationErrors.length > 0 || remoteChanges.length > 0}
+      />
+
+      <DiffModal
+        changes={localChanges}
         opened={publishModalOpened}
         closeModal={closePublishModal}
-        publish={publish}
+        primaryAction={publish}
+        primaryActionLabel="Publish Local Changes"
+        direction="outgoing"
+        config={config}
       />
 
       {!isPublishable && (
         <Flex align="center" justify="center">
           <Text color="red" p={"0.5rem"} align="center">
-            {validationErrors.length > 0
-              ? "There are errors with your hosting/git config."
-              : "There are no changes to publish."}
+            {publishErrorText}
           </Text>
         </Flex>
       )}
@@ -207,13 +261,14 @@ function StatusItem({
     <Box className={`m-2 p-2 ${bgColor} rounded-lg`}>
       <Flex direction="row" align={"center"} justify={"space-between"}>
         <Flex direction="row" align="center">
-          <span className="m-0">{title}</span>
           {!disabled && (
             <ItemCountBadge count={issueCount} color={countColor} />
           )}
+          {disabled && <ItemCountBadge count={"?"} color={"bg-slate-400"} />}
+          <span className="m-0">{title}</span>
         </Flex>
         {!actionButtonDisabled && (
-          <Button variant="subtle" color="dark" onClick={onActionButtonClick}>
+          <Button variant="outline" color="dark" onClick={onActionButtonClick}>
             {actionButtonLabel}
           </Button>
         )}
@@ -239,24 +294,28 @@ const changeResultColors = {
   false: "bg-red-50",
 };
 
-interface ChangesStatusItemProps {
+interface DiffModalProps {
   changes: Difference[];
-  modifiedAtChange?: Difference;
   opened: boolean;
   closeModal: () => void;
-  publish: (
+  primaryAction: (
     changes: Difference[],
     approvals: Record<string, boolean>
   ) => Promise<void>;
+  primaryActionLabel: string;
+  direction: "incoming" | "outgoing";
+  config: AppState;
 }
 
-function PublishModal({
+function DiffModal({
   changes,
-  modifiedAtChange,
   opened,
   closeModal,
-  publish,
-}: ChangesStatusItemProps) {
+  primaryAction,
+  primaryActionLabel,
+  direction,
+  config,
+}: DiffModalProps) {
   const [approvals, setApprovals] = useState<Record<string, boolean>>({});
   const [collapsedDiffs, setCollapsedDiffs] = useState<Record<string, boolean>>(
     {}
@@ -336,34 +395,34 @@ function PublishModal({
       title={"Changes"}
     >
       <Flex direction="column">
-        {!!modifiedAtChange &&
-          (modifiedAtChange.type === "CHANGE" ||
-            modifiedAtChange.type === "CREATE") && (
-            <Flex direction="row" justify={"space-between"} align={"center"}>
-              <Flex direction="column" align="center" w={"40%"}>
-                <Text color="gray" size="sm">
-                  Remote Timestamp
-                </Text>
-                {modifiedAtChange.type === "CHANGE" && (
-                  <Text>
-                    {(modifiedAtChange.oldValue &&
-                      dayjs(modifiedAtChange.oldValue).format(dateFormat)) ||
-                      "NULL"}
-                  </Text>
-                )}
-                {modifiedAtChange.type === "CREATE" && <Text>NULL</Text>}
-              </Flex>
-              <Text color="blue">
-                <Icon width={"2rem"} icon={arrowRightBroken} />
-              </Text>
-              <Flex direction="column" align="center" w={"40%"}>
-                <Text color="gray" size="sm">
-                  Local Timestamp
-                </Text>
-                <Text>{dayjs(modifiedAtChange.value).format(dateFormat)}</Text>
-              </Flex>
-            </Flex>
-          )}
+        <Flex direction="row" justify={"space-between"} align={"center"}>
+          <Flex direction="column" align="center" w={"40%"}>
+            <Text color="gray" size="sm">
+              Local Timestamp
+            </Text>
+            <Text className="text-center">
+              {dayjs(config.modifiedAt).format(dateFormat)}
+            </Text>
+          </Flex>
+
+          <Text color="blue">
+            {direction === "outgoing" && (
+              <Icon width={"2rem"} icon={arrowRightBroken} />
+            )}
+            {direction === "incoming" && (
+              <Icon width={"2rem"} icon={arrowLeftBroken} />
+            )}
+          </Text>
+
+          <Flex direction="column" align="center" w={"40%"}>
+            <Text color="gray" size="sm">
+              Remote Timestamp
+            </Text>
+            <Text className="text-center">
+              {dayjs(config.remoteModifiedAt).format(dateFormat) || "NULL"}
+            </Text>
+          </Flex>
+        </Flex>
         <Flex direction="row" gap="1rem" justify={"center"} align={"center"}>
           <Box>
             <RingProgress
@@ -528,11 +587,13 @@ function PublishModal({
             <Button
               variant="filled"
               onClick={() => {
-                publish(changes, approvals);
+                primaryAction(changes, approvals).then(() => {
+                  closeModal();
+                });
               }}
               disabled={approvalCount !== changes.length}
             >
-              Publish Changes
+              {primaryActionLabel}
             </Button>
           </Flex>
         </Flex>

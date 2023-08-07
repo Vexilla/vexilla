@@ -8,7 +8,7 @@ export function PageLayout({
 }: PropsWithChildren<{ className?: string; title?: string }>) {
   return (
     <div
-      className={`bg-grey flex flex-col text-left max-w-lg mx-auto ${
+      className={`bg-grey pt-0 flex flex-col text-left max-w-lg mx-auto ${
         className || ""
       }`}
     >
