@@ -196,6 +196,7 @@ export function GithubForm({ config, updateConfig }: GithubFormProps) {
 
           if (fetcher) {
             const result = await fetcher.getCurrentConfig();
+            console.log({ result });
           } else {
             console.log("no fetcher");
           }

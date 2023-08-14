@@ -21,6 +21,7 @@ import {
   validation,
   localDifferences,
   remoteDifferences,
+  remoteMetadata,
 } from "../stores/config-valtio";
 import { CustomCard } from "./CustomCard";
 
@@ -64,6 +65,7 @@ export function Status({
   const validationSnapshot = useSnapshot(validation);
   const localDifferencesSnapshot = useSnapshot(localDifferences);
   const remoteDifferencesSnapshot = useSnapshot(remoteDifferences);
+  const remoteMetadataSnapshot = useSnapshot(remoteMetadata);
 
   const [
     remoteChangesModalOpened,
@@ -92,8 +94,18 @@ export function Status({
     (change) => !IGNORED_CHANGE_PATHS.includes(change.path.join("."))
   );
 
+  let remoteDiffStatus = StatusItemStatus.Error;
+  let remoteChangesCount = remoteChanges.length;
+  if (
+    remoteMetadata.remoteMergedAt > remoteMetadata.remoteModifiedAt ||
+    remoteChangesCount === 0
+  ) {
+    remoteDiffStatus = StatusItemStatus.Good;
+    remoteChangesCount = 0;
+  }
+
   let diffStatus = StatusItemStatus.Error;
-  if (remoteChanges.length === 0 && localChanges.length > 0) {
+  if (localChanges.length > 0 && remoteDiffStatus === StatusItemStatus.Good) {
     diffStatus = StatusItemStatus.Good;
   }
 
@@ -104,9 +116,9 @@ export function Status({
   let publishErrorText = "";
   if (validationErrors.length > 0) {
     publishErrorText = "There are errors with your hosting/git config.";
-  } else if (remoteChanges.length > 0) {
+  } else if (remoteDiffStatus === StatusItemStatus.Error) {
     publishErrorText = "There are remote changes to merge.";
-  } else if (localChanges.length > 0) {
+  } else if (localChanges.length === 0) {
     publishErrorText = "There are no local changes to publish.";
   }
 
@@ -136,13 +148,14 @@ export function Status({
 
       <StatusItem
         title="Remote"
-        status={StatusItemStatus.Error}
-        issueCount={remoteChanges.length}
+        status={remoteDiffStatus}
+        issueCount={remoteChangesCount}
         onActionButtonClick={() => {
           openRemoteChangesModal();
         }}
         actionButtonDisabled={
-          validationErrors.length > 0 || remoteChanges.length === 0
+          validationErrors.length > 0 ||
+          remoteDiffStatus === StatusItemStatus.Good
         }
         disabled={validationErrors.length > 0}
       />
@@ -163,7 +176,10 @@ export function Status({
         issueCount={localChanges.length || 0}
         onActionButtonClick={() => {}}
         actionButtonDisabled={true}
-        disabled={validationErrors.length > 0 || remoteChanges.length > 0}
+        disabled={
+          validationErrors.length > 0 ||
+          remoteDiffStatus !== StatusItemStatus.Good
+        }
       />
 
       <DiffModal
@@ -419,7 +435,8 @@ function DiffModal({
               Remote Timestamp
             </Text>
             <Text className="text-center">
-              {dayjs(config.remoteModifiedAt).format(dateFormat) || "NULL"}
+              {dayjs(remoteMetadata.remoteModifiedAt).format(dateFormat) ||
+                "NULL"}
             </Text>
           </Flex>
         </Flex>
@@ -588,6 +605,7 @@ function DiffModal({
               variant="filled"
               onClick={() => {
                 primaryAction(changes, approvals).then(() => {
+                  clearApprovals();
                   closeModal();
                 });
               }}

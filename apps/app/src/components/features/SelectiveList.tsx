@@ -4,13 +4,19 @@ import { useDisclosure } from "@mantine/hooks";
 
 import { CustomList, CustomListItem } from "../CustomList";
 import { useForm } from "@mantine/form";
+import { VexillaInputType } from "@vexilla/types";
 
 interface SelectiveListProps {
   items: (string | number)[];
   onListChange: (newItems: (string | number)[]) => void | Promise<void>;
+  valueType?: VexillaInputType;
 }
 
-export function SelectiveList({ items, onListChange }: SelectiveListProps) {
+export function SelectiveList({
+  items,
+  onListChange,
+  valueType = "string",
+}: SelectiveListProps) {
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure();
 
   const form = useForm({
@@ -34,7 +40,11 @@ export function SelectiveList({ items, onListChange }: SelectiveListProps) {
       >
         <form
           onSubmit={form.onSubmit((values) => {
-            const newItems = [...items, values.newValue];
+            let { newValue } = values;
+            if (valueType === "number" && typeof newValue === "string") {
+              newValue = parseFloat(newValue);
+            }
+            const newItems = [...items, newValue];
             onListChange(newItems);
             closeModal();
             form.reset();

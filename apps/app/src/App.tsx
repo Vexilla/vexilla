@@ -1,5 +1,10 @@
 import React, { useEffect, useMemo } from "react";
-import { Outlet } from "react-router-dom";
+import {
+  Outlet,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { AppShell, Navbar, Header, Flex, Modal, Box } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useSnapshot } from "valtio";
@@ -11,12 +16,14 @@ import {
   Group,
   PublishedEnvironment,
   PublishedGroup,
+  VexillaEnvironment,
+  VexillaFeature,
 } from "@vexilla/types";
 import { HostingProvider } from "@vexilla/hosts";
 
 import { nanoid } from "./utils/nanoid";
 import { fetchersMap } from "./utils/fetchers.map";
-import { config, remoteConfig } from "./stores/config-valtio";
+import { config, remoteConfig, remoteMetadata } from "./stores/config-valtio";
 
 import { GitHubFetcher } from "./components/app/forms/GithubForm.fetchers";
 
@@ -30,6 +37,11 @@ import { notifications } from "@mantine/notifications";
 function App() {
   const configSnapshot = useSnapshot(config);
   const remoteConfigSnapshot = useSnapshot(remoteConfig);
+  const remoteMetadataSnapshot = useSnapshot(remoteMetadata);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  const hasLoggedInParam = searchParams.has("logged_in");
 
   const [
     hostingConfigModalOpened,
@@ -68,8 +80,6 @@ function App() {
     return new GitHubFetcher(cloneDeep(config));
   }, [accessToken, owner, repositoryName]);
 
-  console.log({ groups: JSON.parse(JSON.stringify(groups)) });
-
   useEffect(() => {
     if (!config.hosting?.provider) {
       openHostingConfigModal();
@@ -99,6 +109,7 @@ function App() {
             remoteConfig.groups = result.groups;
             remoteConfig.hosting = result.hosting;
             remoteConfig.modifiedAt = result.modifiedAt;
+            remoteMetadata.remoteModifiedAt = result.modifiedAt;
           } catch (e: any) {
             console.log("Failed to fetch current config. Invalidating token.");
             config.hosting.accessToken = "";
@@ -131,6 +142,7 @@ function App() {
         closeOnEscape={!!config.hosting?.provider}
         withCloseButton={!!config.hosting?.provider}
         onClose={() => {
+          setSearchParams({});
           closeHostingConfigModal();
         }}
       >
@@ -160,12 +172,18 @@ function App() {
                 showConfig={() => {
                   openHostingConfigModal();
                 }}
-                updateLocal={() => {
-                  console.log("TODO: update local config");
+                updateLocal={() => {}}
+                mergeRemoteConfig={async (changes, approvals) => {
+                  mergeRemoteChanges(config, changes, approvals);
+
+                  remoteMetadata.remoteMergedAt = Date.now();
                 }}
                 publish={async (changes, approvals) => {
-                  // rationalize approvals/changes into current config
-                  const newConfig = mergeChanges(config, changes, approvals);
+                  const newConfig = mergeLocalChanges(
+                    config,
+                    changes,
+                    approvals
+                  );
 
                   if (newConfig.hosting.provider === "github") {
                     const groupFiles = newConfig.groups.map((group) => {
@@ -174,12 +192,20 @@ function App() {
                         meta: {
                           version: "v1",
                         },
+                        features: convertFeatureValuesBasedOnTypes(
+                          group.features
+                        ),
                         environments: Object.values(group.environments).reduce(
                           (scrubbedEnvironments, environment) => {
                             const scrubbedEnvironment = omit(
                               environment,
                               "defaultEnvironmentFeatureValues"
                             );
+
+                            scrubbedEnvironment.features =
+                              convertFeatureValuesBasedOnTypes(
+                                scrubbedEnvironment.features
+                              );
 
                             scrubbedEnvironments[environment.environmentId] =
                               scrubbedEnvironment;
@@ -221,6 +247,27 @@ function App() {
                       cleanConfig.hosting.secretAccessKey = "";
                     }
 
+                    cleanConfig.groups = cleanConfig.groups.map((group) => {
+                      group.features = convertFeatureValuesBasedOnTypes(
+                        group.features
+                      );
+
+                      group.environments = Object.entries(
+                        group.environments
+                      ).reduce(
+                        (newEnvironments, [environmentId, environment]) => {
+                          environment.features =
+                            convertFeatureValuesBasedOnTypes(
+                              environment.features
+                            );
+                          newEnvironments[environmentId] = environment;
+                          return newEnvironments;
+                        },
+                        {} as Record<string, VexillaEnvironment>
+                      );
+                      return group;
+                    });
+
                     await githubMethods.publish(targetBranch, [
                       manifestFile,
                       ...groupFiles,
@@ -234,9 +281,6 @@ function App() {
                       message: "PR Created",
                     });
                   }
-                }}
-                mergeRemoteConfig={async (changes, approvals) => {
-                  console.log({ changes, approvals });
                 }}
               />
               <CustomList<Group>
@@ -294,7 +338,7 @@ function App() {
 }
 
 // assumes that the Remote is the old Value and Local is the new Value
-function mergeChanges(
+function mergeLocalChanges(
   localConfig: AppState,
   changes: Difference[],
   approvals: Record<string, boolean>
@@ -319,6 +363,68 @@ function mergeChanges(
   });
 
   return localConfig;
+}
+
+function mergeRemoteChanges(
+  localConfig: AppState,
+  changes: Difference[],
+  approvals: Record<string, boolean>
+) {
+  changes.forEach((change) => {
+    const changePathString = change.path.join(".");
+    const approved = approvals[changePathString];
+
+    if (approved) {
+      switch (change.type) {
+        case "CHANGE":
+          lodashSet(localConfig, change.path, change.value);
+          break;
+        case "CREATE":
+          lodashSet(localConfig, change.path, change.value);
+          break;
+        case "REMOVE":
+          lodashSet(localConfig, change.path, undefined);
+          break;
+      }
+    }
+  });
+
+  return localConfig;
+}
+
+function convertFeatureValuesBasedOnTypes(
+  features: Record<string, VexillaFeature>
+) {
+  return Object.entries(features).reduce(
+    (newFeatures, [featureId, feature]) => {
+      if (feature.featureType === "selective") {
+        if (!Array.isArray(feature.value)) {
+          feature.value = [];
+        } else if (feature.valueType === "string") {
+          feature.value = feature.value.map((value) => `${value}`);
+        } else if (feature.numberType === "int") {
+          feature.value = feature.value.map((value) => parseInt(`${value}`));
+        } else {
+          feature.value = feature.value.map((value) => parseFloat(`${value}`));
+        }
+      }
+
+      if (feature.featureType === "value") {
+        if (feature.valueType === "string") {
+          feature.value = `${feature.value}`;
+        } else if (feature.numberType === "int") {
+          feature.value = parseInt(`${feature.value}`);
+        } else {
+          feature.value = parseFloat(`${feature.value}`);
+        }
+      }
+
+      newFeatures[featureId] = feature;
+
+      return newFeatures;
+    },
+    {} as Record<string, VexillaFeature>
+  );
 }
 
 export default App;

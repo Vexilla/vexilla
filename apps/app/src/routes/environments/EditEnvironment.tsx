@@ -140,6 +140,9 @@ export function EditEnvironment() {
         </Group>
       </Radio.Group>
       <SelectiveList
+        valueType={
+          environment?.defaultEnvironmentFeatureValues.selective.valueType
+        }
         items={
           environment?.defaultEnvironmentFeatureValues.selective.value || []
         }

@@ -16,8 +16,14 @@ import { useSnapshot } from "valtio";
 
 import {
   VexillaFeature,
+  VexillaFeatureTypeSelective,
   VexillaFeatureTypeString,
+  VexillaInputType,
+  VexillaNumberType,
   VexillaSelectiveFeature,
+  VexillaSelectiveFeatureNumbers,
+  VexillaValueFeature,
+  VexillaValueFeatureNumber,
 } from "@vexilla/types";
 
 import { config } from "../../stores/config-valtio";
@@ -96,6 +102,35 @@ export function EditFeature() {
 
   const features = group?.features || {};
   const feature = features[params.featureId || ""];
+
+  const hasEnvironments = environments?.length > 0;
+  const featureForFirstEnv =
+    environments[0]?.features?.[feature?.featureId || ""];
+  const hasValueType =
+    hasEnvironments &&
+    (featureForFirstEnv?.featureType === "selective" ||
+      featureForFirstEnv?.featureType === "value");
+
+  let valueType: VexillaInputType = "string";
+  const featureWithValueType = feature as
+    | VexillaSelectiveFeature
+    | VexillaValueFeature;
+  if (hasValueType && featureWithValueType.valueType) {
+    valueType = featureWithValueType.valueType;
+  }
+
+  const hasNumberType =
+    hasValueType &&
+    (featureForFirstEnv as VexillaSelectiveFeatureNumbers)?.valueType ===
+      "number";
+  const featureWithNumberType = feature as
+    | VexillaSelectiveFeatureNumbers
+    | VexillaValueFeatureNumber;
+
+  let numberType: VexillaNumberType = "int";
+  if (hasNumberType && featureWithNumberType.numberType) {
+    numberType = featureWithNumberType.numberType;
+  }
 
   return (
     <PageLayout>
@@ -235,30 +270,34 @@ export function EditFeature() {
         />
       )}
 
-      {environments?.length > 0 &&
-        environments[0].features?.[feature?.featureId || ""]?.featureType ===
-          "selective" && (
+      {(feature.featureType === "selective" ||
+        feature.featureType === "value") && (
+        <>
           <Radio.Group
             name="valueType"
             label="Value Type"
-            value={
-              (
-                environments[0].features?.[
-                  feature?.featureId || ""
-                ] as VexillaSelectiveFeature
-              )?.valueType ||
-              environments[0]?.defaultEnvironmentFeatureValues.selective
-                .valueType ||
-              "string"
-            }
+            value={valueType}
             onChange={(event) => {
+              (feature as VexillaSelectiveFeature).valueType =
+                event as VexillaInputType;
+
+              if (feature.featureType === "selective") {
+                feature.value = [];
+              } else if (event === "string") {
+                feature.value = "";
+              } else {
+                feature.value = 0;
+              }
+
               environments.forEach((environment) => {
-                if (environment.features?.[feature?.featureId || ""]) {
-                  (
-                    environment.features?.[
-                      feature?.featureId || ""
-                    ] as VexillaSelectiveFeature
-                  ).valueType = event as "string" | "number";
+                const environmentFeature =
+                  environment.features?.[feature?.featureId || ""];
+                if (environmentFeature) {
+                  (feature as VexillaSelectiveFeature).valueType =
+                    event as VexillaInputType;
+
+                  (environmentFeature as VexillaSelectiveFeature).valueType =
+                    event as VexillaInputType;
                 }
               });
             }}
@@ -268,7 +307,52 @@ export function EditFeature() {
               <Radio value="number" label="Number" />
             </Group>
           </Radio.Group>
-        )}
+          {(
+            environments[0].features?.[feature?.featureId || ""] as
+              | VexillaSelectiveFeature
+              | VexillaValueFeature
+          )?.valueType === "number" && (
+            <Radio.Group
+              name="numberType"
+              label="Number Type"
+              value={numberType}
+              onChange={(event) => {
+                environments.forEach((environment) => {
+                  const currentFeature =
+                    environment.features?.[feature?.featureId || ""];
+
+                  const featureHasValueType =
+                    currentFeature.featureType === "selective" ||
+                    currentFeature.featureType === "value";
+
+                  const isNumberFeature =
+                    featureHasValueType &&
+                    currentFeature.valueType === "number";
+
+                  if (isNumberFeature && currentFeature) {
+                    (
+                      feature as
+                        | VexillaSelectiveFeatureNumbers
+                        | VexillaValueFeatureNumber
+                    ).numberType = event as VexillaNumberType;
+
+                    (
+                      currentFeature as
+                        | VexillaSelectiveFeatureNumbers
+                        | VexillaValueFeatureNumber
+                    ).numberType = event as VexillaNumberType;
+                  }
+                });
+              }}
+            >
+              <Group mt="sm" mb="lg" align="center" position="center">
+                <Radio value="int" label="Integer" mr="3rem" />
+                <Radio value="float" label="Float" />
+              </Group>
+            </Radio.Group>
+          )}
+        </>
+      )}
 
       {environments.map((environment) => {
         const featureDetails =
@@ -345,6 +429,7 @@ export function EditFeature() {
             )}
             {featureDetails?.featureType === "selective" && (
               <SelectiveList
+                valueType={featureDetails.valueType}
                 items={
                   (environment.features[feature?.featureId || ""]?.value as (
                     | string

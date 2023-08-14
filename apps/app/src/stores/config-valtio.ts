@@ -7,19 +7,20 @@ import { HostingConfigValidators } from "../utils/validators";
 import { omit } from "lodash-es";
 
 const CONFIG_KEY = "config";
+const REMOTE_CONFIG_KEY = "remoteConfig";
+const REMOTE_METADATA_KEY = "remoteMetadata";
+
+const defaultConfig: AppState = {
+  modifiedAt: 0,
+  groups: [],
+  hosting: {
+    provider: "",
+    providerType: "",
+  },
+};
 
 export const config = proxy<AppState>(
-  JSON.parse(localStorage.getItem(CONFIG_KEY) || "false") || {
-    modifiedAt: 0,
-    groups: [],
-    hosting: {
-      provider: "",
-      config: {
-        provider: "",
-        providerType: "",
-      },
-    },
-  }
+  JSON.parse(localStorage.getItem(CONFIG_KEY) || "false") || defaultConfig
 );
 
 subscribe(config, (changes) => {
@@ -27,20 +28,33 @@ subscribe(config, (changes) => {
     (change) => change[1][0] === "modifiedAt"
   );
   if (!changingModifiedAt) {
+    console.log("setting modifiedAt to now");
     config.modifiedAt = Date.now();
   }
   localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
 });
 
-export const remoteConfig = proxy<AppState>({
-  modifiedAt: 0,
-  remoteModifiedAt: 0,
-  remoteMergedAt: 0,
-  groups: [],
-  hosting: {
-    provider: "",
-    providerType: "",
-  },
+export const remoteConfig = proxy<AppState>(
+  JSON.parse(localStorage.getItem(REMOTE_CONFIG_KEY) || "false") ||
+    defaultConfig
+);
+
+subscribe(remoteConfig, () => {
+  localStorage.setItem(REMOTE_CONFIG_KEY, JSON.stringify(remoteConfig));
+});
+
+export const remoteMetadata = proxy<{
+  remoteModifiedAt: number;
+  remoteMergedAt: number;
+}>(
+  JSON.parse(localStorage.getItem(REMOTE_METADATA_KEY) || "false") || {
+    remoteModifiedAt: 0,
+    remoteMergedAt: 0,
+  }
+);
+
+subscribe(remoteMetadata, () => {
+  localStorage.setItem(REMOTE_METADATA_KEY, JSON.stringify(remoteMetadata));
 });
 
 export const validation = derive({
