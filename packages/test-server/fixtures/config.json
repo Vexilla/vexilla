@@ -1,5 +1,5 @@
 {
-  "modifiedAt": 1690934060007,
+  "modifiedAt": 1691877913585,
   "groups": [
     {
       "name": "Gradual",
@@ -486,6 +486,774 @@
                 "startTime": 32400000,
                 "endTime": 61200000
               }
+            }
+          }
+        },
+        "PEIVjdzwUu-EHd8gp8Yvd": {
+          "name": "Environment 2",
+          "environmentId": "PEIVjdzwUu-EHd8gp8Yvd",
+          "defaultEnvironmentFeatureValues": {
+            "toggle": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "gradual": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "gradual",
+              "seed": 0,
+              "value": 0,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "selective": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "selective",
+              "valueType": "string",
+              "value": [],
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "value": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "value",
+              "valueType": "string",
+              "value": "",
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            }
+          },
+          "features": {
+            "7tmnvFX7RI3kOt5r57vyz": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "khEhXchcRuhNdDa8Il8VO": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "dPjTTjugWI5gJfcmoDmbU": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "6iaSljA2uE74IPq4gNzEv": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "0cq1IesUoQ7co34ViqHY8": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "PKjpuHwBkjmofQlj-o3q5": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "hErE-2S6DeJBybg-zjo-h": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "VOg2MtzQbaAvZJLSyYXo_": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "dA_c61EnCwPL0ENcAbzJF": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            }
+          }
+        },
+        "1OGUOkakswOkbgtVjwRzu": {
+          "name": "Environment 3",
+          "environmentId": "1OGUOkakswOkbgtVjwRzu",
+          "defaultEnvironmentFeatureValues": {
+            "toggle": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "gradual": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "gradual",
+              "seed": 0,
+              "value": 0,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "selective": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "selective",
+              "valueType": "string",
+              "value": [],
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "value": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "value",
+              "valueType": "string",
+              "value": "",
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            }
+          },
+          "features": {
+            "7tmnvFX7RI3kOt5r57vyz": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "khEhXchcRuhNdDa8Il8VO": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "dPjTTjugWI5gJfcmoDmbU": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "6iaSljA2uE74IPq4gNzEv": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "0cq1IesUoQ7co34ViqHY8": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "PKjpuHwBkjmofQlj-o3q5": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "hErE-2S6DeJBybg-zjo-h": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "VOg2MtzQbaAvZJLSyYXo_": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "dA_c61EnCwPL0ENcAbzJF": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            }
+          }
+        },
+        "gBFI4H0hJ66MvJBz1JiXc": {
+          "name": "Environment 4",
+          "environmentId": "gBFI4H0hJ66MvJBz1JiXc",
+          "defaultEnvironmentFeatureValues": {
+            "toggle": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "gradual": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "gradual",
+              "seed": 0,
+              "value": 0,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "selective": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "selective",
+              "valueType": "string",
+              "value": [],
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "value": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "value",
+              "valueType": "string",
+              "value": "",
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            }
+          },
+          "features": {
+            "7tmnvFX7RI3kOt5r57vyz": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "khEhXchcRuhNdDa8Il8VO": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "dPjTTjugWI5gJfcmoDmbU": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "6iaSljA2uE74IPq4gNzEv": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "0cq1IesUoQ7co34ViqHY8": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "PKjpuHwBkjmofQlj-o3q5": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "hErE-2S6DeJBybg-zjo-h": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "VOg2MtzQbaAvZJLSyYXo_": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "dA_c61EnCwPL0ENcAbzJF": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Selective",
+      "groupId": "SqR8BqpM6qgKxVtohkZE1",
+      "features": {
+        "JWXHmkf_Sct1Jr2lqACRT": {
+          "name": "String",
+          "featureId": "JWXHmkf_Sct1Jr2lqACRT",
+          "featureType": "selective",
+          "value": [],
+          "scheduleType": "",
+          "schedule": {
+            "start": 0,
+            "end": 0,
+            "timezone": "UTC",
+            "timeType": "none",
+            "startTime": 0,
+            "endTime": 0
+          },
+          "valueType": "string",
+          "numberType": "int"
+        },
+        "dlvHPXpmQ94KIzt3V-y4D": {
+          "name": "Number",
+          "featureId": "dlvHPXpmQ94KIzt3V-y4D",
+          "featureType": "selective",
+          "value": [],
+          "scheduleType": "",
+          "schedule": {
+            "start": 0,
+            "end": 0,
+            "timezone": "UTC",
+            "timeType": "none",
+            "startTime": 0,
+            "endTime": 0
+          },
+          "numberType": "int",
+          "valueType": "number"
+        }
+      },
+      "environments": {
+        "mEghvHGNfmfHwoPT82We-": {
+          "name": "dev",
+          "environmentId": "mEghvHGNfmfHwoPT82We-",
+          "defaultEnvironmentFeatureValues": {
+            "toggle": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "toggle",
+              "value": false,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "gradual": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "gradual",
+              "seed": 0,
+              "value": 0,
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "selective": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "selective",
+              "valueType": "string",
+              "value": [],
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            },
+            "value": {
+              "name": "",
+              "featureId": "null",
+              "featureType": "value",
+              "valueType": "string",
+              "value": "",
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              }
+            }
+          },
+          "features": {
+            "JWXHmkf_Sct1Jr2lqACRT": {
+              "name": "String",
+              "featureId": "JWXHmkf_Sct1Jr2lqACRT",
+              "featureType": "selective",
+              "valueType": "string",
+              "value": [
+                "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a",
+                "shouldBeInList"
+              ],
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              },
+              "numberType": "int"
+            },
+            "dlvHPXpmQ94KIzt3V-y4D": {
+              "name": "",
+              "featureId": "dlvHPXpmQ94KIzt3V-y4D",
+              "featureType": "selective",
+              "valueType": "number",
+              "value": [42],
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              },
+              "numberType": "int"
             }
           }
         }

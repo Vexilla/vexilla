@@ -1,0 +1,85 @@
+{
+  "name": "Selective",
+  "groupId": "SqR8BqpM6qgKxVtohkZE1",
+  "features": {
+    "JWXHmkf_Sct1Jr2lqACRT": {
+      "name": "String",
+      "featureId": "JWXHmkf_Sct1Jr2lqACRT",
+      "featureType": "selective",
+      "value": [],
+      "scheduleType": "",
+      "schedule": {
+        "start": 0,
+        "end": 0,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      },
+      "valueType": "string",
+      "numberType": "int"
+    },
+    "dlvHPXpmQ94KIzt3V-y4D": {
+      "name": "Number",
+      "featureId": "dlvHPXpmQ94KIzt3V-y4D",
+      "featureType": "selective",
+      "value": [],
+      "scheduleType": "",
+      "schedule": {
+        "start": 0,
+        "end": 0,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      },
+      "numberType": "int",
+      "valueType": "number"
+    }
+  },
+  "environments": {
+    "mEghvHGNfmfHwoPT82We-": {
+      "name": "dev",
+      "environmentId": "mEghvHGNfmfHwoPT82We-",
+      "features": {
+        "JWXHmkf_Sct1Jr2lqACRT": {
+          "name": "String",
+          "featureId": "JWXHmkf_Sct1Jr2lqACRT",
+          "featureType": "selective",
+          "valueType": "string",
+          "value": ["b7e91cc5-ec76-4ec3-9c1c-075032a13a1a", "shouldBeInList"],
+          "scheduleType": "",
+          "schedule": {
+            "start": 0,
+            "end": 0,
+            "timezone": "UTC",
+            "timeType": "none",
+            "startTime": 0,
+            "endTime": 0
+          },
+          "numberType": "int"
+        },
+        "dlvHPXpmQ94KIzt3V-y4D": {
+          "name": "",
+          "featureId": "dlvHPXpmQ94KIzt3V-y4D",
+          "featureType": "selective",
+          "valueType": "number",
+          "value": [42],
+          "scheduleType": "",
+          "schedule": {
+            "start": 0,
+            "end": 0,
+            "timezone": "UTC",
+            "timeType": "none",
+            "startTime": 0,
+            "endTime": 0
+          },
+          "numberType": "int"
+        }
+      }
+    }
+  },
+  "meta": {
+    "version": "v1"
+  }
+}

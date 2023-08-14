@@ -29,7 +29,7 @@ export interface VexillaSchedule {
   endTime: number;
 }
 
-export interface Environment {
+export interface VexillaEnvironment {
   name: string;
   environmentId: string;
   defaultEnvironmentFeatureValues: DefaultFeatureValues;
@@ -65,11 +65,11 @@ export interface Group {
   name: string;
   groupId: string;
   features: Record<string, VexillaFeature>;
-  environments: Record<string, Environment>;
+  environments: Record<string, VexillaEnvironment>;
 }
 
 export type PublishedEnvironment = Omit<
-  Environment,
+  VexillaEnvironment,
   "defaultEnvironmentFeatureValues"
 >;
 
@@ -83,8 +83,6 @@ export interface PublishedGroup {
 
 export interface AppState {
   modifiedAt: number;
-  remoteModifiedAt: number;
-  remoteMergedAt: number;
   groups: Group[];
   hosting: HostingConfig;
 }
@@ -95,7 +93,7 @@ export interface UpdatePayload<T> {
 }
 
 export interface DefaultValuesPayload {
-  environment: Environment;
+  environment: VexillaEnvironment;
   defaultValues: DefaultFeatureValues;
 }
 
@@ -118,12 +116,22 @@ export interface VexillaGradualFeature extends VexillaFeatureBase {
   seed: number;
 }
 
-export interface VexillaValueFeature extends VexillaFeatureBase {
+export interface VexillaValueFeatureString extends VexillaFeatureBase {
   featureType: typeof VexillaFeatureTypeValue;
   value: string;
-  valueType: VexillaInputType;
-  numberType?: "int" | "float";
+  valueType: "string";
 }
+
+export interface VexillaValueFeatureNumber extends VexillaFeatureBase {
+  featureType: typeof VexillaFeatureTypeValue;
+  value: number;
+  valueType: "number";
+  numberType: "int" | "float";
+}
+
+export type VexillaValueFeature =
+  | VexillaValueFeatureString
+  | VexillaValueFeatureNumber;
 
 export interface VexillaSelectiveFeatureBase extends VexillaFeatureBase {
   featureType: typeof VexillaFeatureTypeSelective;
@@ -143,6 +151,7 @@ export interface VexillaSelectiveFeatureNumbers
   featureType: typeof VexillaFeatureTypeSelective;
   valueType: "number";
   value: number[];
+  numberType: VexillaNumberType;
 }
 
 export type VexillaSelectiveFeature =
@@ -154,10 +163,6 @@ export interface VexillaFeatureSet {
     | VexillaToggleFeature
     | VexillaGradualFeature
     | VexillaSelectiveFeature;
-}
-
-export interface VexillaEnvironment {
-  [key: string]: VexillaFeatureSet;
 }
 
 export interface VexillaFlags {
