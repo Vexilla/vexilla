@@ -76,11 +76,14 @@ impl VexillaClient {
         let url = format!("{}/{}.json", self.base_url, coerced_group_id);
         let response_text = fetch(&url);
 
+        println!("response text: {response_text}");
+
         let flags: Result<FlagGroup> = serde_json::from_str(response_text.as_str());
 
         if let Ok(..) = flags {
             Ok(flags.unwrap())
         } else {
+            println!("JSON error: {flags:?}");
             VexillaResult::Err(VexillaError::Unknown)
         }
     }
@@ -134,6 +137,22 @@ impl VexillaClient {
                 SelectiveFeature::String { value, .. } => {
                     Ok(value.contains(&self.instance_id.to_owned()))
                 }
+                SelectiveFeature::Number(feature) => match feature {
+                    SelectiveFeatureNumber::Float { value, .. } => Ok(value.contains(
+                        &self
+                            .instance_id
+                            .to_owned()
+                            .parse()
+                            .map_err(|_| VexillaError::Unknown)?,
+                    )),
+                    SelectiveFeatureNumber::Int { value, .. } => Ok(value.contains(
+                        &self
+                            .instance_id
+                            .to_owned()
+                            .parse()
+                            .map_err(|_| VexillaError::Unknown)?,
+                    )),
+                },
                 _ => Err(VexillaError::InvalidShouldFeatureType(feature.value_type())),
             },
 
@@ -517,5 +536,35 @@ mod tests {
 
         let after_global_daily_scheduled = client.should("Scheduled", "afterGlobalDaily").unwrap();
         assert!(!after_global_daily_scheduled);
+
+        /*
+           Selective
+        */
+
+        client
+            .sync_flags("Selective", |url| {
+                reqwest::blocking::get(url).unwrap().text().unwrap()
+            })
+            .unwrap();
+
+        let selective_string_default = client.should("Selective", "String").unwrap();
+        assert!(selective_string_default);
+
+        let selective_string_custom = client
+            .should_custom_str("Selective", "String", "shouldBeInList")
+            .unwrap();
+        assert!(selective_string_custom);
+
+        let selective_string_custom_fail = client
+            .should_custom_str("Selective", "String", "shouldNotBeInList")
+            .unwrap();
+        assert!(!selective_string_custom_fail);
+
+        let selective_number_custom = client.should_custom_int("Selective", "Number", 42).unwrap();
+        assert!(selective_number_custom);
+
+        let selective_number_custom_fail =
+            client.should_custom_int("Selective", "Number", 43).unwrap();
+        assert!(!selective_number_custom_fail);
     }
 }

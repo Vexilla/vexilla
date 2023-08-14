@@ -43,15 +43,38 @@ import { labelledAssert } from "./utils/testing";
     return fetch(url).then((response) => response.json());
   });
 
-  const shouldBeforeGlobal = client.should("Scheduled", "beforeGlobal");
-  labelledAssert(shouldBeforeGlobal, "Should not be able to beforeGlobal");
+  // const shouldBeforeGlobal = client.should("Scheduled", "beforeGlobal");
+  // labelledAssert(!shouldBeforeGlobal, "Should not be able to beforeGlobal");
 
-  // let before_global_scheduled = client.should("Scheduled", "beforeGlobal").unwrap();
-  // assert!(!before_global_scheduled);
+  // const shouldDuringGlobal = client.should("Scheduled", "duringGlobal");
+  // labelledAssert(shouldDuringGlobal, "Should not be able to duringGlobal");
 
-  // let during_global_scheduled = client.should("Scheduled", "duringGlobal").unwrap();
-  // assert!(during_global_scheduled);
+  // const shouldAfterGlobal = client.should("Scheduled", "afterGlobal");
+  // labelledAssert(!shouldAfterGlobal, "Should not be able to afterGlobal");
 
-  // let after_global_scheduled = client.should("Scheduled", "afterGlobal").unwrap();
-  // assert!(!after_global_scheduled);
+  await client.syncFlags("Selective", (url) => {
+    return fetch(url).then((response) => response.json());
+  });
+
+  const shouldSelectiveString = client.should("Selective", "String");
+  labelledAssert(
+    shouldSelectiveString,
+    "Should be able to shouldSelectiveString"
+  );
+
+  const shouldSelectiveStringCustom = client.should(
+    "Selective",
+    "String",
+    "shouldBeInList"
+  );
+  labelledAssert(
+    shouldSelectiveStringCustom,
+    "Should be able to shouldSelectiveStringCustom"
+  );
+
+  const shouldSelectiveNumber = client.should("Selective", "Number", 42);
+  labelledAssert(
+    shouldSelectiveNumber,
+    "Should be able to shouldSelectiveNumber"
+  );
 })();

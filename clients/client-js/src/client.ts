@@ -116,7 +116,11 @@ export class VexillaClient {
     this.setFlags(fileName, flags);
   }
 
-  should(groupName: string, featureName: string) {
+  should(
+    groupName: string,
+    featureName: string,
+    customInstanceHash?: string | number
+  ) {
     const scrubbedGroupName = groupName.replace(".json", "");
     const groupId = this.groupLookupTable[scrubbedGroupName];
     if (!this.flagGroups[groupId]) {
@@ -182,6 +186,16 @@ export class VexillaClient {
 
         _should =
           this.getInstancePercentile(feature.seed) <= feature.value * 100;
+        break;
+
+      case VexillaFeatureTypeSelective:
+        const instanceHash = customInstanceHash || this.customInstanceHash;
+        console.log("parseFloat", parseFloat(instanceHash as string));
+        console.log("featureValue", feature.value);
+        console.log({ instanceHash });
+        _should = (feature.value as (string | number)[]).includes(
+          instanceHash || parseFloat(instanceHash as string)
+        );
         break;
 
       default:

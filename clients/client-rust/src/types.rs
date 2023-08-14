@@ -135,8 +135,9 @@ pub struct GradualFeature {
 }
 
 #[derive(Clone, Debug, EnumString, Deserialize)]
-#[serde(tag = "value_type")]
+#[serde(tag = "valueType")]
 #[strum(serialize_all = "camelCase")]
+#[serde(rename_all = "camelCase")]
 pub enum ValueFeature {
     #[serde(rename_all = "camelCase")]
     String {
@@ -146,6 +147,7 @@ pub enum ValueFeature {
         schedule: VexillaSchedule,
         value: String,
     },
+    #[serde(rename_all = "camelCase")]
     Number(ValueFeatureNumber),
 }
 
@@ -175,8 +177,9 @@ impl ValueFeature {
 }
 
 #[derive(Clone, Debug, EnumString, Deserialize)]
-#[serde(tag = "value_type")]
+#[serde(tag = "numberType")]
 #[strum(serialize_all = "camelCase")]
+#[serde(rename_all = "camelCase")]
 pub enum ValueFeatureNumber {
     #[serde(rename_all = "camelCase")]
     Int {
@@ -210,8 +213,9 @@ impl Default for ValueFeatureNumber {
 }
 
 #[derive(Clone, Debug, EnumString, Deserialize)]
-#[serde(tag = "number_type")]
+#[serde(tag = "numberType")]
 #[strum(serialize_all = "camelCase")]
+#[serde(rename_all = "camelCase")]
 pub enum SelectiveFeatureNumber {
     #[serde(rename_all = "camelCase")]
     Int {
@@ -246,6 +250,7 @@ impl Default for SelectiveFeatureNumber {
 
 #[derive(Clone, Debug, EnumString, Deserialize)]
 #[serde(tag = "valueType")]
+#[serde(rename_all = "camelCase")]
 #[strum(serialize_all = "camelCase")]
 pub enum SelectiveFeature {
     #[serde(rename_all = "camelCase")]
