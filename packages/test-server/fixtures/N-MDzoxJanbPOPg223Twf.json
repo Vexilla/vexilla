@@ -1,0 +1,117 @@
+{
+  "name": "Value",
+  "groupId": "N-MDzoxJanbPOPg223Twf",
+  "features": {
+    "Qp0lpyynA5H032t0z07Km": {
+      "name": "Integer",
+      "featureId": "Qp0lpyynA5H032t0z07Km",
+      "featureType": "value",
+      "value": 0,
+      "scheduleType": "",
+      "schedule": {
+        "start": 0,
+        "end": 0,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      },
+      "valueType": "number",
+      "numberType": "int"
+    },
+    "zRMmnUwKylOtX0tiQnxys": {
+      "name": "Float",
+      "featureId": "zRMmnUwKylOtX0tiQnxys",
+      "featureType": "value",
+      "value": 0,
+      "scheduleType": "",
+      "schedule": {
+        "start": 0,
+        "end": 0,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      },
+      "valueType": "number",
+      "numberType": "float"
+    },
+    "wkXA-cD1FHbf16yIHnPVi": {
+      "name": "String",
+      "featureId": "wkXA-cD1FHbf16yIHnPVi",
+      "featureType": "value",
+      "value": "false",
+      "scheduleType": "",
+      "schedule": {
+        "start": 0,
+        "end": 0,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      },
+      "valueType": "string"
+    }
+  },
+  "environments": {
+    "2CyvAAPow7cMHvlFFvuFj": {
+      "name": "dev",
+      "environmentId": "2CyvAAPow7cMHvlFFvuFj",
+      "features": {
+        "Qp0lpyynA5H032t0z07Km": {
+          "name": "Integer",
+          "featureId": "Qp0lpyynA5H032t0z07Km",
+          "featureType": "value",
+          "valueType": "number",
+          "value": 42,
+          "scheduleType": "",
+          "schedule": {
+            "start": 0,
+            "end": 0,
+            "timezone": "UTC",
+            "timeType": "none",
+            "startTime": 0,
+            "endTime": 0
+          },
+          "numberType": "int"
+        },
+        "zRMmnUwKylOtX0tiQnxys": {
+          "name": "",
+          "featureId": "zRMmnUwKylOtX0tiQnxys",
+          "featureType": "value",
+          "valueType": "number",
+          "value": 42.42,
+          "scheduleType": "",
+          "schedule": {
+            "start": 0,
+            "end": 0,
+            "timezone": "UTC",
+            "timeType": "none",
+            "startTime": 0,
+            "endTime": 0
+          },
+          "numberType": "float"
+        },
+        "wkXA-cD1FHbf16yIHnPVi": {
+          "name": "String",
+          "featureId": "wkXA-cD1FHbf16yIHnPVi",
+          "featureType": "value",
+          "valueType": "string",
+          "value": "foo",
+          "scheduleType": "",
+          "schedule": {
+            "start": 0,
+            "end": 0,
+            "timezone": "UTC",
+            "timeType": "none",
+            "startTime": 0,
+            "endTime": 0
+          }
+        }
+      }
+    }
+  },
+  "meta": {
+    "version": "v1"
+  }
+}
