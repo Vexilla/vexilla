@@ -7,6 +7,7 @@ import {
   VexillaSchedule,
   VexillaScheduleType,
 } from "@vexilla/types";
+
 export function isScheduledFeatureActive(feature: VexillaFeature) {
   return isScheduleActive(feature.schedule, feature.scheduleType);
 }

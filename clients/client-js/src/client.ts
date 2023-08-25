@@ -7,6 +7,9 @@ import {
   VexillaGradualFeature,
   VexillaManifest,
   PublishedGroup,
+  VexillaFeature,
+  VexillaEnvironment,
+  PublishedEnvironment,
 } from "@vexilla/types";
 
 import Hasher from "./hasher";
@@ -15,6 +18,7 @@ import {
   createFeatureLookupTable,
   createGroupLookupTable,
 } from "./utils/lookup_tables";
+import { isScheduledFeatureActive } from "./scheduling";
 
 const LATEST_MANIFEST_VERSION = 1;
 
@@ -121,46 +125,13 @@ export class VexillaClient {
     featureName: string,
     customInstanceHash?: string | number
   ) {
-    const scrubbedGroupName = groupName.replace(".json", "");
-    const groupId = this.groupLookupTable[scrubbedGroupName];
-    if (!this.flagGroups[groupId]) {
-      this.warn("should() called before flags were fetched for this group");
+    const actualItems = this.getActualItems(groupName, featureName);
+
+    if (!actualItems.success) {
       return false;
     }
 
-    const environmentId =
-      this.environmentLookupTable[groupId][this.environment];
-    if (!environmentId) {
-      this.warn("Environment could not be found", this.environment);
-      return false;
-    }
-
-    const environment = this.flagGroups[groupId].environments[environmentId];
-    if (!environment) {
-      this.warn(
-        `Environment (${this.environment}) not found in group (${groupName}, ${groupId}).`
-      );
-
-      return false;
-    }
-
-    const featureId = this.featureLookupTable[groupId][featureName];
-    if (!featureId) {
-      this.warn("Environment could not be found", this.environment);
-      return false;
-    }
-
-    let feature = environment.features[featureId];
-
-    if (!feature) {
-      this.warn(
-        "feature is undefined for: ",
-        this.environment,
-        groupName,
-        featureName
-      );
-      return false;
-    }
+    let { feature } = actualItems;
 
     let _should = false;
     switch (feature.featureType) {
@@ -203,6 +174,90 @@ export class VexillaClient {
     }
 
     return _should;
+  }
+
+  value(
+    groupName: string,
+    featureName: string,
+    defaultValue: string | number | null = null
+  ): string | number | null {
+    const actualItems = this.getActualItems(groupName, featureName);
+
+    if (!actualItems.success) {
+      return defaultValue;
+    }
+
+    if (actualItems.feature.featureType !== "value") {
+      this.warn("Error: Tried calling value on non-value feature.");
+      return defaultValue;
+    }
+
+    if (!isScheduledFeatureActive(actualItems.feature)) {
+      return defaultValue;
+    }
+
+    return actualItems.feature.value;
+  }
+
+  protected getActualItems(
+    groupName: string,
+    featureName: string
+  ):
+    | {
+        success: true;
+        environment: PublishedEnvironment;
+        group: PublishedGroup;
+        feature: VexillaFeature;
+      }
+    | { success: false } {
+    const scrubbedGroupName = groupName.replace(".json", "");
+    const groupId = this.groupLookupTable[scrubbedGroupName];
+    const group = this.flagGroups[groupId];
+
+    if (!group) {
+      this.warn("should() called before flags were fetched for this group");
+      return { success: false };
+    }
+
+    const environmentId =
+      this.environmentLookupTable[groupId][this.environment];
+    if (!environmentId) {
+      this.warn("Environment could not be found", this.environment);
+      return { success: false };
+    }
+
+    const environment = this.flagGroups[groupId].environments[environmentId];
+    if (!environment) {
+      this.warn(
+        `Environment (${this.environment}) not found in group (${groupName}, ${groupId}).`
+      );
+      return { success: false };
+    }
+
+    const featureId = this.featureLookupTable[groupId][featureName];
+    if (!featureId) {
+      this.warn("Feature could not be found", this.environment);
+      return { success: false };
+    }
+
+    let feature = environment.features[featureId];
+
+    if (!feature) {
+      this.warn(
+        "feature is undefined for: ",
+        this.environment,
+        groupName,
+        featureName
+      );
+      return { success: false };
+    }
+
+    return {
+      success: true,
+      environment,
+      feature,
+      group,
+    };
   }
 
   protected getInstancePercentile(seed: number) {

@@ -566,5 +566,24 @@ mod tests {
         let selective_number_custom_fail =
             client.should_custom_int("Selective", "Number", 43).unwrap();
         assert!(!selective_number_custom_fail);
+
+        /*
+           Value
+        */
+
+        client
+            .sync_flags("Value", |url| {
+                reqwest::blocking::get(url).unwrap().text().unwrap()
+            })
+            .unwrap();
+
+        let value_str = client.value_str("Value", "String", "bar").unwrap();
+        assert!(value_str == "foo");
+
+        let value_int = client.value_int("Value", "Integer", 21).unwrap();
+        assert!(value_int == 42);
+
+        let value_float = client.value_float("Value", "Float", 21.21).unwrap();
+        assert!(value_float == 42.42);
     }
 }

@@ -77,4 +77,17 @@ import { labelledAssert } from "./utils/testing";
     shouldSelectiveNumber,
     "Should be able to shouldSelectiveNumber"
   );
+
+  await client.syncFlags("Value", (url) => {
+    return fetch(url).then((response) => response.json());
+  });
+
+  const valueString = client.value("Value", "String");
+  labelledAssert(valueString === "foo", "Value for String should be 'foo'");
+
+  const valueInt = client.value("Value", "Integer");
+  labelledAssert(valueInt === 42, "Value for Integer should be 42");
+
+  const valueFloat = client.value("Value", "Float");
+  labelledAssert(valueFloat === 42.42, "Value for Float should be 42.42");
 })();
