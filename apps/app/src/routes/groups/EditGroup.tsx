@@ -178,7 +178,7 @@ export function EditGroup() {
                   const features: Record<string, VexillaFeature> = {};
                   Object.values(group.features).forEach((feature) => {
                     features[feature.featureId] = cloneDeep(
-                      DefaultEnvironmentDefaults.toggle
+                      DefaultEnvironmentDefaults[feature.featureType]
                     );
                   });
                   const environmentsArray = Object.values(environments);

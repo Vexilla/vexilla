@@ -36,6 +36,7 @@ import { CustomSlider } from "../../components/CustomSlider";
 import { SelectiveList } from "../../components/features/SelectiveList";
 import { ScheduledForm } from "../../components/features/ScheduledForm";
 import { logProxy } from "../../utils/logging";
+import { CustomNumberInput } from "../../components/CustomNumberInput";
 
 enum FormFields {
   name = "name",
@@ -188,6 +189,15 @@ export function EditFeature() {
             feature
           ) {
             feature.featureType = value;
+
+            if (
+              feature.featureType === "selective" ||
+              feature.featureType === "value"
+            ) {
+              feature.valueType = "string";
+              delete (feature as any).numberType;
+            }
+
             environments.forEach((environment) => {
               if (!environment.features) {
                 environment.features = {};
@@ -285,19 +295,28 @@ export function EditFeature() {
                 feature.value = [];
               } else if (event === "string") {
                 feature.value = "";
+                delete (feature as any).numberType;
               } else {
                 feature.value = 0;
+                (feature as any).numberType = "int";
               }
 
               environments.forEach((environment) => {
                 const environmentFeature =
                   environment.features?.[feature?.featureId || ""];
                 if (environmentFeature) {
-                  (feature as VexillaSelectiveFeature).valueType =
-                    event as VexillaInputType;
-
                   (environmentFeature as VexillaSelectiveFeature).valueType =
                     event as VexillaInputType;
+
+                  if (feature.featureType === "selective") {
+                    environmentFeature.value = [];
+                  } else if (event === "string") {
+                    environmentFeature.value = "";
+                    delete (environmentFeature as any).numberType;
+                  } else {
+                    environmentFeature.value = 0;
+                    (environmentFeature as any).numberType = "int";
+                  }
                 }
               });
             }}
@@ -394,8 +413,7 @@ export function EditFeature() {
         return (
           <div key={environment.environmentId}>
             <h4>{environment.name}</h4>
-            {(!featureDetails?.featureType ||
-              featureDetails?.featureType === "toggle") && (
+            {featureDetails?.featureType === "toggle" && (
               <Switch
                 checked={featureDetails?.value || false}
                 onLabel="ON"
@@ -416,7 +434,6 @@ export function EditFeature() {
                   }}
                   showRandomButton
                 />
-                value = {featureDetails?.value || 0}
                 <CustomSlider
                   value={featureDetails?.value || 0}
                   label={"Threshold"}
@@ -443,6 +460,33 @@ export function EditFeature() {
                 }}
               />
             )}
+
+            {featureDetails?.featureType === "value" &&
+              featureDetails.valueType === "string" && (
+                <TextInput
+                  label={"Value"}
+                  defaultValue={featureDetails?.value}
+                  onChange={(event) => {
+                    safelySetDetails({
+                      value: event.target.value,
+                    });
+                  }}
+                />
+              )}
+
+            {featureDetails?.featureType === "value" &&
+              featureDetails.valueType === "number" && (
+                <CustomNumberInput
+                  value={featureDetails.value || 0}
+                  numberType={featureDetails.numberType}
+                  label={"Value"}
+                  onChange={(value) => {
+                    safelySetDetails({
+                      value,
+                    });
+                  }}
+                />
+              )}
 
             {!!feature?.scheduleType &&
               feature?.scheduleType === "environment" && (
