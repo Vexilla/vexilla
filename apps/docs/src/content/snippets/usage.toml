@@ -1,0 +1,14 @@
+typescript = """
+const USAGE = "bar";
+"""
+
+rust = """
+let mut usage = "bar";
+a;klsjhflkajhdf
+
+adsfasdfasf
+"""
+
+go = """
+usage := "bar"
+"""

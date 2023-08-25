@@ -1,0 +1,22 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Documentation from "@/layouts/Documentation.astro";
+import { getEntry } from "astro:content";
+
+const blogPost = await getEntry("snippets", "installation");
+---
+
+<Layout title="Vexilla | Documentation">
+  <Documentation>FOOO</Documentation>
+  {
+    Object.entries(blogPost.data).map(([key, snippet]) => (
+      <div>
+        <div>Key: {key}</div>
+        <div>{key}</div>
+        <pre>
+          <code>foo {snippet}</code>
+        </pre>
+      </div>
+    ))
+  }
+</Layout>

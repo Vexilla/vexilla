@@ -1,0 +1,15 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Blog from "@/layouts/Blog.astro";
+import { getEntry } from "astro:content";
+
+const blogPost = await getEntry("blog", "hello-world");
+---
+
+<Layout title="Vexilla | Blog">
+  <Blog>
+    <div>FOOO</div>
+
+    {blogPost.data}
+  </Blog>
+</Layout>

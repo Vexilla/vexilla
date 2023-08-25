@@ -1,0 +1,79 @@
+---
+import { ResponsiveContainer } from "@/components/responsive-container";
+import { ThemeSelector } from "@/components/theme-selector";
+import "@/styles/globals.css";
+
+import "@fontsource/atkinson-hyperlegible";
+import clsx from "clsx";
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+
+const isBlog = Astro.url.pathname.startsWith("/blog");
+const isDocumentation = Astro.url.pathname.startsWith("/documentation");
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="Astro description" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="/fonts/racing/stylesheet.css"
+    />
+  </head>
+  <body>
+    <header>
+      <ResponsiveContainer className="flex justify-between items-center p-6">
+        <div class="flex flex-row items-center gap-8">
+          <a class="flex items-center" href="/">
+            <img
+              class="rounded-full bg-slate-600 h-[36px] w-[36px] p-1 mr-2"
+              src="/img/logo-white.svg"
+            />
+            <span class="m-0 font-display text-4xl">Vexilla</span>
+          </a>
+
+          <a
+            href="/documentation"
+            class={clsx({
+              "font-bold": isDocumentation,
+            })}
+          >
+            Documentation
+          </a>
+          <a
+            href="/blog"
+            class={clsx({
+              "font-bold": isBlog,
+            })}
+          >
+            Blog
+          </a>
+        </div>
+        <ThemeSelector client:only />
+      </ResponsiveContainer>
+    </header>
+
+    <ResponsiveContainer>
+      <slot />
+    </ResponsiveContainer>
+
+    <footer>
+      <ResponsiveContainer>
+        <div class="flex items-center justify-center p-16">
+          &copy; 2023 Vexilla
+        </div>
+      </ResponsiveContainer>
+    </footer>
+  </body>
+</html>

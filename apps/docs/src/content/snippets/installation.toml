@@ -1,0 +1,14 @@
+typescript = """
+const FOOOO = "bar";
+"""
+
+rust = """
+let mut foo = "bar";
+a;klsjhflkajhdf
+
+adsfasdfasf
+"""
+
+go = """
+foo := "bar"
+"""

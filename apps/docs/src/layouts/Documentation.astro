@@ -1,0 +1,36 @@
+---
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getCollection } from "astro:content";
+
+const rawDocumentationPages = await getCollection("documentation");
+
+const documentationPages = rawDocumentationPages.sort((a, b) => {
+  return (a.data.sortOrder || 0) - (b.data.sortOrder || 0);
+});
+---
+
+<div class="flex flex-row">
+  <div class="w-80 p-2">
+    <Card>
+      <CardHeader>
+        <CardTitle>Documentation</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ul class="pl-6">
+          {
+            documentationPages.map((page) => (
+              <li>
+                <a href={`/documentation/${page.slug}`}>{page.data.title}</a>
+              </li>
+            ))
+          }
+        </ul>
+      </CardContent>
+    </Card>
+  </div>
+  <div class="flex-auto">
+    <div class="prose lg:prose-xl dark:prose-invert mx-auto">
+      <slot />
+    </div>
+  </div>
+</div>

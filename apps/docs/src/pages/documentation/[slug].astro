@@ -1,0 +1,25 @@
+---
+import { getCollection, getEntryBySlug } from "astro:content";
+import Documentation from "@/layouts/Documentation.astro";
+import Layout from "@/layouts/Layout.astro";
+// 1. Generate a new path for every collection entry
+export async function getStaticPaths() {
+  const blogEntries = await getCollection("documentation");
+  return blogEntries.map((entry) => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }));
+}
+
+const { slug } = Astro.params;
+
+const entry = await getEntryBySlug("documentation", slug || "");
+
+const { Content } = await entry!.render();
+---
+
+<Layout title="Vexilla | Documentation">
+  <Documentation>
+    <Content />
+  </Documentation>
+</Layout>

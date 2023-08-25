@@ -1,0 +1,35 @@
+---
+import { getEntry } from "astro:content";
+import * as shiki from "shiki";
+
+import { CodeSnippet } from "@/components/docs/code-snippet";
+import { CodeSnippetContent, tomlKey } from "@/types/docs";
+
+const { snippet, snippetTitle } = Astro.props;
+
+const contents = await getEntry("snippets", snippet);
+
+console.log({ contents });
+
+const highlighter = await shiki.getHighlighter({
+  theme: "github-dark",
+  // langs: Object.keys(contents) as Lang[],
+});
+
+const snippetContent = contents.data as CodeSnippetContent;
+
+const highlightedContents = Object.entries(snippetContent).reduce(
+  (acc, [lang, snippet]) => {
+    acc[lang as tomlKey] = highlighter.codeToHtml(snippet as string, { lang });
+    return acc;
+  },
+  {} as CodeSnippetContent
+);
+---
+
+<CodeSnippet
+  client:load
+  title={snippetTitle}
+  contents={highlightedContents}
+  rawSnippet={snippetContent}
+/>

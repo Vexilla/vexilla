@@ -1,0 +1,11 @@
+typescript = """
+vexilla generate typescript -o ./types
+"""
+
+rust = """
+vexilla generate rust -o ./types
+"""
+
+go = """
+vexilla generate go -o ./types
+"""
