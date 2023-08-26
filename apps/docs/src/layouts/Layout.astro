@@ -32,7 +32,7 @@ const isDocumentation = Astro.url.pathname.startsWith("/documentation");
     />
   </head>
   <body>
-    <header>
+    <header class="fixed w-full top-0 bg-white dark:bg-black z-10">
       <ResponsiveContainer className="flex justify-between items-center p-6">
         <div class="flex flex-row items-center gap-8">
           <a class="flex items-center" href="/">
@@ -64,7 +64,7 @@ const isDocumentation = Astro.url.pathname.startsWith("/documentation");
       </ResponsiveContainer>
     </header>
 
-    <ResponsiveContainer>
+    <ResponsiveContainer className="pt-[6rem]">
       <slot />
     </ResponsiveContainer>
 

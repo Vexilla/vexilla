@@ -5,6 +5,7 @@ import { Icon } from "@iconify/react";
 import paintRollerBold from "@iconify/icons-solar/paint-roller-bold";
 import sun2Bold from "@iconify/icons-solar/sun-2-bold";
 import moonBold from "@iconify/icons-solar/moon-bold";
+import clsx from "clsx";
 
 const THEME_KEY = "theme";
 
@@ -30,15 +31,36 @@ export function ThemeSelector() {
   }, [theme]);
 
   return (
-    <Button
-      title="Toggle light/dark mode"
-      className="p-2 rounded-full"
-      onClick={() => {
-        setTheme(theme === "dark" ? "light" : "dark");
-      }}
-    >
-      <Icon icon={theme === "dark" ? sun2Bold : moonBold} width={24} />
-      <span className="sr-only">Toggle light/dark mode</span>
-    </Button>
+    <div className="py-1 p-2 rounded-full bg-slate-300 gap-2 flex flex-row">
+      <Button
+        title="Set Light Mode"
+        variant="ghost"
+        className={clsx("rounded-full", {
+          "bg-yellow-400": theme === "light",
+        })}
+        size="icon"
+        onClick={() => {
+          setTheme("light");
+        }}
+      >
+        <Icon icon={sun2Bold} width={24} />
+        <span className="sr-only">Set Light Mode</span>
+      </Button>
+
+      <Button
+        title="Set Dark Mode"
+        variant="ghost"
+        size="icon"
+        className={clsx("rounded-full", {
+          "bg-slate-700": theme === "dark",
+        })}
+        onClick={() => {
+          setTheme("dark");
+        }}
+      >
+        <Icon icon={moonBold} width={24} />
+        <span className="sr-only">Set Dark Mode</span>
+      </Button>
+    </div>
   );
 }

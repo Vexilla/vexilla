@@ -1,0 +1,17 @@
+---
+import { Icon } from "@iconify/react";
+import linkBold from "@iconify/icons-solar/link-bold";
+
+const { level, id } = Astro.props;
+
+const Element: any = `h${level}`;
+---
+
+<a href={`#${id}`} id={id} class="no-underline">
+  <Element class="relative group" data-slug={id}>
+    <div class="absolute right-full top-1 mr-2 group-hover:block hidden">
+      <Icon icon={linkBold} />
+    </div>
+    <slot />
+  </Element>
+</a>

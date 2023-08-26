@@ -9,8 +9,6 @@ const { snippet, snippetTitle } = Astro.props;
 
 const contents = await getEntry("snippets", snippet);
 
-console.log({ contents });
-
 const highlighter = await shiki.getHighlighter({
   theme: "github-dark",
   // langs: Object.keys(contents) as Lang[],

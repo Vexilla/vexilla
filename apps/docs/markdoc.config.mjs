@@ -1,7 +1,13 @@
-import { defineMarkdocConfig, component } from "@astrojs/markdoc/config";
+import { defineMarkdocConfig, component, nodes } from "@astrojs/markdoc/config";
 import shiki from "@astrojs/markdoc/shiki";
 
 export default defineMarkdocConfig({
+  nodes: {
+    heading: {
+      ...nodes.heading,
+      render: component("./src/components/docs/DocHeading.astro"),
+    },
+  },
   tags: {
     snippet: {
       render: component("./src/components/docs/CodeSnippet.astro"),
