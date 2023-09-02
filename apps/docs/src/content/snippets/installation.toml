@@ -1,14 +1,11 @@
 typescript = """
-const FOOOO = "bar";
+npm install @vexilla/client
+// or
+yarn add @vexilla/client
+// or
+pnpm add @vexilla/client
 """
 
 rust = """
-let mut foo = "bar";
-a;klsjhflkajhdf
-
-adsfasdfasf
-"""
-
-go = """
-foo := "bar"
+cargo add vexilla_client
 """

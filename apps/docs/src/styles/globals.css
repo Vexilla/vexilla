@@ -6,6 +6,11 @@
   font-family: "Atkinson Hyperlegible";
 }
 
+pre *,
+code * {
+  font-family: "Fira Code", sans-serif;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

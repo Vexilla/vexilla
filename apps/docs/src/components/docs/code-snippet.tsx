@@ -30,11 +30,18 @@ export function CodeSnippet({
   rawSnippet,
 }: CodeSnippetProps) {
   const [selectedLanguage, setSelectedLanguage] = useState(
-    (localStorage.getItem(SELECTED_LANGUAGE_KEY) || DEFAULT_LANGUAGE) as tomlKey
+    DEFAULT_LANGUAGE as tomlKey
   );
 
   const [loaded, setLoaded] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    setSelectedLanguage(
+      (localStorage.getItem(SELECTED_LANGUAGE_KEY) ||
+        DEFAULT_LANGUAGE) as tomlKey
+    );
+  }, []);
 
   useEffect(() => {
     localStorage.setItem(SELECTED_LANGUAGE_KEY, selectedLanguage);
@@ -74,8 +81,7 @@ export function CodeSnippet({
   return (
     <div className="bg-[#24292e] rounded-lg not-prose">
       <div className="flex flex-row items-center justify-between p-2 px-4 bg-slate-600 rounded-t-md">
-        <div className="text-white">{title}</div>
-        <div className="flex flex-row items-center">
+        <div className="text-white flex flex-row items-center">
           <label className="mr-2 text-slate-200">Language: </label>
           <Select
             value={selectedLanguage}
@@ -83,7 +89,7 @@ export function CodeSnippet({
               setSelectedLanguage(newLang as tomlKey);
             }}
           >
-            <SelectTrigger className="bg-white dark:bg-slate-800 dark:text-white w-[120px]">
+            <SelectTrigger className="bg-white text-slate-700 dark:bg-slate-800 dark:text-white w-[120px]">
               <SelectValue placeholder="Language" />
             </SelectTrigger>
             <SelectContent>
@@ -95,11 +101,25 @@ export function CodeSnippet({
             </SelectContent>
           </Select>
         </div>
+        <div className="flex flex-row items-center">
+          <Button
+            title="Copy code"
+            onClick={() => {
+              navigator.clipboard.writeText(
+                rawSnippet[selectedLanguage as tomlKey]
+              );
+              setCopied(true);
+            }}
+          >
+            {!copied && <Icon icon={copyOutline} />}
+            {copied && "Copied!"}
+          </Button>
+        </div>
       </div>
       {!loaded && (
         <div
           key={DEFAULT_LANGUAGE}
-          className={clsx("px-4 py-4")}
+          className={clsx("px-4 py-4 overflow-x-auto")}
           dangerouslySetInnerHTML={{
             __html: contents[DEFAULT_LANGUAGE],
           }}
@@ -108,30 +128,16 @@ export function CodeSnippet({
       {!!loaded &&
         Object.entries(contents).map(([lang, snippet]) => {
           return (
-            <div className="relative">
+            <div className="relative" key={lang}>
               <div
                 key={lang}
-                className={clsx("px-4 py-4", {
+                className={clsx("px-4 py-4 overflow-x-auto", {
                   hidden: selectedLanguage !== lang,
                 })}
                 dangerouslySetInnerHTML={{
                   __html: snippet,
                 }}
               />
-
-              <Button
-                title="Copy code"
-                className={clsx("absolute top-4 right-4", {
-                  hidden: selectedLanguage !== lang,
-                })}
-                onClick={() => {
-                  navigator.clipboard.writeText(rawSnippet[lang as tomlKey]);
-                  setCopied(true);
-                }}
-              >
-                {!copied && <Icon icon={copyOutline} />}
-                {copied && "Copied!"}
-              </Button>
             </div>
           );
         })}

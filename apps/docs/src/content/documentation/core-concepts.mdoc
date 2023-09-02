@@ -1,0 +1,28 @@
+---
+title: Core Concepts
+sortOrder: 2
+---
+
+Vexilla is fairly simple in its goals.
+
+## Why Feature Flags?
+
+We could spend all day talking about why Feature Flags are so important. The main gist is that Feature Flags need to be decoupled from your main build process. The best way to do that is to make them run-time instead of build-time.
+
+## Static File-based Flags
+
+Many services and tools provide flagging functionality. They tend to be very expensive or something that you have to host yourself.
+
+For a side-project or bootstrapped startup, the cost of one of the big services is often too much. Such costs can really eat into your runway until you become profitable.
+
+Self-hosting is never as cheap as you think it will be. It ends up being another service that needs to maintain uptime and scalability. When your product is not a flagging tool, that just means you are spending your time and energy on something that is not your core concern.
+
+Vexilla avoids the high costs in terms of money as well as time. Static file hosting is very cheap. Whether it's on AWS Cloudfront or some other CDN provider, the files can be closely located to your users improving their experience. You also don't have to worry about scaling in most cases since it would take a LOT of traffic to be a concern for a major CDN provider. The maintenance effort is also very light since it is just a static file.
+
+## Client SDK-based
+
+When the flags are just in a static JSON file, you need to be able to figure out if a flag is off or on at runtime. We provide numerous first-party SDKs to make this happen. A browser-based application can just use the JS/TS SDK. However, what about your backend? We have you covered there too and we are adding more SDKs regularly.
+
+## Git-Native
+
+You might be wondering what it means to be "git-native". We will focus on the benefits. First, git provides a history of what has been changed. It also allows you to see who changed things. By tying into some of the major Git providers, you gain a review process and traceability that helps you maintain SOC2 compliance among other things.

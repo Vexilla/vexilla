@@ -15,7 +15,9 @@ export default defineConfig({
       applyBaseStyles: false,
     }),
     react({
-      experimentalReactChildren: true,
+      // This was needed at one point with Astro 2.x
+      // Not sure if still needed for some special edge case.
+      // experimentalReactChildren: true,
     }),
     markdoc(),
     toml(),

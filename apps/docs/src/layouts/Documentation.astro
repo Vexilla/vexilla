@@ -1,6 +1,6 @@
 ---
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getCollection } from "astro:content";
+import { getCollection, getEntry } from "astro:content";
+import PrevNext from "@/components/PrevNext.astro";
 
 interface Heading {
   depth: number;
@@ -8,7 +8,17 @@ interface Heading {
   text: string;
 }
 
-const { pathname } = Astro.url;
+const currentPageSlug = Astro.url.pathname
+  .replace("/documentation/", "")
+  .replaceAll("/", "");
+
+console.log({ currentPageSlug });
+
+let currentPost = null;
+
+if (currentPageSlug) {
+  currentPost = await getEntry("documentation", currentPageSlug);
+}
 
 const rawDocumentationPages = await getCollection("documentation");
 
@@ -19,76 +29,86 @@ const globbedDocumentationPages = await Astro.glob(
 const documentationPages = await Promise.all(
   rawDocumentationPages.map(async (page, index) => {
     const globbedPage = globbedDocumentationPages[index];
-    return {
+
+    const newPage = {
       ...page,
-      headings: ((await globbedPage?.getHeadings()).filter(
-        (heading: Heading) => heading.depth === 2
-      ) || []) as Heading[],
     } as Record<string, any>;
+
+    if (typeof globbedPage?.getHeadings === "function") {
+      newPage.headings = ((await globbedPage?.getHeadings()).filter(
+        (heading: Heading) => heading.depth === 2
+      ) || []) as Heading[];
+    }
+
+    return newPage;
   })
 );
 
 documentationPages.sort((a, b) => {
   return (a.data.sortOrder || 0) - (b.data.sortOrder || 0);
 });
-
-// console.log("currentPage", documentationPages[0]);
-
-const currentDocumentationPage = documentationPages.find(
-  (page) => `/documentation/${page.slug}` === pathname
-);
 ---
 
 <div class="flex flex-row">
-  <div class="w-80 p-2 relative">
+  <div class="w-[15rem] p-2 pr-8 relative hidden lg:block">
     <div class="sticky top-[7rem]">
-      <Card>
-        <CardHeader>
-          <CardTitle>Documentation</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul class="pl-6">
-            {
-              documentationPages.map((page) => (
-                <li class="pb-4">
-                  <a href={`/documentation/${page.slug}`}>{page.data.title}</a>
+      <ul>
+        {
+          documentationPages.map((page) => (
+            <li class="pb-4">
+              <a class="font-bold" href={`/documentation/${page.slug}`}>
+                {page.data.title}
+              </a>
 
-                  {Astro.url.pathname === `/documentation/${page.slug}` && (
-                    <ul class="pl-6 headings">
-                      {page.headings.map((heading: Heading) => (
-                        <li data-slug={heading.slug}>
-                          <a
-                            href={`/documentation/${page.slug}#${heading.slug}`}
-                          >
-                            {heading.text}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </li>
-              ))
-            }
-          </ul>
-        </CardContent>
-      </Card>
+                <ul class="pl-2 headings">
+                  {page.headings.map((heading: Heading) => (
+                    <li data-slug={heading.slug} class="truncate">
+                      <a
+                        href={`/documentation/${page.slug}#${heading.slug}`}
+                        title={heading.text}
+                      >
+                        {heading.text}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+            </li>
+          ))
+        }
+      </ul>
     </div>
   </div>
-  <div class="flex-auto main-content">
+  <div class="flex-auto main-content pb-10 px-4 w-screen md:w-full" data-pagefind-body>
     <div class="prose lg:prose-xl dark:prose-invert mx-auto">
+      {!!currentPost?.data.title && <h1>{currentPost?.data.title}</h1>}
       <slot />
+      {
+        !!currentPost && (
+          <PrevNext
+            data-pagefind-ignore
+            collectionPages={documentationPages}
+            currentPageSlug={currentPageSlug}
+            collection="documentation"
+          />
+        )
+      }
     </div>
   </div>
 </div>
 
 <script is:inline>
-window.addEventListener("DOMContentLoaded", () => {
+
+const toggledClass = "font-bold";
+let scrollHandler = undefined;
+const OFFSET_ADJUSTMENT = 120;
+
+document.addEventListener("astro:page-load", () => {
   const pageHeadings = Array.from(
     document.querySelectorAll(".main-content h2")
   ).map((heading) => {
     return {
       slug: heading.getAttribute("data-slug"),
-      offset: heading.getBoundingClientRect().top,
+      offset: window.scrollY + heading.getBoundingClientRect().top,
     };
   });
 
@@ -96,39 +116,44 @@ window.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".headings li")
   ).reverse();
 
+  if (scrollHandler) {
+    window.removeEventListener("scroll", scrollHandler, { passive: true })
+  }
+
+  scrollHandler = function (scrollEvent) {
+    let currentHeading = null;
+
+    menuHeadings.forEach((menuHeading) => {
+
+      const pageHeadingForMenuHeading = pageHeadings.find(
+        (pageHeading) => pageHeading.slug === menuHeading.getAttribute("data-slug")
+      );
+
+      if (!pageHeadingForMenuHeading) {
+        return;
+      }
+
+      menuHeading.classList.remove(toggledClass);
+
+      if (
+        window.scrollY >=
+        pageHeadingForMenuHeading.offset - OFFSET_ADJUSTMENT &&
+        !currentHeading
+      ) {
+        currentHeading = menuHeading;
+      }
+    });
+
+    if (currentHeading) {
+      currentHeading.classList.add(toggledClass);
+    }
+  };
+
+  scrollHandler();
+
   window.addEventListener(
     "scroll",
-    function (scrollEvent) {
-      let currentHeading = null;
-
-      menuHeadings.forEach((menuHeading) => {
-        const pageHeadingForMenuHeading = pageHeadings.find(
-          (pageHeading) =>
-            pageHeading.slug === menuHeading.getAttribute("data-slug")
-        );
-
-        menuHeading.classList.remove("font-bold");
-
-        console.log({ pageHeadingForMenuHeading });
-
-        if (
-          window.scrollY >= pageHeadingForMenuHeading.offset &&
-          !currentHeading
-        ) {
-          currentHeading = menuHeading;
-        }
-      });
-
-      // if(!currentHeading) {
-      //   currentHeading = pageHeadings[pageHeadings.length - 1];
-      // }
-
-      console.log({ currentHeading });
-
-      if (currentHeading) {
-        currentHeading.classList.add("font-bold");
-      }
-    },
+    scrollHandler,
     {
       passive: true,
     }

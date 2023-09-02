@@ -4,32 +4,38 @@ import { getCollection } from "astro:content";
 
 const rawBlogPosts = await getCollection("blog");
 
-const blogPosts = rawBlogPosts.sort((a, b) => {
-  return (a.data.sortOrder || 0) - (b.data.sortOrder || 0);
+const blogPosts = rawBlogPosts.sort((postA, postB) => {
+  if (postA.data.publishDate < postB.data.publishDate) {
+    return 1;
+  }
+
+  if (postA.data.publishDate > postB.data.publishDate) {
+    return -1;
+  }
+
+  return 0;
 });
 ---
 
 <div class="flex flex-row">
-  <div class="flex-auto">
-    <div class="prose lg:prose-xl dark:prose-invert mx-auto">
+  <div class="flex-auto main-content pb-10 px-4 w-screen md:w-full">
+    <div class="prose lg:prose-xl dark:prose-invert mx-auto" data-pagefind-body>
       <slot />
     </div>
   </div>
 
-  <div class="w-80 p-2">
-    <Card>
-      <CardHeader>
-        <CardTitle>FOOOO</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ul class="pl-6">
-          {
-            blogPosts.map((blogPost) => (
-              <div>{blogPost.data?.title || "hmmm"}</div>
-            ))
-          }
-        </ul>
-      </CardContent>
-    </Card>
+  <div class="w-80 p-4">
+    <h3 class="font-bold">Recent Posts</h3>
+    <ul class="pl-6">
+      {
+        blogPosts.map((blogPost) => (
+          <li>
+            <a class="truncate" href={`/blog/${blogPost.slug}`}>
+              {blogPost.data?.title || "hmmm"}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
   </div>
 </div>

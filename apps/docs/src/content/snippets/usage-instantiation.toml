@@ -1,0 +1,44 @@
+typescript = """
+// create client
+const client = new VexillaClient({
+  baseUrl: "http://localhost:3000",
+  environment: "dev",
+  customInstanceHash: "YOUR_USERS_ID",
+});
+
+//sync manifest
+await client.syncManifest();
+
+//sync flags
+await client.syncFlags("FLAG_GROUP_NAME_OR_ID", (url) => {
+  return fetch(url).then((response) => response.json());
+});
+"""
+
+rust = """
+// Warning: unwraps are just for example code brevity
+// create client
+let mut client = VexillaClient::new(
+    "dev",
+    "http://localhost:3000",
+    "YOUR_USERS_ID",
+);
+
+// sync manifest
+client.sync_manifest(|url| {
+    reqwest::blocking::get(url)
+        .unwrap()
+        .text()
+        .unwrap()
+});
+
+// sync flags
+client.sync_flags(
+  "FLAG_GROUP_NAME_OR_ID",
+  |url| {
+    reqwest::blocking::get(url)
+      .unwrap()
+      .text()
+      .unwrap()
+}).unwrap();
+"""

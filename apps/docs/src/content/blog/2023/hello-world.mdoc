@@ -1,0 +1,44 @@
+---
+title: Hello World
+slug: hello-world
+publishDate: 8/28/2023
+description: Welcome to the new and improved Vexilla. The 0.x version is being sunset and the new and improved schema is being rolled out.
+---
+
+Vexilla has undergone a large refactor and upgrade. The updated schema and clients add several new features and a significantly changed workflow. It also has a brand spanking new documentation and marketing site.
+
+## Git-native Workflow
+
+The original plan for Vexilla was to publish directly to a static file host or CDN. This usually meant adding a set of Keys to be able to upload. Many users expressed concern over needing to create AWS keys and even more concern over storing them in the app.
+
+One major flaw with the old workflow is that there was no ability to audit and see who changed what when.
+
+The new workflow focuses on being git-native. This means that you can install it as a GitHub marketplace app into your repository and then changes are scoped to a pull request which is tied to the user that created it. You get traceability for free and we still don't need to operate a server to make that happen.
+
+## Split Up Files
+
+Supporting multiple groups has been upgraded. The main reason for upgrading and splitting out groups was to be more conscious of the size of the json payloads you need to fetch.
+
+Specific groups could even have their fetch frequency be different. Some flags could tolerate begin loaded once on page load while others might need to be fetched on a recurring basis.
+
+Your users will thank you for respecting their bandwidth and data quotas.
+
+To give the app a way to split groups, we needed a manifest file that would inform the client SDKs about which groups are available. This file typically only needs to be fetched once on pageload and it is kept as small as possible.
+
+## New Flag Types
+
+One of the most important features we have added is the ability to do Selective and Value based flagging.
+
+Selective flags allow you to specify a list of values that you can then compare against a value in your app. One example would be to have a list of preferred user IDs that get some featues first. Another example could be to have a specific list of user groups (such as beta, VIP, etc) and then check if the user is in one of those groups.
+
+Value based flags can be useful for things like billing. Just imagine you have a mobile app and you would like to change the pricing of a subscription. Apple and Google don't let you change the dollar value on the fly. However, you can create a "product" for the new pricing and then just update the "productID" value in your flags.
+
+## Scheduling
+
+There are rare cases where you will want to schedule a flag being on or off. Many other feature flag providers hide scheduling behind their enterprise tier if they have the feature at all. Instead, Vexilla now supports it out-of-the-box.
+
+Why would you want to schedule a feature flag? Maybe you have a holiday theme you would like to turn on at a specific time. For a mobile app, this would be especially useful because you can't dictate how quickly your app's changes will be approved and up on the app store.
+
+## Wrapping Up
+
+We think that there is a bright future for Vexilla. There is always more work to do. More client SDKs to make. More improvements to the UI to make. If you would like to be involved in the process, feel free to check out the [GitHub repository](https://github.com/vexilla/vexilla)

@@ -2,7 +2,7 @@ import type { PropsWithChildren, ReactNode } from "react";
 
 function ListNumber({ children }: PropsWithChildren<{}>) {
   return (
-    <div className="flex-shrink-0 w-6 h-6 rounded-full mt-10 sm:mt-0 inline-flex items-center justify-center bg-indigo-500 text-white relative z-10 font-medium text-sm">
+    <div className="z-1 flex-shrink-0 w-6 h-6 rounded-full mt-10 sm:mt-0 inline-flex items-center justify-center bg-indigo-500 text-white relative font-medium text-sm">
       {children}
     </div>
   );
@@ -57,7 +57,10 @@ export function HomeHowItWorks() {
     <section className="text-normal body-font" id="how-it-works">
       <div className="container px-5 py-24 mx-auto flex flex-wrap">
         {steps.map((step, index) => (
-          <div className="flex relative pt-10 pb-20 sm:items-center md:w-2/3 mx-auto">
+          <div
+            className="flex relative pt-10 pb-20 sm:items-center md:w-2/3 mx-auto"
+            key={step.title}
+          >
             <div className="h-full w-6 absolute inset-0 flex items-center justify-center">
               <div className="h-full w-1 bg-gray-200 pointer-events-none"></div>
             </div>

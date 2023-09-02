@@ -3,19 +3,25 @@ title: Getting Started
 sortOrder: 1
 ---
 
+Using Vexilla is a fairly easy process. There are a few steps to take care of before you are up and running, though.
+
 ## Setup Flags
 
-You will need to use the App to set up your flags. You will also be responsible for hosting the JSON file anywhere that your application can access it. This means you can have it privately hosted in a VPC.
+You will need to use the App to set up your flags. You will also be responsible for hosting the JSON file anywhere that your application can access it. This means you can have it on any public file server, a CDN, or even privately hosted in a VPC.
 
-### Supported Git Providers
+### Supported VCS Providers
 
-- GitHub [TODO]
-- Gitlab [TODO]
-- Bitbucket [TODO]
+- GitHub [https://github.com](https://github.com)
+- Gitlab *Coming Soon*
+- Bitbucket *Coming Soon*
+
+## Application
+
+Head over to the application and start creating your Flag Groups, Environments, and Flags. For more information about how to use the app, see (the guide)[/guides/application].
 
 ## Installation
 
-The first step is to install an SDK into your application. Vexilla supports many languages as first-party solutions.
+The first step is to install an SDK into your application. Vexilla supports many languages as first-party solutions. Just copy and paste this install command into your terminal and run it.
 
 {% snippet snippet="installation" /%}
 
@@ -25,14 +31,24 @@ Vexilla is also open to third-party integrations. If you would like help in crea
 
 No third-party integrations found, yet.
 
-## Generate Types (Optional)
+<!-- ## Generate Types (Optional)
 
 Vexilla has a CLI [TODO] that can be used to generate types from your JSON config file.
 
-{% snippet snippet="generate-types" /%}
+{% snippet snippet="generate-types" /%} -->
 
-##  Usage
+##  Creating the Client
 
 Once your SDK is installed, you can begin using the client in your app.
 
-{% snippet snippet="usage" /%}
+{% snippet snippet="usage-instantiation" /%}
+
+## Evaluating Flags
+
+After the client is set up, you can start using it in your application logic.
+
+{% snippet snippet="usage-logic" /%}
+
+## Next Steps
+
+Take a look through the guides provided.

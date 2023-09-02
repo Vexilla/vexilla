@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import clsx from "clsx";
+
 import { Button } from "@/components/ui/button";
 
 import { Icon } from "@iconify/react";
-import paintRollerBold from "@iconify/icons-solar/paint-roller-bold";
 import sun2Bold from "@iconify/icons-solar/sun-2-bold";
 import moonBold from "@iconify/icons-solar/moon-bold";
-import clsx from "clsx";
 
 const THEME_KEY = "theme";
 
@@ -36,7 +36,9 @@ export function ThemeSelector() {
         title="Set Light Mode"
         variant="ghost"
         className={clsx("rounded-full", {
-          "bg-yellow-400": theme === "light",
+          "bg-slate-700": theme === "light",
+          "text-white": theme === "light",
+          "text-black": theme === "dark",
         })}
         size="icon"
         onClick={() => {
@@ -53,6 +55,7 @@ export function ThemeSelector() {
         size="icon"
         className={clsx("rounded-full", {
           "bg-slate-700": theme === "dark",
+          "text-black": theme === "light",
         })}
         onClick={() => {
           setTheme("dark");

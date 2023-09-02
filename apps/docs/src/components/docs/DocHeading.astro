@@ -7,11 +7,13 @@ const { level, id } = Astro.props;
 const Element: any = `h${level}`;
 ---
 
-<a href={`#${id}`} id={id} class="no-underline">
-  <Element class="relative group" data-slug={id}>
-    <div class="absolute right-full top-1 mr-2 group-hover:block hidden">
-      <Icon icon={linkBold} />
-    </div>
-    <slot />
-  </Element>
-</a>
+<div id={id} class="pt-[4rem] pb-0">
+  <a href={`#${id}`} class="no-underline">
+    <Element class="relative group !m-0" data-slug={id}>
+      <div class="absolute right-full top-1 mr-2 group-hover:block hidden">
+        <Icon icon={linkBold} />
+      </div>
+      <slot />
+    </Element>
+  </a>
+</div>

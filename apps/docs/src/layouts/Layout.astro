@@ -1,11 +1,15 @@
 ---
-import { ResponsiveContainer } from "@/components/responsive-container";
-import { ThemeSelector } from "@/components/theme-selector";
-import "@/styles/globals.css";
-
-import "@fontsource/atkinson-hyperlegible";
+import { ViewTransitions } from "astro:transitions";
+import ResponsiveContainer from "@/components/ResponsiveContainer.astro";
+import { ThemeSelector } from "@/components/ThemeSelector";
+import { Search } from "@/components/Search";
 import clsx from "clsx";
 
+import '@fontsource/fira-code';
+import '@fontsource/atkinson-hyperlegible/400.css';
+import '@fontsource/atkinson-hyperlegible/700.css';
+
+import "@/styles/globals.css";
 interface Props {
   title: string;
 }
@@ -30,10 +34,11 @@ const isDocumentation = Astro.url.pathname.startsWith("/documentation");
       type="text/css"
       href="/fonts/racing/stylesheet.css"
     />
+    <ViewTransitions />
   </head>
-  <body>
+  <body class="flex flex-col min-h-screen">
     <header class="fixed w-full top-0 bg-white dark:bg-black z-10">
-      <ResponsiveContainer className="flex justify-between items-center p-6">
+      <ResponsiveContainer class="flex justify-between items-center px-6 py-2">
         <div class="flex flex-row items-center gap-8">
           <a class="flex items-center" href="/">
             <img
@@ -60,15 +65,16 @@ const isDocumentation = Astro.url.pathname.startsWith("/documentation");
             Blog
           </a>
         </div>
+        <Search client:only />
         <ThemeSelector client:only />
       </ResponsiveContainer>
     </header>
 
-    <ResponsiveContainer className="pt-[6rem]">
+    <ResponsiveContainer class="z-1 pt-[6rem]">
       <slot />
     </ResponsiveContainer>
 
-    <footer>
+    <footer class="mt-auto">
       <ResponsiveContainer>
         <div class="flex items-center justify-center p-16">
           &copy; 2023 Vexilla
