@@ -11,7 +11,7 @@ dependencies = {
 ```
 '''
 CustomInstanceHash = "custom_instance_hash"
-FetchFlags = "fetch_flags"
+SyncFlags = "fetch_flags"
 SetupSnippet = '''
 ```lua
 client = Client.new({}, "dev", "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com", userId)

@@ -1,6 +1,6 @@
-# Vexilla Client - C#
+# Vexilla Client - {{LanguageDisplayName}}
 
-This is the C# client library for Vexilla, a static file based feature flag system.
+This is the {{LanguageDisplayName}} client library for Vexilla, a static file based feature flag system.
 
 ## Getting Started
 
@@ -8,43 +8,15 @@ To get started is easy.
 
 ### Installation
 
-Using NuGet, install the dependency. Make sure you use the `OutputDirectory` that applies to your project.
-
-Via Package Management CLI:
-
-```
-PM> Install-Package Vexilla.Client
-```
-
-Or
-
-Via VS Package Management window:
-[https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-visual-studio](https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-visual-studio)
-
-Or
-
-Via NuGet CLI:
-
-```
-nuget install Vexilla.Client -OutputDirectory packages
-```
+{{InstallInstructions}}
 
 ### Setup
 
-You will need to create a Client within your app. This optionally takes in the `customInstanceHash` for use with gradual rollout.
+You will need to create a Client within your app. This optionally takes in the `{{CustomInstanceHash}}` for use with gradual rollout.
 
-After creation, call `SyncFlags`. This can be chained from the constructor since it returns the client instance.
+After creation, call `{{SyncFlags}}`. This can be chained from the constructor since it returns the client instance.
 
-```csharp
-var httpClient = new HttpClient()
-VexillaHasher client = new VexillaClient(
-  'https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com',
-  process.env.ENVIRONMENT,
-  userId
-)
-
-let flags = await client.SyncFlags("features.json", httpClient);
-```
+{{SetupSnippet}}
 
 ### Generate Types (Optional)
 
@@ -55,7 +27,7 @@ We have created a tool to generate types for usage in your code. It will crawl y
 To use the tool, you can run it directly from NPM.
 
 ```
-npx vexilla types csharp REMOTE_JSON_URL
+npx vexilla types {{LanguageName}} REMOTE_JSON_URL
 ```
 
 #### Automatic Install Script
@@ -78,26 +50,13 @@ If you prefer to download the binary manually you can get it from the releases s
 
 ### Usage
 
-Use the created client to check if a feature `Should` be on.
+Use the created client to check if a feature `{{Should}}` be on.
 
-```csharp
-client.Should(FEATURE_NAME);
-```
+{{UsageSnippet}}
 
 ### Full Example
 
-```csharp
-var httpClient = new HttpClient()
-var client = new VexillaClient(
-  'https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com',
-  process.env.ENVIRONMENT,
-  userId
-)
-var flags = SyncFlags("features.json", httpClient);
-client.SetFlags(flags)
-
-var useIsAllowed = client.Should(FEATURE_NAME);
-```
+{{Example}}
 
 ## What are Feature Flags?
 

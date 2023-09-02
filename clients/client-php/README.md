@@ -1,6 +1,6 @@
-# Vexilla Client - C#
+# Vexilla Client - JS/TS
 
-This is the C# client library for Vexilla, a static file based feature flag system.
+This is the JS/TS client library for Vexilla, a static file based feature flag system.
 
 ## Getting Started
 
@@ -8,43 +8,37 @@ To get started is easy.
 
 ### Installation
 
-Using NuGet, install the dependency. Make sure you use the `OutputDirectory` that applies to your project.
 
-Via Package Management CLI:
+FOOOOOOO
 
+Using npm or yarn, install the package. Typescript types are shipped with it.
+
+```sh
+npm install --save @vexilla/client
 ```
-PM> Install-Package Vexilla.Client
+
+or
+
+```sh
+yarn add @vexilla/client
 ```
 
-Or
-
-Via VS Package Management window:
-[https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-visual-studio](https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-visual-studio)
-
-Or
-
-Via NuGet CLI:
-
-```
-nuget install Vexilla.Client -OutputDirectory packages
-```
 
 ### Setup
 
 You will need to create a Client within your app. This optionally takes in the `customInstanceHash` for use with gradual rollout.
 
-After creation, call `SyncFlags`. This can be chained from the constructor since it returns the client instance.
+After creation, call `fetchFlags`. This can be chained from the constructor since it returns the client instance.
 
-```csharp
-var httpClient = new HttpClient()
-VexillaHasher client = new VexillaClient(
-  'https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com',
-  process.env.ENVIRONMENT,
-  userId
-)
-
-let flags = await client.SyncFlags("features.json", httpClient);
+```javascript
+this.client = new VexillaClient({
+  baseUrl: 'https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com',
+  environment: process.env.ENVIRONMENT,
+  customInstanceHash: userId
+});
+this.client.getFlags('features.json');
 ```
+
 
 ### Generate Types (Optional)
 
@@ -55,7 +49,7 @@ We have created a tool to generate types for usage in your code. It will crawl y
 To use the tool, you can run it directly from NPM.
 
 ```
-npx vexilla types csharp REMOTE_JSON_URL
+npx vexilla types js REMOTE_JSON_URL
 ```
 
 #### Automatic Install Script
@@ -78,26 +72,36 @@ If you prefer to download the binary manually you can get it from the releases s
 
 ### Usage
 
-Use the created client to check if a feature `Should` be on.
+Use the created client to check if a feature `should` be on.
 
-```csharp
-client.Should(FEATURE_NAME);
+```javascript
+client.should(FEATURE_NAME)
 ```
+
 
 ### Full Example
 
-```csharp
-var httpClient = new HttpClient()
-var client = new VexillaClient(
-  'https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com',
-  process.env.ENVIRONMENT,
-  userId
-)
-var flags = SyncFlags("features.json", httpClient);
-client.SetFlags(flags)
+```javascript
+import { VexillaClient } from '@vexilla/client';
 
-var useIsAllowed = client.Should(FEATURE_NAME);
+export class FeatureFlagsService {
+  private client;
+
+  constructor() {
+    this.client = new VexillaClient({
+      baseUrl: 'https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com',
+      environment: process.env.ENVIRONMENT,
+      customInstanceHash: userId
+    });
+    this.client.getFlags('features.json');
+  }
+
+  should(featureName) {
+    return this.client?.should(featureName);
+  }
+}
 ```
+
 
 ## What are Feature Flags?
 

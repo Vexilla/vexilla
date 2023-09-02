@@ -16,7 +16,7 @@ dependencies:
 ```
 '''
 CustomInstanceHash = "customInstanceHash"
-FetchFlags = "fetchFlags"
+SyncFlags = "fetchFlags"
 SetupSnippet = '''
 ```dart
 var client = VexillaClient(

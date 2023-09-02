@@ -8,7 +8,7 @@ Add the client to your imports.
 ```
 '''
 CustomInstanceHash = "customInstanceHash"
-FetchFlags = "fetchFlags"
+SyncFlags = "fetchFlags"
 SetupSnippet = '''
 ```kotlin
 val client = Client(

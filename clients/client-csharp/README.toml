@@ -23,7 +23,7 @@ nuget install Vexilla.Client -OutputDirectory packages
 
 '''
 CustomInstanceHash = "customInstanceHash"
-FetchFlags = "FetchFlags"
+SyncFlags = "SyncFlags"
 SetupSnippet = '''
 ```csharp
 var httpClient = new HttpClient()
@@ -33,7 +33,7 @@ VexillaHasher client = new VexillaClient(
   userId
 )
 
-let flags = await client.FetchFlags("features.json", httpClient);
+let flags = await client.SyncFlags("features.json", httpClient);
 ```
 '''
 Should = "Should"
@@ -50,7 +50,7 @@ var client = new VexillaClient(
   process.env.ENVIRONMENT,
   userId
 )
-var flags = FetchFlags("features.json", httpClient);
+var flags = SyncFlags("features.json", httpClient);
 client.SetFlags(flags)
 
 var useIsAllowed = client.Should(FEATURE_NAME);

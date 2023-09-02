@@ -8,12 +8,12 @@ import "github.com/vexilla/client-go"
 ```
 '''
 CustomInstanceHash = "CustomInstanceHash"
-FetchFlags = "FetchFlags"
+SyncFlags = "SyncFlags"
 SetupSnippet = '''
 ```go
 client := NewVexillaClient("dev", "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com", userId)
 
-flags, err := client.FetchFlags("features.json")
+flags, err := client.SyncFlags("features.json")
 if err != nil {
   tester.Fatal(err)
 }
@@ -31,7 +31,7 @@ Example = '''
 ```go
 client := NewVexillaClient("dev", "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com", userId)
 
-flags, err := client.FetchFlags("features.json")
+flags, err := client.SyncFlags("features.json")
 if err != nil {
   tester.Fatal(err)
 }

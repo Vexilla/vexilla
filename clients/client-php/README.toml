@@ -1,6 +1,9 @@
 LanguageName = 'js'
 LanguageDisplayName = "JS/TS"
 InstallInstructions = '''
+
+FOOOOOOO
+
 Using npm or yarn, install the package. Typescript types are shipped with it.
 
 ```sh

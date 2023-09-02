@@ -13,7 +13,7 @@ defp deps do
 
 '''
 CustomInstanceHash = "custom_instance_id"
-FetchFlags = "fetch_flags"
+SyncFlags = "fetch_flags"
 SetupSnippet = '''
 ```elixir
 

@@ -6,7 +6,7 @@ Add VexillaClient as a dependency via Swift Packages
 
 '''
 CustomInstanceHash = "customInstanceHash"
-FetchFlags = "fetchFlags"
+SyncFlags = "fetchFlags"
 SetupSnippet = '''
 ```swift
 var client = VexillaClient(environment: "dev", baseUrl: "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com", customInstanceHash: userId)
@@ -19,7 +19,7 @@ client.fetchFlags(fileName: "features.json", fetchCompletionHandler: { flags, er
     }
 
     client.setFlags(flags: flags!)
-    
+
 )}
 ```
 '''
@@ -41,7 +41,7 @@ client.fetchFlags(fileName: "features.json", fetchCompletionHandler: { flags, er
     }
 
     client.setFlags(flags: flags!)
-    
+
     if client.should(FEATURE_NAME) {
         // Do the thing
     }
