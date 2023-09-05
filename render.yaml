@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: app
+    branch: main
+    runtime: static
+    rootDir: apps/app
+    staticPublishPath: ./dist/
+    buildCommand: pnpm build
+    # buildFilter:
+    #   paths:
+    #     - apps/app/**
+  - type: web
+    name: docs
+    branch: main
+    runtime: static
+    rootDir: apps/docs
+    staticPublishPath: ./dist/
+    buildCommand: pnpm build
