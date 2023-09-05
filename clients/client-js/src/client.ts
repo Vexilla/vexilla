@@ -124,7 +124,7 @@ export class VexillaClient {
     groupName: string,
     featureName: string,
     customInstanceHash?: string | number
-  ) {
+  ): boolean {
     const actualItems = this.getActualItems(groupName, featureName);
 
     if (!actualItems.success) {

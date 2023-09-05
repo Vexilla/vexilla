@@ -1,16 +1,27 @@
 {
   "private": true,
   "scripts": {
+    "build:clients:readmes": "ts-node ./scripts/build-client-readmes.ts",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
+    "@types/mustache": "^4.2.2",
+    "@types/node": "^20.5.8",
+    "chalk": "^5.3.0",
     "eslint": "^7.32.0",
+    "mustache": "^4.2.0",
     "prettier": "^2.5.1",
-    "turbo": "^1.9.3"
+    "toml": "^3.0.0",
+    "ts-node": "^10.9.1",
+    "turbo": "^1.9.3",
+    "typescript": "^5.2.2"
   },
   "packageManager": "pnpm@7.15.0",
-  "name": "vexilla"
+  "name": "vexilla",
+  "dependencies": {
+    "yargs": "^17.5.1"
+  }
 }
