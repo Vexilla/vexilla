@@ -23,5 +23,9 @@
   "name": "vexilla",
   "dependencies": {
     "yargs": "^17.5.1"
+  },
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=8.5.0"
   }
 }
