@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useEffect, useMemo } from "react";
+import _React, { forwardRef } from "react";
 import {
   Group,
   Select,
@@ -10,13 +10,11 @@ import {
   Radio,
   Flex,
 } from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useSnapshot } from "valtio";
 
 import {
   VexillaFeature,
-  VexillaFeatureTypeSelective,
   VexillaFeatureTypeString,
   VexillaInputType,
   VexillaNumberType,
@@ -35,12 +33,7 @@ import rewindBackBroken from "@iconify/icons-solar/rewind-back-broken";
 import { CustomSlider } from "../../components/CustomSlider";
 import { SelectiveList } from "../../components/features/SelectiveList";
 import { ScheduledForm } from "../../components/features/ScheduledForm";
-import { logProxy } from "../../utils/logging";
 import { CustomNumberInput } from "../../components/CustomNumberInput";
-
-enum FormFields {
-  name = "name",
-}
 
 interface ItemProps extends React.ComponentPropsWithoutRef<"div"> {
   label: string;

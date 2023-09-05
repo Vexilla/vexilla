@@ -1,4 +1,4 @@
-import React from "react";
+import _React from "react";
 import { PageLayout } from "../components/PageLayout";
 
 export function Configuration() {

@@ -1,4 +1,4 @@
-import React, { PropsWithChildren, useState } from "react";
+import _React, { PropsWithChildren, useState } from "react";
 import { useSnapshot } from "valtio";
 import { Difference } from "microdiff";
 import {
@@ -63,9 +63,9 @@ export function Status({
   mergeRemoteConfig,
 }: StatusProps) {
   const validationSnapshot = useSnapshot(validation);
-  const localDifferencesSnapshot = useSnapshot(localDifferences);
-  const remoteDifferencesSnapshot = useSnapshot(remoteDifferences);
-  const remoteMetadataSnapshot = useSnapshot(remoteMetadata);
+  useSnapshot(localDifferences);
+  useSnapshot(remoteDifferences);
+  useSnapshot(remoteMetadata);
 
   const [
     remoteChangesModalOpened,

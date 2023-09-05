@@ -1,23 +1,12 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
-import {
-  Button,
-  Timeline,
-  Select,
-  ActionIcon,
-  Flex,
-  Tooltip,
-} from "@mantine/core";
+import _React, { useEffect, useState, useMemo } from "react";
+import { Button, Timeline, Select, ActionIcon, Flex } from "@mantine/core";
 import { cloneDeep } from "lodash-es";
 
 import { AppState } from "@vexilla/types";
 
 import { Branch, Repository } from "./_GitForm.types";
 import { GitHubFetcher } from "./GithubForm.fetchers";
-import {
-  GitHubBranch,
-  GitHubInstallation,
-  GitHubRepository,
-} from "./GithubForm.types";
+import { GitHubInstallation } from "./GithubForm.types";
 
 import { GitForm } from "./_GitForm";
 import { TimelineItemTitle } from "../../TimelineItemTitle";
@@ -57,7 +46,7 @@ const disabledButtonStyling = {
   maxWidth: "calc(100% - 28px - 0.25rem)",
 };
 
-export function GithubForm({ config, updateConfig }: GithubFormProps) {
+export function GithubForm({ config }: GithubFormProps) {
   const configSnapshot = useSnapshot(config);
   const {
     accessToken,

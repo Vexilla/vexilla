@@ -1,4 +1,4 @@
-import React from "react";
+import _React from "react";
 import { ActionIcon, Tooltip } from "@mantine/core";
 
 import Icon from "@iconify/react";

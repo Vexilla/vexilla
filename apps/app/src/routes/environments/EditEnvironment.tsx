@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from "react";
+import _React from "react";
 import {
   TextInput,
   Switch,
@@ -9,8 +9,7 @@ import {
   Radio,
   Group,
 } from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useSnapshot } from "valtio";
 
 import { config } from "../../stores/config-valtio";
@@ -19,15 +18,10 @@ import { PageLayout } from "../../components/PageLayout";
 import { CustomSlider } from "../../components/CustomSlider";
 import { CustomTooltip } from "../../components/CustomTooltip";
 import { SelectiveList } from "../../components/features/SelectiveList";
-import { ScheduledForm } from "../../components/features/ScheduledForm";
 
 import { Icon } from "@iconify/react";
 import rewindBackBroken from "@iconify/icons-solar/rewind-back-broken";
 import shieldWarningBroken from "@iconify/icons-solar/shield-warning-broken";
-
-enum FormFields {
-  name = "name",
-}
 
 export function EditEnvironment() {
   const navigate = useNavigate();

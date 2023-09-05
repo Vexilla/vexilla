@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import _React, { useRef } from "react";
 import { Slider, Flex, NumberInput, Button, Text } from "@mantine/core";
 
 import { nanoid } from "../utils/nanoid";

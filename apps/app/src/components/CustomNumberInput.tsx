@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import _React, { useMemo } from "react";
 import { Input, NumberInput } from "@mantine/core";
 import { VexillaNumberType } from "@vexilla/types";
 

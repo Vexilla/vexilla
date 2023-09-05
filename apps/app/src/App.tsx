@@ -1,10 +1,5 @@
-import React, { useEffect, useMemo } from "react";
-import {
-  Outlet,
-  useNavigate,
-  useParams,
-  useSearchParams,
-} from "react-router-dom";
+import _React, { useEffect, useMemo } from "react";
+import { Outlet, useSearchParams } from "react-router-dom";
 import { AppShell, Navbar, Header, Flex, Modal, Box } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useSnapshot } from "valtio";
@@ -36,12 +31,9 @@ import { notifications } from "@mantine/notifications";
 
 function App() {
   const configSnapshot = useSnapshot(config);
-  const remoteConfigSnapshot = useSnapshot(remoteConfig);
-  const remoteMetadataSnapshot = useSnapshot(remoteMetadata);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
-
-  const hasLoggedInParam = searchParams.has("logged_in");
+  useSnapshot(remoteConfig);
+  useSnapshot(remoteMetadata);
+  const [_searchParams, setSearchParams] = useSearchParams();
 
   const [
     hostingConfigModalOpened,
@@ -55,14 +47,7 @@ function App() {
     }
   }, []);
 
-  const {
-    accessToken,
-    repositoryName,
-    owner,
-    targetBranch,
-    shouldCreatePullRequest,
-    branchNamePrefix,
-  } =
+  const { accessToken, repositoryName, owner, targetBranch } =
     config.hosting.provider === "github"
       ? config.hosting
       : {
@@ -70,8 +55,6 @@ function App() {
           repositoryName: "",
           owner: "",
           targetBranch: "",
-          shouldCreatePullRequest: true,
-          branchNamePrefix: "",
         };
 
   const groups = config.groups;
@@ -243,8 +226,8 @@ function App() {
                     if (cleanConfig.hosting.providerType === "git") {
                       cleanConfig.hosting.accessToken = "";
                     } else if (cleanConfig.hosting.providerType === "direct") {
-                      cleanConfig.hosting.accessKeyId = "";
-                      cleanConfig.hosting.secretAccessKey = "";
+                      // cleanConfig.hosting.accessKeyId = "";
+                      // cleanConfig.hosting.secretAccessKey = "";
                     }
 
                     cleanConfig.groups = cleanConfig.groups.map((group) => {

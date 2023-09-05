@@ -1,5 +1,5 @@
-import React from "react";
-import { Input, Modal, TextInput, Group, Button, Radio } from "@mantine/core";
+import _React from "react";
+import { Modal, TextInput, Group, Button } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 
 import { CustomList, CustomListItem } from "../CustomList";

@@ -1,4 +1,4 @@
-import React from "react";
+import _React from "react";
 import ReactDOM from "react-dom/client";
 import { MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";

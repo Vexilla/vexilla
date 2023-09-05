@@ -8,8 +8,8 @@ export class Fetcher {
   }
 
   async publish(
-    branchName: string,
-    files: {
+    _branchName: string,
+    _files: {
       content: string;
       filePath: string;
     }[]
@@ -27,7 +27,7 @@ export class GitFetcher extends Fetcher {
     throw new Error("getRepositories() not implemented");
   }
 
-  async getBranches(branch: string) {
+  async getBranches(_branch: string) {
     throw new Error("getBranches() not implemented");
   }
 }

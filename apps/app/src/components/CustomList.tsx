@@ -1,5 +1,5 @@
-import React, { ReactNode } from "react";
-import { Outlet, Link, NavLink } from "react-router-dom";
+import _React, { ReactNode } from "react";
+import { Link } from "react-router-dom";
 import {
   Flex,
   ActionIcon,

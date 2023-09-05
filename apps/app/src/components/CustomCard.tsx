@@ -1,4 +1,4 @@
-import React, { PropsWithChildren, ReactNode } from "react";
+import _React, { PropsWithChildren, ReactNode } from "react";
 import { Box, Flex, Text } from "@mantine/core";
 
 import { CustomTooltip } from "./CustomTooltip";

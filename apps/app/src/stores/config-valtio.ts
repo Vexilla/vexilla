@@ -4,7 +4,6 @@ import { derive } from "valtio/utils";
 import { z } from "zod";
 import microdiff from "microdiff";
 import { HostingConfigValidators } from "../utils/validators";
-import { omit } from "lodash-es";
 
 const CONFIG_KEY = "config";
 const REMOTE_CONFIG_KEY = "remoteConfig";

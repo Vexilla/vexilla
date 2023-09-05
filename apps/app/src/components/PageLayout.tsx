@@ -1,5 +1,4 @@
-import { Box } from "@mantine/core";
-import React, { PropsWithChildren } from "react";
+import _React, { PropsWithChildren } from "react";
 
 export function PageLayout({
   children,

@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import { Select, Flex, Switch } from "@mantine/core";
+import _React, { useState } from "react";
+import { Select, Flex } from "@mantine/core";
 import { AppState } from "@vexilla/types";
-import { snapshot, useSnapshot } from "valtio";
+import { useSnapshot } from "valtio";
 import { EmptyForm } from "./forms/_EmptyForm";
 import { GithubForm } from "./forms/GithubForm";
 import { HostingProvider, HostingProviderType } from "@vexilla/hosts";
@@ -68,7 +68,7 @@ export function OnboardingForm({
   updateProvider,
 }: OnboardingFormProps) {
   const configSnapshot = useSnapshot(config);
-  const [providerType, setProviderType] = useState(
+  const [_providerType, setProviderType] = useState(
     configSnapshot?.hosting?.providerType
   );
 

@@ -1,4 +1,4 @@
-import React, { PropsWithChildren } from "react";
+import _React, { PropsWithChildren } from "react";
 import {
   Timeline,
   Select,
@@ -26,8 +26,6 @@ const githubAppName = `vexilla-dev`;
 
 export function GitForm({
   config,
-  updateConfig,
-  totalElements,
   activeElement,
   children,
   repositories,

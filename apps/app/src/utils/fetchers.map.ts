@@ -14,4 +14,13 @@ export const fetchersMap: Record<
   s3: () => {
     throw new Error("No fetcher found for S3 provider");
   },
+  azure: () => {
+    throw new Error("No fetcher found for S3 provider");
+  },
+  gcloud: () => {
+    throw new Error("No fetcher found for S3 provider");
+  },
+  firebase: () => {
+    throw new Error("No fetcher found for S3 provider");
+  },
 };

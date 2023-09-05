@@ -10,14 +10,12 @@ declare namespace Intl {
   function supportedValuesOf(input: Key): string[];
 }
 
-import React, { useRef } from "react";
+import _React, { useRef } from "react";
 import {
   Flex,
   Box,
   ActionIcon,
   Select,
-  Radio,
-  Group,
   SegmentedControl,
   Input,
 } from "@mantine/core";

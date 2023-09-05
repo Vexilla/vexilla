@@ -1,12 +1,11 @@
-import React, { useEffect, useState } from "react";
+import _React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { Button, TextInput, Flex, Box } from "@mantine/core";
 
 import {
   DefaultFeatureValues,
-  Environment,
-  Group as FeatureGroup,
+  VexillaEnvironment,
   VexillaFeature,
   VexillaGradualFeature,
   VexillaSchedule,
@@ -99,7 +98,7 @@ export function EditGroup() {
 
           return newEnvironments;
         },
-        {} as Record<string, Environment>
+        {} as Record<string, VexillaEnvironment>
       );
     }
 
@@ -168,7 +167,7 @@ export function EditGroup() {
           />
           <Flex direction="row" gap={"1rem"}>
             <Box w="50%">
-              <CustomList<Environment>
+              <CustomList<VexillaEnvironment>
                 title="Environments"
                 itemType="Environment"
                 items={Object.values(environments)}

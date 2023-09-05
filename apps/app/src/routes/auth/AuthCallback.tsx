@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import _React, { useEffect, useState } from "react";
 import { PageLayout } from "../../components/PageLayout";
 import { config } from "../../stores/config-valtio";
 
