@@ -4,7 +4,7 @@ services:
     branch: main
     runtime: static
     staticPublishPath: ./apps/app/dist/
-    buildCommand: pnpm i -g pnpm; pnpm install; cd apps/app; pnpm build
+    buildCommand: pnpm i -g pnpm; pnpm install; cd apps/app; pnpm build:vite
     buildFilter:
       paths:
         - apps/app/**
