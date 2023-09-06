@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "typecheck": "tsc",
-    "build:vite": "vite build",
+    "build:vite": "node ./node_modules/vite/bin/vite.js build",
     "build": "pnpm tsc && pnpm build:vite",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"

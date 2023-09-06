@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "pnpm astro dev",
     "start": "pnpm astro dev",
-    "build": "pnpm astro build && pagefind && mkdir -p ./src/_pagefind && cp -R ./dist/_pagefind/* ./src/_pagefind/"
+    "build": "node ./node_modules/astro/astro.js build && node ./node_modules/pagefind/lib/index.js && mkdir -p ./src/_pagefind && cp -R ./dist/_pagefind/* ./src/_pagefind/"
   },
   "dependencies": {
     "@astrojs/markdoc": "^0.4.4",
