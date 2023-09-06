@@ -19,47 +19,42 @@ import "./index.css";
 
 import "@fontsource/atkinson-hyperlegible";
 
-const router = createBrowserRouter(
-  [
-    {
-      path: "/",
-      element: <App />,
-      children: [
-        {
-          path: "/",
-          element: <Home />,
-        },
-        {
-          path: "/auth/callback/:provider",
-          element: <AuthCallback />,
-        },
-        {
-          path: "/configuration",
-          element: <Configuration />,
-        },
-        {
-          path: "/publish",
-          element: <Publish />,
-        },
-        {
-          path: "/groups/:groupId",
-          element: <EditGroup />,
-        },
-        {
-          path: "/groups/:groupId/environments/:environmentId",
-          element: <EditEnvironment />,
-        },
-        {
-          path: "/groups/:groupId/features/:featureId",
-          element: <EditFeature />,
-        },
-      ],
-    },
-  ],
+const router = createBrowserRouter([
   {
-    basename: "/app",
-  }
-);
+    path: "/",
+    element: <App />,
+    children: [
+      {
+        path: "/",
+        element: <Home />,
+      },
+      {
+        path: "/auth/callback/:provider",
+        element: <AuthCallback />,
+      },
+      {
+        path: "/configuration",
+        element: <Configuration />,
+      },
+      {
+        path: "/publish",
+        element: <Publish />,
+      },
+      {
+        path: "/groups/:groupId",
+        element: <EditGroup />,
+      },
+      {
+        path: "/groups/:groupId/environments/:environmentId",
+        element: <EditEnvironment />,
+      },
+      {
+        path: "/groups/:groupId/features/:featureId",
+        element: <EditFeature />,
+      },
+    ],
+  },
+]);
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <MantineProvider withNormalizeCSS withGlobalStyles>
