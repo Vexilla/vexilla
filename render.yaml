@@ -5,7 +5,7 @@ services:
     runtime: static
     rootDir: apps/app
     staticPublishPath: ./dist/
-    buildCommand: pnpm install; pnpm build
+    buildCommand: pnpm i -g pnpm; pnpm install; pnpm build
     # buildFilter:
     #   paths:
     #     - apps/app/**
@@ -15,4 +15,4 @@ services:
     runtime: static
     rootDir: apps/docs
     staticPublishPath: ./dist/
-    buildCommand: pnpm install; pnpm build
+    buildCommand: pnpm i -g pnpm; pnpm install; pnpm build
