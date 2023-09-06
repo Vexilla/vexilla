@@ -3,7 +3,7 @@ services:
     name: app
     branch: main
     runtime: static
-    staticPublishPath: ./dist/
+    staticPublishPath: ./apps/app/dist/
     buildCommand: pnpm i -g pnpm; pnpm install; cd apps/app; pnpm build
     buildFilter:
       paths:
@@ -13,7 +13,7 @@ services:
     branch: main
     runtime: static
     # rootDir: apps/docs
-    staticPublishPath: ./dist/
+    staticPublishPath: ./apps/docs/dist/
     buildCommand: pnpm i -g pnpm; pnpm install;cd apps/docs; pnpm build
     buildFilter:
       paths:
