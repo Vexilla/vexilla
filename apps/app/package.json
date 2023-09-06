@@ -60,7 +60,6 @@
     "vite-tsconfig-paths": "^4.2.0"
   },
   "engines": {
-    "node": ">=18",
-    "pnpm": ">=8.5.0"
+    "node": ">=18"
   }
 }
