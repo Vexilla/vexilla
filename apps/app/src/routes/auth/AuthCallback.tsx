@@ -5,7 +5,7 @@ import { config } from "../../stores/config-valtio";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { HostingConfig, HostingProvider } from "@vexilla/hosts";
 
-const BASE_URL = `http://localhost:5174`;
+const BASE_URL = import.meta.env.VITE_AUTH_BASE_URL;
 
 export function AuthCallback() {
   let { provider } = useParams<{ provider: HostingProvider }>();
