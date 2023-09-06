@@ -4,7 +4,7 @@ services:
     branch: main
     runtime: static
     staticPublishPath: ./apps/app/dist/
-    buildCommand: pnpm i -g pnpm; pnpm install; cd apps/app; pnpm build:vite
+    buildCommand: pnpm setup; pnpm i -g pnpm; pnpm install; cd apps/app; pnpm build:vite
     buildFilter:
       paths:
         - apps/app/**
@@ -14,7 +14,7 @@ services:
     runtime: static
     # rootDir: apps/docs
     staticPublishPath: ./apps/docs/dist/
-    buildCommand: pnpm i -g pnpm; pnpm install;cd apps/docs; pnpm build
+    buildCommand: pnpm setup; pnpm i -g pnpm; pnpm install;cd apps/docs; pnpm build
     buildFilter:
       paths:
         - apps/docs/**
