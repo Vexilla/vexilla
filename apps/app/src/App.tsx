@@ -306,7 +306,7 @@ function App() {
               <Flex direction="row" align="center">
                 <img
                   className="rounded-full bg-slate-600 h-[36px] w-[36px] p-1 mr-2"
-                  src="/img/logo-white.svg"
+                  src="/img/vexilla-logo.png"
                 />
                 <h1 className="m-0 font-display text-4xl">Vexilla</h1>
               </Flex>
