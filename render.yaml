@@ -3,16 +3,18 @@ services:
     name: app
     branch: main
     runtime: static
-    rootDir: apps/app
     staticPublishPath: ./dist/
-    buildCommand: pnpm i -g pnpm; pnpm install; pnpm build
-    # buildFilter:
-    #   paths:
-    #     - apps/app/**
+    buildCommand: pnpm i -g pnpm; pnpm install; cd apps/app; pnpm build
+    buildFilter:
+      paths:
+        - apps/app/**
   - type: web
     name: docs
     branch: main
     runtime: static
-    rootDir: apps/docs
+    # rootDir: apps/docs
     staticPublishPath: ./dist/
-    buildCommand: pnpm i -g pnpm; pnpm install; pnpm build
+    buildCommand: pnpm i -g pnpm; pnpm install;cd apps/docs; pnpm build
+    buildFilter:
+      paths:
+        - apps/docs/**

@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro build && pagefind && mkdir -p ./src/_pagefind && cp -R ./dist/_pagefind/* ./src/_pagefind/",
+    "build": "pnpm astro build && pagefind && mkdir -p ./src/_pagefind && cp -R ./dist/_pagefind/* ./src/_pagefind/",
     "preview": "astro preview",
     "astro": "astro"
   },
