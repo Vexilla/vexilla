@@ -7,7 +7,7 @@ const validator = z.object({
 });
 
 const commonHeaders = {
-	'ACCESS-CONTROL-ALLOW-ORIGIN': 'http://localhost:5173',
+	'ACCESS-CONTROL-ALLOW-ORIGIN': env.APP_BASE_URL,
 	'Access-Control-Request-Headers': 'Content-Type'
 } as const;
 

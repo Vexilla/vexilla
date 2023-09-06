@@ -20,10 +20,9 @@ import { fetchersMap } from "../../../utils/fetchers.map";
 import { HostingProvider } from "@vexilla/hosts";
 import { useSnapshot } from "valtio";
 
-const githubAppName = `vexilla-dev`;
-// const githubAppName = `vexilla`;
+const githubAppName = import.meta.env.VITE_GITHUB_APP_NAME;
 
-const baseAuthCallbackUrl = `${window.location.protocol}//${window.location.host}/app/auth/callback`;
+const baseAuthCallbackUrl = `${window.location.protocol}//${window.location.host}/auth/callback`;
 
 const githubClientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
 
