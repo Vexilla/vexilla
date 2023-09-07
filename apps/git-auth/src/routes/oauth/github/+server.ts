@@ -29,7 +29,7 @@ export async function POST({ request }: { request: Request }) {
 				code,
 				client_id: env.GITHUB_CLIENT_ID,
 				client_secret: env.GITHUB_CLIENT_SECRET,
-				redirect_uri: `http://localhost:5173/app/auth/callback/github`
+				redirect_uri: `${env.APP_BASE_URL}/auth/callback/github`
 			}),
 			// body: formData,
 			headers: {
@@ -57,4 +57,5 @@ export async function POST({ request }: { request: Request }) {
 }
 
 // If `OPTIONS` is not defined, Next.js will automatically implement `OPTIONS` and  set the appropriate Response `Allow` header depending on the other methods defined in the route handler.
+// What about Sveltekit?
 // export async function OPTIONS(request: Request) {}
