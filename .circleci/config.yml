@@ -8,12 +8,12 @@ jobs:
     docker:
       - image: cimg/base:2023.03
     steps:
+      - checkout
       - run: cd apps/git-auth
       - run: bun bake
 # Orchestrate our job run sequence
 workflows:
   build:
     jobs:
-      - checkout
       - bun-orb/setup
       - build
