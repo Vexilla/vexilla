@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  bun-orb: cmgriffing/bun-orb@0.0.1
+  bun-orb: cmgriffing/bun-orb@0.0.2
 
 jobs:
   build:
@@ -11,8 +11,8 @@ jobs:
       - checkout
       - bun-orb/setup
       - run: >
-        cd apps/git-auth
-        bun bake
+          cd apps/git-auth
+          bun bake
 # Orchestrate our job run sequence
 workflows:
   build:
