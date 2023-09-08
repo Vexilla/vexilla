@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  bun-orb: cmgriffing/bun-orb@0.0.2
+  bun: cmgriffing/bun-orb@0.0.2
 
 jobs:
   build:
@@ -15,5 +15,5 @@ jobs:
 workflows:
   build:
     jobs:
-      - bun-orb/setup
+      - bun/setup
       - build
