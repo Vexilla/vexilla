@@ -15,5 +15,5 @@ jobs:
 workflows:
   build:
     jobs:
-      - bun/setup
+      - setup
       - build
