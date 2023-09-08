@@ -26,5 +26,10 @@
   },
   "engines": {
     "node": ">=18 <19.0.0"
-  }
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "clients/client-js"
+  ]
 }
