@@ -11,7 +11,7 @@ jobs:
     steps:
       - checkout
       - run: cd apps/git-auth
-      - run: bun bake
+      - run: ~/bun/bin/bun bake
 # Orchestrate our job run sequence
 workflows:
   build:
