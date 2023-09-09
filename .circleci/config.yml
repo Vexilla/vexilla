@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  bun: cmgriffing/bun-orb@0.0.20
+  bun: cmgriffing/bun-orb@0.0.21
   node: circleci/node@5.1.0
 
 jobs:
