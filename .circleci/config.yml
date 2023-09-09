@@ -10,7 +10,6 @@ jobs:
       - image: cimg/node:18.17
     steps:
       - bun/setup
-      - checkout
       - run: cd apps/git-auth
       - run: bun bake
 # Orchestrate our job run sequence
