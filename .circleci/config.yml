@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  bun: cmgriffing/bun-orb@0.0.11
+  bun: cmgriffing/bun-orb@0.0.12
   node: circleci/node@5.1.0
 
 jobs:
@@ -11,7 +11,7 @@ jobs:
     steps:
       - checkout
       - run: cd apps/git-auth
-      - run: ~/bun/bin/bun bake
+      - run: bun bake
 # Orchestrate our job run sequence
 workflows:
   build:
