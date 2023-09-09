@@ -9,6 +9,7 @@ jobs:
     docker:
       - image: cimg/base:2023.03
     steps:
+      - bun/setup
       - checkout
       - run: cd apps/git-auth
       - run: bun bake
@@ -16,7 +17,4 @@ jobs:
 workflows:
   build:
     jobs:
-      - bun/setup
-      - build:
-          requires:
-            - bun/setup
+      - build
