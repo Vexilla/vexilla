@@ -9,6 +9,7 @@ jobs:
     docker:
       - image: cimg/node:18.17
     steps:
+      - checkout
       - bun/setup
       - run: cd apps/git-auth
       - run: bun bake
