@@ -12,7 +12,16 @@ jobs:
       - checkout
       - bun/setup:
           version: 1.0.0
+      - restore_cache:
+          keys:
+            - v1-bun-deps-{{ checksum "bun.lockb" }}
+            - v1-bun-deps-
       - run: cd apps/git-auth && bun install && bun bake
+      - save_cache:
+          key: v1-bun-deps-{{ checksum "bun.lockb" }}
+          paths:
+            - ~/.bun/install/cache
+            - node_modules
 # Orchestrate our job run sequence
 workflows:
   build:
