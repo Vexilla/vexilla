@@ -17,4 +17,6 @@ workflows:
   build:
     jobs:
       - bun/setup
-      - build
+      - build:
+          requires:
+            - bun/setup
