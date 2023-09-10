@@ -1,15 +1,20 @@
 ---
+import clsx from "clsx";
 import { ViewTransitions } from "astro:transitions";
 import ResponsiveContainer from "@/components/ResponsiveContainer.astro";
 import { ThemeSelector } from "@/components/ThemeSelector";
 import { Search } from "@/components/Search";
-import clsx from "clsx";
+import { buttonVariants } from "@/components/ui/button";
 
 import '@fontsource/fira-code';
 import '@fontsource/atkinson-hyperlegible/400.css';
 import '@fontsource/atkinson-hyperlegible/700.css';
-
 import "@/styles/globals.css";
+
+import { Icon } from '@iconify/react';
+import hamburgerMenuOutline from '@iconify/icons-solar/hamburger-menu-outline';
+import closeSquareOutline from '@iconify/icons-solar/close-square-outline';
+
 interface Props {
   title: string;
 }
@@ -41,8 +46,94 @@ const isDocumentation = Astro.url.pathname.startsWith("/documentation");
     <meta name="msapplication-TileColor" content="#da532c" />
     <meta name="theme-color" content="#ffffff" />
     <ViewTransitions />
+    <style>
+      .mobile-menu {
+        transition: right 300ms;
+      }
+
+      #mobile-menu-toggle:checked ~ .mobile-menu {
+        right: 0;
+      }
+    </style>
   </head>
-  <body class="flex flex-col min-h-screen">
+  <body class="flex flex-col min-h-screen relative">
+    <input type="checkbox" id="mobile-menu-toggle" class="sr-only" />
+    <div class="mobile-menu w-screen h-screen fixed right-full bg-white dark:bg-black z-20 flex flex-col justify-between">
+      <ResponsiveContainer class="flex flex-col items-center">
+        <div class="flex justify-between items-center px-6 py-2 w-full mb-8">
+
+          <a class="flex items-center" href="/">
+          <img
+            class="h-[36px] w-[36px] mr-2"
+            src="/img/vexilla-logo.png"
+          />
+          <span class="m-0 font-display text-4xl">Vexilla</span>
+        </a>
+
+        <label for="mobile-menu-toggle">
+          <Icon
+            width={32}
+            icon={closeSquareOutline}
+          />
+        </label>
+      </div>
+      <Search client:only />
+      </ResponsiveContainer>
+
+
+      <ResponsiveContainer class="px-6 py-2 text-center text-xl">
+        <ul class="flex flex-col py-8 gap-8">
+          <li>
+            <a
+              href="/documentation"
+              class={clsx({
+                "font-bold": isDocumentation,
+              })}
+            >
+              Documentation
+            </a>
+          </li>
+          <li>
+            <a
+              href="/blog"
+              class={clsx({
+                "font-bold": isBlog,
+              })}
+            >
+              Blog
+            </a>
+          </li>
+
+
+          <li>
+            <a
+              href="https://app.vexilla.com"
+            >
+              App
+            </a>
+          </li>
+
+          <li>
+            <a
+              href="discord"
+            >
+              Discord
+            </a>
+          </li>
+
+          <li>
+            <a
+              href="https://github.com/vexilla/vexilla"
+            >
+              GitHub
+            </a>
+          </li>
+        </ul>
+      </ResponsiveContainer>
+      <ResponsiveContainer class="flex flex-col items-center p-4">
+          <ThemeSelector client:only />
+      </ResponsiveContainer>
+    </div>
     <header class="fixed w-full top-0 bg-white dark:bg-black z-10">
       <ResponsiveContainer class="flex justify-between items-center px-6 py-2">
         <div class="flex flex-row items-center gap-8">
@@ -54,29 +145,43 @@ const isDocumentation = Astro.url.pathname.startsWith("/documentation");
             <span class="m-0 font-display text-4xl">Vexilla</span>
           </a>
 
-          <a
-            href="/documentation"
-            class={clsx({
-              "font-bold": isDocumentation,
-            })}
-          >
-            Documentation
-          </a>
-          <a
-            href="/blog"
-            class={clsx({
-              "font-bold": isBlog,
-            })}
-          >
-            Blog
-          </a>
+          <div class="items-center hidden lg:flex gap-8">
+            <a
+              href="/documentation"
+              class={clsx({
+                "font-bold": isDocumentation,
+              })}
+            >
+              Documentation
+            </a>
+            <a
+              href="/blog"
+              class={clsx({
+                "font-bold": isBlog,
+              })}
+            >
+              Blog
+            </a>
+          </div>
         </div>
-        <Search client:only />
-        <ThemeSelector client:only />
+        <div class="hidden lg:flex items-center gap-8">
+          <Search client:only />
+          <ThemeSelector client:only />
+        </div>
+        <div class=" lg:hidden">
+          <label
+            for="mobile-menu-toggle"
+          >
+            <Icon
+              width={32}
+              icon={hamburgerMenuOutline}
+            />
+          </label>
+        </div>
       </ResponsiveContainer>
     </header>
 
-    <ResponsiveContainer class="z-1 pt-[6rem]">
+    <ResponsiveContainer class="main-slot z-1 pt-[3.5rem]">
       <slot />
     </ResponsiveContainer>
 

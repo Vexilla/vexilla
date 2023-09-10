@@ -50,8 +50,8 @@ documentationPages.sort((a, b) => {
 ---
 
 <div class="flex flex-row">
-  <div class="w-[15rem] p-2 pr-8 relative hidden lg:block">
-    <div class="sticky top-[7rem]">
+  <div class="w-[15rem] p-2 pr-8 relative hidden lg:block pt-10">
+    <div class="sticky top-16 max-h-[calc(100vh-4rem)] overflow-scroll">
       <ul>
         {
           documentationPages.map((page) => (
@@ -60,26 +60,26 @@ documentationPages.sort((a, b) => {
                 {page.data.title}
               </a>
 
-                <ul class="pl-2 headings">
-                  {page.headings.map((heading: Heading) => (
-                    <li data-slug={heading.slug} class="truncate">
-                      <a
-                        href={`/documentation/${page.slug}#${heading.slug}`}
-                        title={heading.text}
-                      >
-                        {heading.text}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
+              <ul class="pl-2 headings">
+                {page.headings.map((heading: Heading) => (
+                  <li data-slug={heading.slug} class="truncate">
+                    <a
+                      href={`/documentation/${page.slug}#${heading.slug}`}
+                      title={heading.text}
+                    >
+                      {heading.text}
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </li>
           ))
         }
       </ul>
     </div>
   </div>
-  <div class="flex-auto main-content pb-10 px-4 w-screen md:w-full" data-pagefind-body>
-    <div class="prose lg:prose-xl dark:prose-invert mx-auto">
+  <div class="flex-auto main-content pt-10 pb-10 px-4 w-screen md:w-full" data-pagefind-body>
+    <div class="prose lg:prose-xl dark:prose-invert mx-auto lg:w-[calc(100vw-42rem)] xl:w-auto">
       {!!currentPost?.data.title && <h1>{currentPost?.data.title}</h1>}
       <slot />
       {

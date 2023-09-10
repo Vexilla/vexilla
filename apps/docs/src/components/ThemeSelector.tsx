@@ -31,7 +31,7 @@ export function ThemeSelector() {
   }, [theme]);
 
   return (
-    <div className="py-1 p-2 rounded-full bg-slate-300 gap-2 flex flex-row">
+    <div className="py-1 p-2 rounded-full bg-slate-300 gap-2 flex flex-row w-24">
       <Button
         title="Set Light Mode"
         variant="ghost"
