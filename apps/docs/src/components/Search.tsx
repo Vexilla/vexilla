@@ -98,8 +98,6 @@ export function Search() {
                   );
 
                   setResults(newResults);
-
-                  console.log({ newResults });
                 }
               } catch (e) {
                 console.log("Error searching:", e);

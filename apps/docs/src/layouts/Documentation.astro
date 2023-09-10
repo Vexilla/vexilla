@@ -12,8 +12,6 @@ const currentPageSlug = Astro.url.pathname
   .replace("/documentation/", "")
   .replaceAll("/", "");
 
-console.log({ currentPageSlug });
-
 let currentPost = null;
 
 if (currentPageSlug) {
