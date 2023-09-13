@@ -2,6 +2,7 @@ use convert_case::{Case, Casing};
 use serde_json::Result;
 use std::collections::HashMap;
 
+mod example;
 mod hashing;
 mod scheduling;
 mod types;
@@ -31,14 +32,14 @@ pub struct VexillaClient {
 
 impl VexillaClient {
     pub fn new(
-        environment: &'static str,
+        environment: impl Into<&'static str>,
         base_url: &'static str,
         instance_id: &'static str,
     ) -> VexillaClient {
         VexillaClient {
             manifest: Manifest::default(),
             show_logs: false,
-            environment,
+            environment: environment.into(),
             base_url,
             instance_id,
             flag_groups: HashMap::new(),
@@ -67,11 +68,11 @@ impl VexillaClient {
         self.group_lookup_table = lookup_table;
     }
 
-    pub fn get_flags(&self, file_name: &str, fetch: Callback) -> VexillaResult<FlagGroup> {
-        let scrubbed_file_name = file_name.to_string().replace(".json", "");
+    pub fn get_flags(&self, group_name_or_id: &str, fetch: Callback) -> VexillaResult<FlagGroup> {
+        let scrubbed_group_name_or_id = group_name_or_id.to_string().replace(".json", "");
         let coerced_group_id = &self
             .group_lookup_table
-            .get(scrubbed_file_name.as_str())
+            .get(scrubbed_group_name_or_id.as_str())
             .ok_or(VexillaError::GroupLookupKeyNotFound)?;
         let url = format!("{}/{}.json", self.base_url, coerced_group_id);
         let response_text = fetch(&url);
@@ -88,43 +89,43 @@ impl VexillaClient {
         }
     }
 
-    pub fn set_flags(&mut self, group_id: &str, flags: FlagGroup) {
-        let scrubbed_file_name = group_id.to_string().replace(".json", "");
-        let coerced_group_id = &self.group_lookup_table[scrubbed_file_name.as_str()];
+    pub fn set_flags(&mut self, group_name_or_id: &str, flags: FlagGroup) {
+        let scrubbed_file_name = group_name_or_id.to_string().replace(".json", "");
+        let coerced_group_name_or_id = &self.group_lookup_table[scrubbed_file_name.as_str()];
         self.flag_groups
-            .insert(coerced_group_id.to_string(), flags.clone());
+            .insert(coerced_group_name_or_id.to_string(), flags.clone());
 
         let group_flag_table = create_feature_lookup_table(flags.clone());
         self.flag_lookup_table
-            .insert(coerced_group_id.to_string(), group_flag_table);
+            .insert(coerced_group_name_or_id.to_string(), group_flag_table);
 
         let environment_table = create_environment_lookup_table(flags);
         self.environment_lookup_table
-            .insert(coerced_group_id.to_string(), environment_table);
+            .insert(coerced_group_name_or_id.to_string(), environment_table);
     }
 
     pub fn sync_flags(
         &mut self,
-        file_name: &str,
+        group_name_or_id: &str,
         fetch: Callback,
     ) -> VexillaResult<(), VexillaError> {
-        let scrubbed_file_name = file_name.to_string().replace(".json", "");
+        let scrubbed_group_name_or_id = group_name_or_id.to_string().replace(".json", "");
         let cloned_self = self.clone();
         let group_id = cloned_self
             .group_lookup_table
-            .get(scrubbed_file_name.as_str())
+            .get(scrubbed_group_name_or_id.as_str())
             .ok_or(VexillaError::GroupLookupKeyNotFound)?;
-        let flag_group = self.get_flags(scrubbed_file_name.as_str(), fetch)?;
-        self.set_flags(group_id, flag_group);
+        let flag_group = self.get_flags(scrubbed_group_name_or_id.as_str(), fetch)?;
+        self.set_flags(group_name_or_id, flag_group);
         Ok(())
     }
 
     pub fn should(
         &self,
-        group_id: &'static str,
-        feature_name: &'static str,
+        group_name_or_id: &'static str,
+        feature_name_or_id: impl Into<&'static str>,
     ) -> VexillaResult<bool> {
-        let feature = self.get_feature(group_id, feature_name)?;
+        let feature = self.get_feature(group_name_or_id, feature_name_or_id.into())?;
 
         let is_within_schedule = is_scheduled_feature_active(feature.to_owned());
 
@@ -166,11 +167,11 @@ impl VexillaClient {
 
     pub fn should_custom_str(
         &self,
-        group_id: &str,
-        feature_name: &str,
+        group_name_or_id: &str,
+        feature_name_or_id: impl Into<&'static str>,
         custom_id: &str,
     ) -> VexillaResult<bool> {
-        let feature = self.get_feature(group_id, feature_name)?;
+        let feature = self.get_feature(group_name_or_id, feature_name_or_id.into())?;
 
         let is_within_schedule = is_scheduled_feature_active(feature.to_owned());
 
@@ -194,11 +195,11 @@ impl VexillaClient {
 
     pub fn should_custom_int(
         &self,
-        group_id: &str,
-        feature_name: &str,
+        group_name_or_id: &str,
+        feature_name_or_id: impl Into<&'static str>,
         custom_id: i64,
     ) -> VexillaResult<bool> {
-        let feature = self.get_feature(group_id, feature_name)?;
+        let feature = self.get_feature(group_name_or_id, feature_name_or_id.into())?;
 
         let is_within_schedule = is_scheduled_feature_active(feature.to_owned());
 
@@ -222,11 +223,11 @@ impl VexillaClient {
 
     pub fn should_custom_float(
         &self,
-        group_id: &str,
-        feature_name: &str,
+        group_name_or_id: &str,
+        feature_name_or_id: impl Into<&'static str>,
         custom_id: f64,
     ) -> VexillaResult<bool> {
-        let feature = self.get_feature(group_id, feature_name)?;
+        let feature = self.get_feature(group_name_or_id, feature_name_or_id.into())?;
 
         let is_within_schedule = is_scheduled_feature_active(feature.to_owned());
 
@@ -250,11 +251,11 @@ impl VexillaClient {
 
     pub fn value_str(
         &self,
-        group_id: &str,
-        feature_name: &str,
+        group_name_or_id: &str,
+        feature_name_or_id: impl Into<&'static str>,
         default: &'static str,
     ) -> VexillaResult<String> {
-        let feature = self.get_feature(group_id, feature_name)?;
+        let feature = self.get_feature(group_name_or_id, feature_name_or_id.into())?;
         let is_within_schedule = is_scheduled_feature_active(feature.to_owned());
 
         match (feature.clone(), is_within_schedule) {
@@ -273,11 +274,11 @@ impl VexillaClient {
 
     pub fn value_int(
         &self,
-        group_id: &str,
-        feature_name: &str,
+        group_name_or_id: &str,
+        feature_name_or_id: impl Into<&'static str>,
         default: i64,
     ) -> VexillaResult<i64> {
-        let feature = self.get_feature(group_id, feature_name)?;
+        let feature = self.get_feature(group_name_or_id, feature_name_or_id.into())?;
 
         let is_within_schedule = is_scheduled_feature_active(feature.to_owned());
 
@@ -297,11 +298,11 @@ impl VexillaClient {
 
     pub fn value_float(
         &self,
-        group_id: &str,
-        feature_name: &str,
+        group_name_or_id: &str,
+        feature_name_or_id: impl Into<&'static str>,
         default: f64,
     ) -> VexillaResult<f64> {
-        let feature = self.get_feature(group_id, feature_name)?;
+        let feature = self.get_feature(group_name_or_id, feature_name_or_id.into())?;
 
         let is_within_schedule = is_scheduled_feature_active(feature.to_owned());
 
@@ -325,8 +326,12 @@ impl VexillaClient {
         hash_value(self.instance_id, seed)
     }
 
-    fn get_feature(&self, group_id: &str, feature_name: &str) -> VexillaResult<Feature> {
-        let ids = self.get_real_ids(group_id, feature_name)?;
+    fn get_feature(
+        &self,
+        group_name_or_id: &str,
+        feature_name_or_id: impl Into<&'static str>,
+    ) -> VexillaResult<Feature> {
+        let ids = self.get_real_ids(group_name_or_id, feature_name_or_id.into())?;
 
         let group = &self
             .flag_groups
@@ -346,10 +351,14 @@ impl VexillaClient {
         Ok(feature.clone())
     }
 
-    fn get_real_ids(&self, group_id: &str, feature_name: &str) -> VexillaResult<RealIds> {
+    fn get_real_ids(
+        &self,
+        group_name_or_id: &str,
+        feature_name_or_id: &str,
+    ) -> VexillaResult<RealIds> {
         let real_group_id = self
             .group_lookup_table
-            .get(group_id)
+            .get(group_name_or_id)
             .ok_or(VexillaError::GroupLookupKeyNotFound)?
             .to_string();
 
@@ -357,7 +366,7 @@ impl VexillaClient {
             .flag_lookup_table
             .get(&real_group_id)
             .ok_or(VexillaError::GroupLookupKeyNotFound)?
-            .get(feature_name)
+            .get(feature_name_or_id)
             .ok_or(VexillaError::FlagLookupKeyNotFound)?
             .to_string();
 
@@ -580,7 +589,9 @@ mod tests {
         let value_str = client.value_str("Value", "String", "bar").unwrap();
         assert!(value_str == "foo");
 
-        let value_int = client.value_int("Value", "Integer", 21).unwrap();
+        let value_int = client
+            .value_int(example::Value::Name, example::Value::Features::Integer, 21)
+            .unwrap();
         assert!(value_int == 42);
 
         let value_float = client.value_float("Value", "Float", 21.21).unwrap();

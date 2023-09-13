@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs-extra";
 import axios from "axios";
-import { VexillaFlags } from "@vexilla/client";
+import { PublishedGroup, VexillaFlags, VexillaManifest } from "@vexilla/types";
 
 import { transformConstants } from "./transform";
 
@@ -9,28 +9,28 @@ export async function outputTypes(
   inputUrl: string,
   outputPath: string,
   targetLanguage: string,
-  typePrefix = ""
+  typePrefix = "",
+  typeSuffix = ""
 ) {
-  const response = await axios.get<VexillaFlags>(inputUrl);
+  const response = await axios.get<VexillaManifest>(
+    `${inputUrl}/manifest.json`
+  );
 
-  const flagsJson = response.data;
+  const manifest = response.data;
 
-  const tagsSet = new Set<string>();
-  const keysSet = new Set<string>();
+  const groups = await Promise.all(
+    manifest.groups.map(async ({ groupId }) => {
+      const response = await axios.get(`${inputUrl}/${groupId}.json`);
+      return response.data as PublishedGroup;
+    })
+  );
 
-  Object.values(flagsJson.environments).forEach((environment) => {
-    Object.entries(environment).forEach(([tag, featureSet]) => {
-      tagsSet.add(tag);
-      Object.keys(featureSet).forEach((key) => {
-        keysSet.add(key);
-      });
-    });
-  });
-
-  const tags = Array.from(tagsSet);
-  const keys = Array.from(keysSet);
-
-  const result = transformConstants(targetLanguage, tags, keys);
+  const result = transformConstants(
+    targetLanguage,
+    groups,
+    typePrefix,
+    typeSuffix
+  );
 
   fs.outputFileSync(path.resolve(process.cwd(), outputPath), result);
 }

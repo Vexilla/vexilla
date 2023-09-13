@@ -182,5 +182,5 @@ export interface ManifestGroup {
 
 export interface VexillaManifest {
   version: string;
-  groups: Record<string, ManifestGroup>;
+  groups: ManifestGroup[];
 }

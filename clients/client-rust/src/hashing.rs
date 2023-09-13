@@ -13,11 +13,6 @@ mod tests {
 
     use super::*;
 
-    // #[test]
-    // fn client_works() {
-
-    // }
-
     #[test]
     fn hashing_works() {
         let user_id = "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a";

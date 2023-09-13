@@ -45,29 +45,27 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Vexilla/cli.git"
+    "url": "git+https://github.com/Vexilla/vexilla.git"
   },
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Vexilla/cli/issues"
+    "url": "https://github.com/Vexilla/vexilla/issues"
   },
-  "homepage": "https://github.com/Vexilla/cli#readme",
+  "homepage": "https://github.com/Vexilla/vexilla#readme",
   "dependencies": {
-    "@types/axios": "^0.14.0",
     "axios": "^0.27.2",
     "case": "^1.6.3",
     "fs-extra": "^10.1.0",
-    "quicktype-core": "^6.0.71",
+    "mustache": "^4.2.0",
     "yargs": "^17.5.1"
   },
   "devDependencies": {
     "@changesets/cli": "^2.21.0",
+    "@types/axios": "^0.14.0",
     "@types/fs-extra": "^9.0.13",
     "@types/node": "^18.7.18",
-    "@types/readable-stream": "^2.3.14",
-    "@types/urijs": "^1.19.19",
-    "@vexilla/client": "^0.0.17",
+    "@types/yargs": "^17.0.24",
     "npm-run-all": "^4.1.5",
     "pkg": "^5.8.0",
     "ts-node": "^10.9.1",
