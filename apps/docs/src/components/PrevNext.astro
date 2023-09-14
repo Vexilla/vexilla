@@ -21,7 +21,7 @@ const nextPage = collectionPages[currentPageIndex + 1];
           class="flex p-4 no-underline items-center justify-start border border-slate-300 rounded-xl shadow"
           href={`/${collection}/${previousPage.slug}`}
         >
-          <Icon client:only icon={roundDoubleAltArrowLeftLinear} width={48} className="block w-[48px] min-w-[48px]" />
+          <Icon icon={roundDoubleAltArrowLeftLinear} width={48} className="block w-[48px] min-w-[48px]" />
           <div class="pl-2 truncate">
             <div class="text-base">Previous <span class="sr-only">Post</span></div>
             <div class="text-2xl font-bold truncate">
@@ -45,7 +45,7 @@ const nextPage = collectionPages[currentPageIndex + 1];
               {nextPage.data.title}
             </div>
           </div>
-          <Icon client:only icon={roundDoubleAltArrowRightLinear} width={48} className="w-[48px]  min-w-[48px]" />
+          <Icon icon={roundDoubleAltArrowRightLinear} width={48} className="w-[48px]  min-w-[48px]" />
         </a>
       )
     }

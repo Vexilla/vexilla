@@ -4,7 +4,7 @@ import { ViewTransitions } from "astro:transitions";
 import ResponsiveContainer from "@/components/ResponsiveContainer.astro";
 import { ThemeSelector } from "@/components/ThemeSelector";
 import { Search } from "@/components/Search";
-import { buttonVariants } from "@/components/ui/button";
+import { DISCORD_INVITE_LINK } from "@/utils/constants";
 
 import '@fontsource/fira-code';
 import '@fontsource/atkinson-hyperlegible/400.css';
@@ -55,6 +55,7 @@ const isDocumentation = Astro.url.pathname.startsWith("/documentation");
         right: 0;
       }
     </style>
+    <script defer data-domain="vexilla.dev" src="https://plausible.io/js/script.js"></script>
   </head>
   <body class="flex flex-col min-h-screen relative">
     <input type="checkbox" id="mobile-menu-toggle" class="sr-only" />
@@ -187,6 +188,11 @@ const isDocumentation = Astro.url.pathname.startsWith("/documentation");
 
     <footer class="mt-auto">
       <ResponsiveContainer>
+        <div class="flex items-center justify-center p-16">
+          <a href={DISCORD_INVITE_LINK} target="_blank">
+            Discord
+          </a>
+        </div>
         <div class="flex items-center justify-center p-16">
           &copy; 2023 Vexilla
         </div>
