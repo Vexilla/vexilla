@@ -54,35 +54,39 @@ const isDocumentation = Astro.url.pathname.startsWith("/documentation");
       #mobile-menu-toggle:checked ~ .mobile-menu {
         right: 0;
       }
+
+      :root {
+        --primary: #257ddd;
+      }
     </style>
     <script defer data-domain="vexilla.dev" src="https://plausible.io/js/script.js"></script>
   </head>
   <body class="flex flex-col min-h-screen relative">
     <input type="checkbox" id="mobile-menu-toggle" class="sr-only" />
     <div class="mobile-menu w-screen h-screen fixed right-full bg-white dark:bg-black z-20 flex flex-col justify-between">
-      <ResponsiveContainer class="flex flex-col items-center">
-        <div class="flex justify-between items-center px-6 py-2 w-full mb-8">
+      <ResponsiveContainer class="flex flex-col items-center relative">
+        <div class="fixed top-0 flex justify-between items-center px-6 py-2 w-full mb-8 bg-white dark:bg-black z-10">
 
           <a class="flex items-center" href="/">
-          <img
-            class="h-[36px] w-[36px] mr-2"
-            src="/img/vexilla-logo.png"
-          />
-          <span class="m-0 font-display text-4xl">Vexilla</span>
-        </a>
+            <img
+              class="h-[36px] w-[36px] mr-2"
+              src="/img/vexilla-logo.png"
+            />
+            <span class="m-0 font-display text-4xl">Vexilla</span>
+          </a>
 
-        <label for="mobile-menu-toggle">
-          <Icon
-            width={32}
-            icon={closeSquareOutline}
-          />
-        </label>
-      </div>
-      <Search client:only />
+          <label for="mobile-menu-toggle">
+            <Icon
+              width={32}
+              icon={closeSquareOutline}
+            />
+          </label>
+        </div>
       </ResponsiveContainer>
 
 
-      <ResponsiveContainer class="px-6 py-2 text-center text-xl">
+      <ResponsiveContainer class="px-6 py-2 text-center text-xl pt-20 h-screen overflow-scroll">
+        <Search client:only />
         <ul class="flex flex-col py-8 gap-8">
           <li>
             <a

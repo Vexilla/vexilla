@@ -12,19 +12,18 @@ export function HomeFeatureFlags() {
           <p className="leading-relaxed text-base">
             Many popular applications use feature flags to roll out and test new
             functionality without having to redeploy the app and its assets.
-            Learn more about why feature flags are so useful at featureflags.io
-            or Wikipedia.
+            Learn more about why feature flags are so useful in our
+            documentation or Wikipedia.
           </p>
           <div className="flex md:mt-4 mt-6">
             <a
-              className="inline-flex text-white bg-indigo-500 border-0 py-1 px-4 focus:outline-none hover:bg-indigo-600 rounded"
-              href="https://featureflags.io"
-              target="_blank"
+              className="inline-flex text-white bg-primary-500 border-0 py-1 px-4 focus:outline-none hover:bg-primary-600 rounded"
+              href="/documentation/core-concepts"
             >
-              featureflags.io
+              Core Concepts
             </a>
             <a
-              className="text-indigo-500 dark:text-indigo-300 inline-flex items-center ml-4"
+              className="text-primary-500 dark:text-primary-300 inline-flex items-center ml-4"
               href="https://en.wikipedia.org/wiki/Feature_toggle"
               target="_blank"
             >

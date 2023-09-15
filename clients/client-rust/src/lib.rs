@@ -111,11 +111,11 @@ impl VexillaClient {
     ) -> VexillaResult<(), VexillaError> {
         let scrubbed_group_name_or_id = group_name_or_id.to_string().replace(".json", "");
         let cloned_self = self.clone();
-        let group_id = cloned_self
+        let coerced_group_id = cloned_self
             .group_lookup_table
             .get(scrubbed_group_name_or_id.as_str())
             .ok_or(VexillaError::GroupLookupKeyNotFound)?;
-        let flag_group = self.get_flags(scrubbed_group_name_or_id.as_str(), fetch)?;
+        let flag_group = self.get_flags(coerced_group_id.as_str(), fetch)?;
         self.set_flags(group_name_or_id, flag_group);
         Ok(())
     }

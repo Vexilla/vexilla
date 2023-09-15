@@ -4,32 +4,29 @@ export function HomeHero() {
       <div className="container mx-auto flex px-5 py-24 md:flex-row flex-col items-center">
         <div className="lg:flex-grow md:w-1/2 lg:pr-24 md:pr-16 flex flex-col md:items-start md:text-left mb-16 md:mb-0 items-center text-center">
           <h1 className="title-font sm:text-4xl text-3xl mb-4 font-medium text-emphasis">
-            Flip the switch
-            <br className="hidden lg:inline-block" />
-            No redeploy necessary
+            Feature Flags for Everyone
           </h1>
           <p className="mb-8 leading-relaxed">
-            You have features and you need to turn them off and on at a moment's
-            notice without having to redeploy your application. Let Vexilla be
-            the catalyst for change that you can confidently lean on.
+            Many services are just too expensive. Self-hosting is an option, but
+            that can get expensive, too. Vexilla allows publishing flags as a
+            static file wherever you want.
           </p>
-          <div className="flex justify-center">
+          <div className="flex flex-row md:flex-col xl:flex-row justify-center gap-4">
             <a
-              className="inline-flex text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded text-lg"
-              href="/app"
+              href="/documentation/getting-started"
+              className="inline-flex text-gray-700 bg-gray-100 border-0 py-2 px-6 focus:outline-none hover:bg-gray-200 rounded text-lg"
+            >
+              Getting Started
+            </a>
+            <a
+              className="inline-flex text-white bg-primary-500 border-0 py-2 px-6 focus:outline-none hover:bg-primary-600 rounded text-lg"
+              href="https://app.vexilla.dev"
             >
               Launch the App
             </a>
-
-            <a
-              href="/documentation"
-              className="ml-4 inline-flex text-gray-700 bg-gray-100 border-0 py-2 px-6 focus:outline-none hover:bg-gray-200 rounded text-lg"
-            >
-              Read the Documentation
-            </a>
           </div>
         </div>
-        <div className="lg:max-w-lg lg:w-full md:w-1/2 w-5/6">
+        <div className="xl:max-w-xl 2xl:w-full hidden md:flex md:w-1/2">
           <img
             className="object-cover object-center rounded"
             alt="hero"

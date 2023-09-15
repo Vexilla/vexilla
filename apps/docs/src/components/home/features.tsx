@@ -77,7 +77,7 @@ export function HomeFeatures() {
             allows you to do more with less.
           </p>
           <div className="flex mt-6 justify-center">
-            <div className="w-16 h-1 rounded-full bg-indigo-500 inline-flex"></div>
+            <div className="w-16 h-1 rounded-full bg-primary-500 inline-flex"></div>
           </div>
         </div>
         <div className="flex flex-wrap sm:-m-4 -mx-4 -mb-10 -mt-4 md:space-y-0 space-y-6">
@@ -86,7 +86,7 @@ export function HomeFeatures() {
               className="p-4 md:w-1/3 flex flex-col text-center items-center"
               key={feature.title}
             >
-              <div className="w-20 h-20 inline-flex items-center justify-center rounded-full bg-indigo-100 text-indigo-500 mb-5 flex-shrink-0">
+              <div className="w-20 h-20 inline-flex items-center justify-center rounded-full bg-slate-100 text-primary-500 mb-5 flex-shrink-0">
                 {feature.image}
               </div>
               <div className="flex-grow">
