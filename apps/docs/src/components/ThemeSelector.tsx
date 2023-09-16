@@ -31,11 +31,11 @@ export function ThemeSelector() {
   }, [theme]);
 
   return (
-    <div className="py-1 p-2 rounded-full bg-slate-300 gap-2 flex flex-row w-24">
+    <div className="py-1 p-2 rounded-full bg-slate-300 gap-1 flex flex-row w-18 h-8">
       <Button
         title="Set Light Mode"
         variant="ghost"
-        className={clsx("rounded-full", {
+        className={clsx("flex rounded-full h-6 w-6 min-w-[1.5rem]", {
           "bg-slate-700": theme === "light",
           "text-white": theme === "light",
           "text-black": theme === "dark",
@@ -45,7 +45,7 @@ export function ThemeSelector() {
           setTheme("light");
         }}
       >
-        <Icon icon={sun2Bold} width={24} />
+        <Icon icon={sun2Bold} width={16} />
         <span className="sr-only">Set Light Mode</span>
       </Button>
 
@@ -53,7 +53,7 @@ export function ThemeSelector() {
         title="Set Dark Mode"
         variant="ghost"
         size="icon"
-        className={clsx("rounded-full", {
+        className={clsx("flex rounded-full h-6 w-6 min-w-[1.5rem]", {
           "bg-slate-700": theme === "dark",
           "text-black": theme === "light",
         })}
@@ -61,7 +61,7 @@ export function ThemeSelector() {
           setTheme("dark");
         }}
       >
-        <Icon icon={moonBold} width={24} />
+        <Icon icon={moonBold} width={16} />
         <span className="sr-only">Set Dark Mode</span>
       </Button>
     </div>
