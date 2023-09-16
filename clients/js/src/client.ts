@@ -50,7 +50,7 @@ export class VexillaClient {
       return fetchHook(`${this.baseUrl}/manifest.json`);
     } catch (e: any) {
       this.warn("Error: failed to fetch manifest", e);
-      return { version: "v0", groups: {} };
+      return { version: "v0", groups: [] };
     }
   }
 

@@ -5,10 +5,10 @@ import {
 } from "@vexilla/types";
 import Case from "case";
 
-export function createGroupLookupTable(groups: Record<string, ManifestGroup>) {
+export function createGroupLookupTable(groups: ManifestGroup[]) {
   const lookupTable: Record<string, string> = {};
 
-  Object.values(groups).forEach(({ name, groupId }) => {
+  groups.forEach(({ name, groupId }) => {
     lookupTable[groupId] = groupId;
     lookupTable[name] = groupId;
     lookupTable[Case.kebab(name)] = groupId;

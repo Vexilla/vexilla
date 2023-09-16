@@ -26,6 +26,9 @@
   - `clients/js/src/test_scheduling.ts`
 - [ ] Include integration tests that consume the fixture data in `packages/test-server`. Example integration tests can be found in the JS/TS client:
   - `clients/js/src/test_client.ts`
+- [ ] Add support for CLI tool in `packages/cli`
+  - [ ] Template in `packages/cli/src/templates.ts`
+  - [ ] Transformer in `packages/cli/src/transform.ts`
 
 ## [optional] Related Tickets & Documents
 

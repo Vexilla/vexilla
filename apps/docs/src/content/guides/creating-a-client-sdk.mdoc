@@ -3,4 +3,59 @@ title: Creating a Client SDK
 sortOrder: 1
 ---
 
-Testing?
+We want to support as many use-cases as possible with out client SDKs. We believe this will be one of the big differentiators between Vexilla and other feature flag tools. However, it is a lot to do ourselves. If you want to create an SDK for a language we don't support yet, this guide will help you do that.
+
+## Primary Example
+
+Depending on the kind of language you are implementing for, the process will feel a bit different. Dynamic languages will likely follow the patterns in the [JS/TS SDK](https://github.com/Vexilla/vexilla/tree/main/clients/js). Strictly-typed languages will probably want to follow the patterns in the [Rust SDK](https://github.com/Vexilla/vexilla/tree/main/clients/rust).
+
+## Lookup tables
+
+Your client should maintain lookup tables that allow consumers to use the name or ID value without changing any functionality. If using the CLI to generate types, your users will likely pass ID values obfsucated behind contants or enums.
+
+## Constructor
+
+The constructor needs to take in a few arguments to set up the rest of the functionality.
+
+- config: This contains the main configuration values.
+  - baseUrl: string: The URL where your flags live without a file path. The file path will be appended internally when fetching the manifest and flags.
+  - environment: string: This corresponds to the environment you want to use to determine flag functionality. Can be the name value or environmentId value.
+  - customInstanceHash: string: The default value you would like to use for gradual flags. It will often be a userId value but that is left up to the consumer of the SDK.
+- suppressLogs: boolean: You may want to log or warn about various things during usage of the client SDK. A consumer of the SDK should be able to disable this.
+
+## Methods
+
+The implementation of these methods will depend on the specific language. Some languages will allow overloading and dynamic typing more than others. e.g.: In the case of Rust, there are multiple `should` variations to support different data types.
+
+- `should`: This is the main function consumers of your SDK will be using. It will handle Toggle, Gradual and Selective flag types. It returns a boolean value.
+- `value`: This method is specifically for consuming Value flag types. The return value will depend on the Value flags type. Strings, Integers, and Floats are currently supported.
+
+### Manifest
+- `getManifest`: Fetches the manifest file. It only returns the contents.
+- `setManifest`: Sets a manifest in the client based on the fetched manifest values and creates the Group lookup table.
+- `syncManifest`: Performs both getManifest and setManifest as a convenience method.
+
+### Flags
+- `getFlags`: Fetches a flag group. Only returns the contents.
+- `setFlags`: Sets a flagGroup based on a getFlags result and creates the lookup tables for Environments and Features.
+- `syncFlags`: Performs both getFlags and setFlags as a convenience method.
+
+## Testing
+
+Your client SDK should make sure to test some of the core functions such as the hasing algorithm for string values. It will also need to test the scheduling functionality because time is fickle.
+
+## CLI
+
+Last but not least, we have a CLI tool. The main purpose of the tool for now will be to generate constants or enums so that consumers are not using "magic strings" everywhere.
+
+If you are not proficient in TypeScript, we can help you out with that part.
+
+You will need to edit the CLI tool in `packages/cli` for two specific things.
+
+First is the template in `packages/cli/src/templates.ts`. It takes in data from the transform function and outputs idiomatic code in a place of the user's choosing.
+
+Secondly, you will need to add a transform function that generates the values passed to the template. Make sure to use `Case` to give variable names the proper casing for the language you are building the SDK for.
+
+## Pull Request
+
+When you have finished all of that, you are ready to make a [Pull Request](https://github.com/Vexilla/vexilla/compare/main?quick_pull=1&template=sdk.md) on the Vexilla repo.
