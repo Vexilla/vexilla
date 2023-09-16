@@ -1,6 +1,8 @@
 ---
 import clsx from "clsx";
+import { getCollection } from "astro:content";
 import { ViewTransitions } from "astro:transitions";
+
 import ResponsiveContainer from "@/components/ResponsiveContainer.astro";
 import { ThemeSelector } from "@/components/ThemeSelector";
 import { Search } from "@/components/Search";
@@ -14,6 +16,7 @@ import "@/styles/globals.css";
 import { Icon } from '@iconify/react';
 import hamburgerMenuOutline from '@iconify/icons-solar/hamburger-menu-outline';
 import closeSquareOutline from '@iconify/icons-solar/close-square-outline';
+import type { Heading } from "@/types/docs";
 
 interface Props {
   title: string;
@@ -24,6 +27,64 @@ const { title } = Astro.props;
 const isBlog = Astro.url.pathname.startsWith("/blog");
 const isDocumentation = Astro.url.pathname.startsWith("/documentation");
 const isGuide = Astro.url.pathname.startsWith("/guides");
+
+
+const rawDocumentationPages = await getCollection("documentation");
+
+const globbedDocumentationPages = await Astro.glob(
+  "../content/documentation/*.mdoc"
+);
+
+const documentationPages = await Promise.all(
+  rawDocumentationPages.map(async (page, index) => {
+    const globbedPage = globbedDocumentationPages[index];
+
+    const newPage = {
+      ...page,
+    } as Record<string, any>;
+
+    if (typeof globbedPage?.getHeadings === "function") {
+      newPage.headings = ((await globbedPage?.getHeadings()).filter(
+        (heading: Heading) => heading.depth === 2
+      ) || []) as Heading[];
+    }
+
+    return newPage;
+  })
+);
+
+documentationPages.sort((a, b) => {
+  return (a.data.sortOrder || 0) - (b.data.sortOrder || 0);
+});
+
+const rawGuidePages = await getCollection("guides");
+
+const globbedGuidePages = await Astro.glob(
+  "../content/guides/*.mdoc"
+);
+
+const guidePages = await Promise.all(
+  rawGuidePages.map(async (page, index) => {
+    const globbedPage = globbedGuidePages[index];
+
+    const newPage = {
+      ...page,
+    } as Record<string, any>;
+
+    if (typeof globbedPage?.getHeadings === "function") {
+      newPage.headings = ((await globbedPage?.getHeadings()).filter(
+        (heading: Heading) => heading.depth === 2
+      ) || []) as Heading[];
+    }
+
+    return newPage;
+  })
+);
+
+guidePages.sort((a, b) => {
+  return (a.data.sortOrder || 0) - (b.data.sortOrder || 0);
+});
+
 ---
 
 <!DOCTYPE html>
@@ -202,13 +263,73 @@ const isGuide = Astro.url.pathname.startsWith("/guides");
       <slot />
     </ResponsiveContainer>
 
-    <footer class="mt-auto">
+    <footer class="mt-auto bg-primary-50">
       <ResponsiveContainer>
-        <div class="flex items-center justify-center p-16">
-          <a href={DISCORD_INVITE_LINK} target="_blank">
-            Discord
-          </a>
+        <!-- <div class="flex items-center justify-center p-16">
+
+        </div> -->
+
+        <div class="flex flex-row items-start pt-8 gap-16 justify-center">
+          <div>
+            <div>
+              <a class="font-bold" href="/documentation">
+                Documentation
+              </a>
+            </div>
+            <ul class="">
+              {documentationPages.map((page) =>
+                <li>
+                  <a href={`/documentation/${page.slug}`}>{page.data.title}</a>
+                </li>
+              )}
+            </ul>
+          </div>
+          <div>
+            <div>
+              <a class="font-bold" href="/documentation">
+                Guides
+              </a>
+            </div>
+            <ul class="">
+              {guidePages.map((page) =>
+                <li>
+                  <a href={`/guides/${page.slug}`}>{page.data.title}</a>
+                </li>
+              )}
+            </ul>
+          </div>
+          <div>
+            <div class="font-bold">
+              Business
+            </div>
+            <ul class="">
+              <li>
+                <a href="/blog">Blog</a>
+              </li>
+              <li>
+                <a href="/about">About</a>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <div class="font-bold">
+              Social
+            </div>
+            <ul class="">
+              <li>
+                <a href="https://github.com/Vexilla">GitHub</a>
+              </li>
+              <li>
+                <a href={DISCORD_INVITE_LINK} target="_blank">
+                  Discord
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
+
+
         <div class="flex items-center justify-center p-16">
           &copy; 2023 Vexilla
         </div>
