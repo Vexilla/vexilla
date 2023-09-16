@@ -17,34 +17,34 @@ function ListNumber({ children }: PropsWithChildren<{}>) {
 interface StepContent {
   title: string;
   description: string;
-  image: IconifyIcon;
+  image: any;
 }
 
 const steps: StepContent[] = [
   {
     title: "Configure your settings",
     description: "Using the app create your environments and features.",
-    image: settingsLinear,
+    image: <Icon className="w-12 h-12" icon={settingsLinear} />,
   },
 
   {
     title: "Import a client",
     description: "Choose the client library that applies to your backend.",
-    image: importOutline,
+    image: <Icon className="w-12 h-12" icon={importOutline} />,
   },
 
   {
     title: "Wrap your feature",
     description:
       "Using the client library in your frontend and/or backend, write if statements that decide what to do.",
-    image: boxLinear,
+    image: <Icon className="w-12 h-12" icon={boxLinear} />,
   },
 
   {
     title: "Profit!",
     description:
       "You now have a feature flag. Wire it up to analytics and you basically have A/B testing.",
-    image: moneyBagOutline,
+    image: <Icon className="w-12 h-12" icon={moneyBagOutline} />,
   },
 ];
 
@@ -63,7 +63,8 @@ export function HomeHowItWorks() {
             <ListNumber>{index + 1}</ListNumber>
             <div className="flex-grow md:pl-8 pl-6 flex sm:items-center items-start flex-col sm:flex-row">
               <div className="flex-shrink-0 w-24 h-24 bg-slate-100 text-primary-500 rounded-full inline-flex items-center justify-center">
-                <Icon className="w-12 h-12" icon={step.image} />
+                {/* <Icon className="w-12 h-12" icon={step.image} /> */}
+                {step.image}
               </div>
               <div className="flex-grow sm:pl-6 mt-6 sm:mt-0">
                 <h2 className="font-medium title-font text-emphasis mb-1 text-xl">
