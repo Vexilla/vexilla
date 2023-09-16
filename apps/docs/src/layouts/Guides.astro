@@ -3,22 +3,20 @@ import { getCollection, getEntry } from "astro:content";
 import CommonDocumentationLayout from "@/layouts/CommonDocumentation.astro";
 import type { Heading } from "@/types/docs";
 
-
-
 const currentPageSlug = Astro.url.pathname
-  .replace(`/documentation/`, "")
+  .replace(`/guides/`, "")
   .replaceAll("/", "");
 
 let currentPost = null;
 
 if (currentPageSlug) {
-  currentPost = await getEntry("documentation", currentPageSlug) as Record<string, any>;
+  currentPost = await getEntry("guides", currentPageSlug) as Record<string, any>;
 }
 
-const rawDocumentationPages = await getCollection("documentation");
+const rawDocumentationPages = await getCollection("guides");
 
 const globbedDocumentationPages = await Astro.glob(
-  "../content/documentation/*.mdoc"
+  "../content/guides/*.mdoc"
 );
 
 const documentationPages = await Promise.all(

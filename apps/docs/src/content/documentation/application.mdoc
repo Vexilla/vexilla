@@ -1,0 +1,46 @@
+---
+title: Application
+sortOrder: 3
+---
+
+The Application is where you will configure your flags and push them up to your VCS provider.
+
+## Configuration
+
+The first part of using the app is configuring your VCS setup. This will involve selecting a VCS provider as well as logging in via OAuth to that provider to grant the app access to make PRs on your behalf.
+
+SCREENSHOT HERE
+
+## Groups
+
+Groups are used to split your JSON payloads. This is useful to be able to have different fetch intervals while keeping bandwidth costs low. Each Group has its own set of environments and feature flags. You can have as many Groups as you want.
+
+## Environments
+
+You can have as many environments per group as you like. When adding an Environment, you can set default values for flag types when you create new flags.
+
+## Feature Flags
+
+After you have added Groups and Environments, you are ready to start adding flags to groups. Again, you can have as many as you want. Flags have several types that you can use to do various things within your applications.
+
+### Toggle Flags
+
+The most common kind of flag you will likely use is a Toggle flag. It just evaluates to a boolean based on environment.
+
+### Gradual Flags
+
+Gradual flags allow you to release a feature for a subset of your users. It will hash any string value you want to pass it. This will typically be your user's ID. When creating a Gradual flag, you will set a threshold and seed value. The threshold is used for determining what percentage of your users should see a flag. In many cases, you will need several hundred users to get an even distribution. The Seed value is how you can keep the same threshold but target a different subset of users.
+
+### Selective
+
+Selective flags are useful for releasing out to specific users or groups of users. You simply add values to a list per environment and then at flag check time, you will pass a value to look for in that list. This can be useful for releasing out to Beta users or possibly specific user groups or clients.
+
+### Value
+
+A Value flag is a bit different from the others. It can be used for things like billing or pricing. You could even use it for text or copy changes. Billing is an especially useful feature for mobile apps because you can simply create the "Product" within the app stores and update the Value in Vexilla remotely, meaning that users don't even need to update their app to consume a billing change.
+
+## Publishing
+
+If you have not published any flags yet, the publish will be fairly simple. You just approve your changes and click publish. This will create a Pull Request in your VCS provider. From there, your CI/CD should upload the JSON files to wherever you want them hosted. We plan on providing some integration tools to make this easier.
+
+If you have already published before, you must pull in and approve or deny changes from your VCS provider. This can happen if multiple people have been editing the configuration and flags because your changes are only kept in local storage.

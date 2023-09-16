@@ -23,6 +23,7 @@ const { title } = Astro.props;
 
 const isBlog = Astro.url.pathname.startsWith("/blog");
 const isDocumentation = Astro.url.pathname.startsWith("/documentation");
+const isGuide = Astro.url.pathname.startsWith("/guides");
 ---
 
 <!DOCTYPE html>
@@ -150,7 +151,7 @@ const isDocumentation = Astro.url.pathname.startsWith("/documentation");
             <span class="m-0 font-display text-4xl">Vexilla</span>
           </a>
 
-          <div class="items-center hidden lg:flex gap-8">
+          <div class="items-center hidden md:flex gap-8">
             <a
               href="/documentation"
               class={clsx({
@@ -159,6 +160,16 @@ const isDocumentation = Astro.url.pathname.startsWith("/documentation");
             >
               Documentation
             </a>
+
+            <a
+              href="/guides"
+              class={clsx({
+                "font-bold": isGuide,
+              })}
+            >
+              Guides
+            </a>
+
             <a
               href="/blog"
               class={clsx({
@@ -167,13 +178,14 @@ const isDocumentation = Astro.url.pathname.startsWith("/documentation");
             >
               Blog
             </a>
+
           </div>
         </div>
-        <div class="hidden lg:flex items-center gap-8">
+        <div class="hidden md:flex items-center gap-8">
           <Search client:only />
           <ThemeSelector client:only />
         </div>
-        <div class=" lg:hidden">
+        <div class="md:hidden">
           <label
             for="mobile-menu-toggle"
           >

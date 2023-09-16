@@ -1,0 +1,130 @@
+---
+import PrevNext from "@/components/PrevNext.astro";
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  documentationPages: Record<string, any>[];
+  currentPageSlug: string;
+  currentPost: Record<string, any> | null;
+}
+
+const { documentationPages, currentPost, currentPageSlug } = Astro.props;
+
+---
+
+<div class="flex flex-row">
+  <div class="w-[15rem] p-2 pr-8 relative hidden lg:block pt-10">
+    <div class="sticky top-16 max-h-[calc(100vh-4rem)] overflow-scroll">
+      <ul>
+        {
+          documentationPages.map((page) => (
+            <li class="pb-4">
+              <a class="font-bold" href={`/documentation/${page.slug}`}>
+                {page.data.title}
+              </a>
+
+              <ul class="pl-2 headings">
+                {page.headings.map((heading: Heading) => (
+                  <li data-slug={heading.slug} class="truncate">
+                    <a
+                      href={`/documentation/${page.slug}#${heading.slug}`}
+                      title={heading.text}
+                    >
+                      {heading.text}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+  <div class="flex-auto main-content pt-10 pb-10 px-4 w-screen md:w-full" data-pagefind-body>
+    <div class="prose lg:prose-xl dark:prose-invert mx-auto xl:w-auto">
+      {!!currentPost?.data.title && <h1>{currentPost?.data.title}</h1>}
+      <slot />
+      {
+        !!currentPost && (
+          <PrevNext
+            data-pagefind-ignore
+            collectionPages={documentationPages}
+            currentPageSlug={currentPageSlug}
+            collection="documentation"
+          />
+        )
+      }
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+
+const toggledClass = "font-bold";
+let scrollHandler = undefined;
+const OFFSET_ADJUSTMENT = 120;
+
+document.addEventListener("astro:page-load", () => {
+  const pageHeadings = Array.from(
+    document.querySelectorAll(".main-content h2")
+  ).map((heading) => {
+    return {
+      slug: heading.getAttribute("data-slug"),
+      offset: window.scrollY + heading.getBoundingClientRect().top,
+    };
+  });
+
+  const menuHeadings = Array.from(
+    document.querySelectorAll(".headings li")
+  ).reverse();
+
+  if (scrollHandler) {
+    window.removeEventListener("scroll", scrollHandler, { passive: true })
+  }
+
+  scrollHandler = function (scrollEvent) {
+    let currentHeading = null;
+
+    menuHeadings.forEach((menuHeading) => {
+
+      const pageHeadingForMenuHeading = pageHeadings.find(
+        (pageHeading) => pageHeading.slug === menuHeading.getAttribute("data-slug")
+      );
+
+      if (!pageHeadingForMenuHeading) {
+        return;
+      }
+
+      menuHeading.classList.remove(toggledClass);
+
+      if (
+        window.scrollY >=
+        pageHeadingForMenuHeading.offset - OFFSET_ADJUSTMENT &&
+        !currentHeading
+      ) {
+        currentHeading = menuHeading;
+      }
+    });
+
+    if (currentHeading) {
+      currentHeading.classList.add(toggledClass);
+    }
+  };
+
+  scrollHandler();
+
+  window.addEventListener(
+    "scroll",
+    scrollHandler,
+    {
+      passive: true,
+    }
+  );
+});
+</script>

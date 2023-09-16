@@ -1,18 +1,15 @@
 ---
 import Layout from "@/layouts/Layout.astro";
-import Documentation from "@/layouts/Documentation.astro";
+import Guides from "@/layouts/Guides.astro";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 
 import { Icon } from "@iconify/react";
 import roundDoubleAltArrowRightLinear from "@iconify/icons-solar/round-double-alt-arrow-right-linear";
-import documentAddBold from '@iconify/icons-solar/document-add-bold';
-import rocket2Bold from '@iconify/icons-solar/rocket-2-bold';
-import windowFrameBold from '@iconify/icons-solar/window-frame-bold';
-import book2Bold from '@iconify/icons-solar/book-2-bold';
+import plugCircleBold from '@iconify/icons-solar/plug-circle-bold';
 
 import { buttonVariants } from "@/components/ui/button";
-interface HelpSection {
+interface GuideSection {
   icon: typeof roundDoubleAltArrowRightLinear;
   title: string;
   description: string;
@@ -20,48 +17,21 @@ interface HelpSection {
   linkText: string;
 }
 
-const sections: HelpSection[] = [
+const sections: GuideSection[] = [
   {
-    title: "Getting Started",
+    title: "Creating a Client SDK",
     description:
-      "We have put in a lot of effort to make sure that you can get up and running as quickly as possible.",
-    link: "/documentation/getting-started",
-    linkText: "Get Started",
-    icon: rocket2Bold
-  },
-
-  {
-    title: "Core Concepts",
-    description:
-      "There are a couple fundamental concepts to understand about Vexilla",
-    link: "/documentation/core-concepts",
-    linkText: "Learn More",
-    icon: book2Bold
-  },
-
-  {
-    title: "Application",
-    description:
-      "The Application is where you will configure your flags and push them up to your VCS provider.",
-    link: "/documentation/application",
-    linkText: "Start Cooking",
-    icon: windowFrameBold
-  },
-
-  {
-    title: "Contributing",
-    description:
-      "There is always more work to do. We would love it if you wanted to help improve the docs, translations, or Client SDK support.",
-    link: "/documentation/contributing",
-    linkText: "Join the Party",
-    icon: documentAddBold
+      "Client SDKs are what make Vexilla work. If we don't have one for your language, yet. You can create one!",
+    link: "/guides/creating-a-client-sdk",
+    linkText: "Learn more",
+    icon: plugCircleBold
   },
 ];
 ---
 
-<Layout title="Documentation | Vexilla">
-  <Documentation>
-    <h1>Documentation</h1>
+<Layout title="Guides | Vexilla">
+  <Guides>
+    <h1>Guides</h1>
     <div class="flex flex-wrap">
       {
         sections.map((section) => (
@@ -102,5 +72,5 @@ const sections: HelpSection[] = [
         ))
       }
     </div>
-  </Documentation>
+  </Guides>
 </Layout>
