@@ -1,0 +1,70 @@
+---
+
+import { Icon } from "@iconify/react";
+import settingsLinear from "@iconify/icons-solar/settings-linear";
+import importOutline from "@iconify/icons-solar/import-outline";
+import boxLinear from "@iconify/icons-solar/box-linear";
+import moneyBagOutline from "@iconify/icons-solar/money-bag-outline";
+
+interface StepContent {
+  title: string;
+  description: string;
+  image: any;
+}
+
+const steps: StepContent[] = [
+  {
+    title: "Configure your settings",
+    description: "Using the app create your environments and features.",
+    image: settingsLinear,
+  },
+
+  {
+    title: "Import a client",
+    description: "Choose the client library that applies to your backend.",
+    image: importOutline,
+  },
+
+  {
+    title: "Wrap your feature",
+    description:
+      "Using the client library in your frontend and/or backend, write if statements that decide what to do.",
+    image: boxLinear,
+  },
+
+  {
+    title: "Profit!",
+    description:
+      "You now have a feature flag. Wire it up to analytics and you basically have A/B testing.",
+    image: moneyBagOutline,
+  },
+];
+---
+
+<section class="text-normal body-font" id="how-it-works">
+  <div class="container px-5 py-24 mx-auto flex flex-wrap">
+    {steps.map((step, index) => (
+      <div
+        class="flex relative pt-10 pb-20 sm:items-center md:w-2/3 mx-auto"
+      >
+        <div class="h-full w-6 absolute inset-0 flex items-center justify-center">
+          <div class="h-full w-1 bg-gray-200 pointer-events-none"></div>
+        </div>
+        <div class="z-1 flex-shrink-0 w-6 h-6 rounded-full mt-10 sm:mt-0 inline-flex items-center justify-center bg-primary-500 text-white relative font-medium text-sm">
+          {index + 1}
+        </div>
+        <div class="flex-grow md:pl-8 pl-6 flex sm:items-center items-start flex-col sm:flex-row">
+          <div class="flex-shrink-0 w-24 h-24 bg-slate-100 text-primary-500 rounded-full inline-flex items-center justify-center">
+            <Icon className="w-12 h-12" icon={step.image} />
+          </div>
+          <div class="flex-grow sm:pl-6 mt-6 sm:mt-0">
+            <h2 class="font-medium title-font text-emphasis mb-1 text-xl">
+              {step.title}
+            </h2>
+            <p class="leading-relaxed">{step.description}</p>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+</section>
