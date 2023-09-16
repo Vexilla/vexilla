@@ -64,9 +64,11 @@ export function HomeHowItWorks() {
             <div className="flex-grow md:pl-8 pl-6 flex sm:items-center items-start flex-col sm:flex-row">
               <div className="flex-shrink-0 w-24 h-24 bg-slate-100 text-primary-500 rounded-full inline-flex items-center justify-center">
                 {/* <Icon className="w-12 h-12" icon={step.image} /> */}
-                {step.image}
+                {/* {step.image} */}
+                <Icon className="w-12 h-12" icon={settingsLinear} />
               </div>
               <div className="flex-grow sm:pl-6 mt-6 sm:mt-0">
+                asdfasdf
                 <h2 className="font-medium title-font text-emphasis mb-1 text-xl">
                   {step.title}
                 </h2>
