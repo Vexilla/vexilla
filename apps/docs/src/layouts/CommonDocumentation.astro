@@ -19,7 +19,7 @@ const { documentationPages, currentPost, currentPageSlug } = Astro.props;
 
 <div class="flex flex-row">
   <div class="w-[15rem] p-2 pr-8 relative hidden lg:block pt-10">
-    <div class="sticky top-16 max-h-[calc(100vh-4rem)] overflow-scroll">
+    <div class="sticky top-16 max-h-[calc(100vh-4rem)] overflow-y-auto">
       <ul>
         {
           documentationPages.map((page) => (
