@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-// import * as pagefind from "@/pagefind/pagefind";
+// @ts-ignore // pagefind does not export types for us to use
+import * as pagefind from "@/pagefind/pagefind";
 
 import { Icon } from "@iconify/react";
 import bookOpenTextDuotone from "@iconify/icons-ph/book-open-text-duotone";
@@ -10,12 +11,9 @@ import notePencilDuotone from "@iconify/icons-ph/note-pencil-duotone";
 import {
   CommandDialog,
   CommandEmpty,
-  CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
-  CommandShortcut,
   Command,
 } from "@/components/ui/command";
 
@@ -80,25 +78,25 @@ export function Search() {
           <CommandInput
             placeholder="Type a command or search..."
             onInput={async (event) => {
-              // setLoading(true);
-              // try {
-              //   const search = await pagefind.debouncedSearch(
-              //     event.currentTarget.value
-              //   );
-              //   if (search) {
-              //     const newResults = await Promise.all(
-              //       search.results.map(async (result: any) => ({
-              //         data: await result.data(),
-              //         meta: result,
-              //       }))
-              //     );
-              //     setResults(newResults);
-              //   }
-              // } catch (e) {
-              //   console.log("Error searching:", e);
-              // } finally {
-              //   setLoading(false);
-              // }
+              setLoading(true);
+              try {
+                const search = await pagefind.debouncedSearch(
+                  event.currentTarget.value
+                );
+                if (search) {
+                  const newResults = await Promise.all(
+                    search.results.map(async (result: any) => ({
+                      data: await result.data(),
+                      meta: result,
+                    }))
+                  );
+                  setResults(newResults);
+                }
+              } catch (e) {
+                console.log("Error searching:", e);
+              } finally {
+                setLoading(false);
+              }
             }}
           />
           <CommandList>
