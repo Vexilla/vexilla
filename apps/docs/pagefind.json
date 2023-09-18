@@ -1,4 +1,4 @@
 {
-  "source": "dist",
-  "bundle_dir": "_pagefind"
+  "site": "dist",
+  "output-path": "src/pagefind"
 }
