@@ -2,8 +2,8 @@
 import { getEntry } from "astro:content";
 import * as shiki from "shiki";
 
-import { CodeSnippet } from "@/components/docs/code-snippet";
-import { CodeSnippetContent, tomlKey } from "@/types/docs";
+import { CodeSnippetComponent } from "@/components/docs/code-snippet";
+import type { CodeSnippetContent, tomlKey } from "@/types/docs";
 
 const { snippet, snippetTitle } = Astro.props;
 
@@ -25,7 +25,7 @@ const highlightedContents = Object.entries(snippetContent).reduce(
 );
 ---
 
-<CodeSnippet
+<CodeSnippetComponent
   client:load
   title={snippetTitle}
   contents={highlightedContents}

@@ -4,8 +4,8 @@ import clsx from "clsx";
 import { Button } from "@/components/ui/button";
 
 import { Icon } from "@iconify/react";
-import sun2Bold from "@iconify/icons-solar/sun-2-bold";
-import moonBold from "@iconify/icons-solar/moon-bold";
+import sunDuotone from "@iconify/icons-ph/sun-duotone";
+import moonDuotone from "@iconify/icons-ph/moon-duotone";
 
 const THEME_KEY = "theme";
 
@@ -45,7 +45,7 @@ export function ThemeSelector() {
           setTheme("light");
         }}
       >
-        <Icon icon={sun2Bold} width={16} />
+        <Icon icon={sunDuotone} width={16} />
         <span className="sr-only">Set Light Mode</span>
       </Button>
 
@@ -61,7 +61,7 @@ export function ThemeSelector() {
           setTheme("dark");
         }}
       >
-        <Icon icon={moonBold} width={16} />
+        <Icon icon={moonDuotone} width={16} />
         <span className="sr-only">Set Dark Mode</span>
       </Button>
     </div>

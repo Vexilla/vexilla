@@ -3,14 +3,15 @@ import Layout from "@/layouts/Layout.astro";
 import Guides from "@/layouts/Guides.astro";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
+import Icon from "astro-icon";
 
-import { Icon } from "@iconify/react";
-import roundDoubleAltArrowRightLinear from "@iconify/icons-solar/round-double-alt-arrow-right-linear";
-import plugCircleBold from '@iconify/icons-solar/plug-circle-bold';
+// import { Icon } from "@iconify/react";
+// import roundDoubleAltArrowRightLinear from "@iconify/icons-solar/round-double-alt-arrow-right-linear";
+// import plugCircleBold from '@iconify/icons-solar/plug-circle-bold';
 
 import { buttonVariants } from "@/components/ui/button";
 interface GuideSection {
-  icon: typeof roundDoubleAltArrowRightLinear;
+  icon: string;
   title: string;
   description: string;
   link: string;
@@ -24,7 +25,7 @@ const sections: GuideSection[] = [
       "Client SDKs are what make Vexilla work. If we don't have one for your language, yet. You can create one!",
     link: "/guides/creating-a-client-sdk",
     linkText: "Learn more",
-    icon: plugCircleBold
+    icon: "phosphor/duotone/plug-duotone",
   },
 ];
 ---
@@ -39,7 +40,7 @@ const sections: GuideSection[] = [
             <Card className="h-full flex flex-col">
               <CardHeader>
                 <CardTitle className="!m-0 flex flex-row items-center">
-                  <Icon icon={section.icon} />
+                  <Icon name={section.icon} width={32} />
                   <a href={section.link} class="no-underline ml-2">
                     {section.title}
                   </a>
@@ -48,8 +49,6 @@ const sections: GuideSection[] = [
               <CardContent className="flex flex-col h-full">
                 <p class="flex flex-1">{section.description}</p>
                 <div class="flex flex-row justify-end mt-auto">
-
-                      <Icon client:only icon={roundDoubleAltArrowRightLinear} width={48} className="w-[48px]  min-w-[48px]" />
                   <a
                     class={`flex flex-row items-center no-underline ${buttonVariants(
                       {
@@ -62,7 +61,7 @@ const sections: GuideSection[] = [
                     {section.linkText}
 
                     <div class="ml-2">
-                      <Icon icon={roundDoubleAltArrowRightLinear} width={24} />
+                      <Icon name="phosphor/duotone/arrow-circle-right-duotone" width={24} />
                     </div>
                   </a>
                 </div>

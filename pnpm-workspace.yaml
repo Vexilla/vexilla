@@ -1,4 +1,4 @@
 packages:
   - "apps/*"
   - "packages/*"
-  - "clients/client-js"
+  - "clients/js"

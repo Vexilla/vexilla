@@ -11,9 +11,9 @@ import {
 import { Button } from "../ui/button";
 
 import { Icon } from "@iconify/react";
-import copyOutline from "@iconify/icons-solar/copy-outline";
+import copyOutline from "@iconify/icons-ph/copy-duotone";
 
-interface CodeSnippetProps {
+interface CodeSnippetComponentProps {
   title: string;
   rawSnippet: CodeSnippetContent;
   contents: CodeSnippetContent;
@@ -24,11 +24,11 @@ const DEFAULT_LANGUAGE = "typescript";
 
 const customStorageEvent = "languageChange";
 
-export function CodeSnippet({
+export function CodeSnippetComponent({
   contents,
   title = "",
   rawSnippet,
-}: CodeSnippetProps) {
+}: CodeSnippetComponentProps) {
   const [selectedLanguage, setSelectedLanguage] = useState(
     DEFAULT_LANGUAGE as tomlKey
   );

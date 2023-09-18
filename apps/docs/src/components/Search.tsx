@@ -1,13 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import * as pagefind from "@/_pagefind/pagefind";
+// import * as pagefind from "@/pagefind/pagefind";
 
 import { Icon } from "@iconify/react";
-import documentTextBold from "@iconify/icons-solar/document-text-bold";
-import book2Bold from "@iconify/icons-solar/book-2-bold";
-import documentAddBold from "@iconify/icons-solar/document-add-bold";
-
-// const pagefind =
+import bookOpenTextDuotone from "@iconify/icons-ph/book-open-text-duotone";
+import bookDuotone from "@iconify/icons-ph/book-duotone";
+import notePencilDuotone from "@iconify/icons-ph/note-pencil-duotone";
 
 import {
   CommandDialog,
@@ -82,28 +80,25 @@ export function Search() {
           <CommandInput
             placeholder="Type a command or search..."
             onInput={async (event) => {
-              setLoading(true);
-
-              try {
-                const search = await pagefind.debouncedSearch(
-                  event.currentTarget.value
-                );
-
-                if (search) {
-                  const newResults = await Promise.all(
-                    search.results.map(async (result: any) => ({
-                      data: await result.data(),
-                      meta: result,
-                    }))
-                  );
-
-                  setResults(newResults);
-                }
-              } catch (e) {
-                console.log("Error searching:", e);
-              } finally {
-                setLoading(false);
-              }
+              // setLoading(true);
+              // try {
+              //   const search = await pagefind.debouncedSearch(
+              //     event.currentTarget.value
+              //   );
+              //   if (search) {
+              //     const newResults = await Promise.all(
+              //       search.results.map(async (result: any) => ({
+              //         data: await result.data(),
+              //         meta: result,
+              //       }))
+              //     );
+              //     setResults(newResults);
+              //   }
+              // } catch (e) {
+              //   console.log("Error searching:", e);
+              // } finally {
+              //   setLoading(false);
+              // }
             }}
           />
           <CommandList>
@@ -138,12 +133,12 @@ export function Search() {
 
 function getResultIcon(result: SearchResult) {
   if (result.data.url.includes("/documentation/")) {
-    return book2Bold;
+    return bookDuotone;
   }
 
   if (result.data.url.includes("/blog/")) {
-    return documentAddBold;
+    return notePencilDuotone;
   }
 
-  return documentTextBold;
+  return bookOpenTextDuotone;
 }
