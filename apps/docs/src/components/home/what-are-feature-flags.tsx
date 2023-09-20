@@ -17,7 +17,7 @@ export function HomeFeatureFlags() {
           </p>
           <div className="flex md:mt-4 mt-6">
             <a
-              className="inline-flex text-white bg-primary-500 border-0 py-1 px-4 focus:outline-none hover:bg-primary-600 rounded"
+              className="inline-flex text-white bg-primary-500 border-0 py-1 px-4  hover:bg-primary-600 rounded"
               href="/documentation/core-concepts"
             >
               Core Concepts

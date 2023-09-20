@@ -97,3 +97,8 @@ code * {
     @apply text-primary-500 dark:text-primary-300;
   }
 }
+
+*:focus {
+  outline: 2px solid blue;
+  outline-offset: 3px;
+}

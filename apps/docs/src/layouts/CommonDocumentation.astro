@@ -19,7 +19,7 @@ const { documentationPages, currentPost, currentPageSlug } = Astro.props;
 
 <div class="flex flex-row">
   <div class="w-[15rem] p-2 pr-8 relative hidden lg:block pt-10">
-    <div class="sticky top-16 max-h-[calc(100vh-4rem)] overflow-y-auto">
+    <nav aria-label="Sidebar" class="sticky top-16 max-h-[calc(100vh-4rem)] overflow-y-auto">
       <ul>
         {
           documentationPages.map((page) => (
@@ -45,8 +45,8 @@ const { documentationPages, currentPost, currentPageSlug } = Astro.props;
         }
       </ul>
     </div>
-  </div>
-  <div class="flex-auto main-content pt-10 pb-10 px-4 w-screen md:w-full" data-pagefind-body>
+  </nav>
+  <main id="main" class="flex-auto main-content pt-10 pb-10 px-4 w-screen md:w-full" data-pagefind-body>
     <div class="prose lg:prose-xl dark:prose-invert mx-auto xl:w-auto">
       {!!currentPost?.data.title && <h1>{currentPost?.data.title}</h1>}
       <slot />
@@ -61,7 +61,7 @@ const { documentationPages, currentPost, currentPageSlug } = Astro.props;
         )
       }
     </div>
-  </div>
+  </main>
 </div>
 
 <script is:inline>

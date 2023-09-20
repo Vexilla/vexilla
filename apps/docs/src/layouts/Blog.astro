@@ -17,13 +17,13 @@ const blogPosts = rawBlogPosts.sort((postA, postB) => {
 ---
 
 <div class="flex flex-col lg:flex-row">
-  <div class="flex-auto main-content pt-10 pb-10 px-4 w-screen sm:w-full">
+  <main id="main" class="flex-auto main-content pt-10 pb-10 px-4 w-screen sm:w-full">
     <div class="prose lg:prose-xl dark:prose-invert mx-auto" data-pagefind-body>
       <slot />
     </div>
-  </div>
+  </main>
 
-  <div class="lg:w-80 p-4 pt-10">
+  <aside class="sidebar lg:w-80 p-4 pt-10">
     <h3 class="font-bold">Recent Posts</h3>
     <ul class="pl-6">
       {
@@ -36,5 +36,5 @@ const blogPosts = rawBlogPosts.sort((postA, postB) => {
         ))
       }
     </ul>
-  </div>
+  </aside>
 </div>

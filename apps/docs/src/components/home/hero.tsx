@@ -14,12 +14,12 @@ export function HomeHero() {
           <div className="flex flex-row md:flex-col xl:flex-row justify-center gap-4">
             <a
               href="/documentation/getting-started"
-              className="inline-flex text-gray-700 bg-gray-100 border-0 py-2 px-6 focus:outline-none hover:bg-gray-200 rounded text-lg"
+              className="inline-flex text-gray-700 bg-gray-100 border-0 py-2 px-6  hover:bg-gray-200 rounded text-lg"
             >
               Getting Started
             </a>
             <a
-              className="inline-flex text-white bg-primary-500 border-0 py-2 px-6 focus:outline-none hover:bg-primary-600 rounded text-lg"
+              className="inline-flex text-white bg-primary-500 border-0 py-2 px-6  hover:bg-primary-600 rounded text-lg"
               href="https://app.vexilla.dev"
             >
               Launch the App

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import _React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 // @ts-ignore // pagefind does not export types for us to use
 import * as pagefind from "@/pagefind/pagefind";

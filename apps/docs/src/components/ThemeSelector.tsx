@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import _React, { useEffect, useState } from "react";
 import clsx from "clsx";
 
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,7 @@ export function ThemeSelector() {
           "text-white": theme === "light",
           "text-black": theme === "dark",
         })}
+        aria-pressed={theme === "light"}
         size="icon"
         onClick={() => {
           setTheme("light");
@@ -53,6 +54,7 @@ export function ThemeSelector() {
         title="Set Dark Mode"
         variant="ghost"
         size="icon"
+        aria-pressed={theme === "dark"}
         className={clsx("flex rounded-full h-6 w-6 min-w-[1.5rem]", {
           "bg-slate-700": theme === "dark",
           "text-black": theme === "light",

@@ -127,8 +127,10 @@ guidePages.sort((a, b) => {
   </head>
   <body class="flex flex-col min-h-screen relative">
 
-    <input type="checkbox" id="mobile-menu-toggle" class="sr-only" />
-    <div class="mobile-menu w-screen h-screen fixed right-full bg-white dark:bg-black z-20 flex flex-col justify-between">
+    <div class="z-20 absolute left-[-100%] focus-within:left-0 bg-white"><a href="#main">Skip to content</a></div>
+
+    <input aria-owns="mobile-menu" type="checkbox" id="mobile-menu-toggle" class="sr-only md:hidden" />
+    <div id="mobile-menu" class="mobile-menu w-screen h-screen fixed right-full bg-white dark:bg-black z-20 flex flex-col justify-between md:hidden">
       <ResponsiveContainer class="flex flex-col items-center relative">
         <div class="fixed top-0 flex justify-between items-center px-6 py-2 w-full mb-8 bg-white dark:bg-black z-10">
 
@@ -215,7 +217,7 @@ guidePages.sort((a, b) => {
             <span class="m-0 font-display text-4xl">Vexilla</span>
           </a>
 
-          <div class="items-center hidden md:flex gap-8">
+          <nav aria-label="Primary" class="items-center hidden md:flex gap-8">
             <a
               href="/documentation"
               class={clsx({
@@ -224,7 +226,6 @@ guidePages.sort((a, b) => {
             >
               Documentation
             </a>
-
             <a
               href="/guides"
               class={clsx({
@@ -233,7 +234,6 @@ guidePages.sort((a, b) => {
             >
               Guides
             </a>
-
             <a
               href="/blog"
               class={clsx({
@@ -242,8 +242,7 @@ guidePages.sort((a, b) => {
             >
               Blog
             </a>
-
-          </div>
+          </nav>
         </div>
         <div class="hidden md:flex items-center gap-8">
           <Search client:only="react" />
@@ -266,7 +265,7 @@ guidePages.sort((a, b) => {
       <slot />
     </ResponsiveContainer>
 
-    <footer class="mt-auto bg-primary-50">
+    <footer class="mt-auto bg-primary-50 dark:bg-primary-900">
       <ResponsiveContainer>
         <div class="flex flex-row items-start pt-8 gap-16 justify-center">
           <div>
