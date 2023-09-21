@@ -1,4 +1,4 @@
-import _React, { useEffect, useState } from "react";
+import _React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 // @ts-ignore // pagefind does not export types for us to use
 import * as pagefind from "@/pagefind/pagefind";
@@ -42,6 +42,7 @@ interface SearchResultData {
 }
 
 export function Search() {
+  const searchButtonRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -59,21 +60,44 @@ export function Search() {
     return () => document.removeEventListener("keydown", down);
   }, []);
 
+  useEffect(() => {
+    if (!open) {
+      searchButtonRef.current?.focus();
+    }
+  }, [open]);
+
   return (
     <>
       <Button
-        variant="outline"
+        ref={searchButtonRef}
         onClick={() => {
           setOpen(true);
           setResults([]);
         }}
+        variant="outline"
       >
         <div className="mr-10">Search</div>
         <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
           <span className="text-xs">⌘</span>K
         </kbd>
       </Button>
-      <CommandDialog open={open} onOpenChange={setOpen}>
+      <CommandDialog
+        open={open}
+        onOpenChange={(open) => {
+          if (open === true) {
+          } else {
+            setOpen(false);
+
+            // need to kick the focus to next iteration of the event loop
+            // similar to a useEffect with open as the dependency
+            setTimeout(() => {
+              if (searchButtonRef.current) {
+                searchButtonRef.current.focus();
+              }
+            }, 0);
+          }
+        }}
+      >
         <Command shouldFilter={false}>
           <CommandInput
             placeholder="Type a command or search..."
