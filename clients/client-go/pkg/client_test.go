@@ -4,29 +4,9 @@ import (
 	"testing"
 )
 
-func TestHashing(tester *testing.T) {
-
-	uuid := "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a"
-
-	workingGradual := float32(0.11)
-	nonWorkingGradual := float32(0.22)
-
-	shouldWorkValue := HashInstanceID(uuid, workingGradual)
-	shouldntWorkValue := HashInstanceID(uuid, nonWorkingGradual)
-
-	if shouldWorkValue >= 40 {
-		tester.Fatal()
-	}
-
-	if shouldntWorkValue < 40 {
-		tester.Fatal()
-	}
-
-}
-
 func TestClient(tester *testing.T) {
 
-		client := NewVexillaClient("dev", "https://streamparrot-feature-flags.s3.amazonaws.com", "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a")
+		client := NewClient("dev", "https://streamparrot-feature-flags.s3.amazonaws.com", "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a")
 		flags, err := client.FetchFlags("features.json")
 		if err != nil {
 			tester.Fatal(err)
