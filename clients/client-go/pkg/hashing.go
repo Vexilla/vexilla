@@ -2,7 +2,7 @@ package internal
 
 import "math"
 
-func HashInstanceID(instanceID string, seed float64) int64 {
+func HashStringInstanceID(instanceID string, seed float64) int64 {
 	chars := ([]byte)(instanceID)
 
 	total := 0

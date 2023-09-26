@@ -1,5 +1,7 @@
 package internal
 
+import "encoding/json"
+
 type GroupId string
 type GroupName string
 type EnvironmentId string
@@ -8,42 +10,37 @@ type FeatureId string
 type FeatureName string
 
 type FeatureType string
+
 const (
-	GradualFeatureType FeatureType = "gradual"
+	GradualFeatureType   FeatureType = "gradual"
 	SelectiveFeatureType FeatureType = "selective"
-	ToggleFeatureType FeatureType = "toggle"
-	ValueFeatureType FeatureType = "value"
+	ToggleFeatureType    FeatureType = "toggle"
+	ValueFeatureType     FeatureType = "value"
 )
 
 type ScheduleType string
+
 const (
-	EmptyScheduleType ScheduleType = ""
-	GlobalScheduleType ScheduleType = "global"
+	EmptyScheduleType       ScheduleType = ""
+	GlobalScheduleType      ScheduleType = "global"
 	EnvironmentScheduleType ScheduleType = "environment"
 )
 
 type ScheduleTimeType string
+
 const (
-	NoneScheduleTimeType ScheduleTimeType = "none"
+	NoneScheduleTimeType     ScheduleTimeType = "none"
 	StartEndScheduleTimeType ScheduleTimeType = "start/end"
-	DailyScheduleTimeType ScheduleTimeType = "daily"
+	DailyScheduleTimeType    ScheduleTimeType = "daily"
 )
 
 type Schedule struct {
-	Start int64 `json:"start"`
-	End int64 `json:"end"`
-	Timezone string `json:"timezone"`
-	TimeType ScheduleTimeType `json:"timeType"` // TODO: default to UTC when needed
-	StartTime int64 `json:"startTime"`
-	EndTime int64 `json:"endTime"`
-}
-
-type Feature struct {
-	Name FeatureName `json:"name"`
-	FeatureId FeatureId `json:"featureId"`
-	FeatureType FeatureType `json:"featureType"`
-	ScheduleType ScheduleType `json:"scheduleType"`
-	Schedule Schedule `json:"schedule"`
+	Start     int64            `json:"start"`
+	End       int64            `json:"end"`
+	Timezone  string           `json:"timezone"`
+	TimeType  ScheduleTimeType `json:"timeType"` // TODO: default to UTC when needed
+	StartTime int64            `json:"startTime"`
+	EndTime   int64            `json:"endTime"`
 }
 
 type GroupMeta struct {
@@ -51,48 +48,55 @@ type GroupMeta struct {
 }
 
 type Environment struct {
-	Name EnvironmentName `json:"name"`
-	EnvironmentId EnvironmentId `json:"environmentId"`
-	Features map[FeatureId]Feature `json:"features"`
+	Name          EnvironmentName               `json:"name"`
+	EnvironmentId EnvironmentId                 `json:"environmentId"`
+	RawFeatures   map[FeatureId]json.RawMessage `json:"features"`
+
+	ToggleFeatures  map[FeatureId]ToggleFeature  `json:"-"`
+	GradualFeatures map[FeatureId]GradualFeature `json:"-"`
+
+	SelectiveFeatures       map[FeatureId]SelectiveFeature       `json:"-"`
+	SelectiveStringFeatures map[FeatureId]SelectiveStringFeature `json:"-"`
+	SelectiveIntFeatures    map[FeatureId]SelectiveIntFeature    `json:"-"`
+	SelectiveFloatFeatures  map[FeatureId]SelectiveFloatFeature  `json:"-"`
+
+	ValueFeatures       map[FeatureId]ValueFeature       `json:"-"`
+	ValueStringFeatures map[FeatureId]ValueStringFeature `json:"-"`
+	ValueIntFeatures    map[FeatureId]ValueIntFeature    `json:"-"`
+	ValueFloatFeatures  map[FeatureId]ValueFloatFeature  `json:"-"`
 }
 
 type ManifestGroup struct {
-	Name GroupName `json:"name"`
-	GroupId GroupId `json:"groupId"`
+	Name    GroupName `json:"name"`
+	GroupId GroupId   `json:"groupId"`
 }
 
 type Manifest struct {
-	Version string `json:"version"`
-	Groups []ManifestGroup `json:"groups"`
+	Version string          `json:"version"`
+	Groups  []ManifestGroup `json:"groups"`
 }
 
 type Group struct {
-	Name GroupName `json:"name"`
-	GroupId GroupId `json:"groupId"`
+	Name    GroupName `json:"name"`
+	GroupId GroupId   `json:"groupId"`
+	Meta    GroupMeta `json:"meta"`
+
 	Environments map[EnvironmentId]Environment `json:"environments"`
-	Features map[FeatureId]Feature `json:"features"`
-	Meta GroupMeta `json:"meta"`
+	Features     map[FeatureId]Feature         `json:"features"`
 }
 
 type RealIds struct {
-	RealGroupId GroupId
-	RealFeatureId FeatureId
+	RealGroupId       GroupId
+	RealFeatureId     FeatureId
 	RealEnvironmentId EnvironmentId
 }
 
-type ClientConfig struct {
-	Environment string
-	BaseURL string
-	InstanceId string
-
-	ShowLogs bool
-
-	Manifest Manifest
-	FlagGroups map[GroupId]Group
-
-	GroupLookupTable map[string]GroupId
-	EnvironmentLookupTable map[GroupId]map[string]EnvironmentId
-	FeatureLookupTable map[GroupId]map[string]FeatureId
+type Feature struct {
+	Name         FeatureName  `json:"name"`
+	FeatureId    FeatureId    `json:"featureId"`
+	FeatureType  FeatureType  `json:"featureType"`
+	ScheduleType ScheduleType `json:"scheduleType"`
+	Schedule     Schedule     `json:"schedule"`
 }
 
 type ToggleFeature struct {
@@ -102,36 +106,54 @@ type ToggleFeature struct {
 
 type GradualFeature struct {
 	Feature
-	Value int64 `json:"value"`
-	Seed float64 `json:"seed"`
+	Value int64   `json:"value"`
+	Seed  float64 `json:"seed"`
+}
+
+type ValueType string
+
+const (
+	StringValueType ValueType = "string"
+	IntValueType    ValueType = "int"
+	FloatValueType  ValueType = "float"
+)
+
+type ValueFeature struct {
+	Feature
+	ValueType ValueType `json:"valueType"`
 }
 
 type ValueStringFeature struct {
-	Feature
+	ValueFeature
 	Value string `json:"value"`
 }
 
 type ValueIntFeature struct {
-	Feature
+	ValueFeature
 	Value int64 `json:"value"`
 }
 
 type ValueFloatFeature struct {
-	Feature
+	ValueFeature
 	Value float64 `json:"value"`
 }
 
-type SelectiveStringFeature struct {
+type SelectiveFeature struct {
 	Feature
+	ValueType ValueType `json:"valueType"`
+}
+
+type SelectiveStringFeature struct {
+	SelectiveFeature
 	Value []string `json:"value"`
 }
 
 type SelectiveIntFeature struct {
-	Feature
+	SelectiveFeature
 	Value []int64 `json:"value"`
 }
 
 type SelectiveFloatFeature struct {
-	Feature
+	SelectiveFeature
 	Value []float64 `json:"value"`
 }

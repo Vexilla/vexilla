@@ -11,8 +11,8 @@ func TestHashing(tester *testing.T) {
 	workingGradual := float64(0.11)
 	nonWorkingGradual := float64(0.22)
 
-	shouldWorkValue := HashInstanceID(uuid, workingGradual)
-	shouldntWorkValue := HashInstanceID(uuid, nonWorkingGradual)
+	shouldWorkValue := HashStringInstanceID(uuid, workingGradual)
+	shouldntWorkValue := HashStringInstanceID(uuid, nonWorkingGradual)
 
 	if shouldWorkValue >= 40 {
 		tester.Fatal()
