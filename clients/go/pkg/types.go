@@ -47,10 +47,14 @@ type GroupMeta struct {
 	Version string `json:"version"`
 }
 
-type Environment struct {
+type BaseEnvironment struct {
 	Name          EnvironmentName               `json:"name"`
 	EnvironmentId EnvironmentId                 `json:"environmentId"`
 	RawFeatures   map[FeatureId]json.RawMessage `json:"features"`
+}
+
+type Environment struct {
+	BaseEnvironment
 
 	ToggleFeatures  map[FeatureId]ToggleFeature  `json:"-"`
 	GradualFeatures map[FeatureId]GradualFeature `json:"-"`
@@ -106,7 +110,7 @@ type ToggleFeature struct {
 
 type GradualFeature struct {
 	Feature
-	Value int64   `json:"value"`
+	Value float64 `json:"value"`
 	Seed  float64 `json:"seed"`
 }
 

@@ -14,11 +14,11 @@ func TestHashing(tester *testing.T) {
 	shouldWorkValue := HashStringInstanceID(uuid, workingGradual)
 	shouldntWorkValue := HashStringInstanceID(uuid, nonWorkingGradual)
 
-	if shouldWorkValue >= 40 {
+	if shouldWorkValue >= 0.4 {
 		tester.Fatal()
 	}
 
-	if shouldntWorkValue < 40 {
+	if shouldntWorkValue < 0.4 {
 		tester.Fatal()
 	}
 

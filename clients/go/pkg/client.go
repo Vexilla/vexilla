@@ -3,16 +3,25 @@ package internal
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"vexillaTypes"
 )
 
 func (environment *Environment) UnmarshalJSON(bytes []byte) error {
 
-	err := json.Unmarshal(bytes, environment)
+	var baseEnvironment BaseEnvironment
+	err := json.Unmarshal(bytes, &baseEnvironment)
 	if err != nil {
 		return err
 	}
 
-	for featureId, rawFeature := range environment.RawFeatures {
+	environment.EnvironmentId = baseEnvironment.EnvironmentId
+	environment.Name = baseEnvironment.Name
+	environment.RawFeatures = baseEnvironment.RawFeatures
+
+	for featureId, rawFeature := range baseEnvironment.RawFeatures {
+
 		var baseFeature Feature
 		err := json.Unmarshal(rawFeature, &baseFeature)
 		if err != nil {
@@ -34,6 +43,7 @@ func (environment *Environment) UnmarshalJSON(bytes []byte) error {
 			environment.ToggleFeatures[featureId] = toggleFeature
 
 		case GradualFeatureType:
+			fmt.Println("made it into Gradual type case")
 			var gradualFeature GradualFeature
 			err := json.Unmarshal(rawFeature, &gradualFeature)
 			if err != nil {
@@ -191,14 +201,24 @@ func NewClient(environment string, baseURL string, customInstanceHash string, sh
 	}
 }
 
-func (client Client) GetManifest(fetch func(url string) []byte) (Manifest, error) {
+func (client Client) GetManifest(fetch func(url string) (*http.Response, error)) (Manifest, error) {
 	url := fmt.Sprintf("%s/manifest.json", client.BaseURL)
-	response := fetch(url)
-	var fetchedManifest Manifest
-	err := json.Unmarshal(response, &fetchedManifest)
+	response, fetchErr := fetch(url)
+	if fetchErr != nil {
+		return Manifest{}, fetchErr
+	}
+
+	bodyBytes, err := io.ReadAll(response.Body)
 
 	if err != nil {
 		return Manifest{}, err
+	}
+
+	var fetchedManifest Manifest
+	unmarshallErr := json.Unmarshal(bodyBytes, &fetchedManifest)
+
+	if unmarshallErr != nil {
+		return Manifest{}, unmarshallErr
 	}
 
 	return fetchedManifest, nil
@@ -206,9 +226,19 @@ func (client Client) GetManifest(fetch func(url string) []byte) (Manifest, error
 
 func (client *Client) SetManifest(manifest Manifest) {
 	client.Manifest = manifest
+
+	if client.groupLookupTable == nil {
+		client.groupLookupTable = make(map[string]GroupId)
+	}
+
+	for _, group := range manifest.Groups {
+		client.groupLookupTable[string(group.Name)] = group.GroupId
+		client.groupLookupTable[string(group.GroupId)] = group.GroupId
+	}
+
 }
 
-func (client *Client) SyncManifest(fetch func(url string) []byte) error {
+func (client *Client) SyncManifest(fetch func(url string) (*http.Response, error)) error {
 	newManifest, err := client.GetManifest(fetch)
 
 	if err != nil {
@@ -220,7 +250,7 @@ func (client *Client) SyncManifest(fetch func(url string) []byte) error {
 	return nil
 }
 
-func (client *Client) GetFlags(groupNameOrId string, fetch func(url string) []byte) (Group, error) {
+func (client *Client) GetFlags(groupNameOrId string, fetch func(url string) (*http.Response, error)) (Group, error) {
 
 	groupId := client.groupLookupTable[groupNameOrId]
 
@@ -229,12 +259,22 @@ func (client *Client) GetFlags(groupNameOrId string, fetch func(url string) []by
 	}
 
 	url := fmt.Sprintf("%s/%s.json", client.BaseURL, groupId)
-	response := fetch(url)
-	var fetchedGroup Group
-	err := json.Unmarshal(response, &fetchedGroup)
+	response, fetchErr := fetch(url)
+	if fetchErr != nil {
+		return Group{}, fetchErr
+	}
+
+	bodyBytes, err := io.ReadAll(response.Body)
 
 	if err != nil {
 		return Group{}, err
+	}
+
+	var fetchedGroup Group
+	unmarshallErr := json.Unmarshal(bodyBytes, &fetchedGroup)
+
+	if unmarshallErr != nil {
+		return Group{}, unmarshallErr
 	}
 
 	return fetchedGroup, nil
@@ -249,10 +289,36 @@ func (client *Client) SetFlags(groupNameOrId string, group Group) error {
 
 	client.FlagGroups[groupId] = group
 
+	if client.environmentLookupTable == nil {
+		client.environmentLookupTable = make(map[GroupId]map[string]EnvironmentId)
+	}
+
+	if client.environmentLookupTable[group.GroupId] == nil {
+		client.environmentLookupTable[group.GroupId] = make(map[string]EnvironmentId)
+	}
+
+	for _, environment := range group.Environments {
+		client.environmentLookupTable[group.GroupId][string(environment.Name)] = environment.EnvironmentId
+		client.environmentLookupTable[group.GroupId][string(environment.EnvironmentId)] = environment.EnvironmentId
+	}
+
+	if client.featureLookupTable == nil {
+		client.featureLookupTable = make(map[GroupId]map[string]FeatureId)
+	}
+
+	if client.featureLookupTable[group.GroupId] == nil {
+		client.featureLookupTable[group.GroupId] = make(map[string]FeatureId)
+	}
+
+	for _, feature := range group.Features {
+		client.featureLookupTable[group.GroupId][string(feature.Name)] = feature.FeatureId
+		client.featureLookupTable[group.GroupId][string(feature.FeatureId)] = feature.FeatureId
+	}
+
 	return nil
 }
 
-func (client *Client) SyncFlags(groupNameOrId string, fetch func(url string) []byte) error {
+func (client *Client) SyncFlags(groupNameOrId string, fetch func(url string) (*http.Response, error)) error {
 
 	fetchedFlags, err := client.GetFlags(groupNameOrId, fetch)
 
@@ -265,6 +331,10 @@ func (client *Client) SyncFlags(groupNameOrId string, fetch func(url string) []b
 }
 
 func (client Client) Should(groupNameOrId string, featureNameOrId string) (bool, error) {
+	return client.ShouldCustomString(groupNameOrId, featureNameOrId, client.InstanceId)
+}
+
+func (client Client) ShouldCustomString(groupNameOrId string, featureNameOrId string, customInstanceId string) (bool, error) {
 
 	realIds, err := client.getRealIds(groupNameOrId, featureNameOrId)
 
@@ -280,13 +350,18 @@ func (client Client) Should(groupNameOrId string, featureNameOrId string) (bool,
 
 	environment := client.FlagGroups[realIds.RealGroupId].Environments[realIds.RealEnvironmentId]
 
+	if environment.EnvironmentId == "" {
+		return false, fmt.Errorf("no environment found for environmentId: %s", realIds.RealEnvironmentId)
+	}
+
 	switch rawFeature.FeatureType {
 	case ToggleFeatureType:
 		toggleFeature := environment.ToggleFeatures[realIds.RealFeatureId]
 		return toggleFeature.Value, nil
 	case GradualFeatureType:
 		gradualFeature := environment.GradualFeatures[realIds.RealFeatureId]
-		return HashStringInstanceID(client.InstanceId, gradualFeature.Seed) > gradualFeature.Value, nil
+
+		return HashStringInstanceID(customInstanceId, gradualFeature.Seed) < gradualFeature.Value, nil
 
 	case SelectiveFeatureType:
 
@@ -310,6 +385,118 @@ func (client Client) Should(groupNameOrId string, featureNameOrId string) (bool,
 
 	case ValueFeatureType:
 		return false, fmt.Errorf("selectivefeature, %s:%s, is not a StringValueType. Consider using ValueString, ValueInt, or ValueFloat", rawFeature.Name, rawFeature.FeatureId)
+
+	}
+
+	return false, nil
+}
+
+func (client Client) ShouldCustomInt(groupNameOrId string, featureNameOrId string, customInstanceId int64) (bool, error) {
+
+	realIds, err := client.getRealIds(groupNameOrId, featureNameOrId)
+
+	if err != nil {
+		return false, err
+	}
+
+	rawFeature, err := client.getRawFeature(groupNameOrId, featureNameOrId)
+
+	if err != nil {
+		return false, err
+	}
+
+	environment := client.FlagGroups[realIds.RealGroupId].Environments[realIds.RealEnvironmentId]
+
+	if environment.EnvironmentId == "" {
+		return false, fmt.Errorf("no environment found for environmentId: %s", realIds.RealEnvironmentId)
+	}
+
+	switch rawFeature.FeatureType {
+	case ToggleFeatureType:
+		toggleFeature := environment.ToggleFeatures[realIds.RealFeatureId]
+		return toggleFeature.Value, nil
+	case GradualFeatureType:
+		gradualFeature := environment.GradualFeatures[realIds.RealFeatureId]
+		return HashIntInstanceID(customInstanceId, gradualFeature.Seed) < gradualFeature.Value, nil
+
+	case SelectiveFeatureType:
+
+		selectiveFeature := environment.SelectiveFeatures[realIds.RealFeatureId]
+
+		switch selectiveFeature.ValueType {
+		case StringValueType:
+			return false, fmt.Errorf("selective feature, %s:%s, is not an IntValueType. Consider using ShouldCustomInt", selectiveFeature.Name, selectiveFeature.FeatureId)
+		case IntValueType:
+			selectiveIntFeature := environment.SelectiveIntFeatures[realIds.RealFeatureId]
+
+			for i := range selectiveIntFeature.Value {
+				if selectiveIntFeature.Value[i] == customInstanceId {
+					return true, nil
+				}
+			}
+
+		case FloatValueType:
+			return false, fmt.Errorf("selectivefeature, %s:%s, is not an IntValueType. Consider using ShouldCustomFloat", selectiveFeature.Name, selectiveFeature.FeatureId)
+		}
+
+	case ValueFeatureType:
+		return false, fmt.Errorf("selectivefeature, %s:%s, is not a StringValueType. Consider using ValueString, ValueInt, or ValueFloat", rawFeature.Name, rawFeature.FeatureId)
+
+	}
+
+	return false, nil
+}
+
+func (client Client) ShouldCustomFloat(groupNameOrId string, featureNameOrId string, customInstanceId float64) (bool, error) {
+
+	realIds, err := client.getRealIds(groupNameOrId, featureNameOrId)
+
+	if err != nil {
+		return false, err
+	}
+
+	rawFeature, err := client.getRawFeature(groupNameOrId, featureNameOrId)
+
+	if err != nil {
+		return false, err
+	}
+
+	environment := client.FlagGroups[realIds.RealGroupId].Environments[realIds.RealEnvironmentId]
+
+	if environment.EnvironmentId == "" {
+		return false, fmt.Errorf("no environment found for environmentId: %s", realIds.RealEnvironmentId)
+	}
+
+	switch rawFeature.FeatureType {
+	case ToggleFeatureType:
+		toggleFeature := environment.ToggleFeatures[realIds.RealFeatureId]
+		return toggleFeature.Value, nil
+	case GradualFeatureType:
+		gradualFeature := environment.GradualFeatures[realIds.RealFeatureId]
+		return HashFloatInstanceID(customInstanceId, gradualFeature.Seed) < gradualFeature.Value, nil
+
+	case SelectiveFeatureType:
+
+		selectiveFeature := environment.SelectiveFeatures[realIds.RealFeatureId]
+
+		switch selectiveFeature.ValueType {
+		case StringValueType:
+			return false, fmt.Errorf("selective feature, %s:%s, is not an IntValueType. Consider using ShouldCustomInt", selectiveFeature.Name, selectiveFeature.FeatureId)
+		case IntValueType:
+			return false, fmt.Errorf("selectivefeature, %s:%s, is not a IntValueType. Consider using ShouldCustomInt", selectiveFeature.Name, selectiveFeature.FeatureId)
+
+		case FloatValueType:
+			selectiveFloatFeature := environment.SelectiveFloatFeatures[realIds.RealFeatureId]
+
+			for i := range selectiveFloatFeature.Value {
+				if selectiveFloatFeature.Value[i] == customInstanceId {
+					return true, nil
+				}
+			}
+		}
+
+	case ValueFeatureType:
+		return false, fmt.Errorf("selectivefeature, %s:%s, is not a ValueFeatureType. Consider using ValueString, ValueInt, or ValueFloat", rawFeature.Name, rawFeature.FeatureId)
 
 	}
 
