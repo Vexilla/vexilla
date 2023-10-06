@@ -69,12 +69,8 @@ export class VexillaClient {
     }
   }
 
-  async syncManifest() {
-    const manifest = await this.getManifest(async (url) => {
-      const response = await fetch(url);
-      return response.json();
-    });
-
+  async syncManifest(fetchHook: FetchHook<VexillaManifest>) {
+    const manifest = await this.getManifest(fetchHook);
     this.setManifest(manifest);
   }
 
