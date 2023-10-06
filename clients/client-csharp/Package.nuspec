@@ -10,9 +10,6 @@
     <projectUrl>https://vexilla.github.io</projectUrl>
     <iconUrl>https://vexilla.github.io/logo-nuget.png</iconUrl>
     <icon>./images/logo-nuget.png</icon>
-    <files>
-      <file src=".\logo-nuget.png" target="images\" />
-    </files>
     <description>A client for the Vexilla feature flag system</description>
     <releaseNotes>Initial release</releaseNotes>
     <copyright>Copyright 2021</copyright>
