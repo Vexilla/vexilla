@@ -47,7 +47,8 @@ export class VexillaClient {
     fetchHook: FetchHook<VexillaManifest>
   ): Promise<VexillaManifest> {
     try {
-      return fetchHook(`${this.baseUrl}/manifest.json`);
+      const result = await fetchHook(`${this.baseUrl}/manifest.json`);
+      return result;
     } catch (e: any) {
       this.warn("Error: failed to fetch manifest", e);
       return { version: "v0", groups: [] };
