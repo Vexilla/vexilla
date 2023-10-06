@@ -7,17 +7,17 @@ export const templates: Record<Language, string> = {
 */
 
 {{#groups}}
-export const {{{groupName}}} = {
-  name: "{{{rawGroupName}}}",
-  id: "{{{groupId}}}",
+export const {{{name}}} = {
+  name: "{{{rawName}}}",
+  id: "{{{id}}}",
   environments: {
     {{#environments}}
-    {{{environmentName}}}: "{{{environmentId}}}",
+    {{{name}}}: "{{{id}}}",
     {{/environments}}
   },
   features: {
     {{#features}}
-    {{{featureName}}}: "{{{featureId}}}",
+    {{{name}}}: "{{{id}}}",
     {{/features}}
   },
 };
@@ -30,17 +30,17 @@ export const {{{groupName}}} = {
 */
 
 {{#groups}}
-export const {{{groupName}}}Group = {
-  name: "{{{rawGroupName}}}",
-  id: "{{{groupId}}}",
+export const {{{name}}}Group = {
+  name: "{{{rawName}}}",
+  id: "{{{id}}}",
   environments: {
     {{#environments}}
-    {{{environmentName}}}: "{{{environmentId}}}",
+    {{{name}}}: "{{{id}}}",
     {{/environments}}
   },
   features: {
     {{#features}}
-    {{{featureName}}}: "{{{featureId}}}",
+    {{{name}}}: "{{{id}}}",
     {{/features}}
   },
 } as const;
@@ -54,14 +54,14 @@ export const {{{groupName}}}Group = {
 
 
 {{#groups}}
-pub mod {{{groupName}}}Group {
+pub mod {{{name}}}Group {
     use std::fmt::{ Display, Formatter, Result};
-    pub const Name: &str = "{{{rawGroupName}}}";
-    pub const Id: &str = "{{{groupId}}}";
+    pub const Name: &str = "{{{rawName}}}";
+    pub const Id: &str = "{{{id}}}";
 
     pub enum Environments {
         {{#environments}}
-        {{{environmentName}}},
+        {{{name}}},
         {{/environments}}
     }
 
@@ -69,7 +69,7 @@ pub mod {{{groupName}}}Group {
       fn into(self) -> &'static str {
             match self {
                 {{#environments}}
-                Environments::{{{environmentName}}} => "{{{environmentId}}}",
+                Environments::{{{name}}} => "{{{id}}}",
                 {{/environments}}
             }
         }
@@ -77,7 +77,7 @@ pub mod {{{groupName}}}Group {
 
     pub enum Features {
         {{#features}}
-        {{{featureName}}},
+        {{{name}}},
         {{/features}}
     }
 
@@ -85,7 +85,7 @@ pub mod {{{groupName}}}Group {
       fn into(self) -> &'static str {
             match self {
                 {{#features}}
-                Features::{{{featureName}}} => "{{{featureId}}}",
+                Features::{{{name}}} => "{{{id}}}",
                 {{/features}}
             }
         }
@@ -104,38 +104,38 @@ package vexillaTypes
 
 {{#groups}}
 
-type {{{structName}}}Environments struct {
+type {{{name}}}Environments struct {
   {{#environments}}
   {{{name}}} func () string
   {{/environments}}
 }
 
-type {{{structName}}}Features struct {
+type {{{name}}}Features struct {
   {{#features}}
   {{{name}}} func () string
   {{/features}}
 }
 
-type {{{structName}}}Group struct {
+type {{{name}}}Group struct {
   Name func () string
   ID func () string
-  Environments func () {{{structName}}}Environments
-  Features func () {{{structName}}}Features
+  Environments func () {{{name}}}Environments
+  Features func () {{{name}}}Features
 }
 
-var {{{name}}}Group = func () {{{structName}}}Group {
-  return {{{structName}}}Group {
-    Name: func () string { return "{{{name}}}" },
+var {{{name}}}Group = func () {{{name}}}Group {
+  return {{{name}}}Group {
+    Name: func () string { return "{{{rawName}}}" },
     ID: func () string { return "{{{id}}}" },
-    Environments: func () {{{structName}}}Environments {
-      return {{{structName}}}Environments {
+    Environments: func () {{{name}}}Environments {
+      return {{{name}}}Environments {
         {{#environments}}
         {{{name}}}: func () string { return "{{{id}}}" },
         {{/environments}}
       }
     } ,
-    Features: func () {{{structName}}}Features {
-      return {{{structName}}}Features {
+    Features: func () {{{safeName}}}Features {
+      return {{{name}}}Features {
         {{#features}}
         {{{name}}}: func () string { return "{{{id}}}" },
         {{/features}}
@@ -145,4 +145,47 @@ var {{{name}}}Group = func () {{{structName}}}Group {
 }
 {{/groups}}
 `,
+  csharp: `
+namespace Vexilla.Client {
+    {{#groups}}
+    public static class {{{name}}}Group {
+        public static string Name = "{{{rawName}}}";
+        public static string GroupId = "{{{id}}}";
+
+        public static class Environments {
+            {{#environments}}
+            public static string {{{name}}} = "{{{id}}}";
+            {{/environments}}
+        }
+
+        public static class Features {
+            {{#features}}
+            public static string {{{name}}} = "{{{id}}}";
+            {{/features}}
+        }
+    }
+    {{/groups}}
+}
+`,
 };
+
+`
+namespace Vexilla.Client {
+
+  class ToggleGroup {
+    public static string Name = "Toggle";
+    public static string EnvironmentId = "khgasdkfhgaksdhgf";
+
+
+    public static class Environments {
+
+    }
+
+    public static class Features {
+
+    }
+
+  }
+}
+
+`;

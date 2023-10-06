@@ -1,7 +1,7 @@
 import Case from "case";
 import mustache from "mustache";
 import type { Language } from "./types";
-import { PublishedGroup } from "@vexilla/types";
+import { Group, PublishedGroup } from "@vexilla/types";
 import { templates } from "./templates";
 
 const disclaimerText = `This file has been generated from your remote Vexilla Feature Flags file.
@@ -15,48 +15,18 @@ const languageTransformers: Record<
   (groups: PublishedGroup[], typePrefix?: string, typeSuffix?: string) => string
 > = {
   js: function (groups: PublishedGroup[], typePrefix = "", typeSuffix = "") {
-    const groupsOutput = groups.map((group) => {
-      return {
-        rawGroupName: group.name,
-        groupId: group.groupId,
-        groupName: Case.pascal(
-          `${typePrefix} ${group.name} ${typeSuffix}`.trim()
-        ),
-        environments: Object.values(group.environments).map((environment) => ({
-          environmentName: Case.camel(environment.name),
-          environmentId: environment.environmentId,
-        })),
-        features: Object.values(group.features).map((feature) => ({
-          featureName: Case.camel(feature.name),
-          featureId: feature.featureId,
-        })),
-      };
-    });
-
+    const groupsOutput = groups.map(
+      parseGroup(typePrefix, typeSuffix, Case.camel, Case.pascal)
+    );
     return mustache.render(templates.js, {
       disclaimerText,
       groups: groupsOutput,
     });
   },
   ts: function (groups: PublishedGroup[], typePrefix = "", typeSuffix = "") {
-    const groupsOutput = groups.map((group) => {
-      return {
-        rawGroupName: group.name,
-        groupId: group.groupId,
-        groupName: Case.pascal(
-          `${typePrefix} ${group.name} ${typeSuffix}`.trim()
-        ),
-        environments: Object.values(group.environments).map((environment) => ({
-          environmentName: Case.camel(environment.name),
-          environmentId: environment.environmentId,
-        })),
-        features: Object.values(group.features).map((feature) => ({
-          featureName: Case.camel(feature.name),
-          featureId: feature.featureId,
-        })),
-      };
-    });
-
+    const groupsOutput = groups.map(
+      parseGroup(typePrefix, typeSuffix, Case.camel, Case.pascal)
+    );
     return mustache.render(templates.ts, {
       disclaimerText,
       groups: groupsOutput,
@@ -64,53 +34,32 @@ const languageTransformers: Record<
   },
 
   rust: function (groups: PublishedGroup[], typePrefix = "", typeSuffix = "") {
-    const groupsOutput = groups.map((group) => {
-      return {
-        rawGroupName: group.name,
-        groupId: group.groupId,
-        groupName: Case.pascal(
-          `${typePrefix} ${group.name} ${typeSuffix}`.trim()
-        ),
-        environments: Object.values(group.environments).map((environment) => ({
-          environmentName: Case.pascal(environment.name),
-          environmentId: environment.environmentId,
-        })),
-        features: Object.values(group.features).map((feature) => ({
-          featureName: Case.pascal(feature.name),
-          featureId: feature.featureId,
-        })),
-      };
-    });
-
+    const groupsOutput = groups.map(
+      parseGroup(typePrefix, typeSuffix, Case.pascal)
+    );
     return mustache.render(templates.rust, {
       disclaimerText,
       groups: groupsOutput,
     });
   },
   go: function (groups: PublishedGroup[], typePrefix = "", typeSuffix = "") {
-    const groupsOutput = groups.map((group) => {
-      return {
-        name: Case.pascal(`${typePrefix} ${group.name} ${typeSuffix}`.trim()),
-        structName: Case.camel(
-          `${typePrefix} ${group.name} ${typeSuffix}`.trim()
-        ),
-        id: group.groupId,
-        environments: Object.values(group.environments).map((environment) => {
-          return {
-            name: Case.pascal(environment.name),
-            id: environment.environmentId,
-          };
-        }),
-        features: Object.values(group.features).map((feature) => {
-          return {
-            name: Case.pascal(feature.name),
-            id: feature.featureId,
-          };
-        }),
-      };
-    });
-
+    const groupsOutput = groups.map(
+      parseGroup(typePrefix, typeSuffix, Case.pascal)
+    );
     return mustache.render(templates.go, {
+      disclaimerText,
+      groups: groupsOutput,
+    });
+  },
+  csharp: function (
+    groups: PublishedGroup[],
+    typePrefix = "",
+    typeSuffix = ""
+  ) {
+    const groupsOutput = groups.map(
+      parseGroup(typePrefix, typeSuffix, Case.pascal)
+    );
+    return mustache.render(templates.csharp, {
       disclaimerText,
       groups: groupsOutput,
     });
@@ -277,10 +226,49 @@ const languageTransformers: Record<
   //   },
 };
 
+function parseGroup(
+  typePrefix: string,
+  typeSuffix: string,
+  genericNameTransformer: typeof Case.pascal,
+  topLevelNameTransformer?: typeof Case.pascal,
+  safeNameTransformer?: typeof Case.pascal
+) {
+  const _topLevelNameTransformer =
+    topLevelNameTransformer ?? genericNameTransformer;
+  const _safeNameTransformer = safeNameTransformer ?? genericNameTransformer;
+
+  return (group: PublishedGroup) => {
+    return {
+      rawName: group.name,
+      safeName: _safeNameTransformer(group.name),
+      name: _topLevelNameTransformer(
+        `${typePrefix} ${group.name} ${typeSuffix}`.trim()
+      ),
+      id: group.groupId,
+      environments: Object.values(group.environments).map((environment) => {
+        return {
+          rawName: environment.name,
+          safeName: _safeNameTransformer(environment.name),
+          name: genericNameTransformer(environment.name),
+          id: environment.environmentId,
+        };
+      }),
+      features: Object.values(group.features).map((feature) => {
+        return {
+          rawName: feature.name,
+          safeName: _safeNameTransformer(feature.name),
+          name: genericNameTransformer(feature.name),
+          id: feature.featureId,
+        };
+      }),
+    };
+  };
+}
+
 const languageAliases: Record<string, Language> = {
-  // cs: "csharp",
-  // "c#": "csharp",
-  // csharp: "csharp",
+  cs: "csharp",
+  "c#": "csharp",
+  csharp: "csharp",
   javascript: "js",
   js: "js",
   typescript: "ts",
