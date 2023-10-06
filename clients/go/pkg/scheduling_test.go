@@ -125,8 +125,8 @@ func TestSchedulingActiveDaily(tester *testing.T) {
 		End:       now.Add(Day).UnixMilli(),
 		Timezone:  "UTC",
 		TimeType:  DailyScheduleTimeType,
-		StartTime: now.Add(time.Hour).UnixMilli(),
-		EndTime:   now.Add(2 * time.Hour).UnixMilli(),
+		StartTime: now.Add(-2 * time.Hour).UnixMilli(),
+		EndTime:   now.Add(-1 * time.Hour).UnixMilli(),
 	}
 
 	isAfterDayScheduleActive := IsScheduleActive(afterDaySchedule, GlobalScheduleType)

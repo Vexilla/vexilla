@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"vexillaTypes"
 )
 
 func (environment *Environment) UnmarshalJSON(bytes []byte) error {
