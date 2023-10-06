@@ -8,8 +8,8 @@ export const templates: Record<Language, string> = {
 
 {{#groups}}
 export const {{{groupName}}} = {
-  name: {{{rawGroupName}}},
-  id: {{{groupId}}},
+  name: "{{{rawGroupName}}}",
+  id: "{{{groupId}}}",
   environments: {
     {{#environments}}
     {{{environmentName}}}: "{{{environmentId}}}",
@@ -30,9 +30,9 @@ export const {{{groupName}}} = {
 */
 
 {{#groups}}
-export const {{{groupName}}} = {
-  name: {{{rawGroupName}}},
-  id: {{{groupId}}},
+export const {{{groupName}}}Group = {
+  name: "{{{rawGroupName}}}",
+  id: "{{{groupId}}}",
   environments: {
     {{#environments}}
     {{{environmentName}}}: "{{{environmentId}}}",
@@ -54,7 +54,7 @@ export const {{{groupName}}} = {
 
 
 {{#groups}}
-pub mod {{{groupName}}} {
+pub mod {{{groupName}}}Group {
     use std::fmt::{ Display, Formatter, Result};
     pub const Name: &str = "{{{rawGroupName}}}";
     pub const Id: &str = "{{{groupId}}}";
@@ -94,5 +94,55 @@ pub mod {{{groupName}}} {
 
 {{/groups}}
 
+`,
+  go: `
+/*
+  {{{disclaimerText}}}
+*/
+
+package vexillaTypes
+
+{{#groups}}
+
+type {{{structName}}}Environments struct {
+  {{#environments}}
+  {{{name}}} func () string
+  {{/environments}}
+}
+
+type {{{structName}}}Features struct {
+  {{#features}}
+  {{{name}}} func () string
+  {{/features}}
+}
+
+type {{{structName}}}Group struct {
+  Name func () string
+  ID func () string
+  Environments func () {{{structName}}}Environments
+  Features func () {{{structName}}}Features
+}
+
+var {{{name}}}Group = func () {{{structName}}}Group {
+  return {{{structName}}}Group {
+    Name: func () string { return "{{{name}}}" },
+    ID: func () string { return "{{{id}}}" },
+    Environments: func () {{{structName}}}Environments {
+      return {{{structName}}}Environments {
+        {{#environments}}
+        {{{name}}}: func () string { return "{{{id}}}" },
+        {{/environments}}
+      }
+    } ,
+    Features: func () {{{structName}}}Features {
+      return {{{structName}}}Features {
+        {{#features}}
+        {{{name}}}: func () string { return "{{{id}}}" },
+        {{/features}}
+      }
+    },
+  }
+}
+{{/groups}}
 `,
 };

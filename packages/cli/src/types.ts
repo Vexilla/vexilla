@@ -1,9 +1,8 @@
-export type Language = "js" | "ts" | "rust";
+export type Language = "js" | "ts" | "rust" | "go";
 // | "elixir"
 // | "php"
 // | "python"
 // | "csharp"
-// | "go"
 // | "ruby"
 // | "lua"
 // | "dart";

@@ -87,6 +87,34 @@ const languageTransformers: Record<
       groups: groupsOutput,
     });
   },
+  go: function (groups: PublishedGroup[], typePrefix = "", typeSuffix = "") {
+    const groupsOutput = groups.map((group) => {
+      return {
+        name: Case.pascal(`${typePrefix} ${group.name} ${typeSuffix}`.trim()),
+        structName: Case.camel(
+          `${typePrefix} ${group.name} ${typeSuffix}`.trim()
+        ),
+        id: group.groupId,
+        environments: Object.values(group.environments).map((environment) => {
+          return {
+            name: Case.pascal(environment.name),
+            id: environment.environmentId,
+          };
+        }),
+        features: Object.values(group.features).map((feature) => {
+          return {
+            name: Case.pascal(feature.name),
+            id: feature.featureId,
+          };
+        }),
+      };
+    });
+
+    return mustache.render(templates.go, {
+      disclaimerText,
+      groups: groupsOutput,
+    });
+  },
   //   elixir: function (groups: PublishedGroup[], typePrefix = "") {
   //     const tagsString = tags
   //       .map((tag: string) => `:vexilla_tag_${Case.snake(tag)} = "${tag}"`)
@@ -105,6 +133,7 @@ const languageTransformers: Record<
   // ${keysString}
   // `;
   //   },
+
   //   php: function (groups: PublishedGroup[], typePrefix = "") {
   //     const tagsString = tags
   //       .map((tag: string) => `  public static $${Case.camel(tag)} = "${tag}";`)
@@ -130,6 +159,7 @@ const languageTransformers: Record<
   // }
   // `;
   //   },
+
   //   python: function (groups: PublishedGroup[], typePrefix = "") {
   //     const tagsString = tags
   //       .map((tag: string) => `    ${Case.constant(tag)} = "${tag}"`)
@@ -151,6 +181,7 @@ const languageTransformers: Record<
 
   // `;
   //   },
+
   //   csharp: function (groups: PublishedGroup[], typePrefix = "") {
   //     const tagsString = tags
   //       .map(
@@ -178,30 +209,7 @@ const languageTransformers: Record<
   //   }
   // }`;
   //   },
-  //   go: function (groups: PublishedGroup[], typePrefix = "") {
-  //     const tagsString = tags
-  //       .map(
-  //         (tag: string) => `const VexillaTag${Case.pascal(tag)} string = "${tag}"`
-  //       )
-  //       .join("\n");
 
-  //     const keysString = keys
-  //       .map(
-  //         (key: string) => `const VexillaKey${Case.pascal(key)} string = "${key}"`
-  //       )
-  //       .join("\n");
-
-  //     return `// ${disclaimerText}
-
-  // package vexillaMain
-
-  // // Tags
-  // ${tagsString}
-
-  // // Keys
-  // ${keysString}
-  // `;
-  //   },
   //   ruby: function (groups: PublishedGroup[], typePrefix = "") {
   //     const tagsString = tags
   //       .map((tag: string) => `    ${Case.constant(tag)} = "${tag}"`)
@@ -224,6 +232,7 @@ const languageTransformers: Record<
   // end
   // `;
   //   },
+
   //   lua: function (groups: PublishedGroup[], typePrefix = "") {
   //     const tagsString = tags
   //       .map((tag: string) => `    ${Case.constant(tag)} = "${tag}"`)
@@ -276,8 +285,8 @@ const languageAliases: Record<string, Language> = {
   js: "js",
   typescript: "ts",
   ts: "ts",
-  // golang: "go",
-  // go: "go",
+  golang: "go",
+  go: "go",
   // py: "python",
   // python: "python",
   // ex: "elixir",
