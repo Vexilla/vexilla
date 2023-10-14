@@ -64,6 +64,19 @@ const languageTransformers: Record<
       groups: groupsOutput,
     });
   },
+  elixir: function (
+    groups: PublishedGroup[],
+    typePrefix = "",
+    typeSuffix = ""
+  ) {
+    const groupsOutput = groups.map(
+      parseGroup(typePrefix, typeSuffix, Case.snake, Case.pascal, Case.pascal)
+    );
+    return mustache.render(templates.elixir, {
+      disclaimerText,
+      groups: groupsOutput,
+    });
+  },
   //   elixir: function (groups: PublishedGroup[], typePrefix = "") {
   //     const tagsString = tags
   //       .map((tag: string) => `:vexilla_tag_${Case.snake(tag)} = "${tag}"`)
@@ -277,8 +290,8 @@ const languageAliases: Record<string, Language> = {
   go: "go",
   // py: "python",
   // python: "python",
-  // ex: "elixir",
-  // elixir: "elixir",
+  ex: "elixir",
+  elixir: "elixir",
   // rb: "ruby",
   // ruby: "ruby",
   rs: "rust",

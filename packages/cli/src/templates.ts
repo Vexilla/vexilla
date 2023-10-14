@@ -146,6 +146,10 @@ var {{{name}}}Group = func () {{{name}}}Group {
 {{/groups}}
 `,
   csharp: `
+/*
+{{{disclaimerText}}}
+*/
+
 namespace Vexilla.Client {
     {{#groups}}
     public static class {{{name}}}Group {
@@ -167,25 +171,54 @@ namespace Vexilla.Client {
     {{/groups}}
 }
 `,
+  elixir: `
+"""
+{{{disclaimerText}}}
+"""
+
+{{#groups}}
+defmodule {{{name}}}Group do
+  @name "{{{rawName}}}"
+  @group_id "{{{id}}}"
+
+  defmacro name, do: @name
+  defmacro group_id, do: @group_id
+
+  {{#environments}}
+  defmodule {{{safeName}}}Environment do
+    @name "{{{rawName}}}"
+    @environment_id "{{{id}}}"
+
+    defmacro name, do: @name
+    defmacro environment_id, do: @environment_id
+  end
+
+  {{/environments}}
+
+  {{#features}}
+  defmodule {{{safeName}}}Feature do
+    @name "{{{rawName}}}"
+    @feature_id "{{{id}}}"
+
+    defmacro name, do: @name
+    defmacro feature_id, do: @feature_id
+  end
+
+  {{/features}}
+end
+
+{{/groups}}
+`,
 };
 
-`
-namespace Vexilla.Client {
+// defmodule FeatureType do
+//   @toggle "toggle"
+//   @gradual "gradual"
+//   @selective "selective"
+//   @value "value"
 
-  class ToggleGroup {
-    public static string Name = "Toggle";
-    public static string EnvironmentId = "khgasdkfhgaksdhgf";
-
-
-    public static class Environments {
-
-    }
-
-    public static class Features {
-
-    }
-
-  }
-}
-
-`;
+//   defmacro toggle, do: @toggle
+//   defmacro gradual, do: @gradual
+//   defmacro selective, do: @selective
+//   defmacro value, do: @value
+// end
