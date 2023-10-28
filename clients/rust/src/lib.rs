@@ -69,10 +69,9 @@ impl VexillaClient {
     }
 
     pub fn get_flags(&self, group_name_or_id: &str, fetch: Callback) -> VexillaResult<FlagGroup> {
-        let scrubbed_group_name_or_id = group_name_or_id.to_string().replace(".json", "");
         let coerced_group_id = &self
             .group_lookup_table
-            .get(scrubbed_group_name_or_id.as_str())
+            .get(group_name_or_id)
             .ok_or(VexillaError::GroupLookupKeyNotFound)?;
         let url = format!("{}/{}.json", self.base_url, coerced_group_id);
         let response_text = fetch(&url);
@@ -90,8 +89,7 @@ impl VexillaClient {
     }
 
     pub fn set_flags(&mut self, group_name_or_id: &str, flags: FlagGroup) {
-        let scrubbed_file_name = group_name_or_id.to_string().replace(".json", "");
-        let coerced_group_name_or_id = &self.group_lookup_table[scrubbed_file_name.as_str()];
+        let coerced_group_name_or_id = &self.group_lookup_table[group_name_or_id];
         self.flag_groups
             .insert(coerced_group_name_or_id.to_string(), flags.clone());
 
@@ -109,11 +107,10 @@ impl VexillaClient {
         group_name_or_id: &str,
         fetch: Callback,
     ) -> VexillaResult<(), VexillaError> {
-        let scrubbed_group_name_or_id = group_name_or_id.to_string().replace(".json", "");
         let cloned_self = self.clone();
         let coerced_group_id = cloned_self
             .group_lookup_table
-            .get(scrubbed_group_name_or_id.as_str())
+            .get(group_name_or_id)
             .ok_or(VexillaError::GroupLookupKeyNotFound)?;
         let flag_group = self.get_flags(coerced_group_id.as_str(), fetch)?;
         self.set_flags(group_name_or_id, flag_group);

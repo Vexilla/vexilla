@@ -92,7 +92,7 @@ pub fn is_schedule_active_with_now(
                 .with_second(59)?
                 .with_nanosecond(999_999_999)?;
 
-            let is_active_date = match (now.gt(&start_date), now.lt(&end_date)) {
+            let is_active_date = match (now.ge(&start_date), now.le(&end_date)) {
                 (true, true) => true,
                 (_, _) => false,
             };
@@ -105,12 +105,12 @@ pub fn is_schedule_active_with_now(
                     let end_time = Utc.timestamp_millis_opt(schedule.end_time).latest()?;
 
                     match (
-                        now.gt(&start_date
+                        now.ge(&start_date
                             .with_hour(start_time.hour())?
                             .with_minute(start_time.minute())?
                             .with_second(start_time.second())?
                             .with_nanosecond(start_time.nanosecond())?),
-                        now.lt(&end_date
+                        now.le(&end_date
                             .with_hour(end_time.hour())?
                             .with_minute(end_time.minute())?
                             .with_second(end_time.second())?
@@ -301,20 +301,6 @@ mod tests {
             start_time: (now - Duration::hours(1)).timestamp_millis(),
             end_time: (now + Duration::hours(1)).timestamp_millis(),
         };
-
-        println!(
-            "DURING
-            now: {},
-            start:{},
-            end: {},
-            start_time: {},
-            end_time: {}",
-            now.timestamp_millis(),
-            (now - Duration::days(1)).timestamp_millis(),
-            (now + Duration::days(1)).timestamp_millis(),
-            (now - Duration::hours(1)).timestamp_millis(),
-            (now + Duration::hours(1)).timestamp_millis()
-        );
 
         let after_day_schedule = VexillaSchedule {
             start: (now - Duration::days(1)).timestamp_millis(),
