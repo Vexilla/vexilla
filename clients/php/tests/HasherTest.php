@@ -12,15 +12,15 @@ final class HasherTest extends TestCase
 
     public function testWorkingGradualSeed()
     {
-        $hasher = new Hasher($this->workingGradualSeed);
-        $hashValue = $hasher->hashString($this->uuid);
-        $this->assertTrue($hashValue <= 40);
+        $hashValue = Hasher::hashString($this->uuid, $this->workingGradualSeed);
+        var_dump("working value: $hashValue");
+        $this->assertTrue($hashValue <= 0.4);
     }
 
     public function testNonWorkingGradualSeed()
     {
-        $hasher = new Hasher($this->nonWorkingGradualSeed);
-        $hashValue = $hasher->hashString($this->uuid);
-        $this->assertTrue($hashValue > 40);
+        $hashValue = Hasher::hashString($this->uuid, $this->nonWorkingGradualSeed);
+        var_dump("NOT working value: $hashValue");
+        $this->assertTrue($hashValue > 0.4);
     }
 }
