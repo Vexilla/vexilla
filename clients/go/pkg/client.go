@@ -502,89 +502,89 @@ func (client Client) ShouldCustomFloat(groupNameOrId string, featureNameOrId str
 	return false, nil
 }
 
-func (client *Client) ValueString(groupNameOrId string, featureNameOrId string) (string, error) {
+func (client *Client) ValueString(groupNameOrId string, featureNameOrId string, defaultValue string) (string, error) {
 
 	rawFeature, err := client.getRawFeature(groupNameOrId, featureNameOrId)
 
 	if err != nil {
-		return "", err
+		return defaultValue, err
 	}
 
 	if rawFeature.FeatureType != "value" {
-		return "", fmt.Errorf("feature (%s) is not of type 'value'", featureNameOrId)
+		return defaultValue, fmt.Errorf("feature (%s) is not of type 'value'", featureNameOrId)
 	}
 
 	realIds, err := client.getRealIds(groupNameOrId, featureNameOrId)
 
 	if err != nil {
-		return "", err
+		return defaultValue, err
 	}
 
 	valueStringFeature := client.FlagGroups[realIds.RealGroupId].Environments[realIds.RealEnvironmentId].ValueStringFeatures[realIds.RealFeatureId]
 
 	if valueStringFeature.FeatureId == "" {
-		return "", fmt.Errorf("value feature not found for groupId (%s) and featureId (%s)", realIds.RealGroupId, realIds.RealFeatureId)
+		return defaultValue, fmt.Errorf("value feature not found for groupId (%s) and featureId (%s)", realIds.RealGroupId, realIds.RealFeatureId)
 	}
 
 	return valueStringFeature.Value, nil
 }
 
-func (client *Client) ValueInt(groupNameOrId string, featureNameOrId string) (int64, error) {
+func (client *Client) ValueInt(groupNameOrId string, featureNameOrId string, defaultValue int64) (int64, error) {
 
 	rawFeature, err := client.getRawFeature(groupNameOrId, featureNameOrId)
 
 	if err != nil {
-		return 0, err
+		return defaultValue, err
 	}
 
 	if rawFeature.FeatureType != ValueFeatureType {
-		return 0, fmt.Errorf("feature (%s) is not of type 'value'", featureNameOrId)
+		return defaultValue, fmt.Errorf("feature (%s) is not of type 'value'", featureNameOrId)
 	}
 
 	if err != nil {
-		return 0, err
+		return defaultValue, err
 	}
 
 	if rawFeature.FeatureType != ValueFeatureType {
-		return 0, fmt.Errorf("feature (%s) is not of type 'value'", featureNameOrId)
+		return defaultValue, fmt.Errorf("feature (%s) is not of type 'value'", featureNameOrId)
 	}
 
 	realIds, err := client.getRealIds(groupNameOrId, featureNameOrId)
 
 	if err != nil {
-		return 0, err
+		return defaultValue, err
 	}
 
 	valueIntFeature := client.FlagGroups[realIds.RealGroupId].Environments[realIds.RealEnvironmentId].ValueIntFeatures[realIds.RealFeatureId]
 
 	if valueIntFeature.FeatureId == "" {
-		return 0, fmt.Errorf("value feature not found for groupId (%s) and featureId (%s)", realIds.RealGroupId, realIds.RealFeatureId)
+		return defaultValue, fmt.Errorf("value feature not found for groupId (%s) and featureId (%s)", realIds.RealGroupId, realIds.RealFeatureId)
 	}
 
 	return valueIntFeature.Value, nil
 }
 
-func (client *Client) ValueFloat(groupNameOrId string, featureNameOrId string) (float64, error) {
+func (client *Client) ValueFloat(groupNameOrId string, featureNameOrId string, defaultValue float64) (float64, error) {
 	rawFeature, err := client.getRawFeature(groupNameOrId, featureNameOrId)
 
 	if err != nil {
-		return 0.0, err
+		return defaultValue, err
 	}
 
 	if rawFeature.FeatureType != ValueFeatureType {
-		return 0.0, fmt.Errorf("feature (%s) is not of type 'value'", featureNameOrId)
+		return defaultValue, fmt.Errorf("feature (%s) is not of type 'value'", featureNameOrId)
 	}
 
 	realIds, err := client.getRealIds(groupNameOrId, featureNameOrId)
 
 	if err != nil {
-		return 0.0, err
+		return defaultValue, err
 	}
 
 	valueFloatFeature := client.FlagGroups[realIds.RealGroupId].Environments[realIds.RealEnvironmentId].ValueFloatFeatures[realIds.RealFeatureId]
 
 	if valueFloatFeature.FeatureId == "" {
-		return 0.0, fmt.Errorf("value feature not found for groupId (%s) and featureId (%s)", realIds.RealGroupId, realIds.RealFeatureId)
+		return defaultValue, fmt.Errorf("value feature not found for groupId (%s) and featureId (%s)", realIds.RealGroupId, realIds.RealFeatureId)
 	}
 
 	return valueFloatFeature.Value, nil
