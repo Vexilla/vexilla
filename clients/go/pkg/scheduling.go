@@ -124,7 +124,7 @@ func IsScheduleActiveWithNow(schedule Schedule, scheduleType ScheduleType, now t
 				endTimestamp = todayZeroTimestamp + zeroedEndTimestampPlusDay
 			}
 
-			return nowTimestamp > startTimestamp && nowTimestamp < endTimestamp
+			return nowTimestamp >= startTimestamp && nowTimestamp <= endTimestamp
 
 		default:
 			return false
