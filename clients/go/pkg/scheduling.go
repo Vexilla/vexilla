@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-func IsScheduleFeatureActive(feature Feature) bool {
+func IsScheduledFeatureActive(feature Feature) bool {
 	return IsScheduleActive(feature.Schedule, feature.ScheduleType)
 }
 

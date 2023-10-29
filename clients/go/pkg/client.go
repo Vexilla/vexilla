@@ -353,6 +353,10 @@ func (client Client) ShouldCustomString(groupNameOrId string, featureNameOrId st
 		return false, fmt.Errorf("no environment found for environmentId: %s", realIds.RealEnvironmentId)
 	}
 
+	if !IsScheduledFeatureActive(rawFeature) {
+		return false, nil
+	}
+
 	switch rawFeature.FeatureType {
 	case ToggleFeatureType:
 		toggleFeature := environment.ToggleFeatures[realIds.RealFeatureId]
@@ -410,6 +414,10 @@ func (client Client) ShouldCustomInt(groupNameOrId string, featureNameOrId strin
 		return false, fmt.Errorf("no environment found for environmentId: %s", realIds.RealEnvironmentId)
 	}
 
+	if !IsScheduledFeatureActive(rawFeature) {
+		return false, nil
+	}
+
 	switch rawFeature.FeatureType {
 	case ToggleFeatureType:
 		toggleFeature := environment.ToggleFeatures[realIds.RealFeatureId]
@@ -464,6 +472,10 @@ func (client Client) ShouldCustomFloat(groupNameOrId string, featureNameOrId str
 
 	if environment.EnvironmentId == "" {
 		return false, fmt.Errorf("no environment found for environmentId: %s", realIds.RealEnvironmentId)
+	}
+
+	if !IsScheduledFeatureActive(rawFeature) {
+		return false, nil
 	}
 
 	switch rawFeature.FeatureType {
@@ -526,6 +538,10 @@ func (client *Client) ValueString(groupNameOrId string, featureNameOrId string, 
 		return defaultValue, fmt.Errorf("value feature not found for groupId (%s) and featureId (%s)", realIds.RealGroupId, realIds.RealFeatureId)
 	}
 
+	if !IsScheduledFeatureActive(rawFeature) {
+		return defaultValue, nil
+	}
+
 	return valueStringFeature.Value, nil
 }
 
@@ -561,6 +577,10 @@ func (client *Client) ValueInt(groupNameOrId string, featureNameOrId string, def
 		return defaultValue, fmt.Errorf("value feature not found for groupId (%s) and featureId (%s)", realIds.RealGroupId, realIds.RealFeatureId)
 	}
 
+	if !IsScheduledFeatureActive(rawFeature) {
+		return defaultValue, nil
+	}
+
 	return valueIntFeature.Value, nil
 }
 
@@ -585,6 +605,10 @@ func (client *Client) ValueFloat(groupNameOrId string, featureNameOrId string, d
 
 	if valueFloatFeature.FeatureId == "" {
 		return defaultValue, fmt.Errorf("value feature not found for groupId (%s) and featureId (%s)", realIds.RealGroupId, realIds.RealFeatureId)
+	}
+
+	if !IsScheduledFeatureActive(rawFeature) {
+		return defaultValue, nil
 	}
 
 	return valueFloatFeature.Value, nil
