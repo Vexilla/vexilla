@@ -12,7 +12,7 @@ import {
   PublishedEnvironment,
 } from "@vexilla/types";
 
-import Hasher from "./hasher";
+import { hashString } from "./hasher";
 import {
   createEnvironmentLookupTable,
   createFeatureLookupTable,
@@ -20,12 +20,10 @@ import {
 } from "./utils/lookup_tables";
 import { isScheduledFeatureActive } from "./scheduling";
 
-const LATEST_MANIFEST_VERSION = 1;
-
 type FetchHook<T> = (url: string) => Promise<T>;
 
 export class VexillaClient {
-  protected suppressLogs;
+  protected showLogs;
   protected baseUrl: string;
   protected environment: string;
   protected customInstanceHash = "";
@@ -36,8 +34,8 @@ export class VexillaClient {
   protected featureLookupTable: Record<string, Record<string, string>> = {};
   protected environmentLookupTable: Record<string, Record<string, string>> = {};
 
-  constructor(config: VexillaClientConfig, suppressLogs = true) {
-    this.suppressLogs = suppressLogs;
+  constructor(config: VexillaClientConfig, showLogs = false) {
+    this.showLogs = showLogs;
     this.baseUrl = config.baseUrl;
     this.environment = config.environment || "prod";
     this.customInstanceHash = config.customInstanceHash;
@@ -58,16 +56,6 @@ export class VexillaClient {
   async setManifest(manifest: VexillaManifest) {
     this.manifest = manifest;
     this.groupLookupTable = createGroupLookupTable(manifest.groups);
-
-    const currentVersion = this.manifest.version
-      ? parseInt(this.manifest.version.replace("v", ""))
-      : 0;
-
-    if (currentVersion !== LATEST_MANIFEST_VERSION) {
-      throw new Error(
-        `Manifest version mismatch. Current: ${currentVersion} - Required: ${LATEST_MANIFEST_VERSION}. You must either use an appropriate client or you must update your schema.`
-      );
-    }
   }
 
   async syncManifest(fetchHook: FetchHook<VexillaManifest>) {
@@ -76,29 +64,26 @@ export class VexillaClient {
   }
 
   async getFlags(
-    fileName: string,
-    fetchHook: FetchHook<VexillaFlags>
+    groupNameOrId: string,
+    fetchHook: FetchHook<PublishedGroup>
   ): Promise<PublishedGroup> {
     if (!this.manifest) {
       throw new Error("Manifest is not fetched");
     }
-
-    let flagFileName = fileName.replace(".json", "");
-    let groupId = this.groupLookupTable[flagFileName];
+    let groupId = this.groupLookupTable[groupNameOrId];
 
     if (!groupId) {
       throw new Error("FlagGroup not found in manifest.");
     }
 
-    const flagsResponse: any = await fetchHook(
+    const flagsResponse: PublishedGroup = await fetchHook(
       `${this.baseUrl}/${groupId}.json`
     );
     return flagsResponse;
   }
 
-  setFlags(groupName: string, flags: PublishedGroup) {
-    let flagFileName = groupName.replace(".json", "");
-    let groupId = this.groupLookupTable[flagFileName];
+  setFlags(groupNameOrId: string, flags: PublishedGroup) {
+    let groupId = this.groupLookupTable[groupNameOrId];
 
     this.featureLookupTable[groupId] = createFeatureLookupTable(flags.features);
     this.environmentLookupTable[groupId] = createEnvironmentLookupTable(
@@ -108,7 +93,7 @@ export class VexillaClient {
     this.flagGroups[groupId] = flags;
   }
 
-  async syncFlags(fileName: string, fetchHook: FetchHook<VexillaFlags>) {
+  async syncFlags(fileName: string, fetchHook: FetchHook<PublishedGroup>) {
     if (!this.manifest) {
       throw new Error("Manifest is not fetched");
     }
@@ -118,11 +103,11 @@ export class VexillaClient {
   }
 
   should(
-    groupName: string,
+    groupNameOrId: string,
     featureName: string,
     customInstanceHash?: string | number
   ): boolean {
-    const actualItems = this.getActualItems(groupName, featureName);
+    const actualItems = this.getActualItems(groupNameOrId, featureName);
 
     if (!actualItems.success) {
       return false;
@@ -144,7 +129,7 @@ export class VexillaClient {
           return false;
         }
 
-        if (!this.customInstanceHash) {
+        if (!customInstanceHash && !this.customInstanceHash) {
           console.error(
             "customInstanceHash config must be defined when using 'gradual' Feature Types"
           );
@@ -153,14 +138,14 @@ export class VexillaClient {
         feature = feature as VexillaGradualFeature;
 
         _should =
-          this.getInstancePercentile(feature.seed) <= feature.value * 100;
+          hashString(
+            `${customInstanceHash || this.customInstanceHash}`,
+            feature.seed
+          ) <= feature.value;
         break;
 
       case VexillaFeatureTypeSelective:
         const instanceHash = customInstanceHash || this.customInstanceHash;
-        console.log("parseFloat", parseFloat(instanceHash as string));
-        console.log("featureValue", feature.value);
-        console.log({ instanceHash });
         _should = (feature.value as (string | number)[]).includes(
           instanceHash || parseFloat(instanceHash as string)
         );
@@ -174,11 +159,11 @@ export class VexillaClient {
   }
 
   value(
-    groupName: string,
+    groupNameOrId: string,
     featureName: string,
     defaultValue: string | number | null = null
   ): string | number | null {
-    const actualItems = this.getActualItems(groupName, featureName);
+    const actualItems = this.getActualItems(groupNameOrId, featureName);
 
     if (!actualItems.success) {
       return defaultValue;
@@ -197,7 +182,7 @@ export class VexillaClient {
   }
 
   protected getActualItems(
-    groupName: string,
+    groupNameOrId: string,
     featureName: string
   ):
     | {
@@ -207,8 +192,7 @@ export class VexillaClient {
         feature: VexillaFeature;
       }
     | { success: false } {
-    const scrubbedGroupName = groupName.replace(".json", "");
-    const groupId = this.groupLookupTable[scrubbedGroupName];
+    const groupId = this.groupLookupTable[groupNameOrId];
     const group = this.flagGroups[groupId];
 
     if (!group) {
@@ -226,7 +210,7 @@ export class VexillaClient {
     const environment = this.flagGroups[groupId].environments[environmentId];
     if (!environment) {
       this.warn(
-        `Environment (${this.environment}) not found in group (${groupName}, ${groupId}).`
+        `Environment (${this.environment}) not found in group (${groupNameOrId}, ${groupId}).`
       );
       return { success: false };
     }
@@ -243,7 +227,7 @@ export class VexillaClient {
       this.warn(
         "feature is undefined for: ",
         this.environment,
-        groupName,
+        groupNameOrId,
         featureName
       );
       return { success: false };
@@ -257,19 +241,14 @@ export class VexillaClient {
     };
   }
 
-  protected getInstancePercentile(seed: number) {
-    const hasher = new Hasher(seed);
-    return hasher.hashString(this.customInstanceHash);
-  }
-
   protected log(...props) {
-    if (!this.suppressLogs) {
+    if (this.showLogs) {
       console.log(...props);
     }
   }
 
   protected warn(...props) {
-    if (!this.suppressLogs) {
+    if (this.showLogs) {
       console.warn(...props);
     }
   }
