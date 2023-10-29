@@ -12,7 +12,7 @@ use crate::scheduling::*;
 use crate::types::*;
 
 type VexillaResult<T, E = VexillaError> = std::result::Result<T, E>;
-type Callback = fn(url: &str) -> String;
+type Callback = fn(url: &str) -> VexillaResult<String>;
 
 #[derive(Clone, Debug, Default)]
 pub struct VexillaClient {
@@ -33,15 +33,15 @@ pub struct VexillaClient {
 impl VexillaClient {
     pub fn new(
         environment: impl Into<&'static str>,
-        base_url: &'static str,
-        instance_id: &'static str,
+        base_url: impl Into<&'static str>,
+        instance_id: impl Into<&'static str>,
     ) -> VexillaClient {
         VexillaClient {
             manifest: Manifest::default(),
             show_logs: false,
             environment: environment.into(),
-            base_url,
-            instance_id,
+            base_url: base_url.into(),
+            instance_id: instance_id.into(),
             flag_groups: HashMap::new(),
             group_lookup_table: HashMap::new(),
             flag_lookup_table: HashMap::new(),
@@ -49,10 +49,11 @@ impl VexillaClient {
         }
     }
 
-    pub fn get_manifest(&self, fetch: Callback) -> Result<Manifest> {
+    pub fn get_manifest(&self, fetch: Callback) -> VexillaResult<Manifest> {
         let url = format!("{}/manifest.json", self.base_url);
         let response_text = fetch(&url);
-        let manifest: Manifest = serde_json::from_str(response_text.as_ref())?;
+        let manifest: Manifest = serde_json::from_str(response_text?.as_ref())
+        .map_err(|_| VexillaError::Unknown)?;
 
         Ok(manifest)
     }
@@ -61,11 +62,12 @@ impl VexillaClient {
         self.group_lookup_table = create_group_lookup_table(manifest);
     }
 
-    pub fn sync_manifest(&mut self, fetch: Callback) {
-        let manifest = self.get_manifest(fetch).unwrap();
+    pub fn sync_manifest(&mut self, fetch: Callback) -> VexillaResult<bool> {
+        let manifest = self.get_manifest(fetch)?;
         let lookup_table = create_group_lookup_table(manifest.clone());
         self.manifest = manifest;
         self.group_lookup_table = lookup_table;
+        Ok(true)
     }
 
     pub fn get_flags(&self, group_name_or_id: &str, fetch: Callback) -> VexillaResult<FlagGroup> {
@@ -74,7 +76,7 @@ impl VexillaClient {
             .get(group_name_or_id)
             .ok_or(VexillaError::GroupLookupKeyNotFound)?;
         let url = format!("{}/{}.json", self.base_url, coerced_group_id);
-        let response_text = fetch(&url);
+        let response_text = fetch(&url)?;
 
         println!("response text: {response_text}");
 
@@ -446,12 +448,12 @@ mod tests {
         */
 
         let manifest = client
-            .get_manifest(|url| reqwest::blocking::get(url).unwrap().text().unwrap())
+            .get_manifest(|url| Ok(reqwest::blocking::get(url).unwrap().text().unwrap()))
             .unwrap();
 
         assert!(!manifest.version.is_empty());
 
-        client.sync_manifest(|url| reqwest::blocking::get(url).unwrap().text().unwrap());
+        client.sync_manifest(|url| Ok(reqwest::blocking::get(url).unwrap().text().unwrap()));
 
         /*
             Get Flags
@@ -459,7 +461,7 @@ mod tests {
 
         let flags = client
             .get_flags("Gradual", |url| {
-                reqwest::blocking::get(url).unwrap().text().unwrap()
+                Ok(reqwest::blocking::get(url).unwrap().text().unwrap())
             })
             .unwrap();
 
@@ -471,7 +473,7 @@ mod tests {
 
         client
             .sync_flags("Gradual", |url| {
-                reqwest::blocking::get(url).unwrap().text().unwrap()
+                Ok(reqwest::blocking::get(url).unwrap().text().unwrap())
             })
             .unwrap();
 
@@ -495,7 +497,7 @@ mod tests {
 
         client
             .sync_flags("Scheduled", |url| {
-                reqwest::blocking::get(url).unwrap().text().unwrap()
+                Ok(reqwest::blocking::get(url).unwrap().text().unwrap())
             })
             .unwrap();
 
@@ -549,7 +551,7 @@ mod tests {
 
         client
             .sync_flags("Selective", |url| {
-                reqwest::blocking::get(url).unwrap().text().unwrap()
+                Ok(reqwest::blocking::get(url).unwrap().text().unwrap())
             })
             .unwrap();
 
@@ -579,7 +581,7 @@ mod tests {
 
         client
             .sync_flags("Value", |url| {
-                reqwest::blocking::get(url).unwrap().text().unwrap()
+                Ok(reqwest::blocking::get(url).unwrap().text().unwrap())
             })
             .unwrap();
 
