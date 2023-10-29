@@ -9,12 +9,15 @@ namespace Vexilla.Client
             return IsScheduleActive(feature.Schedule, feature.ScheduleType);
         }
 
-        public static bool IsScheduleActive(Schedule schedule, string scheduleType)
+        public static bool IsScheduleActive(Schedule schedule,
+            string scheduleType)
         {
-            return IsScheduleActiveWithNow(schedule, scheduleType, DateTimeOffset.Now);
+            return IsScheduleActiveWithNow(schedule, scheduleType,
+                DateTimeOffset.Now);
         }
 
-        public static bool IsScheduleActiveWithNow(Schedule schedule, string scheduleType, DateTimeOffset now)
+        private static bool IsScheduleActiveWithNow(Schedule schedule,
+            string scheduleType, DateTimeOffset now)
         {
             switch (scheduleType)
             {
@@ -23,9 +26,8 @@ namespace Vexilla.Client
                 case ScheduleType.Global:
                 case ScheduleType.Environment:
 
-                    var isInDateRange = false;
-
-                    var startDateTimeOffset = DateTimeOffset.FromUnixTimeMilliseconds(schedule.Start);
+                    var startDateTimeOffset =
+                        DateTimeOffset.FromUnixTimeMilliseconds(schedule.Start);
 
                     var startOfStartDate = new DateTimeOffset(
                         startDateTimeOffset.Year,
@@ -37,7 +39,8 @@ namespace Vexilla.Client
                         startDateTimeOffset.Offset
                     );
 
-                    var endDateTimeOffset = DateTimeOffset.FromUnixTimeMilliseconds(schedule.End);
+                    var endDateTimeOffset =
+                        DateTimeOffset.FromUnixTimeMilliseconds(schedule.End);
 
                     var endOfEndDate = new DateTimeOffset(
                         endDateTimeOffset.Year,
@@ -49,10 +52,17 @@ namespace Vexilla.Client
                         endDateTimeOffset.Offset
                     );
 
-                    if (now < startOfStartDate || now > endOfEndDate) return false;
+                    if (now <= startOfStartDate || now >= endOfEndDate)
+                    {
+                        return false;
+                    }
 
-                    var startTime = DateTimeOffset.FromUnixTimeMilliseconds(schedule.StartTime);
-                    var endTime = DateTimeOffset.FromUnixTimeMilliseconds(schedule.EndTime);
+                    var startTime =
+                        DateTimeOffset.FromUnixTimeMilliseconds(schedule
+                            .StartTime);
+                    var endTime =
+                        DateTimeOffset.FromUnixTimeMilliseconds(
+                            schedule.EndTime);
 
 
                     switch (schedule.TimeType)
@@ -83,11 +93,12 @@ namespace Vexilla.Client
                                 endDateTimeOffset.Offset
                             );
 
-                            return now > startDateTime && now < endDateTime;
+                            return now >= startDateTime && now <= endDateTime;
 
                         case ScheduleTimeType.Daily:
 
-                            var zeroDay = DateTimeOffset.FromUnixTimeMilliseconds(0);
+                            var zeroDay =
+                                DateTimeOffset.FromUnixTimeMilliseconds(0);
                             var nowTimestamp = now.ToUnixTimeMilliseconds();
 
                             var todayZeroTimestamp = new DateTimeOffset(
@@ -122,15 +133,24 @@ namespace Vexilla.Client
                                 endTime.Millisecond,
                                 now.Offset
                             );
-                            var zeroedEndTimestamp = zeroedEndDateTimeOffset.ToUnixTimeMilliseconds();
-                            var zeroedEndTimestampPlusDay = zeroedEndDateTimeOffset.AddDays(1).ToUnixTimeMilliseconds();
+                            var zeroedEndTimestamp = zeroedEndDateTimeOffset
+                                .ToUnixTimeMilliseconds();
+                            var zeroedEndTimestampPlusDay =
+                                zeroedEndDateTimeOffset.AddDays(1)
+                                    .ToUnixTimeMilliseconds();
 
-                            var startTimestamp = todayZeroTimestamp + zeroedStartTimestamp;
-                            var endTimestamp = todayZeroTimestamp + zeroedEndTimestamp;
+                            var startTimestamp = todayZeroTimestamp +
+                                                 zeroedStartTimestamp;
+                            var endTimestamp =
+                                todayZeroTimestamp + zeroedEndTimestamp;
                             if (zeroedStartTimestamp > zeroedEndTimestamp)
-                                endTimestamp = todayZeroTimestamp + zeroedEndTimestampPlusDay;
+                            {
+                                endTimestamp = todayZeroTimestamp +
+                                               zeroedEndTimestampPlusDay;
+                            }
 
-                            return nowTimestamp > startTimestamp && nowTimestamp < endTimestamp;
+                            return nowTimestamp > startTimestamp &&
+                                   nowTimestamp < endTimestamp;
                     }
 
                     break;

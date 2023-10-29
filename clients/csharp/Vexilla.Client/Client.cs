@@ -142,6 +142,11 @@ namespace Vexilla.Client
             var rawFeature = environment
                 .RawFeatures[realIds.RealFeatureId];
 
+            if (!Scheduler.IsScheduleFeatureActive(rawFeature))
+            {
+                return false;
+            }
+
             switch (rawFeature.FeatureType)
             {
                 case FeatureType.Toggle:
@@ -190,6 +195,11 @@ namespace Vexilla.Client
 
             var rawFeature = environment
                 .RawFeatures[realIds.RealFeatureId];
+
+            if (!Scheduler.IsScheduleFeatureActive(rawFeature))
+            {
+                return false;
+            }
 
             switch (rawFeature.FeatureType)
             {
@@ -240,6 +250,11 @@ namespace Vexilla.Client
             var rawFeature = environment
                 .RawFeatures[realIds.RealFeatureId];
 
+            if (!Scheduler.IsScheduleFeatureActive(rawFeature))
+            {
+                return false;
+            }
+
             switch (rawFeature.FeatureType)
             {
                 case FeatureType.Toggle:
@@ -279,7 +294,8 @@ namespace Vexilla.Client
             return false;
         }
 
-        public string ValueString(string groupNameOrId, string featureNameOrId)
+        public string ValueString(string groupNameOrId, string featureNameOrId,
+            string defaultValue)
         {
             var realIds = GetRealIds(groupNameOrId, featureNameOrId);
 
@@ -288,6 +304,11 @@ namespace Vexilla.Client
 
             var rawFeature = environment
                 .RawFeatures[realIds.RealFeatureId];
+
+            if (!Scheduler.IsScheduleFeatureActive(rawFeature))
+            {
+                return defaultValue;
+            }
 
             if (rawFeature.FeatureType != FeatureType.Value)
             {
@@ -306,7 +327,8 @@ namespace Vexilla.Client
             return valueStringFeature.Value;
         }
 
-        public long ValueInt(string groupNameOrId, string featureNameOrId)
+        public long ValueInt(string groupNameOrId, string featureNameOrId,
+            int defaultValue)
         {
             var realIds = GetRealIds(groupNameOrId, featureNameOrId);
 
@@ -315,6 +337,11 @@ namespace Vexilla.Client
 
             var rawFeature = environment
                 .RawFeatures[realIds.RealFeatureId];
+
+            if (!Scheduler.IsScheduleFeatureActive(rawFeature))
+            {
+                return defaultValue;
+            }
 
             if (rawFeature.FeatureType != FeatureType.Value)
             {
@@ -333,7 +360,8 @@ namespace Vexilla.Client
             return valueIntFeature.Value;
         }
 
-        public double ValueFloat(string groupNameOrId, string featureNameOrId)
+        public double ValueFloat(string groupNameOrId, string featureNameOrId,
+            float defaultValue)
         {
             var realIds = GetRealIds(groupNameOrId, featureNameOrId);
 
@@ -342,6 +370,11 @@ namespace Vexilla.Client
 
             var rawFeature = environment
                 .RawFeatures[realIds.RealFeatureId];
+
+            if (!Scheduler.IsScheduleFeatureActive(rawFeature))
+            {
+                return defaultValue;
+            }
 
             if (rawFeature.FeatureType != FeatureType.Value)
             {
