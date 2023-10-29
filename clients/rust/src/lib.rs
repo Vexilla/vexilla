@@ -90,8 +90,8 @@ impl VexillaClient {
         }
     }
 
-    pub fn set_flags(&mut self, group_name_or_id: &str, flags: FlagGroup) {
-        let coerced_group_name_or_id = &self.group_lookup_table[group_name_or_id];
+    pub fn set_flags(&mut self, group_name_or_id: &str, flags: FlagGroup) -> VexillaResult<bool> {
+        let coerced_group_name_or_id = &self.group_lookup_table.get(group_name_or_id).ok_or("group not found").map_err(|_| VexillaError::Unknown)?;
         self.flag_groups
             .insert(coerced_group_name_or_id.to_string(), flags.clone());
 
@@ -102,6 +102,7 @@ impl VexillaClient {
         let environment_table = create_environment_lookup_table(flags);
         self.environment_lookup_table
             .insert(coerced_group_name_or_id.to_string(), environment_table);
+        Ok(true)
     }
 
     pub fn sync_flags(
