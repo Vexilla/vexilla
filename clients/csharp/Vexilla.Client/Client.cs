@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -119,9 +118,6 @@ namespace Vexilla.Client
             Func<string, Task<string>> fetch)
         {
             var flags = await GetFlags(groupNameOrId, fetch);
-
-            Debug.WriteLine("flags", flags);
-
             SetFlags(flags);
         }
 

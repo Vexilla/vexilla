@@ -149,8 +149,8 @@ namespace Vexilla.Client
                                                zeroedEndTimestampPlusDay;
                             }
 
-                            return nowTimestamp > startTimestamp &&
-                                   nowTimestamp < endTimestamp;
+                            return nowTimestamp >= startTimestamp &&
+                                   nowTimestamp <= endTimestamp;
                     }
 
                     break;
