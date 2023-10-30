@@ -20,7 +20,7 @@ defmodule Scheduler do
 
   """
   def is_scheduled_feature_active(feature) do
-    is_schedule_active(feature.schedule, feature.scheduleType)
+    is_schedule_active(feature["schedule"], feature["scheduleType"])
   end
 
   defp is_schedule_active(schedule, schedule_type) do
@@ -115,7 +115,7 @@ defmodule Scheduler do
                 today_zero_timestamp + zeroed_end_timestamp
               end
 
-            now_timestamp > start_timestamp && now_timestamp < end_timestamp
+            now_timestamp >= start_timestamp && now_timestamp <= end_timestamp
 
           {_, false} ->
             IO.puts("Not between days")
@@ -131,7 +131,7 @@ defmodule Scheduler do
     def get_example_feature() do
       now = Timex.now()
 
-      %Feature{
+      %{
         name: "foo",
         featureId: "bar",
         seed: 0,
@@ -144,7 +144,7 @@ defmodule Scheduler do
           endTime: Timex.to_unix(Timex.add(now, Duration.from_hours(2)))
         },
         featureType: FeatureType.toggle(),
-        scheduleType: ScheduleType.global()
+        scheduleType: ScheduleType.global(),
       }
     end
   end

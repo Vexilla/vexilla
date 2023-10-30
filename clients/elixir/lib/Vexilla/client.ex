@@ -4,7 +4,6 @@ defmodule VexillaClient do
   """
   require FeatureType
 
-
   @doc """
   Create a client with a base url and environment name
   """
@@ -89,17 +88,12 @@ defmodule VexillaClient do
   end
 
   def should?(config, group_name_or_id, feature_name_or_id) do
-    inner_should?(config, group_name_or_id, feature_name_or_id, config.instance_id)
+    should_custom?(config, group_name_or_id, feature_name_or_id, config.instance_id)
   end
 
   def should_custom?(config, group_name_or_id, feature_name_or_id, custom_instance_id) do
-    inner_should?(config, group_name_or_id, feature_name_or_id, custom_instance_id)
-  end
-
-  defp inner_should?(config, group_name_or_id, feature_name_or_id, instance_id) do
     group_id = config.group_lookup_table[group_name_or_id]
     group = config.groups[group_id]
-
 
     environment_id = config.environment_lookup_table[group_id][config.environment]
     environment = group["environments"][environment_id]
@@ -112,22 +106,27 @@ defmodule VexillaClient do
     feature_type_selective = FeatureType.selective()
     feature_type_value = FeatureType.value()
 
-    case feature["featureType"] do
-      ^feature_type_toggle ->
+    within_schedule = Scheduler.is_scheduled_feature_active(feature)
+
+    case {feature["featureType"], within_schedule} do
+      {_, false} ->
+        false
+
+      {^feature_type_toggle, _} ->
         feature.value
 
-      ^feature_type_gradual ->
-        Hasher.hash_string(instance_id, feature["seed"]) < feature["value"]
+      {^feature_type_gradual, _} ->
+        Hasher.hash_string(custom_instance_id, feature["seed"]) < feature["value"]
 
-      ^feature_type_selective ->
-        Enum.find_index(feature["value"], fn value -> value == instance_id end) != nil
+      {^feature_type_selective, _} ->
+        Enum.find_index(feature["value"], fn value -> value == custom_instance_id end) != nil
 
-      ^feature_type_value ->
+      {^feature_type_value, _} ->
         false
     end
   end
 
-  def value!(config, group_name_or_id, feature_name_or_id) do
+  def value!(config, group_name_or_id, feature_name_or_id, default_value) do
     group_id = config.group_lookup_table[group_name_or_id]
     group = config.groups[group_id]
 
@@ -141,6 +140,11 @@ defmodule VexillaClient do
       # Maybe throw error/panic
     end
 
-    feature["value"]
+    within_schedule = Scheduler.is_scheduled_feature_active(feature)
+
+    case within_schedule do
+      true -> feature["value"]
+      false -> default_value
+    end
   end
 end
