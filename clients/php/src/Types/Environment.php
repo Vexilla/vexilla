@@ -51,6 +51,7 @@ class Environment {
 
     function getValueStringFeature(string $featureId): ?ValueStringFeature {
         $feature = $this->features[$featureId];
+
         if ($feature && $feature->featureType === FeatureType::VALUE && $feature->valueType === ValueType::STRING) {
             return $feature;
         } else {
@@ -60,7 +61,8 @@ class Environment {
 
     function getValueIntFeature(string $featureId): ?ValueIntFeature {
         $feature = $this->features[$featureId];
-        if ($feature && $feature->featureType === FeatureType::VALUE && $feature->valueType === ValueType::INT) {
+
+        if ($feature && $feature->featureType === FeatureType::VALUE && $feature->numberType === NumberType::INT) {
             return $feature;
         } else {
             return null;
@@ -69,7 +71,7 @@ class Environment {
 
     function getValueFloatFeature(string $featureId): ?ValueFloatFeature {
         $feature = $this->features[$featureId];
-        if ($feature && $feature->featureType === FeatureType::VALUE && $feature->valueType === ValueType::FLOAT) {
+        if ($feature && $feature->featureType === FeatureType::VALUE && $feature->numberType === NumberType::FLOAT) {
             return $feature;
         } else {
             return null;

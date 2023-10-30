@@ -10,6 +10,7 @@ use Vexilla\Types\Group;
 use Vexilla\Types\GroupMeta;
 use Vexilla\Types\Manifest;
 use Vexilla\Types\ManifestGroup;
+use Vexilla\Types\NumberType;
 use Vexilla\Types\RealIds;
 use Vexilla\Types\SelectiveFeature;
 use Vexilla\Types\ToggleFeature;
@@ -131,9 +132,9 @@ class Client
                 } else if ($rawFeature->featureType === FeatureType::VALUE) {
                     if ($rawFeature->valueType === ValueType::STRING) {
                         $feature = ValueStringFeature::fromRaw($rawFeature);
-                    } else if ($rawFeature->valueType == ValueType::INT) {
+                    } else if ($rawFeature->numberType == NumberType::INT) {
                         $feature = ValueIntFeature::fromRaw($rawFeature);
-                    } else if ($rawFeature->featureType === ValueType::FLOAT) {
+                    } else if ($rawFeature->numberType === NumberType::FLOAT) {
                         $feature = ValueFloatFeature::fromRaw($rawFeature);
                     }
                 }
@@ -277,7 +278,7 @@ class Client
             case FeatureType::SELECTIVE:
                 $selectiveFeature = $environment->getSelectiveFeature($feature->featureId);
 
-                if ($selectiveFeature->valueType === ValueType::INT) {
+                if ($selectiveFeature->numberType === NumberType::INT) {
                     return in_array($customInstanceId, $selectiveFeature->value);
                 } else {
                     $this->log('shouldCustomInt must be called with an int instanceId. Use shouldCustomString or shouldCustomFloat, instead.');
@@ -322,7 +323,7 @@ class Client
             case FeatureType::SELECTIVE:
                 $selectiveFeature = $environment->getSelectiveFeature($feature->featureId);
 
-                if ($selectiveFeature->valueType === ValueType::FLOAT) {
+                if ($selectiveFeature->numberType === NumberType::FLOAT) {
                     return in_array($customInstanceId, $selectiveFeature->value);
                 } else {
                     $this->log('shouldCustomFloat must be called with a float instanceId. Use shouldCustomInt or shouldCustomString, instead.');
