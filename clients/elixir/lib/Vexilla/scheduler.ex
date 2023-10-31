@@ -37,10 +37,10 @@ defmodule Scheduler do
         true
 
       schedule_type when schedule_type in [schedule_type_global, schedule_type_environment] ->
-        start_date = Timex.from_unix(schedule.start, :millisecond)
+        start_date = Timex.from_unix(schedule["start"], :millisecond)
         start_of_start_date = Timex.set(start_date, hour: 0, minute: 0, second: 0, microsecond: 0)
 
-        end_date = Timex.from_unix(schedule.end, :millisecond)
+        end_date = Timex.from_unix(schedule["end"], :millisecond)
 
         end_of_end_date =
           Timex.set(end_date, hour: 23, minute: 59, second: 59, microsecond: 999_999)
@@ -49,10 +49,10 @@ defmodule Scheduler do
         time_type_start_end = TimeType.start_end()
         time_type_daily = TimeType.daily()
 
-        start_time = Timex.from_unix(schedule.startTime, :millisecond)
-        end_time = Timex.from_unix(schedule.endTime, :millisecond)
+        start_time = Timex.from_unix(schedule["startTime"], :millisecond)
+        end_time = Timex.from_unix(schedule["endTime"], :millisecond)
 
-        case {schedule.timeType,
+        case {schedule["timeType"],
               Timex.between?(now, start_of_start_date, end_of_end_date, inclusive: true)} do
           {^time_type_none, true} ->
             true

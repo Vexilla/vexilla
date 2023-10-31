@@ -113,7 +113,7 @@ defmodule VexillaClient do
         false
 
       {^feature_type_toggle, _} ->
-        feature.value
+        feature["value"]
 
       {^feature_type_gradual, _} ->
         Hasher.hash_string(custom_instance_id, feature["seed"]) < feature["value"]
@@ -131,10 +131,10 @@ defmodule VexillaClient do
     group = config.groups[group_id]
 
     environment_id = config.environment_lookup_table[group_id][config.environment]
-    environment = group.environments[environment_id]
+    environment = group["environments"][environment_id]
 
     feature_id = config.feature_lookup_table[group_id][feature_name_or_id]
-    feature = environment.features[feature_id]
+    feature = environment["features"][feature_id]
 
     if feature["featureType"] != FeatureType.value() do
       # Maybe throw error/panic
