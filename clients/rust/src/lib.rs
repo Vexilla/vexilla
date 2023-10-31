@@ -454,7 +454,7 @@ mod tests {
 
         assert!(!manifest.version.is_empty());
 
-        client.sync_manifest(|url| Ok(reqwest::blocking::get(url).unwrap().text().unwrap()));
+        client.sync_manifest(|url| Ok(reqwest::blocking::get(url).unwrap().text().unwrap())).unwrap();
 
         /*
             Get Flags
