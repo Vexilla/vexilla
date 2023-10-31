@@ -9,7 +9,7 @@ services:
     command: tail -f /dev/null
     tty: true
     volumes:
-      - /Volumes/T7/repos/vexilla/clients/client-php:/var/www/html
+      - /Volumes/T7/repos/vexilla/clients/php:/var/www/html
 
 # volumes:
 #   mount:
