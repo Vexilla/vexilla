@@ -115,6 +115,10 @@ export class VexillaClient {
 
     let { feature } = actualItems;
 
+    if (!isScheduledFeatureActive(feature)) {
+      return false;
+    }
+
     let _should = false;
     switch (feature.featureType) {
       case VexillaFeatureTypeToggle:

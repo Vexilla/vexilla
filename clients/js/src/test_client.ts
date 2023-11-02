@@ -16,7 +16,10 @@ import { labelledAssert } from "./utils/testing";
     false
   );
 
-  await client.syncManifest();
+  await client.syncManifest(async (url: string) => {
+    const response = await axios.get(url);
+    return response.data;
+  });
 
   const flags = await client.getFlags(groupName, async (url: string) => {
     const response = await axios.get(url);
@@ -43,14 +46,65 @@ import { labelledAssert } from "./utils/testing";
     return fetch(url).then((response) => response.json());
   });
 
-  // const shouldBeforeGlobal = client.should("Scheduled", "beforeGlobal");
-  // labelledAssert(!shouldBeforeGlobal, "Should not be able to beforeGlobal");
+  const shouldBeforeGlobal = client.should("Scheduled", "beforeGlobal");
+  labelledAssert(!shouldBeforeGlobal, "Should not be able to beforeGlobal");
 
-  // const shouldDuringGlobal = client.should("Scheduled", "duringGlobal");
-  // labelledAssert(shouldDuringGlobal, "Should not be able to duringGlobal");
+  const shouldDuringGlobal = client.should("Scheduled", "duringGlobal");
+  labelledAssert(shouldDuringGlobal, "Should not be able to duringGlobal");
 
-  // const shouldAfterGlobal = client.should("Scheduled", "afterGlobal");
-  // labelledAssert(!shouldAfterGlobal, "Should not be able to afterGlobal");
+  const shouldAfterGlobal = client.should("Scheduled", "afterGlobal");
+  labelledAssert(!shouldAfterGlobal, "Should not be able to afterGlobal");
+
+  const shouldBeforeGlobalStartEnd = client.should(
+    "Scheduled",
+    "beforeGlobalStartEnd"
+  );
+  labelledAssert(
+    !shouldBeforeGlobalStartEnd,
+    "Should not be able to beforeGlobalStartEnd"
+  );
+
+  const shouldDuringGlobalStartEnd = client.should(
+    "Scheduled",
+    "duringGlobalStartEnd"
+  );
+  labelledAssert(
+    shouldDuringGlobalStartEnd,
+    "Should not be able to duringGlobalStartEnd"
+  );
+
+  const shouldAfterGlobalStartEnd = client.should(
+    "Scheduled",
+    "afterGlobalStartEnd"
+  );
+  labelledAssert(
+    !shouldAfterGlobalStartEnd,
+    "Should not be able to afterGlobalStartEnd"
+  );
+
+  const shouldBeforeGlobalDaily = client.should(
+    "Scheduled",
+    "beforeGlobalDaily"
+  );
+  labelledAssert(
+    !shouldBeforeGlobalDaily,
+    "Should not be able to beforeGlobalDaily"
+  );
+
+  const shouldDuringGlobalDaily = client.should(
+    "Scheduled",
+    "duringGlobalDaily"
+  );
+  labelledAssert(
+    shouldDuringGlobalDaily,
+    "Should not be able to duringGlobalDaily"
+  );
+
+  const shouldAfterGlobalDaily = client.should("Scheduled", "afterGlobalDaily");
+  labelledAssert(
+    !shouldAfterGlobalDaily,
+    "Should not be able to afterGlobalDaily"
+  );
 
   await client.syncFlags("Selective", (url) => {
     return fetch(url).then((response) => response.json());
