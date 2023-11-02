@@ -118,13 +118,20 @@ type ValueType string
 
 const (
 	StringValueType ValueType = "string"
-	IntValueType    ValueType = "int"
-	FloatValueType  ValueType = "float"
+	NumberValueType    ValueType = "number"
+)
+
+type NumberType string
+
+const (
+	IntNumberType NumberType = "int"
+	FloatNumberType    NumberType = "float"
 )
 
 type ValueFeature struct {
 	Feature
 	ValueType ValueType `json:"valueType"`
+	NumberType NumberType `json:"numberType"`
 }
 
 type ValueStringFeature struct {
@@ -145,6 +152,7 @@ type ValueFloatFeature struct {
 type SelectiveFeature struct {
 	Feature
 	ValueType ValueType `json:"valueType"`
+	NumberType NumberType `json:"numberType"`
 }
 
 type SelectiveStringFeature struct {

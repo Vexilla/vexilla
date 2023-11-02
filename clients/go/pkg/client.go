@@ -42,7 +42,6 @@ func (environment *Environment) UnmarshalJSON(bytes []byte) error {
 			environment.ToggleFeatures[featureId] = toggleFeature
 
 		case GradualFeatureType:
-			fmt.Println("made it into Gradual type case")
 			var gradualFeature GradualFeature
 			err := json.Unmarshal(rawFeature, &gradualFeature)
 			if err != nil {
@@ -82,32 +81,35 @@ func (environment *Environment) UnmarshalJSON(bytes []byte) error {
 
 				environment.SelectiveStringFeatures[featureId] = selectiveStringFeature
 
-			case IntValueType:
-				var selectiveIntFeature SelectiveIntFeature
-				err := json.Unmarshal(rawFeature, &selectiveIntFeature)
-				if err != nil {
-					return err
+			case NumberValueType:
+				switch selectiveFeature.NumberType {
+				case IntNumberType:
+					var selectiveIntFeature SelectiveIntFeature
+					err := json.Unmarshal(rawFeature, &selectiveIntFeature)
+					if err != nil {
+						return err
+					}
+
+					if environment.SelectiveIntFeatures == nil {
+						environment.SelectiveIntFeatures = make(map[FeatureId]SelectiveIntFeature)
+					}
+
+					environment.SelectiveIntFeatures[featureId] = selectiveIntFeature
+
+				case FloatNumberType:
+					var selectiveFloatFeature SelectiveFloatFeature
+					err := json.Unmarshal(rawFeature, &selectiveFloatFeature)
+					if err != nil {
+						return err
+					}
+
+					if environment.SelectiveFloatFeatures == nil {
+						environment.SelectiveFloatFeatures = make(map[FeatureId]SelectiveFloatFeature)
+					}
+
+					environment.SelectiveFloatFeatures[featureId] = selectiveFloatFeature
+
 				}
-
-				if environment.SelectiveIntFeatures == nil {
-					environment.SelectiveIntFeatures = make(map[FeatureId]SelectiveIntFeature)
-				}
-
-				environment.SelectiveIntFeatures[featureId] = selectiveIntFeature
-
-			case FloatValueType:
-				var selectiveFloatFeature SelectiveFloatFeature
-				err := json.Unmarshal(rawFeature, &selectiveFloatFeature)
-				if err != nil {
-					return err
-				}
-
-				if environment.SelectiveFloatFeatures == nil {
-					environment.SelectiveFloatFeatures = make(map[FeatureId]SelectiveFloatFeature)
-				}
-
-				environment.SelectiveFloatFeatures[featureId] = selectiveFloatFeature
-
 			}
 
 		case ValueFeatureType:
@@ -137,32 +139,35 @@ func (environment *Environment) UnmarshalJSON(bytes []byte) error {
 
 				environment.ValueStringFeatures[featureId] = valueStringFeature
 
-			case IntValueType:
-				var valueIntFeature ValueIntFeature
-				err := json.Unmarshal(rawFeature, &valueIntFeature)
-				if err != nil {
-					return err
+			case NumberValueType:
+				switch valueFeature.NumberType {
+				case IntNumberType:
+					var valueIntFeature ValueIntFeature
+					err := json.Unmarshal(rawFeature, &valueIntFeature)
+					if err != nil {
+						return err
+					}
+
+					if environment.ValueIntFeatures == nil {
+						environment.ValueIntFeatures = make(map[FeatureId]ValueIntFeature)
+					}
+
+					environment.ValueIntFeatures[featureId] = valueIntFeature
+
+				case FloatNumberType:
+					var valueFloatFeature ValueFloatFeature
+					err := json.Unmarshal(rawFeature, &valueFloatFeature)
+					if err != nil {
+						return err
+					}
+
+					if environment.ValueFloatFeatures == nil {
+						environment.ValueFloatFeatures = make(map[FeatureId]ValueFloatFeature)
+					}
+
+					environment.ValueFloatFeatures[featureId] = valueFloatFeature
+
 				}
-
-				if environment.ValueIntFeatures == nil {
-					environment.ValueIntFeatures = make(map[FeatureId]ValueIntFeature)
-				}
-
-				environment.ValueIntFeatures[featureId] = valueIntFeature
-
-			case FloatValueType:
-				var valueFloatFeature ValueFloatFeature
-				err := json.Unmarshal(rawFeature, &valueFloatFeature)
-				if err != nil {
-					return err
-				}
-
-				if environment.ValueFloatFeatures == nil {
-					environment.ValueFloatFeatures = make(map[FeatureId]ValueFloatFeature)
-				}
-
-				environment.ValueFloatFeatures[featureId] = valueFloatFeature
-
 			}
 		}
 
@@ -353,16 +358,21 @@ func (client Client) ShouldCustomString(groupNameOrId string, featureNameOrId st
 		return false, fmt.Errorf("no environment found for environmentId: %s", realIds.RealEnvironmentId)
 	}
 
-	if !IsScheduledFeatureActive(rawFeature) {
-		return false, nil
-	}
-
 	switch rawFeature.FeatureType {
 	case ToggleFeatureType:
 		toggleFeature := environment.ToggleFeatures[realIds.RealFeatureId]
+
+		if !IsScheduleActive(toggleFeature.Schedule, toggleFeature.ScheduleType) {
+			return false, nil
+		}
+
 		return toggleFeature.Value, nil
 	case GradualFeatureType:
 		gradualFeature := environment.GradualFeatures[realIds.RealFeatureId]
+
+		if !IsScheduleActive(gradualFeature.Schedule, gradualFeature.ScheduleType) {
+			return false, nil
+		}
 
 		return HashStringInstanceID(customInstanceId, gradualFeature.Seed) < gradualFeature.Value, nil
 
@@ -370,20 +380,27 @@ func (client Client) ShouldCustomString(groupNameOrId string, featureNameOrId st
 
 		selectiveFeature := environment.SelectiveFeatures[realIds.RealFeatureId]
 
+		if !IsScheduleActive(selectiveFeature.Schedule, selectiveFeature.ScheduleType) {
+			return false, nil
+		}
+
 		switch selectiveFeature.ValueType {
 		case StringValueType:
 			selectiveStringFeature := environment.SelectiveStringFeatures[realIds.RealFeatureId]
 
 			for i := range selectiveStringFeature.Value {
-				if selectiveStringFeature.Value[i] == client.InstanceId {
+				if selectiveStringFeature.Value[i] == customInstanceId {
 					return true, nil
 				}
 			}
-		case IntValueType:
-			return false, fmt.Errorf("selective feature, %s:%s, is not a StringValueType. Consider using ShouldCustomInt", selectiveFeature.Name, selectiveFeature.FeatureId)
+		case NumberValueType:
+			switch selectiveFeature.NumberType {
+			case IntNumberType:
+				return false, fmt.Errorf("selective feature, %s:%s, is not a StringValueType. Consider using ShouldCustomInt", selectiveFeature.Name, selectiveFeature.FeatureId)
 
-		case FloatValueType:
-			return false, fmt.Errorf("selectivefeature, %s:%s, is not a StringValueType. Consider using ShouldCustomFloat", selectiveFeature.Name, selectiveFeature.FeatureId)
+			case FloatNumberType:
+				return false, fmt.Errorf("selectivefeature, %s:%s, is not a StringValueType. Consider using ShouldCustomFloat", selectiveFeature.Name, selectiveFeature.FeatureId)
+			}
 		}
 
 	case ValueFeatureType:
@@ -414,36 +431,47 @@ func (client Client) ShouldCustomInt(groupNameOrId string, featureNameOrId strin
 		return false, fmt.Errorf("no environment found for environmentId: %s", realIds.RealEnvironmentId)
 	}
 
-	if !IsScheduledFeatureActive(rawFeature) {
-		return false, nil
-	}
-
 	switch rawFeature.FeatureType {
 	case ToggleFeatureType:
 		toggleFeature := environment.ToggleFeatures[realIds.RealFeatureId]
+
+		if !IsScheduleActive(toggleFeature.Schedule, toggleFeature.ScheduleType) {
+			return false, nil
+		}
+
 		return toggleFeature.Value, nil
 	case GradualFeatureType:
 		gradualFeature := environment.GradualFeatures[realIds.RealFeatureId]
+		if !IsScheduleActive(gradualFeature.Schedule, gradualFeature.ScheduleType) {
+			return false, nil
+		}
 		return HashIntInstanceID(customInstanceId, gradualFeature.Seed) < gradualFeature.Value, nil
 
 	case SelectiveFeatureType:
-
 		selectiveFeature := environment.SelectiveFeatures[realIds.RealFeatureId]
+
+		if !IsScheduleActive(selectiveFeature.Schedule, selectiveFeature.ScheduleType) {
+			return false, nil
+		}
 
 		switch selectiveFeature.ValueType {
 		case StringValueType:
 			return false, fmt.Errorf("selective feature, %s:%s, is not an IntValueType. Consider using ShouldCustomInt", selectiveFeature.Name, selectiveFeature.FeatureId)
-		case IntValueType:
-			selectiveIntFeature := environment.SelectiveIntFeatures[realIds.RealFeatureId]
+		case NumberValueType:
 
-			for i := range selectiveIntFeature.Value {
-				if selectiveIntFeature.Value[i] == customInstanceId {
-					return true, nil
+			switch selectiveFeature.NumberType {
+			case IntNumberType:
+				selectiveIntFeature := environment.SelectiveIntFeatures[realIds.RealFeatureId]
+
+				for i := range selectiveIntFeature.Value {
+					if selectiveIntFeature.Value[i] == customInstanceId {
+						return true, nil
+					}
 				}
-			}
 
-		case FloatValueType:
-			return false, fmt.Errorf("selectivefeature, %s:%s, is not an IntValueType. Consider using ShouldCustomFloat", selectiveFeature.Name, selectiveFeature.FeatureId)
+			case FloatNumberType:
+				return false, fmt.Errorf("selectivefeature, %s:%s, is not an IntValueType. Consider using ShouldCustomFloat", selectiveFeature.Name, selectiveFeature.FeatureId)
+			}
 		}
 
 	case ValueFeatureType:
@@ -474,38 +502,46 @@ func (client Client) ShouldCustomFloat(groupNameOrId string, featureNameOrId str
 		return false, fmt.Errorf("no environment found for environmentId: %s", realIds.RealEnvironmentId)
 	}
 
-	if !IsScheduledFeatureActive(rawFeature) {
-		return false, nil
-	}
-
 	switch rawFeature.FeatureType {
 	case ToggleFeatureType:
 		toggleFeature := environment.ToggleFeatures[realIds.RealFeatureId]
+		if !IsScheduleActive(toggleFeature.Schedule, toggleFeature.ScheduleType) {
+			return false, nil
+		}
 		return toggleFeature.Value, nil
 	case GradualFeatureType:
 		gradualFeature := environment.GradualFeatures[realIds.RealFeatureId]
+		if !IsScheduleActive(gradualFeature.Schedule, gradualFeature.ScheduleType) {
+			return false, nil
+		}
 		return HashFloatInstanceID(customInstanceId, gradualFeature.Seed) < gradualFeature.Value, nil
 
 	case SelectiveFeatureType:
 
 		selectiveFeature := environment.SelectiveFeatures[realIds.RealFeatureId]
 
+		if !IsScheduleActive(selectiveFeature.Schedule, selectiveFeature.ScheduleType) {
+			return false, nil
+		}
+
 		switch selectiveFeature.ValueType {
 		case StringValueType:
 			return false, fmt.Errorf("selective feature, %s:%s, is not an IntValueType. Consider using ShouldCustomInt", selectiveFeature.Name, selectiveFeature.FeatureId)
-		case IntValueType:
-			return false, fmt.Errorf("selectivefeature, %s:%s, is not a IntValueType. Consider using ShouldCustomInt", selectiveFeature.Name, selectiveFeature.FeatureId)
+		case NumberValueType:
+			switch selectiveFeature.NumberType {
+			case IntNumberType:
+				return false, fmt.Errorf("selectivefeature, %s:%s, is not a IntValueType. Consider using ShouldCustomInt", selectiveFeature.Name, selectiveFeature.FeatureId)
 
-		case FloatValueType:
-			selectiveFloatFeature := environment.SelectiveFloatFeatures[realIds.RealFeatureId]
+			case FloatNumberType:
+				selectiveFloatFeature := environment.SelectiveFloatFeatures[realIds.RealFeatureId]
 
-			for i := range selectiveFloatFeature.Value {
-				if selectiveFloatFeature.Value[i] == customInstanceId {
-					return true, nil
+				for i := range selectiveFloatFeature.Value {
+					if selectiveFloatFeature.Value[i] == customInstanceId {
+						return true, nil
+					}
 				}
 			}
 		}
-
 	case ValueFeatureType:
 		return false, fmt.Errorf("selectivefeature, %s:%s, is not a ValueFeatureType. Consider using ValueString, ValueInt, or ValueFloat", rawFeature.Name, rawFeature.FeatureId)
 
@@ -538,7 +574,7 @@ func (client *Client) ValueString(groupNameOrId string, featureNameOrId string, 
 		return defaultValue, fmt.Errorf("value feature not found for groupId (%s) and featureId (%s)", realIds.RealGroupId, realIds.RealFeatureId)
 	}
 
-	if !IsScheduledFeatureActive(rawFeature) {
+	if !IsScheduleActive(valueStringFeature.Schedule, valueStringFeature.ScheduleType) {
 		return defaultValue, nil
 	}
 
@@ -577,7 +613,7 @@ func (client *Client) ValueInt(groupNameOrId string, featureNameOrId string, def
 		return defaultValue, fmt.Errorf("value feature not found for groupId (%s) and featureId (%s)", realIds.RealGroupId, realIds.RealFeatureId)
 	}
 
-	if !IsScheduledFeatureActive(rawFeature) {
+	if !IsScheduleActive(valueIntFeature.Schedule, valueIntFeature.ScheduleType) {
 		return defaultValue, nil
 	}
 
@@ -607,7 +643,7 @@ func (client *Client) ValueFloat(groupNameOrId string, featureNameOrId string, d
 		return defaultValue, fmt.Errorf("value feature not found for groupId (%s) and featureId (%s)", realIds.RealGroupId, realIds.RealFeatureId)
 	}
 
-	if !IsScheduledFeatureActive(rawFeature) {
+	if !IsScheduleActive(valueFloatFeature.Schedule, valueFloatFeature.ScheduleType) {
 		return defaultValue, nil
 	}
 
