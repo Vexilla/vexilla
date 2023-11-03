@@ -1,4 +1,4 @@
-load("@rules_rust//rust:defs.bzl", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 
 rust_library(
     name = "vexilla_client",
