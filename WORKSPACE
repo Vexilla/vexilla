@@ -1,4 +1,3 @@
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 #CSharp
@@ -36,18 +35,6 @@ rules_dotnet_nuget_packages()
 # load("@io_bazel_rules_dart//dart/build_rules:repositories.bzl", "dart_repositories")
 
 # dart_repositories()
-
-# JS
-
-git_repository(
-    name = "rules_nodejs",
-    remote = "https://github.com/bazelbuild/rules_nodejs.git",
-    tag = "5.8.2",
-)
-
-load("@rules_nodejs//:index.bzl", "node_repositories")
-
-node_repositories()
 
 # Kotlin
 
