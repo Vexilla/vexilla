@@ -3,4 +3,4 @@ node_modules
 .elixir_ls
 dist
 bin
-./example.*
+example.*

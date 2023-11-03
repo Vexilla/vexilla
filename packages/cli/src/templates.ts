@@ -209,16 +209,37 @@ end
 
 {{/groups}}
 `,
+  php: `<?php
+namespace Vexilla\\Types;
+/*
+  {{{disclaimerText}}}
+*/
+
+{{#groups}}
+class {{{name}}}Group {
+  const NAME = "{{{rawName}}}";
+  const GROUP_ID = "{{{id}}}";
+
+  {{#environments}}
+  public static function {{{name}}}Environment() {
+    return new class() {
+      const NAME = "{{{rawName}}}";
+      const ENVIRONMENT_ID = "{{{id}}}";
+    };
+  }
+  {{/environments}}
+
+
+  {{#features}}
+  public static function {{{name}}}Feature() {
+    return new class() {
+      const NAME = "{{{rawName}}}";
+      const FEATURE_ID = "{{{id}}}";
+    };
+  }
+  {{/features}}
+}
+{{/groups}}
+
+`,
 };
-
-// defmodule FeatureType do
-//   @toggle "toggle"
-//   @gradual "gradual"
-//   @selective "selective"
-//   @value "value"
-
-//   defmacro toggle, do: @toggle
-//   defmacro gradual, do: @gradual
-//   defmacro selective, do: @selective
-//   defmacro value, do: @value
-// end

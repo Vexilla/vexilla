@@ -77,50 +77,16 @@ const languageTransformers: Record<
       groups: groupsOutput,
     });
   },
-  //   elixir: function (groups: PublishedGroup[], typePrefix = "") {
-  //     const tagsString = tags
-  //       .map((tag: string) => `:vexilla_tag_${Case.snake(tag)} = "${tag}"`)
-  //       .join("\n");
+  php: function (groups: PublishedGroup[], typePrefix = "", typeSuffix = "") {
+    const groupsOutput = groups.map(
+      parseGroup(typePrefix, typeSuffix, Case.pascal)
+    );
 
-  //     const keysString = keys
-  //       .map((key: string) => `:vexilla_key_${Case.snake(key)} = "${key}"`)
-  //       .join("\n");
-
-  //     return `# ${disclaimerText}
-
-  // # Tags
-  // ${tagsString}
-
-  // # Keys
-  // ${keysString}
-  // `;
-  //   },
-
-  //   php: function (groups: PublishedGroup[], typePrefix = "") {
-  //     const tagsString = tags
-  //       .map((tag: string) => `  public static $${Case.camel(tag)} = "${tag}";`)
-  //       .join("\n");
-
-  //     const keysString = keys
-  //       .map((key: string) => `  public static $${Case.camel(key)} = "${key}";`)
-  //       .join("\n");
-
-  //     return `<?php
-  // namespace Vexilla;
-
-  // // ${disclaimerText}
-
-  // // Tags
-  // class Tags {
-  // ${tagsString}
-  // }
-
-  // // Keys
-  // class Keys {
-  // ${keysString}
-  // }
-  // `;
-  //   },
+    return mustache.render(templates.php, {
+      disclaimerText,
+      groups: groupsOutput,
+    });
+  },
 
   //   python: function (groups: PublishedGroup[], typePrefix = "") {
   //     const tagsString = tags
@@ -288,6 +254,7 @@ const languageAliases: Record<string, Language> = {
   ts: "ts",
   golang: "go",
   go: "go",
+  php: "php",
   // py: "python",
   // python: "python",
   ex: "elixir",

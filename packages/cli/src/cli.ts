@@ -21,7 +21,7 @@ yargs
         },
         o: {
           alias: "output",
-          describe: "the output file",
+          describe: "the output file/directory",
           type: "string",
           nargs: 1,
           demand: true,
