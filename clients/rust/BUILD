@@ -8,6 +8,6 @@ rust_library(
 
 rust_test(
     name = "unit_test",
-    crate = ":lib",
+    crate = ":vexilla_client",
     deps = [],
 )
