@@ -4,7 +4,7 @@ InstallInstructions = '''
 Add the client to your imports.
 
 ```go
-import "github.com/vexilla/client-go"
+import "github.com/vexilla/clients/go"
 ```
 '''
 CustomInstanceHash = "CustomInstanceHash"
