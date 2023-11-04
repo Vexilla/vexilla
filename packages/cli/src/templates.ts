@@ -55,9 +55,8 @@ export const {{{name}}}Group = {
 
 {{#groups}}
 pub mod {{{name}}}Group {
-    use std::fmt::{ Display, Formatter, Result};
-    pub const Name: &str = "{{{rawName}}}";
-    pub const Id: &str = "{{{id}}}";
+    pub const NAME: &str = "{{{rawName}}}";
+    pub const ID: &str = "{{{id}}}";
 
     pub enum Environments {
         {{#environments}}
