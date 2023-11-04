@@ -6,10 +6,9 @@
   It is encouraged to gitignore this file and generate it on-the-fly during build/compilation.
 */
 
-pub mod Gradual {
-    use std::fmt::{Display, Formatter, Result};
-    pub const Name: &str = "Gradual";
-    pub const Id: &str = "aKS-wxK2mMbeYxVVFSV8p";
+pub mod GradualGroup {
+    pub const NAME: &str = "Gradual";
+    pub const ID: &str = "aKS-wxK2mMbeYxVVFSV8p";
 
     pub enum Environments {
         Dev,
@@ -38,10 +37,9 @@ pub mod Gradual {
     }
 }
 
-pub mod Scheduled {
-    use std::fmt::{Display, Formatter, Result};
-    pub const Name: &str = "Scheduled";
-    pub const Id: &str = "Jz0rgEv0epyCb6z58or72";
+pub mod ScheduledGroup {
+    pub const NAME: &str = "Scheduled";
+    pub const ID: &str = "Jz0rgEv0epyCb6z58or72";
 
     pub enum Environments {
         Dev,
@@ -84,10 +82,9 @@ pub mod Scheduled {
     }
 }
 
-pub mod Selective {
-    use std::fmt::{Display, Formatter, Result};
-    pub const Name: &str = "Selective";
-    pub const Id: &str = "SqR8BqpM6qgKxVtohkZE1";
+pub mod SelectiveGroup {
+    pub const NAME: &str = "Selective";
+    pub const ID: &str = "SqR8BqpM6qgKxVtohkZE1";
 
     pub enum Environments {
         Dev,
@@ -116,10 +113,9 @@ pub mod Selective {
     }
 }
 
-pub mod Value {
-    use std::fmt::{Display, Formatter, Result};
-    pub const Name: &str = "Value";
-    pub const Id: &str = "N-MDzoxJanbPOPg223Twf";
+pub mod ValueGroup {
+    pub const NAME: &str = "Value";
+    pub const ID: &str = "N-MDzoxJanbPOPg223Twf";
 
     pub enum Environments {
         Dev,

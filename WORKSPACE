@@ -1,28 +1,37 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
+http_archive(
+    name = "bazel_skylib",
+    sha256 = "66ffd9315665bfaafc96b52278f57c7e2dd09f5ede279ea6d39b2be471e7e3aa",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/1.4.2/bazel-skylib-1.4.2.tar.gz",
+        "https://github.com/bazelbuild/bazel-skylib/releases/download/1.4.2/bazel-skylib-1.4.2.tar.gz",
+    ],
+)
+
 #CSharp
 
-http_archive(
-    name = "rules_dotnet",
-    sha256 = "a119674a818822a80622d4c6ba2facd134bf86f8489db5966e5a8138c1a9fc47",
-    strip_prefix = "rules_dotnet-0.8.11",
-    url = "https://github.com/bazelbuild/rules_dotnet/releases/download/v0.8.11/rules_dotnet-v0.8.11.tar.gz",
-)
+# http_archive(
+#     name = "rules_dotnet",
+#     sha256 = "a119674a818822a80622d4c6ba2facd134bf86f8489db5966e5a8138c1a9fc47",
+#     strip_prefix = "rules_dotnet-0.8.11",
+#     url = "https://github.com/bazelbuild/rules_dotnet/releases/download/v0.8.11/rules_dotnet-v0.8.11.tar.gz",
+# )
 
-load(
-    "@rules_dotnet//dotnet:repositories.bzl",
-    "dotnet_register_toolchains",
-    "rules_dotnet_dependencies",
-)
+# load(
+#     "@rules_dotnet//dotnet:repositories.bzl",
+#     "dotnet_register_toolchains",
+#     "rules_dotnet_dependencies",
+# )
 
-rules_dotnet_dependencies()
+# rules_dotnet_dependencies()
 
-# TODO: Figure out correct version
-dotnet_register_toolchains("dotnet", "7.0.101")
+# # TODO: Figure out correct version
+# dotnet_register_toolchains("dotnet", "7.0.101")
 
-load("@rules_dotnet//dotnet:rules_dotnet_nuget_packages.bzl", "rules_dotnet_nuget_packages")
+# load("@rules_dotnet//dotnet:rules_dotnet_nuget_packages.bzl", "rules_dotnet_nuget_packages")
 
-rules_dotnet_nuget_packages()
+# rules_dotnet_nuget_packages()
 
 # Dart
 
@@ -74,3 +83,10 @@ rules_rust_dependencies()
 rust_register_toolchains()
 
 crate_universe_dependencies()
+
+load(
+    "//clients/rust/crates:crates.bzl",
+    crates_vendor_packages_repositories = "crate_repositories",
+)
+
+crates_vendor_packages_repositories()

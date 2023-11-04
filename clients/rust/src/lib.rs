@@ -52,8 +52,8 @@ impl VexillaClient {
     pub fn get_manifest(&self, fetch: Callback) -> VexillaResult<Manifest> {
         let url = format!("{}/manifest.json", self.base_url);
         let response_text = fetch(&url);
-        let manifest: Manifest = serde_json::from_str(response_text?.as_ref())
-        .map_err(|_| VexillaError::Unknown)?;
+        let manifest: Manifest =
+            serde_json::from_str(response_text?.as_ref()).map_err(|_| VexillaError::Unknown)?;
 
         Ok(manifest)
     }
@@ -91,7 +91,11 @@ impl VexillaClient {
     }
 
     pub fn set_flags(&mut self, group_name_or_id: &str, flags: FlagGroup) -> VexillaResult<bool> {
-        let coerced_group_name_or_id = &self.group_lookup_table.get(group_name_or_id).ok_or("group not found").map_err(|_| VexillaError::Unknown)?;
+        let coerced_group_name_or_id = &self
+            .group_lookup_table
+            .get(group_name_or_id)
+            .ok_or("group not found")
+            .map_err(|_| VexillaError::Unknown)?;
         self.flag_groups
             .insert(coerced_group_name_or_id.to_string(), flags.clone());
 
@@ -116,7 +120,7 @@ impl VexillaClient {
             .get(group_name_or_id)
             .ok_or(VexillaError::GroupLookupKeyNotFound)?;
         let flag_group = self.get_flags(coerced_group_id.as_str(), fetch)?;
-        self.set_flags(group_name_or_id, flag_group);
+        let _ = self.set_flags(group_name_or_id, flag_group)?;
         Ok(())
     }
 
@@ -454,7 +458,9 @@ mod tests {
 
         assert!(!manifest.version.is_empty());
 
-        client.sync_manifest(|url| Ok(reqwest::blocking::get(url).unwrap().text().unwrap())).unwrap();
+        client
+            .sync_manifest(|url| Ok(reqwest::blocking::get(url).unwrap().text().unwrap()))
+            .unwrap();
 
         /*
             Get Flags
@@ -590,7 +596,11 @@ mod tests {
         assert!(value_str == "foo");
 
         let value_int = client
-            .value_int(example::Value::Name, example::Value::Features::Integer, 21)
+            .value_int(
+                example::ValueGroup::NAME,
+                example::ValueGroup::Features::Integer,
+                21,
+            )
             .unwrap();
         assert!(value_int == 42);
 
