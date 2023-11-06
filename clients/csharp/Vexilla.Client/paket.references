@@ -1,0 +1,6 @@
+NETStandard.Library
+System.Text.Json
+Microsoft.NET.Test.Sdk
+System.Threading
+System.Runtime
+System.Threading.Tasks

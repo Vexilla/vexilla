@@ -1,20 +1,14 @@
 using System.Net.Http;
 using System.Threading.Tasks;
-using Xunit;
-using Xunit.Abstractions;
+using NUnit.Framework;
 
 namespace Vexilla.Client.Tests
 {
+    [TestFixture]
     public class ClientTest
     {
-        private readonly ITestOutputHelper _output;
 
-        public ClientTest(ITestOutputHelper output)
-        {
-            _output = output;
-        }
-
-        [Fact]
+        [Test]
         public async Task ClientWorksTest()
         {
             var client = new VexillaClientBase(
@@ -48,6 +42,7 @@ namespace Vexilla.Client.Tests
                 client.Should("Gradual", "testingNonWorkingGradual");
 
             Assert.False(shouldNotGradual);
+            // Assert.False(true);
         }
     }
 }

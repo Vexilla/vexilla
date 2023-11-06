@@ -38,16 +38,16 @@ namespace Vexilla.Client
             };
 
             Feature currentFeature = null;
-            ToggleFeature currentToggleFeature = null;
-            GradualFeature currentGradualFeature = null;
-            SelectiveFeature currentSelectiveFeature = null;
-            SelectiveStringFeature currentSelectiveStringFeature = null;
-            SelectiveIntFeature currentSelectiveIntFeature = null;
-            SelectiveFloatFeature currentSelectiveFloatFeature = null;
-            ValueFeature currentValueFeature = null;
-            ValueStringFeature currentValueStringFeature = null;
-            ValueIntFeature currentValueIntFeature = null;
-            ValueFloatFeature currentValueFloatFeature = null;
+            // ToggleFeature currentToggleFeature = null;
+            // GradualFeature currentGradualFeature = null;
+            // SelectiveFeature currentSelectiveFeature = null;
+            // SelectiveStringFeature currentSelectiveStringFeature = null;
+            // SelectiveIntFeature currentSelectiveIntFeature = null;
+            // SelectiveFloatFeature currentSelectiveFloatFeature = null;
+            // ValueFeature currentValueFeature = null;
+            // ValueStringFeature currentValueStringFeature = null;
+            // ValueIntFeature currentValueIntFeature = null;
+            // ValueFloatFeature currentValueFloatFeature = null;
 
             var currentFeatureType = string.Empty;
 

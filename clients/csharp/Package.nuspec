@@ -7,17 +7,12 @@
     <owners>cmgriffing</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <license type="expression">MIT</license>
-    <projectUrl>https://vexilla.github.io</projectUrl>
+    <projectUrl>https://vexilla.dev</projectUrl>
     <iconUrl>https://vexilla.github.io/logo-nuget.png</iconUrl>
     <icon>./images/logo-nuget.png</icon>
     <description>A client for the Vexilla feature flag system</description>
     <releaseNotes>Initial release</releaseNotes>
     <copyright>Copyright 2021</copyright>
     <tags>Vexilla feature flag toggle</tags>
-    <dependencies>
-      <group targetFramework="netstandard2.0">
-        <dependency id="Newtonsoft.Json" version="12.0.3" />
-      </group>
-    </dependencies>
   </metadata>
 </package>

@@ -1,19 +1,13 @@
 using System;
-using Xunit;
-using Xunit.Abstractions;
+using NUnit.Framework;
 
 namespace Vexilla.Client.Tests
 {
+    [TestFixture]
     public class SchedulerTest
     {
-        private readonly ITestOutputHelper _output;
 
-        public SchedulerTest(ITestOutputHelper output)
-        {
-            _output = output;
-        }
-
-        [Fact]
+        [Test]
         public void TestSchedulerActiveNone()
         {
             var schedule = new Schedule
@@ -30,7 +24,7 @@ namespace Vexilla.Client.Tests
                 Scheduler.IsScheduleActive(schedule, ScheduleType.Empty));
         }
 
-        [Fact]
+        [Test]
         public void TestSchedulerActiveStartEnd()
         {
             var now = DateTimeOffset.Now;
@@ -74,7 +68,7 @@ namespace Vexilla.Client.Tests
                 ScheduleType.Global));
         }
 
-        [Fact]
+        [Test]
         public void TestSchedulingActiveDaily()
         {
             var now = DateTimeOffset.Now;
