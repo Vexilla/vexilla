@@ -4,4 +4,7 @@ load(
     # "php_test",
 )
 
-php_library()
+php_library(
+    name = "lib",
+    srcs = [glob("*.php")],
+)
