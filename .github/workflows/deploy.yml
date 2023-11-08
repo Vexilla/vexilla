@@ -10,12 +10,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup PHP with PECL extension
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: "7.4"
-          extensions: imagick
       - uses: actions/checkout@v3
+      # Bazel-supported languages
       - name: Cache Bazel
         uses: actions/cache@v3
         with:
@@ -26,3 +22,8 @@ jobs:
             ${{ runner.os }}-bazel-
       - run: bazel build //...
       - run: bazel test //...
+      # PHP
+      - uses: isbang/compose-action@v1.5.1
+        with:
+          compose-file: "./clients/php/docker-compose.ci.yml"
+          down-flags: "--volumes"

@@ -1,0 +1,12 @@
+version: "3.4"
+
+services:
+  php-custom:
+    image: php-custom
+    build: .
+    ports:
+      - 3456
+    command: composer test
+    tty: true
+    volumes:
+      - ${{ github.workspace }}/clients/php:/var/www/html
