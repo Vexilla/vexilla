@@ -1,4 +1,5 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
 http_archive(
     name = "bazel_skylib",
@@ -11,27 +12,35 @@ http_archive(
 
 #CSharp
 
-# http_archive(
-#     name = "rules_dotnet",
-#     sha256 = "a119674a818822a80622d4c6ba2facd134bf86f8489db5966e5a8138c1a9fc47",
-#     strip_prefix = "rules_dotnet-0.8.11",
-#     url = "https://github.com/bazelbuild/rules_dotnet/releases/download/v0.8.11/rules_dotnet-v0.8.11.tar.gz",
-# )
+http_archive(
+    name = "rules_dotnet",
+    sha256 = "5f9dedad3b0e1a6efe8a2418291de53e63a4e6320ed1e16a8290ec8113624bbc",
+    strip_prefix = "rules_dotnet-0.11.1",
+    url = "https://github.com/bazelbuild/rules_dotnet/releases/download/v0.11.1/rules_dotnet-v0.11.1.tar.gz",
+)
 
-# load(
-#     "@rules_dotnet//dotnet:repositories.bzl",
-#     "dotnet_register_toolchains",
-#     "rules_dotnet_dependencies",
-# )
+load(
+    "@rules_dotnet//dotnet:repositories.bzl",
+    "dotnet_register_toolchains",
+    "rules_dotnet_dependencies",
+)
 
-# rules_dotnet_dependencies()
+rules_dotnet_dependencies()
 
-# # TODO: Figure out correct version
-# dotnet_register_toolchains("dotnet", "7.0.101")
+# TODO: Figure out correct version
+dotnet_register_toolchains("dotnet", "7.0.101")
 
-# load("@rules_dotnet//dotnet:rules_dotnet_nuget_packages.bzl", "rules_dotnet_nuget_packages")
+load("@rules_dotnet//dotnet:rules_dotnet_nuget_packages.bzl", "rules_dotnet_nuget_packages")
 
-# rules_dotnet_nuget_packages()
+rules_dotnet_nuget_packages()
+
+load("@rules_dotnet//dotnet:paket2bazel_dependencies.bzl", "paket2bazel_dependencies")
+
+paket2bazel_dependencies()
+
+load("//clients/csharp:deps/paket.bzl", "paket")
+
+paket()
 
 # Dart
 
@@ -90,3 +99,36 @@ load(
 )
 
 crates_vendor_packages_repositories()
+
+#PHP
+
+http_archive(
+    name = "rules_php",
+    strip_prefix = "php_codebase-master",
+    url = "https://github.com/cmgriffing/php_codebase/archive/refs/heads/master.tar.gz",
+)
+
+git_repository(
+    name = "io_bazel_rules_docker",
+    remote = "https://github.com/bazelbuild/rules_docker.git",
+    tag = "v0.25.0",
+)
+
+# load(
+#     "@io_bazel_rules_docker//container:container.bzl",
+#     "container_pull",
+# )
+# load(
+#     "@io_bazel_rules_docker//repositories:repositories.bzl",
+#     container_repositories = "repositories",
+# )
+
+# container_repositories()
+
+# container_pull(
+#     name = "php56_base",
+#     registry = "index.docker.io",
+#     repository = "library/php",
+#     tag = "5.6-cli",
+#     # digest = "sha256:506e2d5852de1d7c90d538c5332bd3cc33b9cbd26f6ca653875899c505c82687",
+# )
