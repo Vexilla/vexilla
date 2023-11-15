@@ -11,7 +11,7 @@ jobs:
     steps:
       - checkout
       - bun/setup:
-          version: 1.0.0
+          version: latest
       - restore_cache:
           keys:
             - v1-bun-deps-{{ checksum "bun.lockb" }}
