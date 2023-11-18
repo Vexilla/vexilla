@@ -90,11 +90,11 @@ guidePages.sort((a, b) => {
 ---
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="w-screen">
   <head>
     <meta charset="UTF-8" />
     <meta name="description" content="Astro description" />
-    <meta name="viewport" content="width=device-width" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
     <link
@@ -125,7 +125,7 @@ guidePages.sort((a, b) => {
     </style>
     <script defer data-domain="vexilla.dev" src="https://plausible.io/js/script.js"></script>
   </head>
-  <body class="flex flex-col min-h-screen relative">
+  <body class="flex flex-col min-h-screen w-screen relative">
 
     <div class="z-20 absolute left-[-100%] focus-within:left-0 bg-white"><a href="#main">Skip to content</a></div>
 
@@ -267,8 +267,8 @@ guidePages.sort((a, b) => {
 
     <footer class="mt-auto bg-primary-50 dark:bg-primary-900">
       <ResponsiveContainer>
-        <div class="flex flex-row items-start pt-8 gap-16 justify-center">
-          <div>
+        <div class="flex flex-row items-start pt-8 justify-center flex-wrap px-4 sm:px-16">
+          <div class="w-1/2 md:w-1/4 pb-4">
             <div>
               <a class="font-bold" href="/documentation">
                 Documentation
@@ -282,7 +282,7 @@ guidePages.sort((a, b) => {
               )}
             </ul>
           </div>
-          <div>
+          <div class="w-1/2 md:w-1/4 pb-4">
             <div>
               <a class="font-bold" href="/documentation">
                 Guides
@@ -296,7 +296,7 @@ guidePages.sort((a, b) => {
               )}
             </ul>
           </div>
-          <div>
+          <div class="w-1/2 md:w-1/4 pb-4">
             <div class="font-bold">
               Business
             </div>
@@ -310,7 +310,7 @@ guidePages.sort((a, b) => {
             </ul>
           </div>
 
-          <div>
+          <div class="w-1/2 md:w-1/4 pb-4">
             <div class="font-bold">
               Social
             </div>
