@@ -1,4 +1,4 @@
-import _React, { useEffect, useRef, useState } from "react";
+import _React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 // @ts-ignore // pagefind does not export types for us to use
 import * as pagefind from "@/pagefind/pagefind";
@@ -44,6 +44,7 @@ interface SearchResultData {
 export function Search() {
   const searchButtonRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
+  const [wasOpen, setWasOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
 
@@ -53,6 +54,7 @@ export function Search() {
         e.preventDefault();
         setResults([]);
         setOpen((open) => !open);
+        setWasOpen(!open);
       }
     };
 
@@ -60,11 +62,12 @@ export function Search() {
     return () => document.removeEventListener("keydown", down);
   }, []);
 
-  useEffect(() => {
-    if (!open) {
+  useLayoutEffect(() => {
+    if (!open && wasOpen) {
       searchButtonRef.current?.focus();
+      setWasOpen(false);
     }
-  }, [open]);
+  }, [open, wasOpen]);
 
   return (
     <>
