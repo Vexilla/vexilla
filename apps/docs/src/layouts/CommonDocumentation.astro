@@ -11,9 +11,10 @@ interface Props {
   documentationPages: Record<string, any>[];
   currentPageSlug: string;
   currentPost: Record<string, any> | null;
+  pathPrefix?: string;
 }
 
-const { documentationPages, currentPost, currentPageSlug } = Astro.props;
+const { documentationPages, currentPost, currentPageSlug, pathPrefix = "documentation" } = Astro.props;
 
 ---
 
@@ -24,7 +25,7 @@ const { documentationPages, currentPost, currentPageSlug } = Astro.props;
         {
           documentationPages.map((page) => (
             <li class="pb-4">
-              <a class="font-bold" href={`/documentation/${page.slug}`}>
+              <a class="font-bold" href={`/${pathPrefix}/${page.slug}`}>
                 {page.data.title}
               </a>
 
@@ -32,7 +33,7 @@ const { documentationPages, currentPost, currentPageSlug } = Astro.props;
                 {page.headings.map((heading: Heading) => (
                   <li data-slug={heading.slug} class="truncate">
                     <a
-                      href={`/documentation/${page.slug}#${heading.slug}`}
+                      href={`/${pathPrefix}/${page.slug}#${heading.slug}`}
                       title={heading.text}
                     >
                       {heading.text}
