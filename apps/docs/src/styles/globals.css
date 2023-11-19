@@ -4,6 +4,11 @@
 
 * {
   font-family: "Atkinson Hyperlegible";
+  border-radius: 4px;
+}
+
+*:focus {
+  outline: solid 2px #257ddd !important;
 }
 
 pre *,

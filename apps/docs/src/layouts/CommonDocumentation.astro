@@ -20,7 +20,7 @@ const { documentationPages, currentPost, currentPageSlug, pathPrefix = "document
 
 <div class="flex flex-row">
   <div class="w-[15rem] p-2 pr-8 relative hidden lg:block pt-10">
-    <nav aria-label="Sidebar" class="sticky top-16 max-h-[calc(100vh-4rem)] overflow-y-auto">
+    <nav aria-label="Sidebar" class="sticky top-16 max-h-[calc(100vh-4rem)] overflow-y-auto p-2">
       <ul>
         {
           documentationPages.map((page) => (
@@ -31,7 +31,7 @@ const { documentationPages, currentPost, currentPageSlug, pathPrefix = "document
 
               <ul class="pl-2 headings">
                 {page.headings.map((heading: Heading) => (
-                  <li data-slug={heading.slug} class="truncate">
+                  <li data-slug={heading.slug}>
                     <a
                       href={`/${pathPrefix}/${page.slug}#${heading.slug}`}
                       title={heading.text}
