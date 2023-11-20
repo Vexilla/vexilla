@@ -267,16 +267,16 @@ guidePages.sort((a, b) => {
 
     <footer class="mt-auto bg-primary-50 dark:bg-primary-900">
       <ResponsiveContainer>
-        <div class="flex flex-row items-start pt-8 justify-center flex-wrap px-4 sm:px-16">
+        <div class="flex flex-row items-start pt-8 justify-center flex-wrap px-4">
           <div class="w-1/2 md:w-1/4 pb-4">
             <div>
               <a class="font-bold" href="/documentation">
                 Documentation
               </a>
             </div>
-            <ul class="">
+            <ul class="pl-4">
               {documentationPages.map((page) =>
-                <li>
+                <li class="py-1">
                   <a href={`/documentation/${page.slug}`}>{page.data.title}</a>
                 </li>
               )}
@@ -288,9 +288,9 @@ guidePages.sort((a, b) => {
                 Guides
               </a>
             </div>
-            <ul class="">
+            <ul class="pl-4">
               {guidePages.map((page) =>
-                <li>
+                <li class="py-1">
                   <a href={`/guides/${page.slug}`}>{page.data.title}</a>
                 </li>
               )}
@@ -300,11 +300,11 @@ guidePages.sort((a, b) => {
             <div class="font-bold">
               Business
             </div>
-            <ul class="">
-              <li>
+            <ul class="pl-4">
+              <li class="py-1">
                 <a href="/blog">Blog</a>
               </li>
-              <li>
+              <li class="py-1">
                 <a href="/about">About</a>
               </li>
             </ul>
@@ -314,11 +314,11 @@ guidePages.sort((a, b) => {
             <div class="font-bold">
               Social
             </div>
-            <ul class="">
-              <li>
+            <ul class="pl-4">
+              <li class="py-1">
                 <a href="https://github.com/Vexilla">GitHub</a>
               </li>
-              <li>
+              <li class="py-1">
                 <a href={DISCORD_INVITE_LINK} target="_blank">
                   Discord
                 </a>

@@ -19,19 +19,19 @@ const { documentationPages, currentPost, currentPageSlug, pathPrefix = "document
 ---
 
 <div class="flex flex-row">
-  <div class="w-[15rem] p-2 pr-8 relative hidden lg:block pt-10">
+  <div class="w-[22rem] p-2 pr-8 relative hidden lg:block pt-10">
     <nav aria-label="Sidebar" class="sticky top-16 max-h-[calc(100vh-4rem)] overflow-y-auto p-2">
       <ul>
         {
           documentationPages.map((page) => (
-            <li class="pb-4">
+            <li class="pb-6">
               <a class="font-bold" href={`/${pathPrefix}/${page.slug}`}>
                 {page.data.title}
               </a>
 
-              <ul class="pl-2 headings">
+              <ul class="pl-4 headings">
                 {page.headings.map((heading: Heading) => (
-                  <li data-slug={heading.slug}>
+                  <li data-slug={heading.slug} class="py-1">
                     <a
                       href={`/${pathPrefix}/${page.slug}#${heading.slug}`}
                       title={heading.text}

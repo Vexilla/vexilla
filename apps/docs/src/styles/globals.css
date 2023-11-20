@@ -11,6 +11,14 @@
   outline: solid 2px #257ddd !important;
 }
 
+a {
+  padding: 2px;
+}
+
+a:hover {
+  text-decoration: #257ddd underline;
+}
+
 pre *,
 code * {
   font-family: "Fira Code", sans-serif;
@@ -101,9 +109,4 @@ code * {
   .text-link {
     @apply text-primary-500 dark:text-primary-300;
   }
-}
-
-*:focus {
-  outline: 2px solid blue;
-  outline-offset: 3px;
 }

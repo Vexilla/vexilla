@@ -69,12 +69,15 @@ const sections: HelpSection[] = [
           <div class="w-full md:w-1/2 p-2">
             <Card className="h-full flex flex-col">
               <CardHeader>
-                <CardTitle className="!m-0 flex flex-row items-center">
-                  <Icon name={section.icon} width={32} />
+                <CardTitle className="!m-0 flex flex-row items-start">
+                  <div class="rounded-full bg-primary-500 p-2 mt-[0.1rem]">
+                    <Icon name={section.icon} width={24} color="white" />
+                    </div>
                   <a href={section.link} class="no-underline ml-2">
                     {section.title}
                   </a>
                 </CardTitle>
+                <hr class="!mt-7" />
               </CardHeader>
               <CardContent className="flex flex-col h-full">
                 <p class="flex flex-1">{section.description}</p>
@@ -90,8 +93,8 @@ const sections: HelpSection[] = [
                   >
                     {section.linkText}
 
-                    <div class="ml-2">
-                      <Icon name="phosphor/duotone/arrow-circle-right-duotone" width={24} />
+                    <div class="ml-2 bg-primary-500 rounded-full">
+                      <Icon name="phosphor/duotone/arrow-circle-right-duotone" width={24} color="white" />
                     </div>
                   </a>
                 </div>
