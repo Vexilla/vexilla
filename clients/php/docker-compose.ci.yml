@@ -9,4 +9,4 @@ services:
     command: composer test
     tty: true
     volumes:
-      - ${ GITHUB_WORKSPACE }/clients/php:/var/www/html
+      - $${ GITHUB_WORKSPACE }/clients/php:/var/www/html
