@@ -36,3 +36,5 @@ jobs:
         with:
           compose-file: "./clients/php/docker-compose.ci.yml"
           down-flags: "--volumes"
+        env:
+          GITHUB_WORKSPACE: ${{ github.workspace }}
