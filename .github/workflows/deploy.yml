@@ -14,12 +14,6 @@ jobs:
       contents: read
       packages: write
 
-    services:
-      test-server:
-        image: vexilla-test-server
-        ports:
-          - 3000:3000
-
     steps:
       - uses: actions/checkout@v3
 
