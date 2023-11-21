@@ -32,6 +32,8 @@ jobs:
       - run: bazel build //...
       # - run: bazel test //...
       # PHP
+      - name: UGH
+        run: echo ${{ github.workspace }}
       - uses: isbang/compose-action@v1.5.1
         with:
           compose-file: "./clients/php/docker-compose.ci.yml"
