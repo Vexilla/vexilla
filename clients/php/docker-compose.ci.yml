@@ -7,7 +7,7 @@ services:
     ports:
       - 3456
     command: composer test
-    # tty: true
+    tty: true
     volumes:
       - ./:/var/www/html
       # - $GITHUB_WORKSPACE/clients/php:/var/www/html
