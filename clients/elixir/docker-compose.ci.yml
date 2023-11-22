@@ -7,6 +7,7 @@ services:
     ports:
       - 3456
     command: mix test
+    network_mode: host
     tty: true
     volumes:
       - ./:/var/www/html
