@@ -10,7 +10,7 @@ final class ClientTest extends TestCase
   public function testClient()
   {
     $client = new Client(
-      'http://localhost:3000',
+      'http://host.docker.internal:3000',
       'dev',
       $this->uuid,
       true
