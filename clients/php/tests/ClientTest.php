@@ -10,7 +10,7 @@ final class ClientTest extends TestCase
   public function testClient()
   {
     $client = new Client(
-      'http://192.168.1.6:3000',
+      'http://localhost:3000',
       'dev',
       $this->uuid,
       true
