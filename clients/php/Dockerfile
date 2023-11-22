@@ -2,6 +2,8 @@ FROM php:7.4.33-fpm
 
 COPY . .
 
+WORKDIR /var/www/html
+
 VOLUME /Volumes/T7/repos/vexilla/clients/client-php /var/www/html
 
 RUN apt-get update
