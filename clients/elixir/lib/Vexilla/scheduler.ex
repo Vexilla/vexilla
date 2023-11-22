@@ -83,7 +83,8 @@ defmodule Scheduler do
             now_timestamp = Timex.to_unix(now)
 
             today_zero_timestamp =
-              Timex.to_unix(Timex.set(now, hour: 0, minute: 0, second: 0, microsecond: 0))
+              Timex.set(now, hour: 0, minute: 0, second: 0, microsecond: 0)
+              |> Timex.to_unix()
 
             zeroed_start_timestamp =
               Timex.set(zero_day,
@@ -92,6 +93,7 @@ defmodule Scheduler do
                 second: start_time.second,
                 microsecond: start_time.microsecond
               )
+              |> Timex.to_unix()
 
             zeroed_end =
               Timex.set(zero_day,
@@ -144,7 +146,7 @@ defmodule Scheduler do
           endTime: Timex.to_unix(Timex.add(now, Duration.from_hours(2)))
         },
         featureType: FeatureType.toggle(),
-        scheduleType: ScheduleType.global(),
+        scheduleType: ScheduleType.global()
       }
     end
   end
