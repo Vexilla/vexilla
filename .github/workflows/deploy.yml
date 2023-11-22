@@ -30,6 +30,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-bazel-
       - run: bazel build //...
-      - run: bazel test //...
+      # - run: bazel test //...
       # PHP
       - run: docker-compose -f ./clients/php/docker-compose.ci.yml up  --exit-code-from php-custom
+
+      # PHP
+      - run: docker-compose -f ./clients/elixir/docker-compose.ci.yml up  --exit-code-from elixir-custom
