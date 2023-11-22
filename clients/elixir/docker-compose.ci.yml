@@ -1,7 +1,7 @@
 version: "3.4"
 
 services:
-  php-custom:
+  elixir-custom:
     image: elixir-custom
     build: .
     ports:
