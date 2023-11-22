@@ -4,8 +4,6 @@ services:
   elixir-custom:
     image: elixir-custom
     build: .
-    ports:
-      - 3456
     command: mix test
     network_mode: host
     tty: true

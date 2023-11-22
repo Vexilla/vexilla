@@ -4,8 +4,6 @@ services:
   php-custom:
     image: php-custom
     build: .
-    ports:
-      - 3456
     command: composer test
     network_mode: host
     tty: true
