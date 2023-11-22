@@ -30,7 +30,7 @@
   },
   "scripts": {
     "test": [
-      "phpunit --verbose --bootstrap vendor/autoload.php tests/*.php"
+      "./vendor/bin/phpunit --verbose --bootstrap vendor/autoload.php tests/*.php"
     ]
   }
 }
