@@ -6,8 +6,7 @@ services:
     build: .
     ports:
       - 3456
-    command: ls -a
-    # command: composer test
+    command: composer test
     # tty: true
     volumes:
       - ./:/var/www/html
