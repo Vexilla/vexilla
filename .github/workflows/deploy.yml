@@ -53,18 +53,21 @@ jobs:
       - uses: actions/checkout@v3
 
       # Bazel-supported languages
-      - name: Cache Bazel
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/bazel
-          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel') }}
-          restore-keys: |
-            ${{ runner.os }}-bazel-
-      - run: bazel build //...
+      # - name: Cache Bazel
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: |
+      #       ~/.cache/bazel
+      #     key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-bazel-
+      # - run: bazel build //...
+
       # - run: bazel test //...
       #   env:
       #     TEST_SERVER_HOST: test-server
+
+      - run: curl -o- -s http://test-server:3000/manifest.json
 
       # PHP
       - run: docker-compose -f ./clients/php/docker-compose.ci.yml up  --exit-code-from php-custom
