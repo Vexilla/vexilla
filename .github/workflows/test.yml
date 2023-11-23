@@ -102,7 +102,7 @@ jobs:
       - run: |
           cd ./clients/php
           composer install
-          composer test
+          TEST_SERVER_HOST=test-server composer test
 
       # Elixir
       # - run: docker-compose -f ./clients/elixir/docker-compose.ci.yml up  --exit-code-from elixir-custom
