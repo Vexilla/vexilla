@@ -67,7 +67,7 @@ jobs:
       #   env:
       #     TEST_SERVER_HOST: test-server
 
-      - run: curl -o- -s http://test-server:3000/manifest.json
+      - run: curl -o- -s http://localhost:3000/manifest.json
 
       # PHP
       - run: docker-compose -f ./clients/php/docker-compose.ci.yml up  --exit-code-from php-custom
