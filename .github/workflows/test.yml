@@ -71,7 +71,7 @@ jobs:
       #   env:
       #     TEST_SERVER_HOST: test-server
 
-      - run: apt-get -y install curl && curl -v http://test-server:3000/manifest.json
+      - run: apt-get update && apt-get -y install curl && curl -v http://test-server:3000/manifest.json
 
       # PHP
       - run: docker-compose -f ./clients/php/docker-compose.ci.yml up  --exit-code-from php-custom
