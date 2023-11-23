@@ -32,10 +32,35 @@ jobs:
           docker build . --tag ghcr.io/vexilla/test-server:latest
           docker push ghcr.io/vexilla/test-server:latest
 
+  # publish-host:
+  #   runs-on: ubuntu-latest
+
+  #   permissions:
+  #     contents: read
+  #     packages: write
+
+  #   steps:
+  #     - uses: actions/checkout@v3
+
+  #     - name: Login to GitHub Container Registry
+  #       uses: docker/login-action@v1
+  #       with:
+  #         registry: ghcr.io
+  #         username: vexilla
+  #         password: ${{secrets.GITHUB_TOKEN}}
+
+  #     - name: Build Test Server Image
+  #       run: |
+  #         docker build . --tag ghcr.io/vexilla/test-server:latest
+  #         docker push ghcr.io/vexilla/test-server:latest
+
   test:
     runs-on: ubuntu-latest
     # container: ubuntu
-    needs: publish-test-server
+    needs: [
+        "publish-test-server",
+        # "publish-host"
+      ]
 
     permissions:
       contents: read
@@ -71,7 +96,7 @@ jobs:
       #   env:
       #     TEST_SERVER_HOST: test-server
 
-      # - run: apt-get update && apt-get -y install curl && curl -v http://test-server:3000/manifest.json
+      - run: curl -v http://localhost:3000/manifest.json
 
       # PHP
       - run: docker-compose -f ./clients/php/docker-compose.ci.yml up  --exit-code-from php-custom
