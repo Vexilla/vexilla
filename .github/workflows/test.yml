@@ -9,7 +9,6 @@ on:
 jobs:
   publish-test-server:
     runs-on: ubuntu-latest
-    container: ubuntu
     defaults:
       run:
         working-directory: "./packages/test-server"
