@@ -9,6 +9,7 @@ on:
 jobs:
   publish-test-server:
     runs-on: ubuntu-latest
+    container: ubuntu
     defaults:
       run:
         working-directory: "./packages/test-server"
@@ -34,6 +35,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
+    container: ubuntu
     needs: publish-test-server
 
     permissions:
@@ -48,8 +50,9 @@ jobs:
         image: ghcr.io/vexilla/test-server:latest
         ports:
           - 3000:3000
-        options: |
-          --health-cmd "curl -v http://127.0.0.1:3000/manifest.json"
+        # options: |
+        #   --health-cmd "curl -v http://127.0.0.1:3000/manifest.json"
+        #   --health-start-period 10s
 
     steps:
       - uses: actions/checkout@v3
@@ -69,7 +72,7 @@ jobs:
       #   env:
       #     TEST_SERVER_HOST: test-server
 
-      - run: curl -v http://0.0.0.0:3000/manifest.json
+      - run: curl -v http://test-server:3000/manifest.json
 
       # PHP
       - run: docker-compose -f ./clients/php/docker-compose.ci.yml up  --exit-code-from php-custom
