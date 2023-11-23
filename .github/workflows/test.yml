@@ -48,6 +48,8 @@ jobs:
         image: ghcr.io/vexilla/test-server:latest
         ports:
           - 3000:3000
+        options: |
+          --health-cmd "curl -v http://localhost:3000/manifest.json"
 
     steps:
       - uses: actions/checkout@v3
@@ -67,7 +69,7 @@ jobs:
       #   env:
       #     TEST_SERVER_HOST: test-server
 
-      - run: curl -o- -v -s http://0.0.0.0:3000/manifest.json
+      - run: curl -v http://0.0.0.0:3000/manifest.json
 
       # PHP
       - run: docker-compose -f ./clients/php/docker-compose.ci.yml up  --exit-code-from php-custom
