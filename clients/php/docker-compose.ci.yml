@@ -3,10 +3,11 @@ version: "3.4"
 services:
   php-custom:
     image: php-custom
+    environment:
+      - TEST_SERVER_HOST
     build: .
     command: composer test
     network_mode: host
     tty: true
     volumes:
       - ./:/var/www/html
-      # - $GITHUB_WORKSPACE/clients/php:/var/www/html

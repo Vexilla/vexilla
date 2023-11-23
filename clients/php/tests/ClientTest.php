@@ -9,8 +9,13 @@ final class ClientTest extends TestCase
 
   public function testClient()
   {
+    $testServerHost = getenv('TEST_SERVER_HOST');
+    if (!$testServerHost) {
+      $testServerHost = 'localhost';
+    }
+
     $client = new Client(
-      'http://127.0.0.1:3000',
+      "http://$testServerHost:3000",
       'dev',
       $this->uuid,
       true

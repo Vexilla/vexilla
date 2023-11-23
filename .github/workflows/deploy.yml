@@ -7,8 +7,11 @@ on:
       - "**.md"
 
 jobs:
-  deploy:
+  publish-test-server:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: "./packages/test-server"
 
     permissions:
       contents: read
@@ -17,8 +20,33 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Run background service
-        run: cd ./packages/test-server && npm install && npm run start &
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Build Test Server Image
+        run: |
+          docker build . --tag ghcr.io/${{ github.actor }}/test-server:latest
+          docker push ghcr.io/${{ github.actor }}/test-server:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    services:
+      test-server:
+        image: ${{ github.actor }}/test-server:latest
+        ports:
+          - 3000:3000
+
+    steps:
+      - uses: actions/checkout@v3
 
       # Bazel-supported languages
       - name: Cache Bazel
@@ -31,8 +59,15 @@ jobs:
             ${{ runner.os }}-bazel-
       - run: bazel build //...
       # - run: bazel test //...
-      # PHP
-      - run: docker-compose -f ./clients/php/docker-compose.ci.yml up  --exit-code-from php-custom
+      #   env:
+      #     TEST_SERVER_HOST: test-server
 
       # PHP
+      - run: docker-compose -f ./clients/php/docker-compose.ci.yml up  --exit-code-from php-custom
+        env:
+          TEST_SERVER_HOST: test-server
+
+      # Elixir
       - run: docker-compose -f ./clients/elixir/docker-compose.ci.yml up  --exit-code-from elixir-custom
+        env:
+          TEST_SERVER_HOST: test-server
