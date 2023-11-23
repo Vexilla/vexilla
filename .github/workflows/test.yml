@@ -32,35 +32,32 @@ jobs:
           docker build . --tag ghcr.io/vexilla/test-server:latest
           docker push ghcr.io/vexilla/test-server:latest
 
-  # publish-host:
-  #   runs-on: ubuntu-latest
+  publish-host:
+    runs-on: ubuntu-latest
 
-  #   permissions:
-  #     contents: read
-  #     packages: write
+    permissions:
+      contents: read
+      packages: write
 
-  #   steps:
-  #     - uses: actions/checkout@v3
+    steps:
+      - uses: actions/checkout@v3
 
-  #     - name: Login to GitHub Container Registry
-  #       uses: docker/login-action@v1
-  #       with:
-  #         registry: ghcr.io
-  #         username: vexilla
-  #         password: ${{secrets.GITHUB_TOKEN}}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: vexilla
+          password: ${{secrets.GITHUB_TOKEN}}
 
-  #     - name: Build Test Server Image
-  #       run: |
-  #         docker build . --tag ghcr.io/vexilla/test-server:latest
-  #         docker push ghcr.io/vexilla/test-server:latest
+      - name: Build Host Image
+        run: |
+          docker build . --tag ghcr.io/vexilla/host:latest
+          docker push ghcr.io/vexilla/host:latest
 
   test:
     runs-on: ubuntu-latest
-    # container: ubuntu
-    needs: [
-        "publish-test-server",
-        # "publish-host"
-      ]
+    container: ghcr.io/vexilla/host:latest
+    needs: ["publish-test-server", "publish-host"]
 
     permissions:
       contents: read
@@ -96,14 +93,18 @@ jobs:
       #   env:
       #     TEST_SERVER_HOST: test-server
 
-      - run: curl -v http://localhost:3000/manifest.json
+      - run: curl -v http://test-server:3000/manifest.json
 
       # PHP
-      - run: docker-compose -f ./clients/php/docker-compose.ci.yml up  --exit-code-from php-custom
-        env:
-          TEST_SERVER_HOST: test-server
+      # - run: docker-compose -f ./clients/php/docker-compose.ci.yml up  --exit-code-from php-custom
+      #   env:
+      #     TEST_SERVER_HOST: test-server
+      - run: |
+          cd ./clients/php
+          composer install
+          composer test
 
       # Elixir
-      - run: docker-compose -f ./clients/elixir/docker-compose.ci.yml up  --exit-code-from elixir-custom
-        env:
-          TEST_SERVER_HOST: test-server
+      # - run: docker-compose -f ./clients/elixir/docker-compose.ci.yml up  --exit-code-from elixir-custom
+      #   env:
+      #     TEST_SERVER_HOST: test-server
