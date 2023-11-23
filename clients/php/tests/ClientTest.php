@@ -14,6 +14,8 @@ final class ClientTest extends TestCase
       $testServerHost = 'localhost';
     }
 
+    echo "Test Server Host:" . $testServerHost;
+
     $client = new Client(
       "http://$testServerHost:3000",
       'dev',
