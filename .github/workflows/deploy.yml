@@ -42,7 +42,10 @@ jobs:
 
     services:
       test-server:
-        image: vexilla/test-server:latest
+        credentials:
+          username: vexilla
+          password: ${{secrets.GITHUB_TOKEN}}
+        image: ghcr.io/vexilla/test-server:latest
         ports:
           - 3000:3000
 
