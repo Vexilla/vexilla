@@ -1,0 +1,80 @@
+name: Main
+on:
+  push:
+    branches:
+      - "*"
+    paths-ignore:
+      - "**.md"
+
+jobs:
+  publish-test-server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: "./packages/test-server"
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: vexilla
+          password: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Build Test Server Image
+        run: |
+          docker build . --tag ghcr.io/vexilla/test-server:latest
+          docker push ghcr.io/vexilla/test-server:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: publish-test-server
+
+    permissions:
+      contents: read
+      packages: write
+
+    services:
+      test-server:
+        credentials:
+          username: vexilla
+          password: ${{secrets.GITHUB_TOKEN}}
+        image: ghcr.io/vexilla/test-server:latest
+        ports:
+          - 3000:3000
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # Bazel-supported languages
+      # - name: Cache Bazel
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: |
+      #       ~/.cache/bazel
+      #     key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-bazel-
+      # - run: bazel build //...
+
+      # - run: bazel test //...
+      #   env:
+      #     TEST_SERVER_HOST: test-server
+
+      - run: curl -o- -v -s http://0.0.0.0:3000/manifest.json
+
+      # PHP
+      - run: docker-compose -f ./clients/php/docker-compose.ci.yml up  --exit-code-from php-custom
+        env:
+          TEST_SERVER_HOST: test-server
+
+      # Elixir
+      - run: docker-compose -f ./clients/elixir/docker-compose.ci.yml up  --exit-code-from elixir-custom
+        env:
+          TEST_SERVER_HOST: test-server
