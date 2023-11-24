@@ -15,6 +15,4 @@ RUN php composer-setup.php  --install-dir=/usr/local/bin --filename=composer
 RUN php -r "unlink('composer-setup.php');"
 # RUN composer install
 
-# RUN curl -v http://localhost:3000/manifest.json
-
 CMD bash

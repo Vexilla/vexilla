@@ -6,8 +6,8 @@ services:
     environment:
       - TEST_SERVER_HOST
     build: .
-    extra_hosts:
-      - test-server:test-server
+    # extra_hosts:
+    #   - test-server:test-server
     command: composer test
     network_mode: host
     tty: true

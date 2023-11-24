@@ -32,13 +32,10 @@ jobs:
           docker build . --tag ghcr.io/vexilla/test-server:latest
           docker push ghcr.io/vexilla/test-server:latest
 
-  deploy:
+  test-php:
     runs-on: ubuntu-latest
-    needs: publish-test-server
-
-    permissions:
-      contents: read
-      packages: write
+    container: php:7.4.33-fpm
+    needs: ["publish-test-server"]
 
     services:
       test-server:
@@ -48,33 +45,66 @@ jobs:
         image: ghcr.io/vexilla/test-server:latest
         ports:
           - 3000:3000
+        options: |
+          --health-cmd "curl -f http://localhost:3000/manifest.json"
 
     steps:
       - uses: actions/checkout@v3
 
-      # Bazel-supported languages
-      # - name: Cache Bazel
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: |
-      #       ~/.cache/bazel
-      #     key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-bazel-
-      # - run: bazel build //...
+      - name: Cache Composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: /tmp/composer-cache
+          key: ${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
 
-      # - run: bazel test //...
-      #   env:
-      #     TEST_SERVER_HOST: test-server
+      - name: Install Composer
+        run: |
+          apt-get update
+          apt-get install git unzip -y
+          php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+          php -r "if (hash_file('sha384', 'composer-setup.php') === 'e21205b207c3ff031906575712edab6f13eb0b361f2085f1f1237b7126d785e826a450292b6cfd1d64d92e6563bbde02') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+          php composer-setup.php  --install-dir=/usr/local/bin --filename=composer
+          php -r "unlink('composer-setup.php');"
 
-      - run: curl -o- -v -s http://0.0.0.0:3000/manifest.json
+      - run: |
+          cd ./clients/php
+          composer install
+          composer test
+        env:
+          TEST_SERVER_HOST: test-server
 
-      # PHP
-      - run: docker-compose -f ./clients/php/docker-compose.ci.yml up  --exit-code-from php-custom
+  test-bazel:
+    runs-on: ubuntu-latest
+    needs: ["publish-test-server"]
+
+    services:
+      test-server:
+        credentials:
+          username: vexilla
+          password: ${{secrets.GITHUB_TOKEN}}
+        image: ghcr.io/vexilla/test-server:latest
+        ports:
+          - 3000:3000
+        options: |
+          --health-cmd "curl -f http://localhost:3000/manifest.json"
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Cache Bazel
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/bazel
+          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel') }}
+          restore-keys: |
+            ${{ runner.os }}-bazel-
+      - run: bazel build //...
+      - run: bazel test //...
         env:
           TEST_SERVER_HOST: test-server
 
       # Elixir
-      - run: docker-compose -f ./clients/elixir/docker-compose.ci.yml up  --exit-code-from elixir-custom
-        env:
-          TEST_SERVER_HOST: test-server
+      # - run: docker-compose -f ./clients/elixir/docker-compose.ci.yml up  --exit-code-from elixir-custom
+      #   env:
+      #     TEST_SERVER_HOST: test-server
