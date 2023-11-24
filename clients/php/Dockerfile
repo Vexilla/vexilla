@@ -17,4 +17,4 @@ RUN php -r "unlink('composer-setup.php');"
 
 RUN curl -v http://localhost:3000/manifest.json
 
-CMD bash
+# CMD bash

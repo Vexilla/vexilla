@@ -78,9 +78,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Health Check
-        run: sleep 30 && curl -v http://localhost:3000/manifest.json
-
       # Bazel-supported languages
       # - name: Cache Bazel
       #   uses: actions/cache@v3
@@ -100,7 +97,7 @@ jobs:
       #     TEST_SERVER_HOST: test-server
       - run: |
           docker build -t php-custom ./clients/php/.
-          docker run
+          docker run -it php-custom
       # - run: |
       #     cd ./clients/php
       #     composer install
