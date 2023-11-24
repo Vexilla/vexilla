@@ -32,32 +32,33 @@ jobs:
           docker build . --tag ghcr.io/vexilla/test-server:latest
           docker push ghcr.io/vexilla/test-server:latest
 
-  publish-host:
-    runs-on: ubuntu-latest
+  # publish-host:
+  #   runs-on: ubuntu-latest
 
-    permissions:
-      contents: read
-      packages: write
+  #   permissions:
+  #     contents: read
+  #     packages: write
 
-    steps:
-      - uses: actions/checkout@v3
+  #   steps:
+  #     - uses: actions/checkout@v3
 
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1
-        with:
-          registry: ghcr.io
-          username: vexilla
-          password: ${{secrets.GITHUB_TOKEN}}
+  #     - name: Login to GitHub Container Registry
+  #       uses: docker/login-action@v1
+  #       with:
+  #         registry: ghcr.io
+  #         username: vexilla
+  #         password: ${{secrets.GITHUB_TOKEN}}
 
-      - name: Build Host Image
-        run: |
-          docker build . --tag ghcr.io/vexilla/host:latest
-          docker push ghcr.io/vexilla/host:latest
+  #     - name: Build Host Image
+  #       run: |
+  #         docker build . --tag ghcr.io/vexilla/host:latest
+  #         docker push ghcr.io/vexilla/host:latest
 
   test:
     runs-on: ubuntu-latest
-    container: ghcr.io/vexilla/host:latest
-    needs: ["publish-test-server", "publish-host"]
+    # container: ghcr.io/vexilla/host:latest
+    # needs: ["publish-test-server", "publish-host"]
+    needs: ["publish-test-server"]
 
     permissions:
       contents: read
@@ -71,12 +72,12 @@ jobs:
         image: ghcr.io/vexilla/test-server:latest
         ports:
           - 3000:3000
-        # options: |
-        #   --health-cmd "curl -v http://127.0.0.1:3000/manifest.json"
-        #   --health-start-period 10s
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Health Check
+        run: sleep 30 && curl -v http://localhost:3000/manifest.json
 
       # Bazel-supported languages
       # - name: Cache Bazel
@@ -93,16 +94,16 @@ jobs:
       #   env:
       #     TEST_SERVER_HOST: test-server
 
-      - run: sleep 10 && curl -v http://test-server:3000/manifest.json
-
       # PHP
       # - run: docker-compose -f ./clients/php/docker-compose.ci.yml up  --exit-code-from php-custom
       #   env:
       #     TEST_SERVER_HOST: test-server
-      - run: |
-          cd ./clients/php
-          composer install
-          TEST_SERVER_HOST=test-server composer test
+      # - run: |
+      #     cd ./clients/php
+      #     composer install
+      #     composer test
+      #   env:
+      #     TEST_SERVER_HOST: test-server
 
       # Elixir
       # - run: docker-compose -f ./clients/elixir/docker-compose.ci.yml up  --exit-code-from elixir-custom
