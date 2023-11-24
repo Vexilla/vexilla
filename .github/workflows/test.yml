@@ -89,15 +89,13 @@ jobs:
       #     restore-keys: |
       #       ${{ runner.os }}-bazel-
       # - run: bazel build //...
-
       # - run: bazel test //...
       #   env:
       #     TEST_SERVER_HOST: test-server
-
       # PHP
-      # - run: docker-compose -f ./clients/php/docker-compose.ci.yml up  --exit-code-from php-custom
-      #   env:
-      #     TEST_SERVER_HOST: test-server
+      - run: docker-compose -f ./clients/php/docker-compose.ci.yml up  --exit-code-from php-custom
+        # env:
+        #   TEST_SERVER_HOST: test-server
       # - run: |
       #     cd ./clients/php
       #     composer install
