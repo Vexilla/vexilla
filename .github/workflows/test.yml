@@ -54,15 +54,38 @@ jobs:
   #         docker build . --tag ghcr.io/vexilla/host:latest
   #         docker push ghcr.io/vexilla/host:latest
 
-  test:
+  test-php:
     runs-on: ubuntu-latest
-    # container: ghcr.io/vexilla/host:latest
-    # needs: ["publish-test-server", "publish-host"]
+    container: php:7.4.33-fpm
     needs: ["publish-test-server"]
+    steps:
+      - uses: actions/checkout@v3
 
-    permissions:
-      contents: read
-      packages: write
+      - name: Cache Composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: /tmp/composer-cache
+          key: ${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
+
+      - name: Install Composer
+        run: |
+          apt-get update
+          apt-get install git unzip -y
+          php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+          php -r "if (hash_file('sha384', 'composer-setup.php') === 'e21205b207c3ff031906575712edab6f13eb0b361f2085f1f1237b7126d785e826a450292b6cfd1d64d92e6563bbde02') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+          php composer-setup.php  --install-dir=/usr/local/bin --filename=composer
+          php -r "unlink('composer-setup.php');"
+
+      - run: |
+          cd ./clients/php
+          composer install
+          composer test
+        env:
+          TEST_SERVER_HOST: test-server
+
+  test-bazel:
+    runs-on: ubuntu-latest
+    needs: ["publish-test-server"]
 
     services:
       test-server:
@@ -89,19 +112,6 @@ jobs:
       #       ${{ runner.os }}-bazel-
       # - run: bazel build //...
       # - run: bazel test //...
-      #   env:
-      #     TEST_SERVER_HOST: test-server
-      # PHP
-      # - run: docker-compose -f ./clients/php/docker-compose.ci.yml up  --exit-code-from php-custom
-      #   env:
-      #     TEST_SERVER_HOST: test-server
-      - run: |
-          docker build -t php-custom ./clients/php/.
-          docker exec docker.io/library/php-custom "curl -f http://test-server:3000/manifest.json"
-      # - run: |
-      #     cd ./clients/php
-      #     composer install
-      #     composer test
       #   env:
       #     TEST_SERVER_HOST: test-server
 
