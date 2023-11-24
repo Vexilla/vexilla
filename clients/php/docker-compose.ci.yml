@@ -9,7 +9,7 @@ services:
     # extra_hosts:
     #   - test-server:test-server
     command: composer test
-    network_mode: bridge
+    # network_mode: bridge
     tty: true
     volumes:
       - ./:/var/www/html
