@@ -12,10 +12,7 @@ defmodule Scheduler do
 
   ## Examples
 
-    iex> require FeatureType
-    ...>  require ScheduleType
-    ...>  require TimeType
-    ...>  Scheduler.is_scheduled_feature_active(Scheduler.get_example_feature())
+    iex> Scheduler.is_scheduled_feature_active(Scheduler.get_example_feature())
     true
 
   """
@@ -23,11 +20,7 @@ defmodule Scheduler do
     is_schedule_active(feature["schedule"], feature["scheduleType"])
   end
 
-  defp is_schedule_active(schedule, schedule_type) do
-    is_schedule_active_with_now(schedule, schedule_type, Timex.now())
-  end
-
-  defp is_schedule_active_with_now(schedule, schedule_type, now) do
+  defp is_schedule_active(schedule, schedule_type, datetime \\ Timex.now()) do
     schedule_type_empty = ScheduleType.empty()
     schedule_type_global = ScheduleType.global()
     schedule_type_environment = ScheduleType.environment()
@@ -38,12 +31,10 @@ defmodule Scheduler do
 
       schedule_type when schedule_type in [schedule_type_global, schedule_type_environment] ->
         start_date = Timex.from_unix(schedule["start"], :millisecond)
-        start_of_start_date = Timex.set(start_date, hour: 0, minute: 0, second: 0, microsecond: 0)
+        start_of_start_date = Timex.beginning_of_day(start_date)
 
         end_date = Timex.from_unix(schedule["end"], :millisecond)
-
-        end_of_end_date =
-          Timex.set(end_date, hour: 23, minute: 59, second: 59, microsecond: 999_999)
+        end_of_end_date = Timex.end_of_day(end_date)
 
         time_type_none = TimeType.none()
         time_type_start_end = TimeType.start_end()
@@ -52,8 +43,10 @@ defmodule Scheduler do
         start_time = Timex.from_unix(schedule["startTime"], :millisecond)
         end_time = Timex.from_unix(schedule["endTime"], :millisecond)
 
-        case {schedule["timeType"],
-              Timex.between?(now, start_of_start_date, end_of_end_date, inclusive: true)} do
+        is_date_between =
+          Timex.between?(datetime, start_of_start_date, end_of_end_date, inclusive: true)
+
+        case {schedule["timeType"], is_date_between} do
           {^time_type_none, true} ->
             true
 
@@ -74,17 +67,19 @@ defmodule Scheduler do
                 microsecond: end_time.microsecond
               )
 
-            Timex.between?(now, start_day_with_start_time, end_day_with_start_time,
+            Timex.between?(datetime, start_day_with_start_time, end_day_with_start_time,
               inclusive: true
             )
 
           {^time_type_daily, true} ->
-            zero_day = Timex.from_unix(0)
-            now_timestamp = Timex.to_unix(now)
+            zero_day = Timex.from_unix(0, :millisecond)
+            timestamp = Timex.to_unix(datetime) * 1000
 
-            today_zero_timestamp =
-              Timex.set(now, hour: 0, minute: 0, second: 0, microsecond: 0)
+            zero_timestamp_start =
+              datetime
+              |> Timex.beginning_of_day()
               |> Timex.to_unix()
+              |> then(&(&1 * 1000))
 
             zeroed_start_timestamp =
               Timex.set(zero_day,
@@ -94,6 +89,7 @@ defmodule Scheduler do
                 microsecond: start_time.microsecond
               )
               |> Timex.to_unix()
+              |> then(&(&1 * 1000))
 
             zeroed_end =
               Timex.set(zero_day,
@@ -103,24 +99,23 @@ defmodule Scheduler do
                 microsecond: end_time.microsecond
               )
 
-            zeroed_end_timestamp = Timex.to_unix(zeroed_end)
+            zeroed_end_timestamp = Timex.to_unix(zeroed_end) * 1000
 
             zeroed_end_timestamp_plus_day =
-              Timex.to_unix(Timex.add(zeroed_end, Duration.from_days(1)))
+              Timex.to_unix(Timex.add(zeroed_end, Duration.from_days(1))) * 1000
 
-            start_timestamp = today_zero_timestamp + zeroed_start_timestamp
+            start_timestamp = zero_timestamp_start + zeroed_start_timestamp
 
             end_timestamp =
               if zeroed_start_timestamp > zeroed_end_timestamp || zeroed_end_timestamp < 0 do
-                today_zero_timestamp + zeroed_end_timestamp_plus_day
+                zero_timestamp_start + zeroed_end_timestamp_plus_day
               else
-                today_zero_timestamp + zeroed_end_timestamp
+                zero_timestamp_start + zeroed_end_timestamp
               end
 
-            now_timestamp >= start_timestamp && now_timestamp <= end_timestamp
+            timestamp >= start_timestamp && timestamp <= end_timestamp
 
-          {_, false} ->
-            IO.puts("Not between days")
+          _ ->
             false
         end
 
@@ -134,19 +129,19 @@ defmodule Scheduler do
       now = Timex.now()
 
       %{
-        name: "foo",
-        featureId: "bar",
-        seed: 0,
-        value: 0,
-        schedule: %Schedule{
-          start: Timex.to_unix(Timex.subtract(now, Duration.from_days(2))),
-          end: Timex.to_unix(Timex.add(now, Duration.from_days(2))),
-          timeType: TimeType.start_end(),
-          startTime: Timex.to_unix(Timex.subtract(now, Duration.from_hours(2))),
-          endTime: Timex.to_unix(Timex.add(now, Duration.from_hours(2)))
+        "name" => "foo",
+        "featureId" => "bar",
+        "seed" => 0,
+        "value" => 0,
+        "schedule" => %{
+          "start" => Timex.to_unix(Timex.subtract(now, Duration.from_days(2))) * 1000,
+          "end" => Timex.to_unix(Timex.add(now, Duration.from_days(2))) * 1000,
+          "timeType" => TimeType.start_end(),
+          "startTime" => Timex.to_unix(Timex.subtract(now, Duration.from_hours(2))) * 1000,
+          "endTime" => Timex.to_unix(Timex.add(now, Duration.from_hours(2))) * 1000
         },
-        featureType: FeatureType.toggle(),
-        scheduleType: ScheduleType.global()
+        "featureType" => FeatureType.toggle(),
+        "scheduleType" => ScheduleType.global()
       }
     end
   end
