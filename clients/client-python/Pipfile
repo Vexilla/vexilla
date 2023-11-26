@@ -1,11 +1,15 @@
 [[source]]
-name = "pypi"
+name = "vexilla_client"
 url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+pytest = "*"
+black = "*"
 
 [packages]
+arrow = "*"
+pydantic = "*"
 
 [requires]
 python_version = "3.6"
