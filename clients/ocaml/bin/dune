@@ -1,0 +1,4 @@
+(executable
+ (public_name vexilla_ocaml_sdk)
+ (name main)
+ (libraries vexilla))
