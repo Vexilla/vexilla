@@ -1,0 +1,3 @@
+(tests
+ (names hash schedule)
+ (libraries alcotest vexilla))

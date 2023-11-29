@@ -1,0 +1,287 @@
+{
+  "name": "Scheduled",
+  "groupId": "Jz0rgEv0epyCb6z58or72",
+  "features": {
+    "7tmnvFX7RI3kOt5r57vyz": {
+      "name": "beforeGlobal",
+      "featureId": "7tmnvFX7RI3kOt5r57vyz",
+      "featureType": "toggle",
+      "value": false,
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 0,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      }
+    },
+    "khEhXchcRuhNdDa8Il8VO": {
+      "name": "duringGlobal",
+      "featureId": "khEhXchcRuhNdDa8Il8VO",
+      "featureType": "toggle",
+      "value": false,
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 0,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      }
+    },
+    "dPjTTjugWI5gJfcmoDmbU": {
+      "name": "afterGlobal",
+      "featureId": "dPjTTjugWI5gJfcmoDmbU",
+      "featureType": "toggle",
+      "value": false,
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 0,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      }
+    },
+    "6iaSljA2uE74IPq4gNzEv": {
+      "name": "beforeGlobalStartEnd",
+      "featureId": "6iaSljA2uE74IPq4gNzEv",
+      "featureType": "toggle",
+      "value": false,
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 0,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      }
+    },
+    "0cq1IesUoQ7co34ViqHY8": {
+      "name": "duringGlobalStartEnd",
+      "featureId": "0cq1IesUoQ7co34ViqHY8",
+      "featureType": "toggle",
+      "value": false,
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 0,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      }
+    },
+    "PKjpuHwBkjmofQlj-o3q5": {
+      "name": "afterGlobalStartEnd",
+      "featureId": "PKjpuHwBkjmofQlj-o3q5",
+      "featureType": "toggle",
+      "value": false,
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 0,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      }
+    },
+    "hErE-2S6DeJBybg-zjo-h": {
+      "name": "beforeGlobalDaily",
+      "featureId": "hErE-2S6DeJBybg-zjo-h",
+      "featureType": "toggle",
+      "value": false,
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 0,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      }
+    },
+    "VOg2MtzQbaAvZJLSyYXo_": {
+      "name": "duringGlobalDaily",
+      "featureId": "VOg2MtzQbaAvZJLSyYXo_",
+      "featureType": "toggle",
+      "value": false,
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 0,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      }
+    },
+    "dA_c61EnCwPL0ENcAbzJF": {
+      "name": "afterGlobalDaily",
+      "featureId": "dA_c61EnCwPL0ENcAbzJF",
+      "featureType": "toggle",
+      "value": false,
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 0,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      }
+    }
+  },
+  "environments": {
+    "HRHIqkJIGYuPbZpvF74mi": {
+      "name": "dev",
+      "environmentId": "HRHIqkJIGYuPbZpvF74mi",
+      "features": {
+        "7tmnvFX7RI3kOt5r57vyz": {
+          "name": "beforeGlobal",
+          "featureId": "7tmnvFX7RI3kOt5r57vyz",
+          "featureType": "toggle",
+          "value": true,
+          "scheduleType": "global",
+          "schedule": {
+            "start": 1691132400000,
+            "end": 1691737200000,
+            "timezone": "UTC",
+            "timeType": "none",
+            "startTime": 0,
+            "endTime": 0
+          }
+        },
+        "khEhXchcRuhNdDa8Il8VO": {
+          "name": "duringGlobal",
+          "featureId": "khEhXchcRuhNdDa8Il8VO",
+          "featureType": "toggle",
+          "value": true,
+          "scheduleType": "global",
+          "schedule": {
+            "start": 1690527600000,
+            "end": 1691132400000,
+            "timezone": "UTC",
+            "timeType": "none",
+            "startTime": 0,
+            "endTime": 0
+          }
+        },
+        "dPjTTjugWI5gJfcmoDmbU": {
+          "name": "afterGlobal",
+          "featureId": "dPjTTjugWI5gJfcmoDmbU",
+          "featureType": "toggle",
+          "value": true,
+          "scheduleType": "global",
+          "schedule": {
+            "start": 1689922800000,
+            "end": 1690527600000,
+            "timezone": "UTC",
+            "timeType": "none",
+            "startTime": 0,
+            "endTime": 0
+          }
+        },
+        "6iaSljA2uE74IPq4gNzEv": {
+          "name": "beforeGlobalStartEnd",
+          "featureId": "6iaSljA2uE74IPq4gNzEv",
+          "featureType": "toggle",
+          "value": true,
+          "scheduleType": "global",
+          "schedule": {
+            "start": 1691132400000,
+            "end": 1691737200000,
+            "timezone": "UTC",
+            "timeType": "start/end",
+            "startTime": 32400000,
+            "endTime": 61200000
+          }
+        },
+        "0cq1IesUoQ7co34ViqHY8": {
+          "name": "duringGlobalStartEnd",
+          "featureId": "0cq1IesUoQ7co34ViqHY8",
+          "featureType": "toggle",
+          "value": true,
+          "scheduleType": "global",
+          "schedule": {
+            "start": 1690527600000,
+            "end": 1691132400000,
+            "timezone": "UTC",
+            "timeType": "start/end",
+            "startTime": 32400000,
+            "endTime": 61200000
+          }
+        },
+        "PKjpuHwBkjmofQlj-o3q5": {
+          "name": "afterGlobalStartEnd",
+          "featureId": "PKjpuHwBkjmofQlj-o3q5",
+          "featureType": "toggle",
+          "value": true,
+          "scheduleType": "global",
+          "schedule": {
+            "start": 1689922800000,
+            "end": 1690527600000,
+            "timezone": "UTC",
+            "timeType": "start/end",
+            "startTime": 32400000,
+            "endTime": 61200000
+          }
+        },
+        "hErE-2S6DeJBybg-zjo-h": {
+          "name": "beforeGlobalDaily",
+          "featureId": "hErE-2S6DeJBybg-zjo-h",
+          "featureType": "toggle",
+          "value": true,
+          "scheduleType": "global",
+          "schedule": {
+            "start": 1691737200000,
+            "end": 1692342000000,
+            "timezone": "UTC",
+            "timeType": "daily",
+            "startTime": 32400000,
+            "endTime": 61200000
+          }
+        },
+        "VOg2MtzQbaAvZJLSyYXo_": {
+          "name": "duringGlobalDaily",
+          "featureId": "VOg2MtzQbaAvZJLSyYXo_",
+          "featureType": "toggle",
+          "value": true,
+          "scheduleType": "global",
+          "schedule": {
+            "start": 1690527600000,
+            "end": 1691132400000,
+            "timezone": "UTC",
+            "timeType": "daily",
+            "startTime": 32400000,
+            "endTime": 43200000
+          }
+        },
+        "dA_c61EnCwPL0ENcAbzJF": {
+          "name": "afterGlobalDaily",
+          "featureId": "dA_c61EnCwPL0ENcAbzJF",
+          "featureType": "toggle",
+          "value": true,
+          "scheduleType": "global",
+          "schedule": {
+            "start": 1689922800000,
+            "end": 1690527600000,
+            "timezone": "UTC",
+            "timeType": "daily",
+            "startTime": 32400000,
+            "endTime": 61200000
+          }
+        }
+      }
+    }
+  },
+  "meta": {
+    "version": "v1"
+  }
+}
