@@ -2,6 +2,13 @@
 
 This is the JS/TS client library for Vexilla, a static file based feature flag system.
 
+<div>
+  <style>
+    .foo { background: blue; width: 100px; height: 100px }
+  </style>
+  <div class="foo"></div>
+</div>
+
 ## Getting Started
 
 To get started is easy.
