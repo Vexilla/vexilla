@@ -1,7 +1,7 @@
 import enum
 from pydantic import BaseModel, Field, validator
-from typing import List, Literal, Optional, Union, Dict
-from typing_extensions import Annotated
+from typing import List, Optional, Union, Dict
+from typing_extensions import Literal, Annotated
 
 
 class FeatureType(enum.Enum):
@@ -63,6 +63,9 @@ class BaseFeature(BaseModel):
     schedule_type: FeatureType = Field(..., alias="scheduleType")
     schedule: Schedule
 
+    # class Config:
+    #     allow_population_by_field_name = True
+
 
 class ToggleFeature(BaseFeature):
     feature_type: Literal[FeatureType.TOGGLE]
@@ -76,6 +79,7 @@ class GradualFeature(BaseFeature):
 
 
 class BaseValueFeature(BaseFeature):
+    feature_type: Literal[FeatureType.VALUE]
     value_type: ValueType = Field(..., alias="valueType")
     number_type: NumberType = Field(..., alias="numberType")
 
@@ -107,6 +111,7 @@ ValueFeature = Annotated[
 
 
 class BaseSelectiveFeature(BaseModel):
+    feature_type: Literal[FeatureType.SELECTIVE]
     value_type: ValueType = Field(..., alias="valueType")
     number_type: NumberType = Field(..., alias="numberType")
 

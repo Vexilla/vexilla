@@ -1,10 +1,16 @@
 import unittest
+import os
+import urllib.request
 
-from vexilla_client import VexillaClient
+from vexilla_client.client import VexillaClient
+
+TEST_SERVER_HOST = os.environ.get('TEST_SERVER_HOST')
+if not TEST_SERVER_HOST:
+    TEST_SERVER_HOST = "localhost:3000"
+UUID = "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a"
 
 
 class TestClient(unittest.TestCase):
-    __uuid = "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a"
 
     def test_client(self):
         """
@@ -12,8 +18,18 @@ class TestClient(unittest.TestCase):
         """
 
         client = VexillaClient(
-            "https://streamparrot-feature-flags.s3.amazonaws.com", "dev", self.__uuid
-        ).fetch_flags("features")
+            f"http://{TEST_SERVER_HOST}",
+            "dev",
+            UUID
+        )
+
+        client.sync_manifest(lambda url:
+            urllib.request.urlopen(url).read()
+        )
+
+        client.sync_flags("Gradual", lambda url:
+            urllib.request.urlopen(url).read()
+        )
 
         self.assertTrue(client.should("testingWorkingGradual"))
         self.assertFalse(client.should("testingNonWorkingGradual"))

@@ -53,11 +53,16 @@ class EnvironmentNotFoundError(Exception):
         self.errors = errors
 
     def __reduce__(self):
-        return (EnvironmentNotFoundError, (self.group_id, self.environment_id, self.errors))
+        return (
+            EnvironmentNotFoundError,
+            (self.group_id, self.environment_id, self.errors),
+        )
 
 
 class FeatureNotFoundError(Exception):
-    def __init__(self, group_id: str, environment_id: str, feature_id: str, errors) -> None:
+    def __init__(
+        self, group_id: str, environment_id: str, feature_id: str, errors
+    ) -> None:
         super().__init__(
             f"The feature with id, {feature_id}, was not found within the environment with id, {environment_id}, within the group with id, {group_id}. Make sure that the Feature exists within the Group in your flag config."
         )
@@ -67,7 +72,11 @@ class FeatureNotFoundError(Exception):
         self.errors = errors
 
     def __reduce__(self):
-        return (FeatureNotFoundError, (self.group_id, self.environment_id, self.feature_id, self.errors))
+        return (
+            FeatureNotFoundError,
+            (self.group_id, self.environment_id, self.feature_id, self.errors),
+        )
+
 
 class InvalidShouldFeatureTypeError(Exception):
     def __init__(self, feature_id: str, feature_type: FeatureType, errors) -> None:
@@ -79,7 +88,10 @@ class InvalidShouldFeatureTypeError(Exception):
         self.errors = errors
 
     def __reduce__(self):
-        return (InvalidShouldFeatureTypeError, (self.feature_id, self.feature_type, self.errors))
+        return (
+            InvalidShouldFeatureTypeError,
+            (self.feature_id, self.feature_type, self.errors),
+        )
 
 
 class InvalidValueFeatureTypeError(Exception):
@@ -92,4 +104,7 @@ class InvalidValueFeatureTypeError(Exception):
         self.errors = errors
 
     def __reduce__(self):
-        return (InvalidValueFeatureTypeError, (self.feature_id, self.feature_type, self.errors))
+        return (
+            InvalidValueFeatureTypeError,
+            (self.feature_id, self.feature_type, self.errors),
+        )

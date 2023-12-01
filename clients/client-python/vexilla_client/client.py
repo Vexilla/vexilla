@@ -4,7 +4,14 @@ import json
 from .hasher import Hasher
 from .scheduler import Scheduler
 from .types import Group, Feature, Manifest, FeatureType
-from .exceptions import GroupNotFoundError, LookupTableError, NestedLookupTableError, InvalidShouldFeatureTypeError, InvalidValueFeatureTypeError
+from .exceptions import (
+    GroupNotFoundError,
+    LookupTableError,
+    NestedLookupTableError,
+    InvalidShouldFeatureTypeError,
+    InvalidValueFeatureTypeError,
+)
+
 
 class VexillaClient:
     __manifest: Manifest
@@ -27,9 +34,8 @@ class VexillaClient:
         self.__custom_instance_id = custom_instance_id
         self.__show_logs = show_logs
 
-
     def get_manifest(self, fetch: Callable[[str], str]) -> Manifest:
-        url = f"{self.base_url}/manifest.json"
+        url = f"{self.__base_url}/manifest.json"
         raw_manifest = fetch(url)
         return Manifest.parse_raw(raw_manifest)
 
@@ -49,10 +55,9 @@ class VexillaClient:
             group_id = self.__group_lookup_table[group_name_or_id]
         except Exception as e:
             raise LookupTableError("group", group_name_or_id, [e])
-        url = f"{self.base_url}/{group_id}.json"
+        url = f"{self.__base_url}/{group_id}.json"
         raw_flag_group = fetch(url)
         return Group.parse_raw(raw_flag_group)
-
 
     def set_flags(self, group_name_or_id: str, group: Group) -> None:
         try:
@@ -77,7 +82,7 @@ class VexillaClient:
         self.__flag_groups[group_id] = group
 
     def sync_flags(self, group_name_or_id: str, fetch: Callable[[str], str]) -> None:
-        flag_group = self.get_flags(fetch)
+        flag_group = self.get_flags(group_name_or_id, fetch)
         self.set_flags(group_name_or_id, flag_group)
 
     def should(self, group_name_or_id: str, feature_name_or_id: str) -> bool:
@@ -91,7 +96,6 @@ class VexillaClient:
         feature_name_or_id: str,
         custom_instance_id: Union[str, int, float],
     ) -> bool:
-
         feature = self.__get_feature(group_name_or_id, feature_name_or_id)
 
         if not Scheduler.is_scheduled_feature_active(feature):
@@ -104,11 +108,16 @@ class VexillaClient:
         elif feature.feature_type is FeatureType.SELECTIVE:
             return custom_instance_id in feature.value
         else:
-            raise InvalidShouldFeatureTypeError(feature.feature_id, feature.feature_type)
+            raise InvalidShouldFeatureTypeError(
+                feature.feature_id, feature.feature_type
+            )
 
-    def value(self, group_name_or_id: str,
-        feature_name_or_id: str, default_value: Union[str, int, float]) -> Union[str, int, float]:
-
+    def value(
+        self,
+        group_name_or_id: str,
+        feature_name_or_id: str,
+        default_value: Union[str, int, float],
+    ) -> Union[str, int, float]:
         feature = self.__get_feature(group_name_or_id, feature_name_or_id)
 
         if not Scheduler.is_scheduled_feature_active(feature):
@@ -126,14 +135,16 @@ class VexillaClient:
             raise LookupTableError("group", group_name_or_id, [e])
 
         try:
-            feature_id = self.__feature_lookup_table[group_name_or_id]
+            feature_id = self.__feature_lookup_table[feature_name_or_id]
         except Exception as e:
-            raise NestedLookupTableError("feature", group_id, group_name_or_id, [e])
+            raise NestedLookupTableError("feature", group_id, feature_name_or_id, [e])
 
         try:
             environment_id = self.__environment_lookup_table[group_name_or_id]
         except Exception as e:
-            raise NestedLookupTableError("environment", group_id, self.__environment, [e])
+            raise NestedLookupTableError(
+                "environment", group_id, self.__environment, [e]
+            )
 
         try:
             group = self.__flag_groups[group_id]

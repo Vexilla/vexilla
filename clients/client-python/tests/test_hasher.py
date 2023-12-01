@@ -1,6 +1,6 @@
 import unittest
 
-from vexilla_client import Hasher
+from vexilla_client.hasher import Hasher
 
 
 class TestHasher(unittest.TestCase):
@@ -12,15 +12,15 @@ class TestHasher(unittest.TestCase):
         """
         Test the hasher against a working gradual seed
         """
-        hasher = Hasher(self.__working_gradual_seed)
-        self.assertTrue(hasher.hashString(self.__uuid) <= 40)
+        hash_result = Hasher.hash_value(self.__uuid, self.__working_gradual_seed)
+        self.assertTrue(hash_result <= 0.40)
 
     def test_hash_string_with_non_working_gradual(self):
         """
         Test the hasher against a non-working gradual seed
         """
-        hasher = Hasher(self.__non_working_gradual_seed)
-        self.assertTrue(hasher.hashString(self.__uuid) >= 40)
+        hash_result = Hasher.hash_value(self.__uuid, self.__non_working_gradual_seed)
+        self.assertTrue(hash_result > 0.40)
 
 
 if __name__ == "__main__":

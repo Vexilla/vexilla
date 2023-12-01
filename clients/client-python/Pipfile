@@ -11,6 +11,8 @@ flake8 = "*"
 [packages]
 arrow = "*"
 pydantic = "*"
+typing-extensions = "*"
+pytest = "*"
 
 [requires]
 python_version = "3.6"
