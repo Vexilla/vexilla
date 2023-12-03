@@ -13,14 +13,8 @@ defmodule VexillaClientTest do
         "dev",
         user_id
       )
-      |> VexillaClient.sync_manifest!(fn url ->
-        manifest_response = HTTPoison.get!(url)
-        Jason.decode!(manifest_response.body)
-      end)
-      |> VexillaClient.sync_flags!("Gradual", fn url ->
-        manifest_response = HTTPoison.get!(url)
-        Jason.decode!(manifest_response.body)
-      end)
+      |> VexillaClient.sync_manifest!(&generic_fetch!/1)
+      |> VexillaClient.sync_flags!("Gradual", &generic_fetch!/1)
 
     should_gradual = VexillaClient.should?(config, "Gradual", "testingWorkingGradual")
     assert should_gradual == true
@@ -28,11 +22,7 @@ defmodule VexillaClientTest do
     should_not_gradual = VexillaClient.should?(config, "Gradual", "testingNonWorkingGradual")
     assert should_not_gradual == false
 
-    config =
-      VexillaClient.sync_flags!(config, "Selective", fn url ->
-        manifest_response = HTTPoison.get!(url)
-        Jason.decode!(manifest_response.body)
-      end)
+    config = VexillaClient.sync_flags!(config, "Selective", &generic_fetch!/1)
 
     should_selective_string = VexillaClient.should?(config, "Selective", "String")
     assert should_selective_string == true
@@ -45,11 +35,7 @@ defmodule VexillaClientTest do
     should_selective_number = VexillaClient.should_custom?(config, "Selective", "Number", 42)
     assert should_selective_number == true
 
-    config =
-      VexillaClient.sync_flags!(config, "Value", fn url ->
-        manifest_response = HTTPoison.get!(url)
-        Jason.decode!(manifest_response.body)
-      end)
+    config = VexillaClient.sync_flags!(config, "Value", &generic_fetch!/1)
 
     value_string = VexillaClient.value!(config, "Value", "String", "bar")
     assert value_string == "foo"
@@ -69,11 +55,7 @@ defmodule VexillaClientTest do
     value_float_bad = VexillaClient.value!(config, "Value", "Float_Bad", 0)
     assert value_float_bad == 0
 
-    config =
-      VexillaClient.sync_flags!(config, "Scheduled", fn url ->
-        manifest_response = HTTPoison.get!(url)
-        Jason.decode!(manifest_response.body)
-      end)
+    config = VexillaClient.sync_flags!(config, "Scheduled", &generic_fetch!/1)
 
     should_before_global = VexillaClient.should?(config, "Scheduled", "beforeGlobal")
     assert should_before_global == false
@@ -96,5 +78,11 @@ defmodule VexillaClientTest do
     should_after_global_daily = VexillaClient.should?(config, "Scheduled", "afterGlobalDaily")
     assert should_after_global_daily == false
 
+  end
+
+  # Fetch the JSON and decode it.
+  defp generic_fetch!(url) do
+    response = HTTPoison.get!(url)
+    Jason.decode!(response.body)
   end
 end
