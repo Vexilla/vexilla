@@ -109,7 +109,7 @@ class VexillaClient:
             return custom_instance_id in feature.value
         else:
             raise InvalidShouldFeatureTypeError(
-                feature.feature_id, feature.feature_type
+                feature.feature_id, feature.feature_type, []
             )
 
     def value(
@@ -124,7 +124,7 @@ class VexillaClient:
             return default_value
 
         if feature.feature_type is FeatureType.VALUE:
-            raise InvalidValueFeatureTypeError(feature.feature_id, feature.feature_type)
+            raise InvalidValueFeatureTypeError(feature.feature_id, feature.feature_type, [])
 
         return feature.value
 
@@ -135,12 +135,12 @@ class VexillaClient:
             raise LookupTableError("group", group_name_or_id, [e])
 
         try:
-            feature_id = self.__feature_lookup_table[feature_name_or_id]
+            feature_id = self.__feature_lookup_table[group_id][feature_name_or_id]
         except Exception as e:
             raise NestedLookupTableError("feature", group_id, feature_name_or_id, [e])
 
         try:
-            environment_id = self.__environment_lookup_table[group_name_or_id]
+            environment_id = self.__environment_lookup_table[group_id][self.__environment]
         except Exception as e:
             raise NestedLookupTableError(
                 "environment", group_id, self.__environment, [e]

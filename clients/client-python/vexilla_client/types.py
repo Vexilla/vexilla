@@ -4,31 +4,31 @@ from typing import List, Optional, Union, Dict
 from typing_extensions import Literal, Annotated
 
 
-class FeatureType(enum.Enum):
+class FeatureType(str, enum.Enum):
     TOGGLE = "toggle"
     GRADUAL = "gradual"
     SELECTIVE = "selective"
     VALUE = "value"
 
 
-class ScheduleType(enum.Enum):
+class ScheduleType(str, enum.Enum):
     EMPTY = ""
     GLOBAL = "global"
     ENVIRONMENT = "environment"
 
 
-class ScheduleTimeType(enum.Enum):
+class ScheduleTimeType(str, enum.Enum):
     NONE = "none"
     START_END = "start/end"
     DAILY = "daily"
 
 
-class ValueType(enum.Enum):
+class ValueType(str, enum.Enum):
     STRING = "string"
     NUMBER = "number"
 
 
-class NumberType(enum.Enum):
+class NumberType(str, enum.Enum):
     INT = "int"
     FLOAT = "float"
 
@@ -60,26 +60,23 @@ class BaseFeature(BaseModel):
     name: str
     feature_id: str = Field(..., alias="featureId")
     feature_type: FeatureType = Field(..., alias="featureType")
-    schedule_type: FeatureType = Field(..., alias="scheduleType")
+    schedule_type: ScheduleType = Field(..., alias="scheduleType")
     schedule: Schedule
-
-    # class Config:
-    #     allow_population_by_field_name = True
 
 
 class ToggleFeature(BaseFeature):
-    feature_type: Literal[FeatureType.TOGGLE]
+    feature_type: Literal[FeatureType.TOGGLE] = Field(..., alias="featureType")
     value: bool
 
 
 class GradualFeature(BaseFeature):
-    feature_type: Literal[FeatureType.GRADUAL]
+    feature_type: Literal[FeatureType.GRADUAL] = Field(..., alias="featureType")
     value: float
     seed: float
 
 
 class BaseValueFeature(BaseFeature):
-    feature_type: Literal[FeatureType.VALUE]
+    feature_type: Literal[FeatureType.VALUE] = Field(..., alias="featureType")
     value_type: ValueType = Field(..., alias="valueType")
     number_type: NumberType = Field(..., alias="numberType")
 
@@ -111,7 +108,7 @@ ValueFeature = Annotated[
 
 
 class BaseSelectiveFeature(BaseModel):
-    feature_type: Literal[FeatureType.SELECTIVE]
+    feature_type: Literal[FeatureType.SELECTIVE] = Field(..., alias="featureType")
     value_type: ValueType = Field(..., alias="valueType")
     number_type: NumberType = Field(..., alias="numberType")
 

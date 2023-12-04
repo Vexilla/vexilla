@@ -13,6 +13,7 @@ arrow = "*"
 pydantic = "*"
 typing-extensions = "*"
 pytest = "*"
+pytest-cov = "*"
 
 [requires]
 python_version = "3.6"
