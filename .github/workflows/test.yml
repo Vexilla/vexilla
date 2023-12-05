@@ -92,16 +92,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - run: pip3 install pipenv
-
-      # - name: Cache Composer dependencies
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: /tmp/composer-cache
-      #     key: ${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
-
       - run: |
+          pip3 install pipenv
           cd ./clients/python
+          pipenv shell
           pipenv install
           pytest
         env:
