@@ -78,7 +78,6 @@ class GradualFeature(BaseFeature):
 class BaseValueFeature(BaseFeature):
     feature_type: Literal[FeatureType.VALUE] = Field(..., alias="featureType")
     value_type: ValueType = Field(..., alias="valueType")
-    number_type: NumberType = Field(..., alias="numberType")
 
 
 class ValueStringFeature(BaseValueFeature):
