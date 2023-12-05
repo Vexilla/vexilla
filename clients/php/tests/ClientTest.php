@@ -17,7 +17,7 @@ final class ClientTest extends TestCase
     echo "Test Server Host:" . $testServerHost;
 
     $client = new Client(
-      "http://$testServerHost:3000",
+      "http://$testServerHost",
       'dev',
       $this->uuid,
       true

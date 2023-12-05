@@ -71,7 +71,7 @@ jobs:
           composer install
           composer test
         env:
-          TEST_SERVER_HOST: test-server
+          TEST_SERVER_HOST: test-server:3000
 
   test-python:
     runs-on: ubuntu-latest
@@ -99,7 +99,7 @@ jobs:
           pipenv install
           pipenv run pytest
         env:
-          TEST_SERVER_HOST: test-server
+          TEST_SERVER_HOST: test-server:3000
 
   test-bazel:
     runs-on: ubuntu-latest
