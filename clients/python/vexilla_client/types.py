@@ -110,7 +110,6 @@ ValueFeature = Annotated[
 class BaseSelectiveFeature(BaseFeature):
     feature_type: Literal[FeatureType.SELECTIVE] = Field(..., alias="featureType")
     value_type: ValueType = Field(..., alias="valueType")
-    number_type: NumberType = Field(..., alias="numberType")
 
 
 class SelectiveStringFeature(BaseSelectiveFeature):
