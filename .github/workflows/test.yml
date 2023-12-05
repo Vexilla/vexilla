@@ -73,6 +73,40 @@ jobs:
         env:
           TEST_SERVER_HOST: test-server
 
+  test-python:
+    runs-on: ubuntu-latest
+    container: python:3.6.15
+    needs: ["publish-test-server"]
+
+    services:
+      test-server:
+        credentials:
+          username: vexilla
+          password: ${{secrets.GITHUB_TOKEN}}
+        image: ghcr.io/vexilla/test-server:latest
+        ports:
+          - 3000:3000
+        options: |
+          --health-cmd "curl -f http://localhost:3000/manifest.json"
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - run: pip3 install pipenv
+
+      # - name: Cache Composer dependencies
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: /tmp/composer-cache
+      #     key: ${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
+
+      - run: |
+          cd ./clients/python
+          pipenv install
+          pytest
+        env:
+          TEST_SERVER_HOST: test-server
+
   test-bazel:
     runs-on: ubuntu-latest
     needs: ["publish-test-server"]
