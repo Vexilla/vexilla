@@ -123,7 +123,7 @@ class VexillaClient:
         if not Scheduler.is_scheduled_feature_active(feature):
             return default_value
 
-        if feature.feature_type is FeatureType.VALUE:
+        if feature.feature_type is not FeatureType.VALUE:
             raise InvalidValueFeatureTypeError(feature.feature_id, feature.feature_type, [])
 
         return feature.value

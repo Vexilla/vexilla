@@ -97,7 +97,7 @@ jobs:
       - run: |
           cd ./clients/python
           pipenv install
-          pipenv run pytest
+          pipenv run pytest --cov=vexilla_client
         env:
           TEST_SERVER_HOST: test-server:3000
 
