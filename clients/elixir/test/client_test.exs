@@ -7,9 +7,11 @@ defmodule VexillaClientTest do
 
     user_id = "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a"
 
+    TEST_SERVER_HOST = System.get_env("TEST_SERVER_HOST")
+
     config =
       VexillaClient.create_config(
-        "http://localhost:3000",
+        "http://#{TEST_SERVER_HOST}",
         "dev",
         user_id
       )
@@ -64,11 +66,19 @@ defmodule VexillaClientTest do
     should_after_global = VexillaClient.should?(config, "Scheduled", "afterGlobal")
     assert should_after_global == false
 
-    should_before_global_start_end = VexillaClient.should?(config, "Scheduled", "beforeGlobalStartEnd")
+    should_before_global_start_end =
+      VexillaClient.should?(config, "Scheduled", "beforeGlobalStartEnd")
+
     assert should_before_global_start_end == false
-    should_during_global_start_end = VexillaClient.should?(config, "Scheduled", "duringGlobalStartEnd")
+
+    should_during_global_start_end =
+      VexillaClient.should?(config, "Scheduled", "duringGlobalStartEnd")
+
     assert should_during_global_start_end == true
-    should_after_global_start_end = VexillaClient.should?(config, "Scheduled", "afterGlobalStartEnd")
+
+    should_after_global_start_end =
+      VexillaClient.should?(config, "Scheduled", "afterGlobalStartEnd")
+
     assert should_after_global_start_end == false
 
     should_before_global_daily = VexillaClient.should?(config, "Scheduled", "beforeGlobalDaily")
@@ -77,7 +87,6 @@ defmodule VexillaClientTest do
     assert should_during_global_daily == true
     should_after_global_daily = VexillaClient.should?(config, "Scheduled", "afterGlobalDaily")
     assert should_after_global_daily == false
-
   end
 
   # Fetch the JSON and decode it.
