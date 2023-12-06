@@ -56,11 +56,11 @@ class TestClient(unittest.TestCase):
             ValueGroup.GROUP_ID, lambda url: urllib.request.urlopen(url).read()
         )
 
-        self.assertEquals("foo", client.value(ValueGroup.GROUP_ID, ValueGroup.StringFeature.FEATURE_ID, ""))
+        self.assertEqual("foo", client.value(ValueGroup.GROUP_ID, ValueGroup.StringFeature.FEATURE_ID, ""))
 
-        self.assertEquals(42, client.value(ValueGroup.GROUP_ID, ValueGroup.IntegerFeature.FEATURE_ID, 0))
+        self.assertEqual(42, client.value(ValueGroup.GROUP_ID, ValueGroup.IntegerFeature.FEATURE_ID, 0))
 
-        self.assertEquals(42.42, client.value(ValueGroup.GROUP_ID, ValueGroup.FloatFeature.FEATURE_ID, 0.0))
+        self.assertEqual(42.42, client.value(ValueGroup.GROUP_ID, ValueGroup.FloatFeature.FEATURE_ID, 0.0))
 
 
         client.sync_flags(
