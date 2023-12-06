@@ -120,6 +120,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Cache Mix dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            /clients/elixir/_build
+            /clients/elixir/deps
+          key: ${{ runner.os }}-${{ hashFiles('clients/elixir/mix.lock') }}
+
       - run: |
           cd ./clients/elixir
           mix deps.get
