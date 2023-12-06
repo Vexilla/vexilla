@@ -7,11 +7,11 @@ defmodule VexillaClientTest do
 
     user_id = "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a"
 
-    TEST_SERVER_HOST = System.get_env("TEST_SERVER_HOST")
+    test_server_host = System.get_env("TEST_SERVER_HOST", "localhost:3000")
 
     config =
       VexillaClient.create_config(
-        "http://#{TEST_SERVER_HOST}",
+        "http://#{test_server_host}",
         "dev",
         user_id
       )
