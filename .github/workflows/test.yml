@@ -71,7 +71,35 @@ jobs:
           composer install
           composer test
         env:
-          TEST_SERVER_HOST: test-server
+          TEST_SERVER_HOST: test-server:3000
+
+  test-python:
+    runs-on: ubuntu-latest
+    container: python:3.6.15
+    needs: ["publish-test-server"]
+
+    services:
+      test-server:
+        credentials:
+          username: vexilla
+          password: ${{secrets.GITHUB_TOKEN}}
+        image: ghcr.io/vexilla/test-server:latest
+        ports:
+          - 3000:3000
+        options: |
+          --health-cmd "curl -f http://localhost:3000/manifest.json"
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - run: pip3 install pipenv
+
+      - run: |
+          cd ./clients/python
+          pipenv install
+          pipenv run pytest --cov=vexilla_client
+        env:
+          TEST_SERVER_HOST: test-server:3000
 
   test-bazel:
     runs-on: ubuntu-latest

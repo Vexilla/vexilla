@@ -56,3 +56,9 @@ export class FeatureFlagsService {
 }
 ```
 '''
+TestingInstructions='''
+
+Inside of the docker container we need to allow the container to hit the test-server. This is only in local dev. The Github Action should be able to see it just fine. Maybe.
+
+TEST_SERVER_HOST=host.docker.internal:3000 pytest
+'''

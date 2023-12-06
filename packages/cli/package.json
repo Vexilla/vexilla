@@ -66,6 +66,7 @@
     "@types/fs-extra": "^9.0.13",
     "@types/node": "^18.7.18",
     "@types/yargs": "^17.0.24",
+    "@vexilla/types": "workspace:*",
     "npm-run-all": "^4.1.5",
     "pkg": "^5.8.0",
     "ts-node": "^10.9.1",

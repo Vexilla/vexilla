@@ -88,27 +88,20 @@ const languageTransformers: Record<
     });
   },
 
-  //   python: function (groups: PublishedGroup[], typePrefix = "") {
-  //     const tagsString = tags
-  //       .map((tag: string) => `    ${Case.constant(tag)} = "${tag}"`)
-  //       .join("\n");
+  python: function (
+    groups: PublishedGroup[],
+    typePrefix = "",
+    typeSuffix = ""
+  ) {
+    const groupsOutput = groups.map(
+      parseGroup(typePrefix, typeSuffix, Case.pascal)
+    );
 
-  //     const keysString = keys
-  //       .map((key: string) => `    ${Case.constant(key)} = "${key}"`)
-  //       .join("\n");
-
-  //     return `# ${disclaimerText}
-
-  // from enum import Enum
-
-  // class VexillaTags(Enum):
-  // ${tagsString}
-
-  // class VexillaKeys(Enum):
-  // ${keysString}
-
-  // `;
-  //   },
+    return mustache.render(templates.python, {
+      disclaimerText,
+      groups: groupsOutput,
+    });
+  },
 
   //   csharp: function (groups: PublishedGroup[], typePrefix = "") {
   //     const tagsString = tags
@@ -256,7 +249,7 @@ const languageAliases: Record<string, Language> = {
   go: "go",
   php: "php",
   // py: "python",
-  // python: "python",
+  python: "python",
   ex: "elixir",
   elixir: "elixir",
   // rb: "ruby",
