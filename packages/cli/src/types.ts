@@ -5,4 +5,5 @@ export type Language =
   | "go"
   | "csharp"
   | "elixir"
-  | "php";
+  | "php"
+  | "python";

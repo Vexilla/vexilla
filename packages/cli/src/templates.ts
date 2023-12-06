@@ -239,6 +239,32 @@ class {{{name}}}Group {
   {{/features}}
 }
 {{/groups}}
-
 `,
+  python: `"""
+  {{{disclaimerText}}}
+"""
+
+from enum import Enum
+
+{{#groups}}
+
+class {{{name}}}Group(str, Enum):
+    NAME = "{{{rawName}}}"
+    GROUP_ID = "{{{id}}}"
+
+    @staticmethod
+    {{#environments}}
+    class {{{name}}}Environment(str, Enum):
+        NAME = "{{{rawName}}}"
+        ENVIRONMENT_ID = "{{{id}}}"
+
+    {{/environments}}
+    {{#features}}
+    @staticmethod
+    class {{{name}}}Feature(str, Enum):
+        NAME = "{{{rawName}}}"
+        FEATURE_ID = "{{{id}}}"
+
+  {{/features}}
+{{/groups}}`,
 };

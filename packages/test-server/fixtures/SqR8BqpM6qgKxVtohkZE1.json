@@ -60,7 +60,7 @@
           "numberType": "int"
         },
         "dlvHPXpmQ94KIzt3V-y4D": {
-          "name": "",
+          "name": "Number",
           "featureId": "dlvHPXpmQ94KIzt3V-y4D",
           "featureType": "selective",
           "valueType": "number",

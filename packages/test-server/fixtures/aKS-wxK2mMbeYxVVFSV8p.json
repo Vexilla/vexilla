@@ -6,7 +6,8 @@
       "name": "testingWorkingGradual",
       "featureId": "oIVHzosp0ao3HN0fmFwwr",
       "featureType": "gradual",
-      "value": false,
+      "value": 0,
+      "seed": 0,
       "scheduleType": "",
       "schedule": {
         "start": 0,
@@ -21,7 +22,8 @@
       "name": "testingNonWorkingGradual",
       "featureId": "-T2se1u9jyj1HNkbJ9Cdr",
       "featureType": "gradual",
-      "value": false,
+      "value": 0,
+      "seed": 0,
       "scheduleType": "",
       "schedule": {
         "start": 0,
@@ -39,7 +41,7 @@
       "environmentId": "zq-d4W97nyNo3mELbO_LT",
       "features": {
         "oIVHzosp0ao3HN0fmFwwr": {
-          "name": "",
+          "name": "testingWorkingGradual",
           "featureId": "oIVHzosp0ao3HN0fmFwwr",
           "featureType": "gradual",
           "seed": 0.11,
@@ -55,7 +57,7 @@
           }
         },
         "-T2se1u9jyj1HNkbJ9Cdr": {
-          "name": "",
+          "name": "testingNonWorkingGradual",
           "featureId": "-T2se1u9jyj1HNkbJ9Cdr",
           "featureType": "gradual",
           "seed": 0.22,
