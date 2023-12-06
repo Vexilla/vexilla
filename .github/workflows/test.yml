@@ -101,6 +101,40 @@ jobs:
         env:
           TEST_SERVER_HOST: test-server:3000
 
+  test-elixir:
+    runs-on: ubuntu-latest
+    container: elixir:1.15.7
+    needs: ["publish-test-server"]
+
+    services:
+      test-server:
+        credentials:
+          username: vexilla
+          password: ${{secrets.GITHUB_TOKEN}}
+        image: ghcr.io/vexilla/test-server:latest
+        ports:
+          - 3000:3000
+        options: |
+          --health-cmd "curl -f http://localhost:3000/manifest.json"
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Cache Mix dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            /clients/elixir/_build
+            /clients/elixir/deps
+          key: ${{ runner.os }}-${{ hashFiles('clients/elixir/mix.lock') }}
+
+      - run: |
+          cd ./clients/elixir
+          mix deps.get
+          mix test
+        env:
+          TEST_SERVER_HOST: test-server:3000
+
   test-bazel:
     runs-on: ubuntu-latest
     needs: ["publish-test-server"]

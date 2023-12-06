@@ -3,7 +3,6 @@ defmodule Hasher do
   Documentation for `Hasher`.
   """
 
-
   @doc """
   Hash a string into a float value between 0 and 1
 
