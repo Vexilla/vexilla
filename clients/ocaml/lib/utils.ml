@@ -1,3 +1,5 @@
+[@@@ocaml.warning "-27"]
+
 open Syntax
 open Let
 
@@ -18,3 +20,4 @@ let hashtbl_of_yojson key_of_yojson value_of_yojson = function
       in
       populated_tbl
   | _ -> Error "Invalid feature table"
+;;

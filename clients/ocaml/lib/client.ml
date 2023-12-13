@@ -25,11 +25,13 @@ let make ?(show_logs = false) ~environment ~base_url ~instance_id () =
     composite_environment_table = Lookup.Composite_environment_table.make ();
     composite_feature_table = Lookup.Composite_feature_table.make ();
   }
+;;
 
 let get_real_group_id ~client group_id_or_name =
   client.group_table
   |> Lookup.Group_table.find ~key:group_id_or_name
   |> Option.to_result ~none:`Flag_group_not_found
+;;
 
 let get_real_feature_id ~client group_id feature_id_or_name =
   let open Infix.Result in
@@ -39,6 +41,7 @@ let get_real_feature_id ~client group_id feature_id_or_name =
   >>= fun feature_table ->
   Lookup.Feature_table.find ~key:feature_id_or_name feature_table
   |> Option.to_result ~none:`Feature_not_found
+;;
 
 let get_real_environment_id ~client group_id =
   let open Infix.Result in
@@ -48,12 +51,14 @@ let get_real_environment_id ~client group_id =
   >>= fun environment_table ->
   Lookup.Environment_table.find ~key:client.environment environment_table
   |> Option.to_result ~none:`Environment_not_found
+;;
 
 let get_real_ids ~client group_id_or_name feature_name_or_id =
   let@ group_id = get_real_group_id ~client group_id_or_name in
   let@ feature_id = get_real_feature_id ~client group_id feature_name_or_id in
   let@ environment_id = get_real_environment_id ~client group_id in
   Ok (group_id, feature_id, environment_id)
+;;
 
 let get_feature ~client group_id_or_name feature_name_or_id =
   let@ group_id, feature_id, environment_id =
@@ -69,6 +74,7 @@ let get_feature ~client group_id_or_name feature_name_or_id =
   in
   Hashtbl.find_opt environment.features (`Id feature_id)
   |> Option.to_result ~none:`Feature_not_found
+;;
 
 let should ~client ?instance_id group_id_or_name feature_name_or_id =
   let open Types.Feature in
@@ -102,6 +108,7 @@ let should ~client ?instance_id group_id_or_name feature_name_or_id =
             |> Option.is_some |> Result.ok
         | _ -> Result.error `Invalid_instance_id)
     | Value _ -> Result.error (`Unsupported_should_feature_type "feature")
+;;
 
 let value ~client ~default ~group_key:group_id_or_name
     ~feature_key:feature_name_or_id =
@@ -113,3 +120,4 @@ let value ~client ~default ~group_key:group_id_or_name
     match feature with
     | Value { value; _ } -> Result.ok value
     | _ -> Result.error `Unsupported_value_feature_type
+;;

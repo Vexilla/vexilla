@@ -3,7 +3,8 @@
 open Syntax
 open Let
 
-let get ~(client : Client.t) ~fetch_hook group_id_or_name =
+let get ~(client : Client.t) ~(fetch_hook : Fetch.hook) group_id_or_name :
+    (Types.Group.t, [ `Msg of string | `Flag_group_not_found ]) Lwt_result.t =
   let key =
     match group_id_or_name with
     | Types.Group.Id id -> `Id id
@@ -14,8 +15,20 @@ let get ~(client : Client.t) ~fetch_hook group_id_or_name =
     |> Lookup.Group_table.find ~key
     |> Option.to_result ~none:`Flag_group_not_found
   in
-  let+ result = Uri.with_path client.base_url group_id |> fetch_hook in
-  Lwt.return_ok result
+  let* result =
+    Uri.with_path client.base_url (group_id ^ ".json") |> fetch_hook
+  in
+  match result with
+  | Ok raw_json ->
+      let json = Yojson.Safe.from_string raw_json in
+      let| group =
+        Types.Group.of_yojson json |> Result.map_error (fun msg -> `Msg msg)
+      in
+      Lwt.return_ok group
+  | Error (`Msg err) ->
+      Lwt.return_error
+        (`Msg (Fmt.str "Error: failed to fetch flag group: %s\n%!" err))
+;;
 
 let set ~(client : Client.t) ~group group_id_or_name =
   let key =
@@ -58,7 +71,9 @@ let set ~(client : Client.t) ~group group_id_or_name =
   in
   Lwt.return_ok
     { client with composite_environment_table; composite_feature_table }
+;;
 
 let sync ~(client : Client.t) ~fetch_hook group_id_or_name =
   let+ group = get ~client ~fetch_hook group_id_or_name in
   Lwt.return_ok @@ set ~client ~group group_id_or_name
+;;

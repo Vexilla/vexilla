@@ -14,15 +14,14 @@ depends: [
   "dune" {>= "3.10"}
   "fmt"
   "lwt_ssl"
-  "ocaml"
-  "{>="
-  "4.14.1}"
+  "ocaml" {>= "4.14.1"}
   "ppx_deriving"
   "ppx_deriving_yojson"
   "ptime"
   "uri"
   "yojson"
   "alcotest" {with-test}
+  "alcotest_lwt" {with-test}
   "odoc" {with-doc}
 ]
 build: [

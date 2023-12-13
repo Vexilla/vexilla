@@ -1,5 +1,3 @@
-[@@@ocaml.warning "-27"]
-
 open Syntax
 open Let
 
@@ -8,16 +6,10 @@ let is_schedule_active_with_now ~schedule ~schedule_type now =
   match schedule_type with
   | Empty -> Ok true
   | Environment | Global -> (
-      (* Convert to/from a date to zero out the time to the beginning of the day *)
       let@ beginning_of_start_date =
-        schedule.start |> Date_time.to_date |> Date_time.of_date
-        |> Option.to_result ~none:`Invalid_date
+        Date_time.start_of_day_res schedule.start
       in
-      let@ ending_of_end_date =
-        schedule.end' |> Date_time.to_date |> fun date ->
-        Date_time.of_date_time (date, ((23, 59, 59), 0))
-        |> Option.to_result ~none:`Invalid_date
-      in
+      let@ ending_of_end_date = Date_time.end_of_day_res schedule.end' in
       if
         Date_time.is_earlier now ~than:beginning_of_start_date
         || Date_time.is_later now ~than:ending_of_end_date
@@ -37,8 +29,11 @@ let is_schedule_active_with_now ~schedule ~schedule_type now =
               Date_time.(of_date_time (to_date ending_of_end_date, end_time))
               |> Option.to_result ~none:`Invalid_date
             in
-            let is_after_start_date_time = Date_time.is_later ~than:start now in
-            let is_before_end_date_time = Date_time.is_earlier ~than:end' now in
+            let@ now_seconds = Date_time.to_seconds_res now in
+            let@ start_seconds = Date_time.to_seconds_res start in
+            let@ end_seconds = Date_time.to_seconds_res end' in
+            let is_after_start_date_time = now_seconds >= start_seconds in
+            let is_before_end_date_time = now_seconds <= end_seconds in
             Ok (is_after_start_date_time && is_before_end_date_time)
         | Daily ->
             let now = Date_time.Clock.now () in
@@ -73,7 +68,6 @@ let is_schedule_active_with_now ~schedule ~schedule_type now =
               if
                 Date_time.is_later ~than:zeroed_end_timestamp
                   zeroed_start_timestamp
-                || Date_time.to_float_s zeroed_start_timestamp < 0.0
               then
                 Date_time.(
                   Span.add
@@ -93,11 +87,14 @@ let is_schedule_active_with_now ~schedule ~schedule_type now =
               Date_time.(
                 to_float_s now > to_float_s start_timestamp
                 && to_float_s now < to_float_s end_timestamp))
+;;
 
 let is_schedule_active ~schedule ~schedule_type =
   is_schedule_active_with_now ~schedule ~schedule_type (Date_time.Clock.now ())
+;;
 
 let is_schedule_feature_active (feature : Types.Feature.t) =
   let attributes = Types.Feature.attributes feature in
   is_schedule_active ~schedule:attributes.schedule
     ~schedule_type:attributes.schedule_type
+;;

@@ -1,1 +1,1 @@
-type ('value, 'error) hook = Uri.t -> ('value, 'error) Lwt_result.t
+type hook = Uri.t -> (string, [ `Msg of string ]) Lwt_result.t

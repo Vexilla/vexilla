@@ -37,10 +37,12 @@ struct
   let remove ~key t =
     let () = Hashtbl.remove t key in
     t
+  ;;
 
   let set ~key ~value t =
     let () = Hashtbl.replace t key value in
     t
+  ;;
 end
 
 module Make_by_id_or_name (M : By_id_or_name.S) :
@@ -57,10 +59,12 @@ struct
   let remove ~key t =
     let () = Hashtbl.remove t key in
     t
+  ;;
 
   let set ~key ~value t =
     let () = Hashtbl.replace t key value in
     t
+  ;;
 end
 
 module Group_table = Make_by_id_or_name (Types.Group)
@@ -70,10 +74,11 @@ module Feature_table = struct
 
   let set_feature ~feature feature_table =
     let open Types.Feature in
-    let { id; name; _ } = attributes feature in
+    let { feature_id; name; _ } = attributes feature in
     feature_table
-    |> set ~key:(`Id id) ~value:id
-    |> set ~key:(`Name name) ~value:id
+    |> set ~key:(`Id feature_id) ~value:feature_id
+    |> set ~key:(`Name name) ~value:feature_id
+  ;;
 end
 
 module Environment_table = struct
@@ -85,6 +90,7 @@ module Environment_table = struct
     environment_table
     |> set ~key:(`Id id) ~value:id
     |> set ~key:(`Name name) ~value:id
+  ;;
 end
 
 module Composite_feature_table = Make (struct
