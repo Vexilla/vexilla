@@ -1,0 +1,50 @@
+---
+import SectionHr from "./common/section-hr.astro";
+import SectionTitle from "./common/section-title.astro";
+---
+
+<section
+  class="text-gray-600 dark:text-gray-300 body-font"
+  id="feature-flags"
+>
+  <div class="container px-5 py-24 mx-auto flex-col flex-wrap">
+    <SectionTitle>
+      What are feature flags?
+    </SectionTitle>
+    <SectionHr />
+    <div class="max-w-2xl mx-auto">
+      <p class="leading-relaxed text-base">
+        Many popular applications use feature flags to roll out and test new
+        functionality without having to redeploy the app and its assets.
+        Learn more about why feature flags are so useful in our
+        documentation or Wikipedia.
+      </p>
+      <div class="flex md:mt-4 mt-6 justify-center">
+        <a
+          class="inline-flex text-white bg-primary-500 border-0 py-1 px-4  hover:bg-primary-600 rounded"
+          href="/documentation/core-concepts"
+        >
+          Core Concepts
+        </a>
+        <a
+          class="text-primary-500 dark:text-primary-300 inline-flex items-center ml-4"
+          href="https://en.wikipedia.org/wiki/Feature_toggle"
+          target="_blank"
+        >
+          Wikipedia
+          <svg
+            fill="none"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            class="w-4 h-4 ml-2"
+            viewBox="0 0 24 24"
+          >
+            <path d="M5 12h14M12 5l7 7-7 7"></path>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>

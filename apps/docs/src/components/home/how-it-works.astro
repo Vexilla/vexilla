@@ -1,6 +1,9 @@
 ---
 import { Icon } from "astro-icon";
 
+import SectionHr from "./common/section-hr.astro";
+import SectionTitle from "./common/section-title.astro";
+
 interface StepContent {
   title: string;
   description: string;
@@ -37,7 +40,9 @@ const steps: StepContent[] = [
 ---
 
 <section class="text-normal body-font" id="how-it-works">
-  <div class="container px-5 py-24 mx-auto flex flex-wrap">
+  <SectionTitle>How It Works</SectionTitle>
+  <SectionHr />
+  <div class="container px-5 mx-auto flex flex-wrap">
     {steps.map((step, index) => (
       <div
         class="flex relative pt-10 pb-20 sm:items-center md:w-2/3 mx-auto"
