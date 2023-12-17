@@ -22,9 +22,12 @@ import type { Heading } from "@/types/docs";
 
 interface Props {
   title: string;
+  image?: string;
+  description?: string;
+  url?: string;
 }
 
-const { title } = Astro.props;
+const { title, image, description, url } = Astro.props;
 
 const isBlog = Astro.url.pathname.startsWith("/blog");
 const isDocumentation = Astro.url.pathname.startsWith("/documentation");
@@ -93,10 +96,8 @@ guidePages.sort((a, b) => {
 <html lang="en" class="w-screen">
   <head>
     <meta charset="UTF-8" />
-    <meta name="description" content="Astro description" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="generator" content={Astro.generator} />
-    <title>{title}</title>
     <link
       rel="stylesheet"
       type="text/css"
@@ -124,6 +125,32 @@ guidePages.sort((a, b) => {
       }
     </style>
     <script defer data-domain="vexilla.dev" src="https://plausible.io/js/script.js"></script>
+
+    <!-- HTML Meta Tags -->
+    <title>{title || "Vexilla: Feature Flags for Everyone"}</title>
+    <meta name="description" content={description || "Static file-based, git-native, feature flags with an SDK for your language of choice."}>
+
+    <!-- Facebook Meta Tags -->
+    <meta property="og:url" content={url || "https://vexilla.dev"}>
+    <meta property="og:type" content="website">
+    <meta property="og:title" content={title || "Vexilla: Feature Flags for Everyone"}>
+    <meta property="og:description" content={description || "Static file-based, git-native, feature flags with an SDK for your language of choice."}>
+    <meta property="og:image" content={image || "https://vexilla.dev/img/traffic-light-green-opt-2.jpg"}>
+
+    <!-- Twitter Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta property="twitter:domain" content="vexilla.dev">
+    <meta property="twitter:url" content={url || "https://vexilla.dev"}>
+    <meta name="twitter:title" content={title || "Vexilla: Feature Flags for Everyone"}>
+    <meta name="twitter:description" content={description || "Static file-based, git-native, feature flags with an SDK for your language of choice."}>
+    <meta name="twitter:image" content={image || "https://vexilla.dev/img/traffic-light-green-opt-2.jpg"}>
+
+    <!-- Meta Tags Generated via https://www.opengraph.xyz -->
+
+
+
+
+
   </head>
   <body class="flex flex-col min-h-screen w-screen relative">
 
