@@ -1,0 +1,58 @@
+---
+import { Icon } from "astro-icon";
+
+import SectionHr from "./section-hr.astro";
+import SectionTitle from "./section-title.astro";
+import type { ListItem } from "@/types/content";
+
+interface Props {
+  title: string;
+  description: string;
+  listItems: ListItem[];
+}
+
+const { listItems, title, description } = Astro.props;
+
+---
+
+<section class="text-normal body-font" id="features">
+  <div class="container px-5 py-24 mx-auto">
+    <div class="text-center">
+      <SectionTitle>
+        {title}
+      </SectionTitle>
+      <p class="text-base leading-relaxed xl:w-2/4 lg:w-3/4 mx-auto text-left">{description}</p>
+      <SectionHr />
+    </div>
+    <div class="flex flex-wrap sm:-m-4 -mx-4 -mb-10 -mt-4 md:space-y-0 lg:mb-6 gap-8">
+      {listItems.map((feature, index) => (
+        <div
+          class:list={[
+            `p-4 flex text-center  items-start md:items-center w-full justify-center lg:px-40 gap-2 md:gap-12`,
+            { "md:flex-row-reverse": index % 2 === 1 }
+          ]}
+        >
+          <div class:list={[
+            "md:w-1/2 flex",
+            { "md:justify-start": index % 2 === 1, "md:justify-end": index % 2 === 0}
+          ]}>
+            <div class="h-12 w-12 md:w-40 md:h-40 inline-flex items-center justify-center rounded-full bg-slate-100 text-primary-500 flex-shrink-0 p-2 md:p-6">
+              <Icon name={feature.image} class="w-full" />
+            </div>
+          </div>
+          <div class:list={[
+            "md:w-1/2 text-left",
+            { "md:text-left": index % 2 === 0, "md:text-right": index % 2 === 1}
+          ]}>
+            <h2 class="text-emphasis text-2xl title-font mb-3 font-medium mt-2 md:mt-0">
+              {feature.title}
+            </h2>
+            <p class="leading-relaxed text-base">
+              {feature.description}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

@@ -1,0 +1,30 @@
+---
+
+import SectionList from "./common/section-list.astro";
+import type { ListItem } from "@/types/content";
+import { DISCORD_INVITE_LINK } from "@/utils/constants";
+
+const documentationItems: ListItem[] = [
+  {
+    title: "Main Documentation",
+    description: `You can find the majority of our documentation in one easy and convenient place. If you feel there is something missing, we would love to hear about it and improve it.`,
+    image: "phosphor/duotone/books-duotone",
+    link: DISCORD_INVITE_LINK,
+    linkText: "Learn more"
+  },
+  {
+    title: "Guides",
+    description: `Check out some of the guides and recipes. We provide step by step instructions to help you make Vexilla fit your exact use case.`,
+    image: "phosphor/duotone/map-trifold-duotone",
+    link: "/guides",
+    linkText: "Browse Guides"
+  }
+];
+
+---
+
+<SectionList
+  title="Documentation"
+  description="We work hard on our docs. You can find info about the core concepts and features as well as comprehensive guides to help you integrate Vexilla into your projects."
+  listItems={documentationItems}
+/>
