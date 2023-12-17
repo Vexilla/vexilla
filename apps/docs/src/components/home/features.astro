@@ -63,23 +63,23 @@ const features: FeatureContent[] = [
       {features.map((feature, index) => (
         <div
           class:list={[
-            `p-4 flex text-center items-center w-full justify-center lg:px-40 gap-12`,
-            { "flex-row-reverse": index % 2 === 1 }
+            `p-4 flex text-center  items-start md:items-center w-full justify-center lg:px-40 gap-2 md:gap-12`,
+            { "md:flex-row-reverse": index % 2 === 1 }
           ]}
         >
           <div class:list={[
             "md:w-1/2 flex",
-            { "justify-start": index % 2 === 1, "justify-end": index % 2 === 0}
+            { "md:justify-start": index % 2 === 1, "md:justify-end": index % 2 === 0}
           ]}>
-            <div class="w-40 h-40 inline-flex items-center justify-center rounded-full bg-slate-100 text-primary-500 flex-shrink-0 p-6">
+            <div class="h-12 w-12 md:w-40 md:h-40 inline-flex items-center justify-center rounded-full bg-slate-100 text-primary-500 flex-shrink-0 p-2 md:p-6">
               <Icon name={feature.image} class="w-full" />
             </div>
           </div>
           <div class:list={[
-            "md:w-1/2",
-            { "text-left": index % 2 === 0, "text-right": index % 2 === 1}
+            "md:w-1/2 text-left",
+            { "md:text-left": index % 2 === 0, "md:text-right": index % 2 === 1}
           ]}>
-            <h2 class="text-emphasis text-2xl title-font mb-3 font-medium">
+            <h2 class="text-emphasis text-2xl title-font mb-3 font-medium mt-2 md:mt-0">
               {feature.title}
             </h2>
             <p class="leading-relaxed text-base">
