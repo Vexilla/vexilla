@@ -16,7 +16,7 @@ namespace Vexilla.Client
                 DateTimeOffset.Now);
         }
 
-        private static bool IsScheduleActiveWithNow(Schedule schedule,
+        public static bool IsScheduleActiveWithNow(Schedule schedule,
             string scheduleType, DateTimeOffset now)
         {
             switch (scheduleType)
