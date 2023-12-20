@@ -130,6 +130,7 @@ jobs:
 
       - run: |
           cd ./clients/elixir
+          mix local.hex --force
           mix test --cover --export-coverage default
           mix test.coverage
         env:
