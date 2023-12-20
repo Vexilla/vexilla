@@ -7,7 +7,8 @@
   "scripts": {
     "test:gradual": "ts-node src/test_gradual.ts",
     "test:scheduling": "ts-node src/test_scheduling.ts",
-    "test": "ts-node src/test_client.ts",
+    "test:client": "ts-node src/test_client.ts",
+    "test": "pnpm run \"/^test:.*/\"",
     "compile": "tsc"
   },
   "author": {
@@ -20,6 +21,7 @@
     "@types/node": "^14.14.13",
     "axios": "^0.21.0",
     "husky": "^4.3.8",
+    "npm-run-all": "^4.1.5",
     "ts-loader": "^8.0.11",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4"

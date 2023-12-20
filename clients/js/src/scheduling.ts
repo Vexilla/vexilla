@@ -31,18 +31,8 @@ export function isScheduleActiveWithNow(
 
   const currentTime = dayjs.utc(now);
 
-  const startDate = dayjs
-    .utc(schedule.start)
-    .set("hour", 0)
-    .set("minute", 0)
-    .set("second", 0)
-    .set("millisecond", 0);
-  const endDate = dayjs
-    .utc(schedule.end)
-    .set("hour", 23)
-    .set("minute", 59)
-    .set("second", 59)
-    .set("millisecond", 999);
+  const startDate = dayjs.utc(schedule.start).startOf("day");
+  const endDate = dayjs.utc(schedule.end).endOf("day");
 
   if (currentTime.isBefore(startDate) || currentTime.isAfter(endDate)) {
     return false;
@@ -73,22 +63,36 @@ export function isScheduleActiveWithNow(
       currentTime.isBefore(endDayWithEndTime)
     );
   } else if (schedule.timeType === "daily") {
-    const currentDayWithStartTime = currentTime
+    const zeroDay = dayjs.utc(0);
+    let zeroDayPlusCurrentTime = zeroDay
+      .set("hour", currentTime.hour())
+      .set("minute", currentTime.minute())
+      .set("second", currentTime.second())
+      .set("millisecond", currentTime.millisecond());
+
+    let zeroedStart = zeroDay
       .set("hour", startTime.hour())
       .set("minute", startTime.minute())
       .set("second", startTime.second())
       .set("millisecond", startTime.millisecond());
 
-    const currentDayWithEndTime = currentTime
+    let zeroedEnd = zeroDay
       .set("hour", endTime.hour())
       .set("minute", endTime.minute())
       .set("second", endTime.second())
       .set("millisecond", endTime.millisecond());
 
-    return (
-      currentTime.isAfter(currentDayWithStartTime) &&
-      currentTime.isBefore(currentDayWithEndTime)
-    );
+    if (zeroedEnd.isBefore(zeroedStart)) {
+      return (
+        zeroDayPlusCurrentTime.isAfter(zeroedStart) ||
+        zeroDayPlusCurrentTime.isBefore(zeroedEnd)
+      );
+    } else {
+      return (
+        zeroDayPlusCurrentTime.isAfter(zeroedStart) &&
+        zeroDayPlusCurrentTime.isBefore(zeroedEnd)
+      );
+    }
   }
 
   return false;
