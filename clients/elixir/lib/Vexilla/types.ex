@@ -43,6 +43,7 @@ end
 defmodule Schedule do
   use TypedStruct
 
+  @derive Jason.Encoder
   typedstruct enforce: true do
     field :start, integer()
     field :end, integer()

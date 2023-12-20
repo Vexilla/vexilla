@@ -20,7 +20,7 @@ defmodule Scheduler do
     is_schedule_active(feature["schedule"], feature["scheduleType"])
   end
 
-  defp is_schedule_active(schedule, schedule_type, datetime \\ Timex.now()) do
+  def is_schedule_active(schedule, schedule_type, datetime \\ Timex.now()) do
     schedule_type_empty = ScheduleType.empty()
     schedule_type_global = ScheduleType.global()
     schedule_type_environment = ScheduleType.environment()
@@ -75,11 +75,11 @@ defmodule Scheduler do
             zero_day = Timex.from_unix(0, :millisecond)
             timestamp = Timex.to_unix(datetime) * 1000
 
-            zero_timestamp_start =
+            start_of_today =
               datetime
               |> Timex.beginning_of_day()
               |> Timex.to_unix()
-              |> then(&(&1 * 1000))
+              |> Kernel.*(1000)
 
             zeroed_start_timestamp =
               Timex.set(zero_day,
@@ -89,7 +89,7 @@ defmodule Scheduler do
                 microsecond: start_time.microsecond
               )
               |> Timex.to_unix()
-              |> then(&(&1 * 1000))
+              |> Kernel.*(1000)
 
             zeroed_end =
               Timex.set(zero_day,
@@ -101,20 +101,14 @@ defmodule Scheduler do
 
             zeroed_end_timestamp = Timex.to_unix(zeroed_end) * 1000
 
-            zeroed_end_timestamp_plus_day =
-              Timex.to_unix(Timex.add(zeroed_end, Duration.from_days(1))) * 1000
+            start_timestamp = start_of_today + zeroed_start_timestamp
+            end_timestamp = start_of_today + zeroed_end_timestamp
 
-            start_timestamp = zero_timestamp_start + zeroed_start_timestamp
-
-            end_timestamp =
-              if zeroed_start_timestamp > zeroed_end_timestamp || zeroed_end_timestamp < 0 do
-                zero_timestamp_start + zeroed_end_timestamp_plus_day
-              else
-                zero_timestamp_start + zeroed_end_timestamp
-              end
-
-            timestamp >= start_timestamp && timestamp <= end_timestamp
-
+            if zeroed_start_timestamp > zeroed_end_timestamp do
+              timestamp >= start_timestamp || timestamp <= end_timestamp
+            else
+              timestamp >= start_timestamp && timestamp <= end_timestamp
+            end
           _ ->
             false
         end

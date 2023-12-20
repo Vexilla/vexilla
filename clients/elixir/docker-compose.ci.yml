@@ -4,8 +4,11 @@ services:
   elixir-custom:
     image: elixir-custom
     build: .
-    command: mix test
-    network_mode: host
+    environment:
+      - TEST_SERVER_HOST
+    command: |
+      mix test --cover --export-coverage default
+      mix test.coverage
     tty: true
     volumes:
       - ./:/var/www/html

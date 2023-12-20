@@ -130,8 +130,8 @@ jobs:
 
       - run: |
           cd ./clients/elixir
-          mix deps.get
-          mix test
+          mix test --cover --export-coverage default
+          mix test.coverage
         env:
           TEST_SERVER_HOST: test-server:3000
 
