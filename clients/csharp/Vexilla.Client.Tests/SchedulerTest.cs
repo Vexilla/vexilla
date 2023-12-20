@@ -72,8 +72,7 @@ namespace Vexilla.Client.Tests
         public void TestSchedulingActiveDaily()
         {
             var now = DateTimeOffset.Now;
-            for(int hour = 0; i < 24; i++) {
-
+            for(int hour = 0; hour < 24; hour++) {
                 var mocked_now = new DateTimeOffset(
                     now.Year,
                     now.Month,
@@ -82,7 +81,7 @@ namespace Vexilla.Client.Tests
                     0,
                     0,
                     0,
-                    TimeZoneInfo.Utc
+                    TimeSpan.Zero
                 );
 
                 var beforeDaySchedule = new Schedule
@@ -94,6 +93,7 @@ namespace Vexilla.Client.Tests
                     StartTime = mocked_now.AddHours(1).ToUnixTimeMilliseconds(),
                     EndTime = mocked_now.AddHours(3).ToUnixTimeMilliseconds()
                 };
+
                 Assert.False(Scheduler.IsScheduleActiveWithNow(beforeDaySchedule,
                     ScheduleType.Global, mocked_now));
 
