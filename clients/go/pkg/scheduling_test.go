@@ -73,81 +73,65 @@ func TestSchedulingActiveStartEnd(tester *testing.T) {
 
 func TestSchedulingActiveDaily(tester *testing.T) {
 
-	now := time.Now().UTC()
+	for hour := 0; hour < 24; hour++ {
 
-	beforeWholeSchedule := Schedule{
-		Start:     now.Add(Day).UnixMilli(),
-		End:       now.Add(2 * Day).UnixMilli(),
-		Timezone:  "UTC",
-		TimeType:  DailyScheduleTimeType,
-		StartTime: 0,
-		EndTime:   0,
-	}
+		now := time.Now().UTC()
 
-	isBeforeWholeScheduleActive := IsScheduleActive(beforeWholeSchedule, GlobalScheduleType)
+		mocked_now := time.Date(
+			now.Year(),
+			now.Month(),
+			now.Day(),
+			hour,
+			0,
+			0,
+			0,
+			time.UTC,
+		)
 
-	if isBeforeWholeScheduleActive {
-		tester.Error("isBeforeWholeScheduleActive")
-	}
+		beforeDaySchedule := Schedule{
+			Start:     mocked_now.Add(-1 * Day).UnixMilli(),
+			End:       mocked_now.Add(Day).UnixMilli(),
+			Timezone:  "UTC",
+			TimeType:  DailyScheduleTimeType,
+			StartTime: mocked_now.Add(time.Hour).UnixMilli(),
+			EndTime:   mocked_now.Add(2 * time.Hour).UnixMilli(),
+		}
 
-	beforeDaySchedule := Schedule{
-		Start:     now.Add(-1 * Day).UnixMilli(),
-		End:       now.Add(Day).UnixMilli(),
-		Timezone:  "UTC",
-		TimeType:  DailyScheduleTimeType,
-		StartTime: now.Add(time.Hour).UnixMilli(),
-		EndTime:   now.Add(2 * time.Hour).UnixMilli(),
-	}
+		isBeforeDayScheduleActive := IsScheduleActiveWithNow(beforeDaySchedule, GlobalScheduleType, mocked_now)
 
-	isBeforeDayScheduleActive := IsScheduleActive(beforeDaySchedule, GlobalScheduleType)
+		if isBeforeDayScheduleActive {
+			tester.Errorf("Hour %v: isBeforeDayScheduleActive", hour)
+		}
 
-	if isBeforeDayScheduleActive {
-		tester.Error("isBeforeDayScheduleActive")
-	}
+		duringSchedule := Schedule{
+			Start:     mocked_now.Add(-1 * Day).UnixMilli(),
+			End:       mocked_now.Add(Day).UnixMilli(),
+			Timezone:  "UTC",
+			TimeType:  DailyScheduleTimeType,
+			StartTime: mocked_now.Add(-1 * time.Hour).UnixMilli(),
+			EndTime:   mocked_now.Add(time.Hour).UnixMilli(),
+		}
 
-	duringSchedule := Schedule{
-		Start:     now.Add(-1 * Day).UnixMilli(),
-		End:       now.Add(Day).UnixMilli(),
-		Timezone:  "UTC",
-		TimeType:  DailyScheduleTimeType,
-		StartTime: now.Add(-1 * time.Hour).UnixMilli(),
-		EndTime:   now.Add(time.Hour).UnixMilli(),
-	}
+		isDuringScheduleActive := IsScheduleActiveWithNow(duringSchedule, GlobalScheduleType, mocked_now)
 
-	isDuringScheduleActive := IsScheduleActive(duringSchedule, GlobalScheduleType)
+		if !isDuringScheduleActive {
+			tester.Errorf("Hour %v: isDuringScheduleActive", hour)
+		}
 
-	if !isDuringScheduleActive {
-		tester.Error("isDuringScheduleActive")
-	}
+		afterDaySchedule := Schedule{
+			Start:     mocked_now.Add(-1 * Day).UnixMilli(),
+			End:       mocked_now.Add(Day).UnixMilli(),
+			Timezone:  "UTC",
+			TimeType:  DailyScheduleTimeType,
+			StartTime: mocked_now.Add(-2 * time.Hour).UnixMilli(),
+			EndTime:   mocked_now.Add(-1 * time.Hour).UnixMilli(),
+		}
 
-	afterDaySchedule := Schedule{
-		Start:     now.Add(-1 * Day).UnixMilli(),
-		End:       now.Add(Day).UnixMilli(),
-		Timezone:  "UTC",
-		TimeType:  DailyScheduleTimeType,
-		StartTime: now.Add(-2 * time.Hour).UnixMilli(),
-		EndTime:   now.Add(-1 * time.Hour).UnixMilli(),
-	}
+		isAfterDayScheduleActive := IsScheduleActiveWithNow(afterDaySchedule, GlobalScheduleType, mocked_now)
 
-	isAfterDayScheduleActive := IsScheduleActive(afterDaySchedule, GlobalScheduleType)
-
-	if isAfterDayScheduleActive {
-		tester.Error("isAfterDayScheduleActive")
-	}
-
-	afterWholeSchedule := Schedule{
-		Start:     now.Add(-2 * Day).UnixMilli(),
-		End:       now.Add(-1 * Day).UnixMilli(),
-		Timezone:  "UTC",
-		TimeType:  StartEndScheduleTimeType,
-		StartTime: 0,
-		EndTime:   0,
-	}
-
-	isAfterWholeScheduleActive := IsScheduleActive(afterWholeSchedule, GlobalScheduleType)
-
-	if isAfterWholeScheduleActive {
-		tester.Error("isAfterWholeScheduleActive")
+		if isAfterDayScheduleActive {
+			tester.Errorf("Hour %v: isAfterDayScheduleActive", hour)
+		}
 	}
 
 }

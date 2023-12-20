@@ -28,7 +28,7 @@ func IsScheduleActiveWithNow(schedule Schedule, scheduleType ScheduleType, now t
 			0,
 			0,
 			0,
-			startDate.Location(),
+			time.UTC,
 		)
 		endDate := time.UnixMilli(schedule.End)
 		endOfEndDate := time.Date(
@@ -39,7 +39,7 @@ func IsScheduleActiveWithNow(schedule Schedule, scheduleType ScheduleType, now t
 			59,
 			59,
 			999_999_999,
-			endDate.Location(),
+			time.UTC,
 		)
 
 		if !now.After(startOfStartDate) || !now.Before(endOfEndDate) {
@@ -61,7 +61,7 @@ func IsScheduleActiveWithNow(schedule Schedule, scheduleType ScheduleType, now t
 				startTime.Minute(),
 				startTime.Second(),
 				startTime.Nanosecond(),
-				startDate.Location(),
+				time.UTC,
 			))
 
 			isBeforeEndDateTime := now.Before(time.Date(
@@ -72,12 +72,12 @@ func IsScheduleActiveWithNow(schedule Schedule, scheduleType ScheduleType, now t
 				endTime.Minute(),
 				endTime.Second(),
 				endTime.Nanosecond(),
-				endDate.Location(),
+				time.UTC,
 			))
 			return isAfterStartDateTime && isBeforeEndDateTime
 		case DailyScheduleTimeType:
 
-			zeroDay := time.UnixMilli(0)
+			zeroDay := time.UnixMilli(0).UTC()
 			nowTimestamp := now.UnixMilli()
 
 			todayZeroTimestamp := time.Date(
@@ -115,17 +115,14 @@ func IsScheduleActiveWithNow(schedule Schedule, scheduleType ScheduleType, now t
 
 			zeroedEndTimestamp := zeroedEndDateTime.UnixMilli()
 
-			zeroedEndTimestampPlusDay := zeroedEndDateTime.Add(24 * time.Hour).UnixMilli()
-
 			startTimestamp := todayZeroTimestamp + zeroedStartTimestamp
 			endTimestamp := todayZeroTimestamp + zeroedEndTimestamp
 
-			if zeroedStartTimestamp > zeroedEndTimestamp || zeroedEndTimestamp < 0 {
-				endTimestamp = todayZeroTimestamp + zeroedEndTimestampPlusDay
+			if zeroedStartTimestamp > zeroedEndTimestamp {
+				return nowTimestamp >= startTimestamp || nowTimestamp <= endTimestamp
+			} else {
+				return nowTimestamp >= startTimestamp && nowTimestamp <= endTimestamp
 			}
-
-			return nowTimestamp >= startTimestamp && nowTimestamp <= endTimestamp
-
 		default:
 			return false
 		}
