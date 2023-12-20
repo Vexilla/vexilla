@@ -135,9 +135,6 @@ namespace Vexilla.Client
                             );
                             var zeroedEndTimestamp = zeroedEndDateTimeOffset
                                 .ToUnixTimeMilliseconds();
-                            var zeroedEndTimestampPlusDay =
-                                zeroedEndDateTimeOffset.AddDays(1)
-                                    .ToUnixTimeMilliseconds();
 
                             var startTimestamp = todayZeroTimestamp +
                                                  zeroedStartTimestamp;
@@ -145,12 +142,12 @@ namespace Vexilla.Client
                                 todayZeroTimestamp + zeroedEndTimestamp;
                             if (zeroedStartTimestamp > zeroedEndTimestamp)
                             {
-                                endTimestamp = todayZeroTimestamp +
-                                               zeroedEndTimestampPlusDay;
-                            }
-
-                            return nowTimestamp >= startTimestamp &&
+                                return nowTimestamp >= startTimestamp ||
+                                    nowTimestamp <= endTimestamp;
+                            } else {
+                                return nowTimestamp >= startTimestamp &&
                                    nowTimestamp <= endTimestamp;
+                            }
                     }
 
                     break;
