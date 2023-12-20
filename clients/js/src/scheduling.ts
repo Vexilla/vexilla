@@ -58,17 +58,13 @@ export function isScheduleActiveWithNow(
       .set("second", endTime.second())
       .set("millisecond", endTime.millisecond());
 
-    console.log("start/end");
-
     return (
       currentTime.isAfter(startDayWithStartTime) &&
       currentTime.isBefore(endDayWithEndTime)
     );
   } else if (schedule.timeType === "daily") {
-    console.log("daily");
-
     const zeroDay = dayjs.utc(0);
-    const zeroDayPlusCurrentTime = zeroDay
+    let zeroDayPlusCurrentTime = zeroDay
       .set("hour", currentTime.hour())
       .set("minute", currentTime.minute())
       .set("second", currentTime.second())
@@ -87,30 +83,16 @@ export function isScheduleActiveWithNow(
       .set("millisecond", endTime.millisecond());
 
     if (zeroedEnd.isBefore(zeroedStart)) {
-      // if (zeroDayPlusCurrentTime.day() === zeroedEnd.day()) {
-      //   console.log("subtracting day, previous value:", zeroedStart.unix());
-      //   zeroedStart = zeroedStart.subtract(1, "day");
-      // } else {
-      //   console.log("adding day, previous value:", zeroedEnd.unix());
-      zeroedEnd = zeroedEnd.add(1, "day");
-      // }
+      return (
+        zeroDayPlusCurrentTime.isAfter(zeroedStart) ||
+        zeroDayPlusCurrentTime.isBefore(zeroedEnd)
+      );
+    } else {
+      return (
+        zeroDayPlusCurrentTime.isAfter(zeroedStart) &&
+        zeroDayPlusCurrentTime.isBefore(zeroedEnd)
+      );
     }
-
-    console.log({
-      start: zeroedStart.toString(),
-      now: zeroDayPlusCurrentTime.toString(),
-      end: zeroedEnd.toString(),
-      isAfterStart: zeroDayPlusCurrentTime.isAfter(zeroedStart),
-      isBeforeEnd: zeroDayPlusCurrentTime.isBefore(zeroedEnd),
-      startTimestamp: zeroedStart.unix(),
-      nowTimestamp: zeroDayPlusCurrentTime.unix(),
-      endTimestamp: zeroedEnd.unix(),
-    });
-
-    return (
-      zeroDayPlusCurrentTime.isAfter(zeroedStart) &&
-      zeroDayPlusCurrentTime.isBefore(zeroedEnd)
-    );
   }
 
   return false;

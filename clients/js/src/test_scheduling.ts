@@ -92,60 +92,60 @@ labelledAssert(
 
 */
 
-// const scheduleForStartEndBefore: VexillaSchedule = {
-//   start: nowWithZeroTime.unix() * 1000,
-//   end: nowWithZeroTime.add(1, "day").unix() * 1000,
-//   timezone: "UTC",
-//   timeType: "start/end",
-//   // startTime: now.add(1, "hour").unix() * 1000,
-//   // endTime: now.add(3, "hour").unix() * 1000,
-//   startTime: zeroDayWithCurrentTime.add(1, "hour").unix() * 1000,
-//   endTime: zeroDayWithCurrentTime.add(3, "hour").unix() * 1000,
-// };
+const scheduleForStartEndBefore: VexillaSchedule = {
+  start: nowWithZeroTime.unix() * 1000,
+  end: nowWithZeroTime.add(1, "day").unix() * 1000,
+  timezone: "UTC",
+  timeType: "start/end",
+  // startTime: now.add(1, "hour").unix() * 1000,
+  // endTime: now.add(3, "hour").unix() * 1000,
+  startTime: zeroDayWithCurrentTime.add(1, "hour").unix() * 1000,
+  endTime: zeroDayWithCurrentTime.add(3, "hour").unix() * 1000,
+};
 
-// const scheduleForStartEndDuring: VexillaSchedule = {
-//   start: nowWithZeroTime.unix() * 1000,
-//   end: nowWithZeroTime.add(1, "day").unix() * 1000,
-//   timezone: "UTC",
-//   timeType: "start/end",
-//   startTime: zeroDayWithCurrentTime.subtract(1, "hour").unix() * 1000,
-//   endTime: zeroDayWithCurrentTime.add(1, "hour").unix() * 1000,
-// };
+const scheduleForStartEndDuring: VexillaSchedule = {
+  start: nowWithZeroTime.unix() * 1000,
+  end: nowWithZeroTime.add(1, "day").unix() * 1000,
+  timezone: "UTC",
+  timeType: "start/end",
+  startTime: zeroDayWithCurrentTime.subtract(1, "hour").unix() * 1000,
+  endTime: zeroDayWithCurrentTime.add(1, "hour").unix() * 1000,
+};
 
-// const scheduleForStartEndAfter: VexillaSchedule = {
-//   start: nowWithZeroTime.subtract(1, "day").unix() * 1000,
-//   end: nowWithZeroTime.unix() * 1000,
-//   timezone: "UTC",
-//   timeType: "start/end",
-//   startTime: zeroDayWithCurrentTime.subtract(3, "hour").unix() * 1000,
-//   endTime: zeroDayWithCurrentTime.subtract(1, "hour").unix() * 1000,
-// };
+const scheduleForStartEndAfter: VexillaSchedule = {
+  start: nowWithZeroTime.subtract(1, "day").unix() * 1000,
+  end: nowWithZeroTime.unix() * 1000,
+  timezone: "UTC",
+  timeType: "start/end",
+  startTime: zeroDayWithCurrentTime.subtract(3, "hour").unix() * 1000,
+  endTime: zeroDayWithCurrentTime.subtract(1, "hour").unix() * 1000,
+};
 
-// const shouldStartEndBefore = isScheduleActive(
-//   scheduleForStartEndBefore,
-//   "global"
-// );
-// const shouldStartEndDuring = isScheduleActive(
-//   scheduleForStartEndDuring,
-//   "global"
-// );
-// const shouldStartEndAfter = isScheduleActive(
-//   scheduleForStartEndAfter,
-//   "global"
-// );
+const shouldStartEndBefore = isScheduleActive(
+  scheduleForStartEndBefore,
+  "global"
+);
+const shouldStartEndDuring = isScheduleActive(
+  scheduleForStartEndDuring,
+  "global"
+);
+const shouldStartEndAfter = isScheduleActive(
+  scheduleForStartEndAfter,
+  "global"
+);
 
-// labelledAssert(
-//   !shouldStartEndBefore,
-//   "Should be before schedule for schedule with start/end time"
-// );
-// labelledAssert(
-//   shouldStartEndDuring,
-//   "Should be within schedule for schedule with start/end time"
-// );
-// labelledAssert(
-//   !shouldStartEndAfter,
-//   "Should be after schedule for schedule with start/end time"
-// );
+labelledAssert(
+  !shouldStartEndBefore,
+  "Should be before schedule for schedule with start/end time"
+);
+labelledAssert(
+  shouldStartEndDuring,
+  "Should be within schedule for schedule with start/end time"
+);
+labelledAssert(
+  !shouldStartEndAfter,
+  "Should be after schedule for schedule with start/end time"
+);
 
 /*
 
