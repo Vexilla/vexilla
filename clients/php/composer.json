@@ -33,7 +33,7 @@
     "test": [
       "composer install",
       "ls -a",
-      "./vendor/bin/phpunit --coverage-text --verbose --bootstrap vendor/autoload.php tests/*.php"
+      "./vendor/bin/phpunit --coverage-text --coverage-filter src/*.php --verbose --bootstrap vendor/autoload.php tests/*.php"
     ]
   }
 }
