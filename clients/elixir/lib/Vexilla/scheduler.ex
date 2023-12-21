@@ -109,6 +109,7 @@ defmodule Scheduler do
             else
               timestamp >= start_timestamp && timestamp <= end_timestamp
             end
+
           _ ->
             false
         end
