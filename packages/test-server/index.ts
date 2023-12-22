@@ -3,6 +3,9 @@ import path from "path";
 import fs from "fs";
 import mustache from "mustache";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
 
 const app = express();
 const port = 3000;
@@ -80,10 +83,12 @@ app.listen(port, () => {
 });
 
 function getZeroRelativeTime() {
-  const now = dayjs();
+  const now = dayjs.utc();
 
-  return dayjs(0)
+  return dayjs
+    .utc(0)
     .set("hour", now.hour())
     .set("minute", now.minute())
-    .set("second", now.second());
+    .set("second", now.second())
+    .set("millisecond", now.second());
 }
