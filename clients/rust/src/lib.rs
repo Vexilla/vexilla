@@ -78,14 +78,11 @@ impl VexillaClient {
         let url = format!("{}/{}.json", self.base_url, coerced_group_id);
         let response_text = fetch(&url)?;
 
-        println!("response text: {response_text}");
-
         let flags: Result<FlagGroup> = serde_json::from_str(response_text.as_str());
 
         if let Ok(..) = flags {
             Ok(flags.unwrap())
         } else {
-            println!("JSON error: {flags:?}");
             VexillaResult::Err(VexillaError::Unknown)
         }
     }
