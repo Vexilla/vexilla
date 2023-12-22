@@ -1,0 +1,65 @@
+---
+title: Choosing Language Versions for SDKs
+slug: choosing-language-versions-for-sdks
+publishDate: 12/22/2023
+description: It can be nice to get the latest and greatest features from languages we want to make SDKs for. However, our SDKs need to solve as many use cases as possible, so we need to support older sdk versions than most people would expect.
+---
+
+Our goal at Vexilla is to support as many people per SDK as possible. This is not as easy as it sounds. In many languages, the best features are not in the most used versions. Let's take a look at a couple key examples of how and why we decided upon the language versions to support. As a general goal, we want to support 90% of a language's ecosystem.
+
+## PHP
+
+PHP is probably one of the biggest separations from common usage vs latest version. If you haven't been paying attention, PHP is becoming a much nicer language than it used to be. Modern PHP has so many nice features:
+
+- Nullsafe operator
+- Named arguments
+- Attributes
+- Match expression (pattern matching)
+- Constructor property promotion
+- and more...
+
+If you haven't heard about some of these features, we recommend checking some of them out. Pattern matching and constructor property promotion are some of our favorites.
+
+However, the usage statistics show that not many people are able to use these new features, yet. As of July 2023, PHP version usage indicates that many people are still on the 7.x versions.
+
+![PHP Usage stats as of July 2023](./sdk-language-versions/php-stats.png)
+From: [https://stitcher.io/blog/php-version-stats-july-2023](https://stitcher.io/blog/php-version-stats-july-2023)
+
+As you can see, PHP 7.4 seems to get us up to the 90% metric. But, that is not the only concern for PHP users. Wordpress is still used in a shockingly large portion of the internet. They take great care to not introduce too much chrun to their ecosystem, so their PHP version support often lags behind a little bit.
+
+![Wordpress stats on PHP version usage](./sdk-language-versions/wp-php-stats.png)
+From: [https://wordpress.org/about/stats/](https://wordpress.org/about/stats/)
+
+This basically means we don't get access to some of the newer features of PHP, but we do hit the target 90% threshold, even for Wordpress users.
+
+## Python
+
+Python is another language that has had some nice new features added to it in recent versions:
+
+- Structural pattern matching
+- New type union syntax
+- Asynchronous iteration
+- More precise types
+- Dataclasses
+- async/await keywords
+- and more...
+
+However, we see, yet again, that usage of python versions indicates that most developers are not able to use these new features.
+
+![Python version usage](./sdk-language-versions/python-stats.png)
+From: [https://w3techs.com/technologies/history_details/pl-python/3](https://w3techs.com/technologies/history_details/pl-python/3)
+
+Over the course of the last year, the usage of 3.6 has dropped but it still remains the most used version. If we can support 3.6, then we are able to support the versions beyond it too. This ended up being a more problematic decision than PHP due to the minimum required versions of some of the libraries we wanted to use. Thankfully, pipenv was able to figure out which library versions would be compatible with our chosen PHP version.
+
+## Kotlin
+
+Kotlin has a similar version issue, but this is due to the JDK/JVM version we need to support. Modern Kotlin libraries and projects can just use 17. However, that does not cover the 90% threshold we need. 17's usage has increased by 430% but that ratio is less impressive when you realize that the actual percentage of use is only around 9%.
+
+![Python version usage](./sdk-language-versions/java-stats.png)
+From: [https://newrelic.com/resources/report/2023-state-of-the-java-ecosystem](https://newrelic.com/resources/report/2023-state-of-the-java-ecosystem)
+
+Here, we can see that Java 8 is still the most used version. Luckily, Kotlin compiles to that version of the JDK/JVM by default. If these numbers change in the future we can easily just update the compile target for Kotlin regardless of Kotlin's version. That is a huge benefit.
+
+## Wrapping Up
+
+There is a bit more nuance that goes into the version of a language to write an SDK in compared to spinning up a new application. We still want to support older legacy codebases because we think everybody can make use of feature flags and we firmly believe that our first-party SDK support is part of our "moat" that separates us from some of the other feature flag providers out there.
