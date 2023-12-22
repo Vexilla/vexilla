@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "pnpm astro dev",
     "start": "pnpm astro dev",
-    "build": "pnpm astro build && pnpm pagefind && mkdir -p ./src/pagefind && cp -R ./dist/pagefind/* ./src/pagefind/",
+    "build": "node ./node_modules/astro/dist/cli/index.js build && pnpm pagefind && mkdir -p ./src/pagefind && cp -R ./dist/pagefind/* ./src/pagefind/",
     "postinstall": "mkdir -p src/icons/phosphor && cp -R ./node_modules/@phosphor-icons/core/assets/* src/icons/phosphor/"
   },
   "dependencies": {
