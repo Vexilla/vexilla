@@ -466,6 +466,9 @@ importers:
       husky:
         specifier: ^4.3.8
         version: 4.3.8
+      npm-run-all:
+        specifier: ^4.1.5
+        version: 4.1.5
       ts-loader:
         specifier: ^8.0.11
         version: 8.4.0(typescript@5.2.2)(webpack@5.88.2)
@@ -11195,6 +11198,7 @@ packages:
 
   /figgy-pudding@3.5.2:
     resolution: {integrity: sha512-0btnI/H8f2pavGMN8w40mlSKOfTK2SVJmBfBeVIj3kNw0swwgzyRq0d5TJVOwodFmtvpPeWPN/MCcfuWF0Ezbw==}
+    deprecated: This module is no longer supported.
 
   /figures@1.7.0:
     resolution: {integrity: sha512-UxKlfCRuCBxSXU4C6t9scbDyWZ4VlaFFdojKtzJuSkuOBQ5CNFum+zZXFwHjo+CxBC1t6zlYPgHIgFjL8ggoEQ==}
