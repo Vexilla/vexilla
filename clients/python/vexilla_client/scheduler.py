@@ -7,9 +7,7 @@ from .types import Feature, Schedule, ScheduleType, ScheduleTimeType
 class Scheduler:
     @staticmethod
     def is_scheduled_feature_active(feature: Feature) -> bool:
-        return Scheduler.is_schedule_active(
-            feature.schedule, feature.schedule_type
-        )
+        return Scheduler.is_schedule_active(feature.schedule, feature.schedule_type)
 
     @staticmethod
     def is_schedule_active(schedule: Schedule, schedule_type: ScheduleType) -> bool:
@@ -24,9 +22,9 @@ class Scheduler:
         if schedule_type not in {ScheduleType.ENVIRONMENT, ScheduleType.GLOBAL}:
             return True
 
-        now = arrow.utcnow()
+        now = Arrow.utcfromtimestamp(now / 1000)
 
-        start_date = Arrow.utcfromtimestamp(schedule.start)
+        start_date = Arrow.utcfromtimestamp(schedule.start / 1000)
         start_of_start_date = Arrow(
             start_date.year,
             start_date.month,
@@ -39,7 +37,7 @@ class Scheduler:
             fold=getattr(start_date, "fold", 0),
         )
 
-        end_date = Arrow.utcfromtimestamp(schedule.end)
+        end_date = Arrow.utcfromtimestamp(schedule.end / 1000)
         end_of_end_date = Arrow(
             end_date.year,
             end_date.month,
@@ -55,8 +53,8 @@ class Scheduler:
         if not now.is_between(start_of_start_date, end_of_end_date, "[]"):
             return False
 
-        start_time = Arrow.utcfromtimestamp(schedule.start_time)
-        end_time = Arrow.utcfromtimestamp(schedule.end_time)
+        start_time = Arrow.utcfromtimestamp(schedule.start_time / 1000)
+        end_time = Arrow.utcfromtimestamp(schedule.end_time / 1000)
 
         if schedule.time_type is ScheduleTimeType.NONE:
             return True
@@ -130,20 +128,17 @@ class Scheduler:
             )
             zeroed_end_timestamp = zeroed_end_date_time.timestamp()
 
-            zeroed_end_timestamp_plus_day = zeroed_end_date_time.shift(
-                days=1
-            ).timestamp()
-
             start_timestamp = today_zero_timestamp + zeroed_start_timestamp
-
             end_timestamp = today_zero_timestamp + zeroed_end_timestamp
 
             # TODO: Is this where the Daily logic fails? Would it make sense to use our start_timestamp and subtract a day instead
             if zeroed_start_timestamp > zeroed_end_timestamp:
-                zeroed_end_timestamp = (
-                    today_zero_timestamp + zeroed_end_timestamp_plus_day
+                return (
+                    now_timestamp >= start_timestamp or now_timestamp <= end_timestamp
                 )
-
-            return now_timestamp >= start_timestamp and now_timestamp <= end_timestamp
+            else:
+                return (
+                    now_timestamp >= start_timestamp and now_timestamp <= end_timestamp
+                )
 
         return False

@@ -117,17 +117,14 @@ class Scheduler
 
                 $zeroedEndTimestamp = $zeroedEndDateTime->timestamp * 1000;
 
-                $zeroedEndTimestampPlusDay = $zeroedEndDateTime->clone()->addDay()->timestamp * 1000;
-
                 $startTimestamp = $todayZeroTimestamp + $zeroedStartTimestamp;
-
                 $endTimestamp = $todayZeroTimestamp + $zeroedEndTimestamp;
 
                 if ($zeroedStartTimestamp > $zeroedEndTimestamp) {
-                    $endTimestamp = $todayZeroTimestamp + $zeroedEndTimestampPlusDay;
+                    return $startTimestamp <= $nowTimestamp || $nowTimestamp >= $endTimestamp;
+                } else {
+                    return $startTimestamp <= $nowTimestamp && $nowTimestamp >= $endTimestamp;
                 }
-
-                return $startTimestamp <= $nowTimestamp && $nowTimestamp >= $endTimestamp;
 
             default:
                 return false;

@@ -43,13 +43,14 @@ end
 defmodule Schedule do
   use TypedStruct
 
+  @derive Jason.Encoder
   typedstruct enforce: true do
-    field :start, integer()
-    field :end, integer()
-    field :timezone, String.t(), default: "UTC"
-    field :timeType, String.t()
-    field :startTime, integer()
-    field :endTime, integer()
+    field(:start, integer())
+    field(:end, integer())
+    field(:timezone, String.t(), default: "UTC")
+    field(:timeType, String.t())
+    field(:startTime, integer())
+    field(:endTime, integer())
   end
 end
 
@@ -57,7 +58,7 @@ defmodule GroupMeta do
   use TypedStruct
 
   typedstruct enforce: true do
-    field :version, String.t()
+    field(:version, String.t())
   end
 end
 
@@ -65,9 +66,9 @@ defmodule Environment do
   use TypedStruct
 
   typedstruct enforce: true do
-    field :name, String.t()
-    field :environmentId, String.t()
-    field :features, [Feature.t()]
+    field(:name, String.t())
+    field(:environmentId, String.t())
+    field(:features, [Feature.t()])
   end
 end
 
@@ -75,8 +76,8 @@ defmodule ManifestGroup do
   use TypedStruct
 
   typedstruct enforce: true do
-    field :name, String.t()
-    field :groupId, String.t()
+    field(:name, String.t())
+    field(:groupId, String.t())
   end
 end
 
@@ -84,8 +85,8 @@ defmodule Manifest do
   use TypedStruct
 
   typedstruct enforce: true do
-    field :version, String.t()
-    field :groups, [ManifestGroup.t()]
+    field(:version, String.t())
+    field(:groups, [ManifestGroup.t()])
   end
 end
 
@@ -93,11 +94,11 @@ defmodule Group do
   use TypedStruct
 
   typedstruct enforce: true do
-    field :name, String.t()
-    field :groupId, String.t()
-    field :meta, GroupMeta.t()
-    field :environments, term()
-    field :features, term()
+    field(:name, String.t())
+    field(:groupId, String.t())
+    field(:meta, GroupMeta.t())
+    field(:environments, term())
+    field(:features, term())
   end
 end
 
@@ -105,15 +106,17 @@ defmodule Feature do
   use TypedStruct
 
   typedstruct enforce: true do
-    field :name, String.t()
-    field :featureId, String.t()
-    field :featureType, String.t()
-    field :scheduleType, String.t()
-    field :schedule, Schedule.t()
+    field(:name, String.t())
+    field(:featureId, String.t())
+    field(:featureType, String.t())
+    field(:scheduleType, String.t())
+    field(:schedule, Schedule.t())
 
-    field :value,
-          boolean() | String.t() | integer() | float() | [String.t()] | [integer()] | [float()]
+    field(
+      :value,
+      boolean() | String.t() | integer() | float() | [String.t()] | [integer()] | [float()]
+    )
 
-    field :seed, float() | nil
+    field(:seed, float() | nil)
   end
 end

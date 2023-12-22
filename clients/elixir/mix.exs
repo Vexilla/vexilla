@@ -16,7 +16,15 @@ defmodule VexillaClient.MixProject do
         links: %{
           Github: "https://github.com/Vexilla/client-elixir"
         }
-      }
+      },
+      test_coverage: [
+        ignore_modules: [
+          FeatureType,
+          ScheduleType,
+          TimeType,
+          ValueType
+        ]
+      ]
     ]
   end
 
