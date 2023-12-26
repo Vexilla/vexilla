@@ -48,9 +48,6 @@ data class GroupMeta(
     val version: String
 )
 
-@OptIn(ExperimentalSerializationApi::class)
-@Serializable
-@JsonClassDiscriminator("featureType")
 sealed class Feature(
     val name: String,
     val featureId: String,
@@ -59,18 +56,16 @@ sealed class Feature(
     val schedule: Schedule
 )
 
-@Serializable
-sealed class ToggleFeature(
+class ToggleFeature(
     name: String,
     featureId: String,
     featureType: FeatureType = FeatureType.TOGGLE,
     scheduleType: ScheduleType,
     schedule: Schedule,
-    value: Boolean
+    val value: Boolean
 ) : Feature(name, featureId, featureType, scheduleType, schedule)
 
-@Serializable
-sealed class GradualFeature(
+class GradualFeature(
     name: String,
     featureId: String,
     featureType: FeatureType = FeatureType.GRADUAL,
@@ -80,8 +75,6 @@ sealed class GradualFeature(
     val seed: Double
 ) : Feature(name, featureId, featureType, scheduleType, schedule)
 
-@OptIn(ExperimentalSerializationApi::class)
-@JsonClassDiscriminator("valueType")
 sealed class SelectiveFeature(
     name: String,
     featureId: String,
@@ -123,8 +116,6 @@ class SelectiveFloatFeature(
     val value: List<Double>,
 ) : SelectiveFeature(name, featureId, featureType, scheduleType, schedule, valueType)
 
-@OptIn(ExperimentalSerializationApi::class)
-@JsonClassDiscriminator("valueType")
 sealed class ValueFeature(
     name: String,
     featureId: String,
@@ -178,15 +169,12 @@ data class Manifest(
     val groups: List<ManifestGroup>
 )
 
-// the Base Environment if we need to mimic the Go code implementation
-@Serializable
-sealed class Environment(
+data class Environment(
     val name: String,
     val environmentId: String,
     val features: Map<String, Feature>
 )
 
-@Serializable
 data class Group(
     val name: String,
     val groupId: String,
@@ -194,3 +182,13 @@ data class Group(
     val environments: Map<String, Environment>,
     val features: Map<String, Feature>
 )
+
+data class FooGroup(
+    val id: String = "Foo",
+    val name: String = "Bar",
+
+    ) {
+    enum class Features(val FeatureName: String) {
+        FEATURE_1("feature_is_akshjdfgajkshfg"),
+    }
+}

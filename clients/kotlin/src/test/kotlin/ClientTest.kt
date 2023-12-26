@@ -1,6 +1,7 @@
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 import dev.vexilla.Client
+import dev.vexilla.GradualGroup
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
@@ -22,7 +23,7 @@ class ClientTest {
                 httpClient.get(url).bodyAsText(Charset.defaultCharset())
             }
 
-            vexillaClient.syncFlags("Gradual") { url ->
+            vexillaClient.syncFlags(GradualGroup.name) { url ->
                 httpClient.get(url).bodyAsText(Charset.defaultCharset())
             }
 
@@ -58,7 +59,7 @@ class ClientTest {
         assertTrue(shouldSelectiveCustomInt)
 
         val shouldNotSelectiveCustomInt = vexillaClient.shouldCustomInt("Selective", "Number", 43)
-        assertTrue(shouldNotSelectiveCustomInt)
+        assertFalse(shouldNotSelectiveCustomInt)
 
         val valueString = vexillaClient.valueString("Value", "String", "")
         assertEquals("foo", valueString)
@@ -66,8 +67,8 @@ class ClientTest {
         val valueInt = vexillaClient.valueInt("Value", "Integer", 0)
         assertEquals(42, valueInt)
 
-        val valueFloat = vexillaClient.valueFloat("Value", "Integer", 0.0f)
-        assertEquals(0.42f, valueFloat)
+        val valueFloat = vexillaClient.valueFloat("Value", "Float", 0.0f)
+        assertEquals(42.42f, valueFloat)
 
         val beforeGlobal = vexillaClient.should("Scheduled", "beforeGlobal")
         assertFalse(beforeGlobal)

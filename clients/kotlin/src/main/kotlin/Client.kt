@@ -1,6 +1,7 @@
 package dev.vexilla
 
-import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.*
+import kotlin.reflect.typeOf
 
 class Client(
     private val baseUrl: String,
@@ -42,7 +43,7 @@ class Client(
         val url = "${this.baseUrl}/${groupId}.json"
         val response = fetch(url)
 
-        val group = Json.decodeFromString<Group>(response)
+        val group = deserializeGroup(Json.parseToJsonElement(response))
 
         return group
     }
@@ -56,8 +57,8 @@ class Client(
         }
 
         for (entry in group.environments.entries) {
-            this.environmentLookupTable[groupId]?.set(entry.value.name, entry.value.environmentId)
-            this.environmentLookupTable[groupId]?.set(entry.value.environmentId, entry.value.environmentId)
+            this.environmentLookupTable[groupId]!![entry.value.name] = entry.value.environmentId
+            this.environmentLookupTable[groupId]!![entry.value.environmentId] = entry.value.environmentId
         }
 
 
@@ -66,8 +67,8 @@ class Client(
         }
 
         for (entry in group.features.entries) {
-            this.featureLookupTable[groupId]?.set(entry.value.name, entry.value.featureId)
-            this.featureLookupTable[groupId]?.set(entry.value.featureId, entry.value.featureId)
+            this.featureLookupTable[groupId]!![entry.value.name] = entry.value.featureId
+            this.featureLookupTable[groupId]!![entry.value.featureId] = entry.value.featureId
         }
     }
 
@@ -206,11 +207,161 @@ class Client(
         }
     }
 
+    private fun deserializeFeature(json: JsonElement): Feature {
+
+        val featureId = json.jsonObject["featureId"]!!.jsonPrimitive.content
+        val name = json.jsonObject["name"]!!.jsonPrimitive.content
+
+        val scheduleType = when (json.jsonObject["scheduleType"]!!.jsonPrimitive.content) {
+            ScheduleType.EMPTY.typeName -> ScheduleType.EMPTY
+            ScheduleType.GLOBAL.typeName -> ScheduleType.GLOBAL
+            ScheduleType.ENVIRONMENT.typeName -> ScheduleType.ENVIRONMENT
+            else -> throw Exception("Unknown schedule type: " + json.jsonObject["scheduleType"]!!.jsonPrimitive.content)
+        }
+
+
+        val rawSchedule = json.jsonObject["schedule"]!!
+
+        val scheduleTimeType = when (rawSchedule.jsonObject["timeType"]!!.jsonPrimitive.content) {
+            ScheduleTimeType.NONE.typeName -> ScheduleTimeType.NONE
+            ScheduleTimeType.DAILY.typeName -> ScheduleTimeType.DAILY
+            ScheduleTimeType.START_END.typeName -> ScheduleTimeType.START_END
+            else -> throw Exception("Unknown schedule time type: " + rawSchedule.jsonObject["timeType"]!!.jsonPrimitive.content)
+        }
+
+        val schedule = Schedule(
+            start = rawSchedule.jsonObject["start"]!!.jsonPrimitive.content.toLong(),
+            end = rawSchedule.jsonObject["end"]!!.jsonPrimitive.content.toLong(),
+            timezone = rawSchedule.jsonObject["timezone"]!!.jsonPrimitive.content,
+            timeType = scheduleTimeType,
+            startTime = rawSchedule.jsonObject["startTime"]!!.jsonPrimitive.content.toLong(),
+            endTime = rawSchedule.jsonObject["endTime"]!!.jsonPrimitive.content.toLong(),
+        )
+
+
+        return when (json.jsonObject["featureType"]?.jsonPrimitive?.content) {
+            FeatureType.TOGGLE.typeName -> ToggleFeature(
+                featureId = featureId,
+                name = name,
+                scheduleType = scheduleType,
+                schedule = schedule,
+                value = json.jsonObject["value"]!!.jsonPrimitive.content.toBoolean(),
+            )
+
+            FeatureType.GRADUAL.typeName -> GradualFeature(
+                featureId = featureId,
+                name = name,
+                scheduleType = scheduleType,
+                schedule = schedule,
+                value = json.jsonObject["value"]!!.jsonPrimitive.content.toDouble(),
+                seed = json.jsonObject["seed"]!!.jsonPrimitive.content.toDouble()
+            )
+
+            FeatureType.SELECTIVE.typeName -> when (json.jsonObject["valueType"]?.jsonPrimitive?.content) {
+                ValueType.STRING.typeName -> SelectiveStringFeature(
+                    featureId = featureId,
+                    name = name,
+                    scheduleType = scheduleType,
+                    schedule = schedule,
+                    value = json.jsonObject["value"]!!.jsonArray.map { it.jsonPrimitive.content }.toList()
+                )
+
+                ValueType.NUMBER.typeName -> when (json.jsonObject["numberType"]?.jsonPrimitive?.content) {
+                    NumberType.INT.typeName -> SelectiveIntFeature(
+                        featureId = featureId,
+                        name = name,
+                        scheduleType = scheduleType,
+                        schedule = schedule,
+                        value = json.jsonObject["value"]!!.jsonArray.map { it.jsonPrimitive.long }.toList()
+                    )
+
+                    NumberType.FLOAT.typeName -> SelectiveFloatFeature(
+                        featureId = featureId,
+                        name = name,
+                        scheduleType = scheduleType,
+                        schedule = schedule,
+                        value = json.jsonObject["value"]!!.jsonArray.map { it.jsonPrimitive.double }.toList()
+                    )
+
+                    else -> throw Exception("Unknown Feature: key 'numberType' not found or does not match any feature type")
+                }
+
+                else -> throw Exception("Unknown Feature: key 'valueType' not found or does not match any feature type")
+            }
+
+            FeatureType.VALUE.typeName -> when (json.jsonObject["valueType"]?.jsonPrimitive?.content) {
+                ValueType.STRING.typeName -> ValueStringFeature(
+                    featureId = featureId,
+                    name = name,
+                    scheduleType = scheduleType,
+                    schedule = schedule,
+                    value = json.jsonObject["value"]!!.jsonPrimitive.content.toString()
+                )
+
+                ValueType.NUMBER.typeName -> when (json.jsonObject["numberType"]?.jsonPrimitive?.content) {
+                    NumberType.INT.typeName -> ValueIntFeature(
+                        featureId = featureId,
+                        name = name,
+                        scheduleType = scheduleType,
+                        schedule = schedule,
+                        value = json.jsonObject["value"]!!.jsonPrimitive.long
+                    )
+
+                    NumberType.FLOAT.typeName -> ValueFloatFeature(
+                        featureId = featureId,
+                        name = name,
+                        scheduleType = scheduleType,
+                        schedule = schedule,
+                        value = json.jsonObject["value"]!!.jsonPrimitive.double
+                    )
+
+                    else -> throw Exception("Unknown Feature: key 'numberType' not found or does not match any feature type")
+                }
+
+                else -> throw Exception("Unknown Feature: key 'valueType' not found or does not match any feature type")
+            }
+
+            else -> throw Exception("Unknown Feature: key 'featureType' not found or does not match any feature type")
+        }
+    }
+
+    private fun deserializeGroup(json: JsonElement): Group {
+
+        val environments = mutableMapOf<String, Environment>();
+        for (environment in json.jsonObject["environments"]!!.jsonObject.values) {
+            val environmentFeatures = mutableMapOf<String, Feature>()
+            for (feature in environment.jsonObject["features"]!!.jsonObject.values) {
+                environmentFeatures[feature.jsonObject["featureId"]!!.jsonPrimitive.content] =
+                    deserializeFeature(feature)
+            }
+            environments[environment.jsonObject["environmentId"]!!.jsonPrimitive.content] = Environment(
+                features = environmentFeatures,
+                environmentId = environment.jsonObject["environmentId"]!!.jsonPrimitive.content,
+                name = environment.jsonObject["name"]!!.jsonPrimitive.content
+            )
+        }
+
+        val features = mutableMapOf<String, Feature>()
+        for (feature in json.jsonObject["features"]!!.jsonObject.values) {
+            features[feature.jsonObject["featureId"]!!.jsonPrimitive.content] = deserializeFeature(feature)
+        }
+
+        return Group(
+            name = json.jsonObject["name"]!!.jsonPrimitive.content,
+            groupId = json.jsonObject["groupId"]!!.jsonPrimitive.content,
+            meta = GroupMeta(
+                version = json.jsonObject["meta"]!!.jsonObject["version"]!!.jsonPrimitive.content,
+            ),
+            environments = environments,
+            features = features
+        )
+    }
 
     private fun getFeature(groupNameOrId: String, featureNameOrId: String): Feature {
         val groupId = this.groupLookupTable[groupNameOrId] ?: throw Error("Group (${groupNameOrId}) not found")
         val groupEnvironments =
             this.environmentLookupTable[groupId] ?: throw Error("Environments not found for Group (${groupId})")
+
         val environmentId =
             groupEnvironments[this.environment] ?: throw Error("Environment (${this.environment}) not found")
 
