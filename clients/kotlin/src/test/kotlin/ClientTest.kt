@@ -15,8 +15,10 @@ class ClientTest {
 
         val httpClient = HttpClient(CIO)
 
+        val testServerHost: String = System.getenv("TEST_SERVER_HOST") ?: "http://localhost:3000"
+
         val uuid = "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a"
-        val vexillaClient = Client("http://localhost:3000", "dev", uuid)
+        val vexillaClient = Client(testServerHost, "dev", uuid)
 
         runBlocking {
             vexillaClient.syncManifest { url ->

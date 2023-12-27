@@ -163,9 +163,14 @@ http_archive(
     url = "https://github.com/bazelbuild/rules_kotlin/releases/download/v1.9.0/rules_kotlin-v1.9.0.tar.gz",
 )
 
-load("@rules_kotlin//kotlin:repositories.bzl", "kotlin_repositories")
+load("@rules_kotlin//kotlin:repositories.bzl", "kotlin_repositories", "kotlinc_version")
 
-kotlin_repositories()
+kotlin_repositories(
+    compiler_release = kotlinc_version(
+        release = "1.9.21",
+        sha256 = "cf17e0272bc065d49e64a86953b73af06065370629f090d5b7c2fe353ccf9c1a",
+    ),
+)
 
 load("@rules_kotlin//kotlin:core.bzl", "kt_register_toolchains")
 
@@ -193,21 +198,28 @@ rules_jvm_external_setup()
 load("@rules_jvm_external//:defs.bzl", "maven_install")
 
 maven_install(
+    # maven_install_json = "//:maven_install.json",
     artifacts = [
-        "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.0",
+        "org.jetbrains.kotlin:kotlin-stdlib:1.9.21",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.21",
+        "org.jetbrains.kotlin:kotlin-serialization:1.9.21",
         "org.jetbrains.kotlinx:kotlinx-datetime:0.5.0",
+        "org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.6.2",
         "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2",
-        "org.jetbrains.kotlin:kotlin-test:1.9.0",
+        "org.jetbrains.kotlin:kotlin-test:1.9.21",
         "org.junit.jupiter:junit-jupiter-api:5.8.1",
         "org.junit.jupiter:junit-jupiter:5.8.1",
         "io.ktor:ktor-client-core:2.3.7",
         "io.ktor:ktor-client-cio:2.3.7",
         "org.junit.jupiter:junit-jupiter-engine:5.8.1",
     ],
-    fetch_sources = True,
     repositories = [
         "https://maven.google.com",
         "https://repo1.maven.org/maven2",
     ],
     strict_visibility = True,
 )
+
+load("@maven//:defs.bzl", "pinned_maven_install")
+
+pinned_maven_install()
