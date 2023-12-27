@@ -198,10 +198,10 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
 
-      - name: Execute Gradle build
-        run: ./clients/kotlin/gradlew build
-
-      - name: Execute Gradle test
-        run: ./clients/kotlin/gradlew test
+      - name: Execute Gradle build and then test
+        run: |
+          cd clients/kotlin
+          ./gradlew build
+          ./gradlew test
         env:
           TEST_SERVER_HOST: test-server
