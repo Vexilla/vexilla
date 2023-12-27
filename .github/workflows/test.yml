@@ -203,5 +203,6 @@ jobs:
           cd clients/kotlin
           ./gradlew build
           ./gradlew test
-        env:
-          TEST_SERVER_HOST: test-server
+        # test-server not available on local network
+        # env:
+        #   TEST_SERVER_HOST: test-server
