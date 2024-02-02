@@ -172,7 +172,37 @@ jobs:
         env:
           TEST_SERVER_HOST: test-server
 
-      # Elixir
-      # - run: docker-compose -f ./clients/elixir/docker-compose.ci.yml up  --exit-code-from elixir-custom
-      #   env:
-      #     TEST_SERVER_HOST: test-server
+  test-kotlin:
+    runs-on: ubuntu-latest
+    needs: ["publish-test-server"]
+
+    services:
+      test-server:
+        credentials:
+          username: vexilla
+          password: ${{secrets.GITHUB_TOKEN}}
+        image: ghcr.io/vexilla/test-server:latest
+        ports:
+          - 3000:3000
+        options: |
+          --health-cmd "curl -f http://localhost:3000/manifest.json"
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-java@v3
+        with:
+          distribution: corretto
+          java-version: 8
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Execute Gradle build and then test
+        run: |
+          cd clients/kotlin
+          ./gradlew build
+          ./gradlew test
+        # test-server not available on local network
+        # env:
+        #   TEST_SERVER_HOST: test-server

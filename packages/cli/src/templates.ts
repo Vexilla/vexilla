@@ -267,4 +267,27 @@ class {{{name}}}Group(str, Enum):
 
   {{/features}}
 {{/groups}}`,
+  kotlin: `/*
+  {{{disclaimerText}}}
+*/
+
+{{#groups}}
+
+data object {{{name}}}Group {
+  const val NAME: String = "{{{rawName}}}"
+  const val ID: String = "{{{id}}}"
+
+  enum class Features(val id: String) {
+    {{#features}}
+    {{{name}}}("{{{id}}}"),
+    {{/features}}
+  }
+  enum class Environments(val id: String) {
+    {{#environments}}
+    {{{name}}}("{{{id}}}"),
+    {{/environments}}
+  }
+}
+
+{{/groups}}`,
 };

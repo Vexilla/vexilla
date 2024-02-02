@@ -6,4 +6,5 @@ export type Language =
   | "csharp"
   | "elixir"
   | "php"
-  | "python";
+  | "python"
+  | "kotlin";

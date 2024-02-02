@@ -103,6 +103,21 @@ const languageTransformers: Record<
     });
   },
 
+  kotlin: function (
+    groups: PublishedGroup[],
+    typePrefix = "",
+    typeSuffix = ""
+  ) {
+    const groupsOutput = groups.map(
+      parseGroup(typePrefix, typeSuffix, Case.constant, Case.pascal)
+    );
+
+    return mustache.render(templates.kotlin, {
+      disclaimerText,
+      groups: groupsOutput,
+    });
+  },
+
   //   csharp: function (groups: PublishedGroup[], typePrefix = "") {
   //     const tagsString = tags
   //       .map(
@@ -259,6 +274,7 @@ const languageAliases: Record<string, Language> = {
   // lua: "lua",
   // flutter: "dart",
   // dart: "dart",
+  kotlin: "kotlin",
 };
 
 export function transformConstants(
