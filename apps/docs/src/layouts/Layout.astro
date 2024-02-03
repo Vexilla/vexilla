@@ -146,21 +146,21 @@ guidePages.sort((a, b) => {
     <meta name="twitter:image" content={image || "https://vexilla.dev/img/traffic-light-green-opt-2.jpg"}>
 
     <!-- Meta Tags Generated via https://www.opengraph.xyz -->
-      <script is:inline>
-        function getTheme() {
-          if (localStorage.getItem('theme')) {
-            return localStorage.getItem('theme');
-          }
-          return matchMedia("(prefers-color-scheme: light)").matches
-            ? "light"
-            : matchMedia("(prefers-color-scheme: dark)").matches
-              ? "dark"
-              : "light";
+    <script is:inline>
+      function getTheme() {
+        if (localStorage.getItem('theme')) {
+          return localStorage.getItem('theme');
         }
-        document.documentElement.classList.remove("light", "dark")
-        document.documentElement.classList.add(getTheme());
+        return matchMedia("(prefers-color-scheme: light)").matches
+          ? "light"
+          : matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+      }
+      document.documentElement.classList.remove("light", "dark")
+      document.documentElement.classList.add(getTheme());
 
-      </script>
+    </script>
 
 
 
