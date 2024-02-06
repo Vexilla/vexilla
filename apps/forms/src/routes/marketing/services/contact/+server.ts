@@ -22,17 +22,26 @@ export async function POST({ request }: { request: Request }) {
 		const body = await request.json();
 
 		validator.parse(body);
+		console.log('Passed validation.');
 		const { name, email, message } = body;
+
+		console.log({
+			SMTP_SERVER,
+			SMTP_SENDER
+		});
 
 		const transporter = nodemailer.createTransport({
 			host: SMTP_SERVER,
 			port: 587,
-			secure: true,
+			// secure: true,
+			secure: false,
 			auth: {
 				user: SMTP_SENDER,
 				pass: SMTP_PASSWORD
 			}
 		});
+
+		console.log('Transport created.');
 
 		await transporter.sendMail({
 			from: email,
