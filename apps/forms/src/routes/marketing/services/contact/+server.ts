@@ -7,7 +7,7 @@ const validator = z.object({
 	name: z.string(),
 	email: z.string(),
 	message: z.string(),
-	company: z.undefined()
+	company: z.undefined().optional()
 });
 
 const commonHeaders = {
@@ -46,6 +46,11 @@ Message: ${message}
 	} catch (e: any) {
 		// Maybe instead of setting Response we should just notify a logging server of the spam attempt. For now, just let Netlify log the errors
 		console.error(e);
+
+		return new Response(JSON.stringify({ success: false, error: e.message }), {
+			status: 200,
+			headers: commonHeaders
+		});
 		// return new Response(JSON.stringify({ e }), {
 		// 	status: 400,
 		// 	headers: commonHeaders
