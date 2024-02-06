@@ -292,6 +292,9 @@ importers:
       '@tailwindcss/typography':
         specifier: ^0.5.9
         version: 0.5.9(tailwindcss@3.3.2)
+      geller:
+        specifier: ^0.1.4
+        version: 0.1.4
       prettier:
         specifier: ^3.2.4
         version: 3.2.4
