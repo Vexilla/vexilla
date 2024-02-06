@@ -29,10 +29,10 @@ const benefits = [
 <Layout title="Services | Vexilla">
   <main
     id="main"
-    class="flex-auto flex flex-col gap-[4rem] main-content pt-10 pb-10 px-4 w-screen md:w-full"
+    class="flex-auto flex flex-col gap-[4rem] main-content pb-10 px-4 w-screen md:w-full text-normal body-font"
     data-pagefind-body
   >
-    <section class="text-gray-600 body-font">
+    <section class="body-font">
       <div
         class="container mx-auto flex px-5 pt-24 md:flex-row flex-col items-center"
       >
@@ -40,7 +40,7 @@ const benefits = [
           class="lg:flex-grow md:w-1/2 lg:pr-24 md:pr-16 flex flex-col md:items-start md:text-left mb-16 md:mb-0 items-center text-center"
         >
           <h1
-            class="title-font sm:text-4xl text-3xl mb-4 font-medium text-gray-900"
+            class="title-font sm:text-4xl text-3xl mb-4 font-medium text-emphasis"
           >
             Enterprise Services
           </h1>
@@ -66,9 +66,7 @@ const benefits = [
         </div>
       </div>
     </section>
-    <section
-      class="body-font flex flex-col md:flex-row gap-4 items-center text-gray-600"
-    >
+    <section class="body-font flex flex-col md:flex-row gap-4 items-center">
       <div class="md:w-1/2">
         <h2 class={headingClasses}>What's the deal?</h2>
         <p>
@@ -94,7 +92,7 @@ const benefits = [
         </ul>
       </div>
     </section>
-    <section class="flex md:flex-row items-center justify-center text-gray-600">
+    <section class="flex md:flex-row items-center justify-center">
       <div class="md:w-1/2 p-4">
         <h2 class={headingClasses}>Get In Touch!</h2>
         <ServicesForm client:only="react" />
