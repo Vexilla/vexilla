@@ -167,6 +167,20 @@ guidePages.sort((a, b) => {
     />
 
     <!-- Meta Tags Generated via https://www.opengraph.xyz -->
+    <script is:inline>
+      function getTheme() {
+        if (localStorage.getItem("theme")) {
+          return localStorage.getItem("theme");
+        }
+        return matchMedia("(prefers-color-scheme: light)").matches
+          ? "light"
+          : matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+      }
+      document.documentElement.classList.remove("light", "dark");
+      document.documentElement.classList.add(getTheme());
+    </script>
   </head>
   <body class="flex flex-col min-h-screen w-full relative">
     <div class="z-20 absolute left-[-100%] focus-within:left-0 bg-white">
