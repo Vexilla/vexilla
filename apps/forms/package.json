@@ -1,0 +1,36 @@
+{
+	"name": "@vexilla/forms",
+	"version": "0.0.1",
+	"packageManager": "pnpm@8.5.0",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"bake": "vite build",
+		"preview": "vite preview",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"lint": "prettier --plugin-search-dir . --check .",
+		"format": "prettier --plugin-search-dir . --write .",
+		"prebuild": "geller scan -g ./src/**/*.ts"
+	},
+	"devDependencies": {
+		"@fontsource/fira-mono": "^4.5.10",
+		"@sveltejs/adapter-auto": "^2.0.0",
+		"@sveltejs/kit": "^1.5.0",
+		"@types/cookie": "^0.5.1",
+		"@types/nodemailer": "^6.4.14",
+		"geller": "^0.1.4",
+		"prettier": "^2.8.0",
+		"prettier-plugin-svelte": "^2.8.1",
+		"svelte": "^3.54.0",
+		"svelte-check": "^3.0.1",
+		"tslib": "^2.4.1",
+		"typescript": "^5.0.0",
+		"vite": "^4.3.0"
+	},
+	"type": "module",
+	"dependencies": {
+		"nodemailer": "^6.9.9",
+		"zod": "^3.21.4"
+	}
+}
