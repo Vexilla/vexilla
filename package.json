@@ -19,13 +19,13 @@
     "turbo": "^1.9.3",
     "typescript": "^5.2.2"
   },
-  "packageManager": "pnpm@7.15.0",
+  "packageManager": "pnpm@8.5.0",
   "name": "vexilla",
   "dependencies": {
     "yargs": "^17.5.1"
   },
   "engines": {
-    "node": ">=18 <19.0.0"
+    "node": ">=18 <21.0.0"
   },
   "workspaces": [
     "apps/*",
