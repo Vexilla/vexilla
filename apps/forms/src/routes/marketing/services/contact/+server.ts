@@ -3,6 +3,8 @@ import nodemailer from 'nodemailer';
 
 import { SMTP_SERVER, SMTP_SENDER, SMTP_PASSWORD, WEB_BASE_URL } from '$env/static/private';
 
+const SERVICES_RECIPIENT = 'services@vexilla.dev';
+
 const validator = z.object({
 	name: z.string(),
 	email: z.string(),
@@ -22,13 +24,8 @@ export async function POST({ request }: { request: Request }) {
 		const body = await request.json();
 
 		validator.parse(body);
-		console.log('Passed validation.');
+		console.log('Marketing/Services/Contact: Passed validation.');
 		const { name, email, message } = body;
-
-		console.log({
-			SMTP_SERVER,
-			SMTP_SENDER
-		});
 
 		const transporter = nodemailer.createTransport({
 			host: SMTP_SERVER,
@@ -41,29 +38,23 @@ export async function POST({ request }: { request: Request }) {
 			}
 		});
 
-		console.log('Transport created.');
+		console.log('Marketing/Services/Contact: Transport created.');
 
 		await transporter.sendMail({
 			from: email,
 			subject: emailSubject,
+			to: SERVICES_RECIPIENT,
 			text: `
 Sender Name: ${name}
 Sender Email: ${email}
 Message: ${message}
 `
 		});
+
+		console.log('Marketing/Services/Contact: Email sent.');
 	} catch (e: any) {
 		// Maybe instead of setting Response we should just notify a logging server of the spam attempt. For now, just let Netlify log the errors
 		console.error(e);
-
-		return new Response(JSON.stringify({ success: false, error: e.message }), {
-			status: 200,
-			headers: commonHeaders
-		});
-		// return new Response(JSON.stringify({ e }), {
-		// 	status: 400,
-		// 	headers: commonHeaders
-		// });
 	} finally {
 		return new Response(JSON.stringify({ success: true }), {
 			status: 200,
