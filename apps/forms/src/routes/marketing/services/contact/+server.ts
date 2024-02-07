@@ -28,16 +28,7 @@ export async function POST({ request }: { request: Request }) {
 		console.log('Marketing/Services/Contact: Passed body validation.');
 		const { name, email, message } = body;
 
-		const emailValidation = await validate({
-			email,
-			sender: email,
-			validateRegex: true,
-			validateMx: true,
-			// validateTypo: true,
-			validateDisposable: true
-			// this might be overkill
-			// validateSMTP: true
-		});
+		const emailValidation = await validateEmail(email);
 
 		if (!emailValidation.valid) {
 			throw new Error(`Email failed validation for ${emailValidation.reason}`);
@@ -79,6 +70,43 @@ Message: ${message}
 			headers: commonHeaders
 		});
 	}
+}
+
+async function validateEmail(email: string) {
+	const results = await Promise.all([
+		validate({
+			email,
+			sender: email,
+			validateRegex: true
+		}),
+		validate({
+			email,
+			sender: email,
+			validateMx: true
+			// this might be overkill
+			// validateSMTP: true
+		}),
+		validate({
+			email,
+			sender: email,
+			validateTypo: true
+		}),
+		validate({
+			email,
+			sender: email,
+			validateDisposable: true
+		})
+	]);
+
+	const reason = results
+		.filter((result) => !result.valid)
+		.map((result) => result.reason)
+		.join(',');
+
+	return {
+		valid: !reason,
+		reason
+	};
 }
 
 // If `OPTIONS` is not defined, Next.js will automatically implement `OPTIONS` and  set the appropriate Response `Allow` header depending on the other methods defined in the route handler.
