@@ -6,6 +6,13 @@ import toml from "astro-toml";
 
 // https://astro.build/config
 export default defineConfig({
+  vite: {
+    build: {
+      rollupOptions: {
+        external: ["@/pagefind/pagefind"],
+      },
+    },
+  },
   integrations: [
     tailwind({
       applyBaseStyles: false,
