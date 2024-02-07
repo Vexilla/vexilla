@@ -33,7 +33,7 @@ export async function POST({ request }: { request: Request }) {
 			sender: email,
 			validateRegex: true,
 			validateMx: true,
-			validateTypo: true,
+			// validateTypo: true,
 			validateDisposable: true
 			// this might be overkill
 			// validateSMTP: true
