@@ -22,3 +22,6 @@ pnpm-debug.log*
 
 # icons
 src/icons/phosphor
+
+# pagefind artifacts
+src/pagefind
