@@ -23,5 +23,6 @@ pnpm-debug.log*
 # icons
 src/icons/phosphor
 
+# CAN'T IGNORE THIS OR BUILDS FAIL
 # pagefind artifacts
-src/pagefind
+# src/pagefind
