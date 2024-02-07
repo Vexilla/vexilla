@@ -20,14 +20,14 @@ const steps: StepContent[] = [
   {
     title: "Import a client",
     description: "Choose the client library that applies to your backend.",
-    image: "phosphor/duotone/download-duotone" // importOutline,
+    image: "phosphor/duotone/download-duotone", // importOutline,
   },
 
   {
     title: "Wrap your feature",
     description:
       "Using the client library in your frontend and/or backend, write if statements that decide what to do.",
-    image: "phosphor/duotone/gift-duotone" // boxLinear,
+    image: "phosphor/duotone/gift-duotone", // boxLinear,
   },
 
   {
@@ -43,28 +43,28 @@ const steps: StepContent[] = [
   <SectionTitle>How It Works</SectionTitle>
   <SectionHr />
   <div class="container px-5 mx-auto flex flex-wrap">
-    {steps.map((step, index) => (
-      <div
-        class="flex relative pt-10 pb-20 sm:items-center md:w-2/3 mx-auto"
-      >
-        <div class="h-full w-6 absolute inset-0 flex items-center justify-center">
-          <div class="h-full w-1 bg-gray-200 pointer-events-none"></div>
-        </div>
-        <div class="z-1 flex-shrink-0 w-6 h-6 rounded-full mt-10 sm:mt-0 inline-flex items-center justify-center bg-primary-500 text-white relative font-medium text-sm">
-          {index + 1}
-        </div>
-        <div class="flex-grow md:pl-8 pl-6 flex sm:items-center items-start flex-col sm:flex-row">
-          <div class="flex-shrink-0 w-24 h-24 bg-slate-100 text-primary-500 rounded-full inline-flex items-center justify-center p-4">
-            <Icon name={step.image} class="w-full" />
+    {
+      steps.map((step, index) => (
+        <div class="flex relative pt-10 pb-20 sm:items-center md:w-2/3 mx-auto">
+          <div class="h-full w-6 absolute inset-0 flex items-center justify-center">
+            <div class="h-full w-1 bg-gray-200 pointer-events-none" />
           </div>
-          <div class="flex-grow sm:pl-6 mt-6 sm:mt-0">
-            <h2 class="font-medium title-font text-emphasis mb-1 text-xl">
-              {step.title}
-            </h2>
-            <p class="leading-relaxed">{step.description}</p>
+          <div class="z-1 flex-shrink-0 w-6 h-6 rounded-full mt-10 sm:mt-0 inline-flex items-center justify-center bg-primary-500 text-white relative font-medium text-sm">
+            {index + 1}
+          </div>
+          <div class="flex-grow md:pl-8 pl-6 flex sm:items-center items-start flex-col sm:flex-row">
+            <div class="flex-shrink-0 w-24 h-24 bg-slate-100 dark:bg-slate-300 text-primary-500 rounded-full inline-flex items-center justify-center p-4">
+              <Icon name={step.image} class="w-full" />
+            </div>
+            <div class="flex-grow sm:pl-6 mt-6 sm:mt-0">
+              <h2 class="font-medium title-font text-emphasis mb-1 text-xl">
+                {step.title}
+              </h2>
+              <p class="leading-relaxed">{step.description}</p>
+            </div>
           </div>
         </div>
-      </div>
-    ))}
+      ))
+    }
   </div>
 </section>
