@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import nodemailer from 'nodemailer';
-import validate from 'deep-email-validator';
+import { validate } from 'deep-email-validator';
 
 import { SMTP_SERVER, SMTP_SENDER, SMTP_PASSWORD, WEB_BASE_URL } from '$env/static/private';
 
