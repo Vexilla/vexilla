@@ -78,30 +78,50 @@ async function validateEmail(email: string) {
 			validate({
 				email,
 				sender: email,
-				validateRegex: true
+				validateRegex: true,
+
+				validateMx: false,
+				validateTypo: false,
+				validateDisposable: false,
+				validateSMTP: false
 			})
 		),
 		timedValidate('mx', () =>
 			validate({
 				email,
 				sender: email,
-				validateMx: true
+				validateMx: true,
 				// this might be overkill
 				// validateSMTP: true
+
+				validateRegex: false,
+				validateTypo: false,
+				validateDisposable: false,
+				validateSMTP: false
 			})
 		),
 		timedValidate('typo', () =>
 			validate({
 				email,
 				sender: email,
-				validateTypo: true
+				validateTypo: true,
+
+				validateRegex: false,
+				validateMx: false,
+				validateDisposable: false,
+				validateSMTP: false
 			})
 		),
 		timedValidate('disposable', () =>
 			validate({
 				email,
 				sender: email,
-				validateDisposable: true
+				validateDisposable: true,
+
+				validateRegex: false,
+				validateMx: false,
+				validateTypo: false,
+				validateSMTP: false
 			})
 		)
 	]);
