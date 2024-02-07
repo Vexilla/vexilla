@@ -74,28 +74,36 @@ Message: ${message}
 
 async function validateEmail(email: string) {
 	const results = await Promise.all([
-		validate({
-			email,
-			sender: email,
-			validateRegex: true
-		}),
-		// validate({
-		// 	email,
-		// 	sender: email,
-		// 	validateMx: true
-		// 	// this might be overkill
-		// 	// validateSMTP: true
-		// }),
-		validate({
-			email,
-			sender: email,
-			validateTypo: true
-		}),
-		validate({
-			email,
-			sender: email,
-			validateDisposable: true
-		})
+		timedValidate('regex', () =>
+			validate({
+				email,
+				sender: email,
+				validateRegex: true
+			})
+		),
+		timedValidate('mx', () =>
+			validate({
+				email,
+				sender: email,
+				validateMx: true
+				// this might be overkill
+				// validateSMTP: true
+			})
+		),
+		timedValidate('typo', () =>
+			validate({
+				email,
+				sender: email,
+				validateTypo: true
+			})
+		),
+		timedValidate('disposable', () =>
+			validate({
+				email,
+				sender: email,
+				validateDisposable: true
+			})
+		)
 	]);
 
 	const reason = results
@@ -107,6 +115,13 @@ async function validateEmail(email: string) {
 		valid: !reason,
 		reason
 	};
+}
+
+async function timedValidate(label: string, validator: () => ReturnType<typeof validate>) {
+	console.log('Starting email validator:', label);
+	const result = await validator();
+	console.log('Finished email validator:', label);
+	return result;
 }
 
 // If `OPTIONS` is not defined, Next.js will automatically implement `OPTIONS` and  set the appropriate Response `Allow` header depending on the other methods defined in the route handler.
