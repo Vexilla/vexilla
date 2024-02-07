@@ -79,13 +79,13 @@ async function validateEmail(email: string) {
 			sender: email,
 			validateRegex: true
 		}),
-		validate({
-			email,
-			sender: email,
-			validateMx: true
-			// this might be overkill
-			// validateSMTP: true
-		}),
+		// validate({
+		// 	email,
+		// 	sender: email,
+		// 	validateMx: true
+		// 	// this might be overkill
+		// 	// validateSMTP: true
+		// }),
 		validate({
 			email,
 			sender: email,
