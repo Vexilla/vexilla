@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import nodemailer from 'nodemailer';
+import validate from 'deep-email-validator';
 
 import { SMTP_SERVER, SMTP_SENDER, SMTP_PASSWORD, WEB_BASE_URL } from '$env/static/private';
 
@@ -24,8 +25,25 @@ export async function POST({ request }: { request: Request }) {
 		const body = await request.json();
 
 		validator.parse(body);
-		console.log('Marketing/Services/Contact: Passed validation.');
+		console.log('Marketing/Services/Contact: Passed body validation.');
 		const { name, email, message } = body;
+
+		const emailValidation = await validate({
+			email,
+			sender: email,
+			validateRegex: true,
+			validateMx: true,
+			validateTypo: true,
+			validateDisposable: true
+			// this might be overkill
+			// validateSMTP: true
+		});
+
+		if (!emailValidation.valid) {
+			throw new Error(`Email failed validation for ${emailValidation.reason}`);
+		}
+
+		console.log('Marketing/Services/Contact: Passed email validation.');
 
 		const transporter = nodemailer.createTransport({
 			host: SMTP_SERVER,
