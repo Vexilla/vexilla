@@ -2,9 +2,11 @@
 import Layout from "@/layouts/Layout.astro";
 import { ServicesForm } from "@/components/ServicesForm";
 
-import { Image, getImage } from "astro:assets";
+import { Image } from "astro:assets";
 import formImage from "../images/headway-5QgIuuBxKwM-unsplash.jpg";
 
+import SectionHr from "@/components/home/common/section-hr.astro";
+import SectionTitle from "@/components/home/common/section-title.astro";
 import { Icon } from "astro-icon";
 
 const headingClasses =
@@ -29,7 +31,7 @@ const benefits = [
 <Layout title="Services | Vexilla">
   <main
     id="main"
-    class="flex-auto flex flex-col gap-[4rem] main-content pb-10 px-4 w-screen md:w-full text-normal body-font"
+    class="flex-auto flex flex-col main-content pb-10 px-4 w-screen md:w-full text-normal body-font"
     data-pagefind-body
   >
     <section class="body-font">
@@ -37,7 +39,7 @@ const benefits = [
         class="container mx-auto flex px-5 pt-24 md:flex-row flex-col items-center"
       >
         <div
-          class="lg:flex-grow md:w-1/2 lg:pr-24 md:pr-16 flex flex-col md:items-start md:text-left mb-16 md:mb-0 items-center text-center"
+          class="lg:flex-grow md:w-1/2 lg:pr-24 md:pr-16 flex flex-col md:items-end md:text-right mb-16 md:mb-0 items-center text-center"
         >
           <h1
             class="title-font sm:text-4xl text-3xl mb-4 font-medium text-emphasis"
@@ -47,12 +49,19 @@ const benefits = [
           <p class="mb-8 leading-relaxed">
             Let our team help you get up and running as quickly as possible.
           </p>
-          <div class="flex justify-center">
+          <div class="flex justify-center gap-4">
             <a
               href="#contact"
               class="inline-flex text-white bg-primary-500 border-0 py-2 px-6 hover:bg-primary-600 rounded text-lg"
             >
               Contact Us
+            </a>
+
+            <a
+              href="#open-source"
+              class="inline-flex text-gray-700 bg-gray-100 border-0 py-2 px-6 hover:bg-gray-200 rounded text-lg"
+            >
+              Open Source?
             </a>
           </div>
         </div>
@@ -66,7 +75,9 @@ const benefits = [
         </div>
       </div>
     </section>
-    <section class="body-font flex flex-col md:flex-row gap-4 items-center">
+    <section
+      class="body-font flex flex-col md:flex-row gap-4 items-center pt-[4rem]"
+    >
       <div class="md:w-1/2">
         <h2 class={headingClasses}>What's the deal?</h2>
         <p>
@@ -92,7 +103,35 @@ const benefits = [
         </ul>
       </div>
     </section>
-    <section class="flex md:flex-row items-center justify-center">
+    <section class="text-emphasis body-font" id="open-source">
+      <div class="container px-5 py-24 mx-auto flex-col flex-wrap">
+        <SectionTitle>Open Source?</SectionTitle>
+
+        <SectionHr />
+        <div class="max-w-2xl mx-auto">
+          <p class="leading-relaxed text-base">
+            Do you have an open source project that you would like to use
+            feature flags on? We are more than willing to help open source
+            projects free of charge (within reason). You gain priority if we can
+            help you integrate on our livestream on Twitch/YouTube. Simply
+            mention this in your message to us in the form below.
+          </p>
+          <div class="flex md:mt-4 mt-6 justify-center">
+            <a
+              class="inline-flex text-white bg-primary-500 border-0 py-1 px-4 hover:bg-primary-600 rounded"
+              href="#contact"
+            >
+              Contact Us
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section
+      class="flex md:flex-row items-center justify-center pt-[4rem]"
+      id="contact"
+    >
       <div class="md:w-1/2 p-4">
         <h2 class={headingClasses}>Get In Touch!</h2>
         <ServicesForm client:only="react" />
