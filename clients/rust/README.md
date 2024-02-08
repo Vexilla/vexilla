@@ -62,7 +62,10 @@ let should_show_feature = client.should(FEATURE_NAME)
 ### Full Example
 
 ```rust
-let mut client = VexillaClient::new("dev", "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com", user_id);
+let environment = "dev"
+let server_host = "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com"
+let user_id = "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a"
+let mut client = VexillaClient::new(environment, server_host, user_id);
 
 client.sync_manifest(|url| reqwest::blocking::get(url).unwrap().text().unwrap());
 

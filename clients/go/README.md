@@ -93,6 +93,7 @@ The process is simple but has several steps to get up and running. Please see ou
 
 ## API
 
+API
 
 
 ## Generate Types (Optional)
