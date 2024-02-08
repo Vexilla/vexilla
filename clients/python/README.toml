@@ -62,3 +62,6 @@ Inside of the docker container we need to allow the container to hit the test-se
 
 TEST_SERVER_HOST=host.docker.internal:3000 pytest
 '''
+API='''
+API
+'''

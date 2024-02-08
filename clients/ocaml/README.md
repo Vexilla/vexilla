@@ -1,6 +1,6 @@
-# Vexilla Client - Elixir
+# Vexilla Client - OCaml
 
-This is the Elixir client library for Vexilla, a static file-based VCS-native feature flag system.
+This is the OCaml client library for Vexilla, a static file-based VCS-native feature flag system.
 
 ## Table of Contents
 
@@ -22,44 +22,35 @@ To get started is easy. Follow these steps to get started with integration.
 
 ### Installation
 
-Using mix, install the package from hex.pm by adding the dependency to `mix.exs`.
-
-```elixir
-defp deps do
-  [
-    ...
-    {:vexilla_client_elixir, "~> 0.1.0"}
-  ]
-```
-
+INSTALLATION
 
 
 ### Setup
 
-You will need to create a Client within your app. This optionally takes in the `custom_instance_id` for use with gradual rollout as well as Selective features.
+You will need to create a Client within your app. This optionally takes in the `instanceId` for use with gradual rollout as well as Selective features.
 
-After creation, call `fetch_flags`. This can be chained from the constructor since it returns the client instance.
+After creation, call `syncFlags`. This can be chained from the constructor since it returns the client instance.
 
 **Important Note**: All methods that make HTTP requests take in a callback for the request itself. This allows you to use your existing dependencies or standard library methods to keep this bundle smaller and less opinionated.
 
-```elixir
-
+```ocaml
+SETUP
 ```
 
 
 ### Usage
 
-Use the created client to check if a feature `should?` be on.
+Use the created client to check if a feature `should` be on.
 
-```elixir
-
+```ocaml
+USAGE
 ```
 
 
 ### Full Example
 
-```elixir
-
+```ocaml
+EXAMPLE
 ```
 
 
@@ -80,6 +71,7 @@ The process is simple but has several steps to get up and running. Please see ou
 
 ## API
 
+API
 
 
 ## Generate Types (Optional)
@@ -91,7 +83,7 @@ We have created a tool to generate types for usage in your code. It will crawl y
 To use the tool, you can run it directly from NPM.
 
 ```
-npx vexilla types elixir REMOTE_JSON_URL
+npx vexilla types ocaml REMOTE_JSON_URL
 ```
 
 ### Automatic Install Script

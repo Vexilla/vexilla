@@ -6,8 +6,8 @@ import kotlin.reflect.typeOf
 class Client(
     private val baseUrl: String,
     private val environment: String,
-    private val customInstanceHash: String,
-    private val showLogs: Boolean? = false
+    private val instanceId: String,
+    // private val showLogs: Boolean? = false
 ) {
 
     private var manifest: Manifest? = null
@@ -77,7 +77,7 @@ class Client(
         this.setFlags(groupNameOrId, flags)
     }
 
-    fun should(groupNameOrId: String, featureNameOrId: String, instanceId: String = this.customInstanceHash): Boolean {
+    fun should(groupNameOrId: String, featureNameOrId: String, instanceId: String = this.instanceId): Boolean {
         val feature = this.getFeature(groupNameOrId, featureNameOrId)
         if (!Scheduler.isScheduledFeatureActive(feature)) {
             return false

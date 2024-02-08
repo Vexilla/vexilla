@@ -1,0 +1,26 @@
+LanguageName = 'ocaml'
+LanguageDisplayName = "OCaml"
+InstallInstructions = '''
+INSTALLATION
+'''
+CustomInstanceHash = "instanceId"
+SyncFlags = "syncFlags"
+SetupSnippet = '''
+```ocaml
+SETUP
+```
+'''
+Should = "should"
+UsageSnippet = '''
+```ocaml
+USAGE
+```
+'''
+Example = '''
+```ocaml
+EXAMPLE
+```
+'''
+API = '''
+API
+'''

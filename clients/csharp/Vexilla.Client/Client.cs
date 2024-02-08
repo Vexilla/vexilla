@@ -9,7 +9,7 @@ namespace Vexilla.Client
     public class VexillaClientBase
     {
         private readonly string _baseUrl;
-        private readonly string _customInstanceHash;
+        private readonly string _instanceId;
         private readonly string _environment;
 
         private readonly Dictionary<string, Dictionary<string, string>>
@@ -30,13 +30,17 @@ namespace Vexilla.Client
 
         private bool _showLogs;
 
-        public VexillaClientBase(string baseUrl, string environment,
-            string customInstanceHash, bool showLogs = false)
+        public VexillaClientBase(
+            string baseUrl,
+            string environment,
+            string instanceId
+            // bool showLogs = false
+        )
         {
             _baseUrl = baseUrl;
             _environment = environment;
-            _customInstanceHash = customInstanceHash;
-            _showLogs = showLogs;
+            _instanceId = instanceId;
+            // _showLogs = showLogs;
         }
 
         public async Task<Manifest> GetManifest(
@@ -55,7 +59,6 @@ namespace Vexilla.Client
         public void SetManifest(Manifest manifest)
         {
             _manifest = manifest;
-
 
             foreach (var group in manifest.Groups)
             {
@@ -124,7 +127,7 @@ namespace Vexilla.Client
         public bool Should(string groupNameOrId, string featureNameOrId)
         {
             return ShouldCustomString(groupNameOrId,
-                featureNameOrId, _customInstanceHash);
+                featureNameOrId, _instanceId);
         }
 
         public bool ShouldCustomString(string groupNameOrId,
@@ -181,7 +184,7 @@ namespace Vexilla.Client
             return false;
         }
 
-        public bool ShouldCustomInt(string groupNameOrId,
+        public bool ShouldCustomLong(string groupNameOrId,
             string featureNameOrId, long customInstanceId)
         {
             var realIds = GetRealIds(groupNameOrId, featureNameOrId);
@@ -235,7 +238,7 @@ namespace Vexilla.Client
             return false;
         }
 
-        public bool ShouldCustomFloat(string groupNameOrId,
+        public bool ShouldCustomDouble(string groupNameOrId,
             string featureNameOrId, double customInstanceId)
         {
             var realIds = GetRealIds(groupNameOrId, featureNameOrId);
@@ -323,8 +326,8 @@ namespace Vexilla.Client
             return valueStringFeature.Value;
         }
 
-        public long ValueInt(string groupNameOrId, string featureNameOrId,
-            int defaultValue)
+        public long ValueLong(string groupNameOrId, string featureNameOrId,
+            long defaultValue)
         {
             var realIds = GetRealIds(groupNameOrId, featureNameOrId);
 
@@ -356,8 +359,8 @@ namespace Vexilla.Client
             return valueIntFeature.Value;
         }
 
-        public double ValueFloat(string groupNameOrId, string featureNameOrId,
-            float defaultValue)
+        public double ValueDouble(string groupNameOrId, string featureNameOrId,
+            double defaultValue)
         {
             var realIds = GetRealIds(groupNameOrId, featureNameOrId);
 

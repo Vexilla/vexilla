@@ -1,3 +1,3 @@
-module github.com/vexilla/client-go
+module github.com/vexilla/vexilla/clients/go
 
 go 1.15
