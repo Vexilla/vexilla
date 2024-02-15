@@ -44,5 +44,7 @@ if client.Should(FEATURE_NAME) {
 ```
 '''
 API='''
-API
+
+The full API documentation can be found at: [COMING SOON](https://pkg.go.dev/github.com/vexilla/clients/go/cmd/client)
+
 '''

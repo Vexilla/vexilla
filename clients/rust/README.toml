@@ -50,6 +50,12 @@ if client.should(FEATURE_NAME) {
 '''
 
 API = '''
+
+
+The full API documentation can be found at: [COMING SOON](https://docs.rs/vexilla/latest/vexilla/)
+
+
+
 ### `pub fn new( environment: &'static str, base_url: &'static str, instance_id: &'static str) -> VexillaClient`
 
 Returns a new instance of the Vexilla client

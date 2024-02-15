@@ -1,3 +1,8 @@
+//! This is the Rust client library for Vexilla, a static file-based VCS-native feature flag system.
+//!
+//! If you would like to know more about Vexilla head on over to our website. [https://vexilla.dev](https://vexilla.dev)
+//!
+
 use convert_case::{Case, Casing};
 use serde_json::Result;
 use std::collections::HashMap;
@@ -14,6 +19,7 @@ use crate::types::*;
 type VexillaResult<T, E = VexillaError> = std::result::Result<T, E>;
 type Callback = fn(url: &str) -> VexillaResult<String>;
 
+/// VexillaClient is the core struct of this SDK. Most interaction with Vexilla and your feature flags will be through this struct.
 #[derive(Clone, Debug, Default)]
 pub struct VexillaClient {
     environment: &'static str,
@@ -31,6 +37,7 @@ pub struct VexillaClient {
 }
 
 impl VexillaClient {
+    /// Create a new client for consuming feature flags.
     pub fn new(
         environment: impl Into<&'static str>,
         base_url: impl Into<&'static str>,
@@ -49,6 +56,7 @@ impl VexillaClient {
         }
     }
 
+    /// Fetches the manifest file for facilitating name->id lookups. Does not set the value on the client. You would need to call `set_manifest` after. Alternatively, you can use `sync_manifest` to do both steps with less code.
     pub fn get_manifest(&self, fetch: Callback) -> VexillaResult<Manifest> {
         let url = format!("{}/manifest.json", self.base_url);
         let response_text = fetch(&url);
@@ -58,10 +66,12 @@ impl VexillaClient {
         Ok(manifest)
     }
 
+    /// Sets a fetched manifest within the VexillaClient instance. It can also be useful for mocking flags for testing.
     pub fn set_manifest(&mut self, manifest: Manifest) {
         self.group_lookup_table = create_group_lookup_table(manifest);
     }
 
+    /// Fetches and sets the manifest within the client to facilitate name->Id lookups.
     pub fn sync_manifest(&mut self, fetch: Callback) -> VexillaResult<bool> {
         let manifest = self.get_manifest(fetch)?;
         let lookup_table = create_group_lookup_table(manifest.clone());
@@ -70,6 +80,7 @@ impl VexillaClient {
         Ok(true)
     }
 
+    /// Fetches the flags for a specific flagGroup. Can use the ID or the name of the group for the lookup.
     pub fn get_flags(&self, group_name_or_id: &str, fetch: Callback) -> VexillaResult<FlagGroup> {
         let coerced_group_id = &self
             .group_lookup_table
@@ -87,6 +98,7 @@ impl VexillaClient {
         }
     }
 
+    /// Sets a fetched flag group within the Client instance.
     pub fn set_flags(&mut self, group_name_or_id: &str, flags: FlagGroup) -> VexillaResult<bool> {
         let coerced_group_name_or_id = &self
             .group_lookup_table
@@ -106,6 +118,7 @@ impl VexillaClient {
         Ok(true)
     }
 
+    /// Fetches and sets the flag group within the client to facilitate name->Id lookups.
     pub fn sync_flags(
         &mut self,
         group_name_or_id: &str,
@@ -121,6 +134,7 @@ impl VexillaClient {
         Ok(())
     }
 
+    /// Checks if a toggle, gradual, or selective flag should be enabled. Other methods exist for other flag types, such as value.
     pub fn should(
         &self,
         group_name_or_id: &'static str,
@@ -166,6 +180,7 @@ impl VexillaClient {
         }
     }
 
+    /// Checks if a toggle, gradual, or selective flag should be enabled. Uses a custom instance ID rather than the one set in the Client. Other methods exist for other flag types, such as value.
     pub fn should_custom_str(
         &self,
         group_name_or_id: &str,
@@ -194,6 +209,7 @@ impl VexillaClient {
         }
     }
 
+    /// Checks if a toggle, gradual, or selective flag should be enabled. Uses a custom instance ID rather than the one set in the Client. Other methods exist for other flag types, such as value.
     pub fn should_custom_int(
         &self,
         group_name_or_id: &str,
@@ -222,6 +238,7 @@ impl VexillaClient {
         }
     }
 
+    /// Checks if a toggle, gradual, or selective flag should be enabled. Uses a custom instance ID rather than the one set in the Client. Other methods exist for other flag types, such as value.
     pub fn should_custom_float(
         &self,
         group_name_or_id: &str,
@@ -250,6 +267,7 @@ impl VexillaClient {
         }
     }
 
+    /// Gets an environment specific string value and falls back to a default if the feature is outside of its schedule.
     pub fn value_str(
         &self,
         group_name_or_id: &str,
@@ -273,6 +291,7 @@ impl VexillaClient {
         }
     }
 
+    /// Gets an environment specific int value and falls back to a default if the feature is outside of its schedule.
     pub fn value_int(
         &self,
         group_name_or_id: &str,
@@ -297,6 +316,7 @@ impl VexillaClient {
         }
     }
 
+    /// Gets an environment specific float value and falls back to a default if the feature is outside of its schedule.
     pub fn value_float(
         &self,
         group_name_or_id: &str,

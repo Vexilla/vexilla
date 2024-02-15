@@ -69,7 +69,7 @@ Returns a new instance of the Vexilla client
 
 ### async getManifest(fetchHook: FetchHook<VexillaManifest>): Promise<VexillaManifest>
 
-Fetches the manifest file for facilitating name->id lookups. Does not set the value on the client. You would need to call `set_manifest` after. Alternatively, you can use `sync_manifest` to do both steps with less code.
+Fetches the manifest file for facilitating name->id lookups. Does not set the value on the client. You would need to call `setManifest` after. Alternatively, you can use `syncManifest` to do both steps with less code.
 
 #### Arguments
 
@@ -89,7 +89,7 @@ Fetches and sets the manifest within the client to facilitate name->Id lookups.
 
 #### Arguments
 
-- fetch `(url: &str) => string`: A callback that is passed the url of the manifest file. You can bring your own http request library.
+- fetch `(url: string) => string`: A callback that is passed the url of the manifest file. You can bring your own http request library.
 
 ### `async getFlags(file_name: string, fetch: (url: string) => string) -> Promise<string>`
 
@@ -107,7 +107,7 @@ Sets a fetched flag group within the Client instance.
 
 #### Arguments
 
-- group_id `&str`: The ID or name of the flag group that you would like to set.
+- group_id `string`: The ID or name of the flag group that you would like to set.
 
 - flags `FlagGroup`: The collection of flags you would like to set. Typically from a `getFlags` call. `syncFlags` wraps both functions to streamline the process.
 

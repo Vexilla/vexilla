@@ -34,7 +34,6 @@ or
 yarn add @vexilla/client
 ```
 
-
 ### Setup
 
 You will need to create a Client within your app. This optionally takes in the `customInstanceHash` for use with gradual rollout as well as Selective features.
@@ -45,22 +44,20 @@ After creation, call `fetchFlags`. This can be chained from the constructor sinc
 
 ```javascript
 this.client = new VexillaClient({
-  baseUrl: 'https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com',
+  baseUrl: "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com",
   environment: process.env.ENVIRONMENT,
-  customInstanceHash: userId
+  customInstanceHash: userId,
 });
-this.client.getFlags('features.json');
+this.client.getFlags("features.json");
 ```
-
 
 ### Usage
 
 Use the created client to check if a feature `should` be on.
 
 ```javascript
-client.should(FEATURE_NAME)
+client.should(FEATURE_NAME);
 ```
-
 
 ### Full Example
 
@@ -84,7 +81,6 @@ export class FeatureFlagsService {
   }
 }
 ```
-
 
 ## What are Feature Flags?
 
@@ -123,7 +119,7 @@ Fetches the manifest file for facilitating name->id lookups. Does not set the va
 
 - fetchHook `(url: string) => string`: A callback that is passed the url of the manifest file. You can bring your own http request library.
 
-###  `setManifest(manifest: Manifest): void`
+### `setManifest(manifest: Manifest): void`
 
 Sets a fetched manifest within the Client instance.
 
@@ -171,7 +167,7 @@ Fetches and sets the flag group within the client to facilitate name->Id lookups
 
 ### should(groupName: string, featureName: string, customInstanceHash?: string | number): boolean
 
-Checks if a toggle, gradual, or selective flag should be enabled. Other methods exist for other flag types, such as value. Includes an optional `customInstanceHash` that will be used instead of the value passed to the constructor.
+Checks if a toggle, gradual, or selective flag should be enabled. Other methods exist for other flag types, such as value. Includes an optional `customInstanceId` that will be used instead of the value passed to the constructor.
 
 #### Arguments
 
@@ -182,6 +178,7 @@ Checks if a toggle, gradual, or selective flag should be enabled. Other methods 
 - customInstanceHash[optional] `string | number`: The custom instance value that you would like to compare against. The value that will be used instead of the value passed to the constructor.
 
 ### value(groupName: string, featureName: string,
+
     defaultValue: string | number | null = null): boolean
 
 Checks if a toggle, gradual, or selective flag should be enabled. Other methods exist for other flag types, such as value. Includes an optional `customInstanceHash` that will be used instead of the value passed to the constructor.
@@ -205,8 +202,6 @@ Gets a string value based on environment. Can be useful for things like pricing 
 - featureName `string`: The ID or name of the feature flag that you would like to check.
 
 - default `string | number | null`: The default value if the flag is off via scheduling or cannot be fetched.
-
-
 
 ## Generate Types (Optional)
 

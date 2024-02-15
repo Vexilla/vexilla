@@ -22,5 +22,7 @@ EXAMPLE
 ```
 '''
 API = '''
-API
+
+The full API documentation can be found at: [COMING SOON](https://ocaml.org/p/vexilla/latest/doc/index.html)
+
 '''

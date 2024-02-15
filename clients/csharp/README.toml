@@ -147,7 +147,7 @@ Sets a fetched flag group within the Client instance.
 
 - group `Group`: The collection of flags you would like to set. Typically from a `getFlags` call. `syncFlags` wraps both functions to streamline the process.
 
-### async Task SyncFlags(string groupNameOrId, Func<string, Task<string>> fetch)
+### `async Task SyncFlags(string groupNameOrId, Func<string, Task<string>> fetch)`
 
 Fetches and sets the flag group within the client to facilitate name->Id lookups.
 

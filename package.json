@@ -1,7 +1,11 @@
 {
   "private": true,
   "scripts": {
-    "build:clients:readmes": "ts-node ./scripts/build-client-readmes.ts",
+    "build:clients:docs:readmes": "ts-node ./scripts/build-client-readmes.ts",
+    "build:clients:docs:rust": "(cd clients/rust && cargo doc --no-deps --open)",
+    "TODObuild:clients:docs:elixir": "ts-node ./scripts/build-client-readmes.ts",
+    "TODObuild:clients:docs:go": "ts-node ./scripts/build-client-readmes.ts",
+    "build:clients:docs": "pnpm run \"/^build:clients:docs:.*/\"",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
