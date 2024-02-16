@@ -4,7 +4,7 @@ defmodule VexillaClient.MixProject do
   def project do
     [
       app: :vexilla_client_elixir,
-      version: "0.1.0",
+      version: "1.0.0",
       elixir: "~> 1.15",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -14,7 +14,7 @@ defmodule VexillaClient.MixProject do
           "MIT"
         ],
         links: %{
-          Github: "https://github.com/Vexilla/client-elixir"
+          Github: "https://github.com/Vexilla/vexilla/tree/main/clients/elixir"
         }
       },
       test_coverage: [

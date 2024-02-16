@@ -177,6 +177,8 @@ namespace Vexilla.Client {
 
 {{#groups}}
 defmodule {{{name}}}Group do
+  @moduledoc false
+
   @name "{{{rawName}}}"
   @group_id "{{{id}}}"
 
@@ -185,6 +187,8 @@ defmodule {{{name}}}Group do
 
   {{#environments}}
   defmodule {{{safeName}}}Environment do
+    @moduledoc false
+
     @name "{{{rawName}}}"
     @environment_id "{{{id}}}"
 
@@ -196,6 +200,8 @@ defmodule {{{name}}}Group do
 
   {{#features}}
   defmodule {{{safeName}}}Feature do
+    @moduledoc false
+
     @name "{{{rawName}}}"
     @feature_id "{{{id}}}"
 

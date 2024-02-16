@@ -1,7 +1,5 @@
 defmodule Hasher do
-  @moduledoc """
-  Documentation for `Hasher`.
-  """
+  @moduledoc false
 
   @doc """
   Hash a string into a float value between 0 and 1

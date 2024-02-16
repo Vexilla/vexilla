@@ -1,7 +1,6 @@
 defmodule Scheduler do
-  @moduledoc """
-  Documentation for `Scheduler`.
-  """
+  @moduledoc false
+
   use Timex
   require ScheduleType
   require TimeType

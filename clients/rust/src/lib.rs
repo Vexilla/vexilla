@@ -80,7 +80,7 @@ impl VexillaClient {
         Ok(true)
     }
 
-    /// Fetches the flags for a specific flagGroup. Can use the ID or the name of the group for the lookup.
+    /// Fetches the flags for a specific flag group. Can use the ID or the name of the group for the lookup.
     pub fn get_flags(&self, group_name_or_id: &str, fetch: Callback) -> VexillaResult<FlagGroup> {
         let coerced_group_id = &self
             .group_lookup_table

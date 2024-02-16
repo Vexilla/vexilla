@@ -1,4 +1,6 @@
 defmodule FeatureType do
+  @moduledoc false
+
   @toggle "toggle"
   @gradual "gradual"
   @selective "selective"
@@ -11,6 +13,8 @@ defmodule FeatureType do
 end
 
 defmodule ScheduleType do
+  @moduledoc false
+
   @empty ""
   @global "global"
   @environment "environment"
@@ -21,6 +25,8 @@ defmodule ScheduleType do
 end
 
 defmodule TimeType do
+  @moduledoc false
+
   @none "none"
   @start_end "start/end"
   @daily "daily"
@@ -31,6 +37,8 @@ defmodule TimeType do
 end
 
 defmodule ValueType do
+  @moduledoc false
+
   @string "string"
   @int "int"
   @float "float"
@@ -41,6 +49,8 @@ defmodule ValueType do
 end
 
 defmodule Schedule do
+  @moduledoc false
+
   use TypedStruct
 
   @derive Jason.Encoder
@@ -55,6 +65,8 @@ defmodule Schedule do
 end
 
 defmodule GroupMeta do
+  @moduledoc false
+
   use TypedStruct
 
   typedstruct enforce: true do
@@ -63,6 +75,8 @@ defmodule GroupMeta do
 end
 
 defmodule Environment do
+  @moduledoc false
+
   use TypedStruct
 
   typedstruct enforce: true do
@@ -73,6 +87,8 @@ defmodule Environment do
 end
 
 defmodule ManifestGroup do
+  @moduledoc false
+
   use TypedStruct
 
   typedstruct enforce: true do
@@ -82,6 +98,8 @@ defmodule ManifestGroup do
 end
 
 defmodule Manifest do
+  @moduledoc false
+
   use TypedStruct
 
   typedstruct enforce: true do
@@ -91,6 +109,8 @@ defmodule Manifest do
 end
 
 defmodule Group do
+  @moduledoc false
+
   use TypedStruct
 
   typedstruct enforce: true do
@@ -103,6 +123,8 @@ defmodule Group do
 end
 
 defmodule Feature do
+  @moduledoc false
+
   use TypedStruct
 
   typedstruct enforce: true do
