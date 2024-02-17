@@ -151,7 +151,7 @@ defmodule VexillaClient do
   end
 
   @doc """
-  Gets an environment specific string value and falls back to a default if the feature is outside of its schedule.
+  Gets an environment specific string or number value and falls back to a default if the feature is outside of its schedule.
   """
   def value!(config, group_name_or_id, feature_name_or_id, default_value) do
     group_id = config.group_lookup_table[group_name_or_id]

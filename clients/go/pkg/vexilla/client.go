@@ -1,181 +1,15 @@
-package internal
+package vexilla
 
 import (
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+
+	. "github.com/vexilla/vexilla/clients/go/pkg/internal"
 )
 
-func (environment *Environment) UnmarshalJSON(bytes []byte) error {
-
-	var baseEnvironment BaseEnvironment
-	err := json.Unmarshal(bytes, &baseEnvironment)
-	if err != nil {
-		return err
-	}
-
-	environment.EnvironmentId = baseEnvironment.EnvironmentId
-	environment.Name = baseEnvironment.Name
-	environment.RawFeatures = baseEnvironment.RawFeatures
-
-	for featureId, rawFeature := range baseEnvironment.RawFeatures {
-
-		var baseFeature Feature
-		err := json.Unmarshal(rawFeature, &baseFeature)
-		if err != nil {
-			return err
-		}
-
-		switch baseFeature.FeatureType {
-		case ToggleFeatureType:
-			var toggleFeature ToggleFeature
-			err := json.Unmarshal(rawFeature, &toggleFeature)
-			if err != nil {
-				return err
-			}
-
-			if environment.ToggleFeatures == nil {
-				environment.ToggleFeatures = make(map[FeatureId]ToggleFeature)
-			}
-
-			environment.ToggleFeatures[featureId] = toggleFeature
-
-		case GradualFeatureType:
-			var gradualFeature GradualFeature
-			err := json.Unmarshal(rawFeature, &gradualFeature)
-			if err != nil {
-				return err
-			}
-
-			if environment.GradualFeatures == nil {
-				environment.GradualFeatures = make(map[FeatureId]GradualFeature)
-			}
-
-			environment.GradualFeatures[featureId] = gradualFeature
-
-		case SelectiveFeatureType:
-			var selectiveFeature SelectiveFeature
-			err := json.Unmarshal(rawFeature, &selectiveFeature)
-			if err != nil {
-				return err
-			}
-
-			if environment.SelectiveFeatures == nil {
-				environment.SelectiveFeatures = make(map[FeatureId]SelectiveFeature)
-			}
-
-			environment.SelectiveFeatures[selectiveFeature.FeatureId] = selectiveFeature
-
-			switch selectiveFeature.ValueType {
-			case StringValueType:
-				var selectiveStringFeature SelectiveStringFeature
-				err := json.Unmarshal(rawFeature, &selectiveStringFeature)
-				if err != nil {
-					return err
-				}
-
-				if environment.SelectiveStringFeatures == nil {
-					environment.SelectiveStringFeatures = make(map[FeatureId]SelectiveStringFeature)
-				}
-
-				environment.SelectiveStringFeatures[featureId] = selectiveStringFeature
-
-			case NumberValueType:
-				switch selectiveFeature.NumberType {
-				case IntNumberType:
-					var selectiveIntFeature SelectiveIntFeature
-					err := json.Unmarshal(rawFeature, &selectiveIntFeature)
-					if err != nil {
-						return err
-					}
-
-					if environment.SelectiveIntFeatures == nil {
-						environment.SelectiveIntFeatures = make(map[FeatureId]SelectiveIntFeature)
-					}
-
-					environment.SelectiveIntFeatures[featureId] = selectiveIntFeature
-
-				case FloatNumberType:
-					var selectiveFloatFeature SelectiveFloatFeature
-					err := json.Unmarshal(rawFeature, &selectiveFloatFeature)
-					if err != nil {
-						return err
-					}
-
-					if environment.SelectiveFloatFeatures == nil {
-						environment.SelectiveFloatFeatures = make(map[FeatureId]SelectiveFloatFeature)
-					}
-
-					environment.SelectiveFloatFeatures[featureId] = selectiveFloatFeature
-
-				}
-			}
-
-		case ValueFeatureType:
-			var valueFeature ValueFeature
-			err := json.Unmarshal(rawFeature, &valueFeature)
-			if err != nil {
-				return err
-			}
-
-			if environment.ValueFeatures == nil {
-				environment.ValueFeatures = make(map[FeatureId]ValueFeature)
-			}
-
-			environment.ValueFeatures[valueFeature.FeatureId] = valueFeature
-
-			switch valueFeature.ValueType {
-			case StringValueType:
-				var valueStringFeature ValueStringFeature
-				err := json.Unmarshal(rawFeature, &valueStringFeature)
-				if err != nil {
-					return err
-				}
-
-				if environment.ValueStringFeatures == nil {
-					environment.ValueStringFeatures = make(map[FeatureId]ValueStringFeature)
-				}
-
-				environment.ValueStringFeatures[featureId] = valueStringFeature
-
-			case NumberValueType:
-				switch valueFeature.NumberType {
-				case IntNumberType:
-					var valueIntFeature ValueIntFeature
-					err := json.Unmarshal(rawFeature, &valueIntFeature)
-					if err != nil {
-						return err
-					}
-
-					if environment.ValueIntFeatures == nil {
-						environment.ValueIntFeatures = make(map[FeatureId]ValueIntFeature)
-					}
-
-					environment.ValueIntFeatures[featureId] = valueIntFeature
-
-				case FloatNumberType:
-					var valueFloatFeature ValueFloatFeature
-					err := json.Unmarshal(rawFeature, &valueFloatFeature)
-					if err != nil {
-						return err
-					}
-
-					if environment.ValueFloatFeatures == nil {
-						environment.ValueFloatFeatures = make(map[FeatureId]ValueFloatFeature)
-					}
-
-					environment.ValueFloatFeatures[featureId] = valueFloatFeature
-
-				}
-			}
-		}
-
-	}
-
-	return nil
-}
-
+// Client is the core module of this SDK. Most interaction with Vexilla and your feature flags will be through this module.
 type Client struct {
 	Environment string
 	BaseURL     string
@@ -191,6 +25,7 @@ type Client struct {
 	featureLookupTable     map[GroupId]map[string]FeatureId
 }
 
+// Create a new client for consuming feature flags.
 func NewClient(environment string, baseURL string, customInstanceHash string, showLogs bool) Client {
 	return Client{
 		Environment: environment,
@@ -205,6 +40,7 @@ func NewClient(environment string, baseURL string, customInstanceHash string, sh
 	}
 }
 
+// Fetches the manifest file for facilitating name->id lookups. Does not set the value on the client. You would need to call `SetManifest` after. Alternatively, you can use `SyncManifest` to do both steps with less code.
 func (client Client) GetManifest(fetch func(url string) (*http.Response, error)) (Manifest, error) {
 	url := fmt.Sprintf("%s/manifest.json", client.BaseURL)
 	response, fetchErr := fetch(url)
@@ -228,6 +64,7 @@ func (client Client) GetManifest(fetch func(url string) (*http.Response, error))
 	return fetchedManifest, nil
 }
 
+// Sets a fetched manifest within the Client instance. It can also be useful for mocking flags for testing.
 func (client *Client) SetManifest(manifest Manifest) {
 	client.Manifest = manifest
 
@@ -242,6 +79,7 @@ func (client *Client) SetManifest(manifest Manifest) {
 
 }
 
+// Fetches and sets the manifest within the client to facilitate name->Id lookups.
 func (client *Client) SyncManifest(fetch func(url string) (*http.Response, error)) error {
 	newManifest, err := client.GetManifest(fetch)
 
@@ -254,12 +92,13 @@ func (client *Client) SyncManifest(fetch func(url string) (*http.Response, error
 	return nil
 }
 
+// Fetches the flags for a specific flag group. Can use the ID or the name of the group for the lookup.
 func (client *Client) GetFlags(groupNameOrId string, fetch func(url string) (*http.Response, error)) (Group, error) {
 
 	groupId := client.groupLookupTable[groupNameOrId]
 
 	if groupId == "" {
-		return Group{}, fmt.Errorf("Group not found by Name or ID: %s", groupNameOrId)
+		return Group{}, fmt.Errorf("group not found by Name or ID: %s", groupNameOrId)
 	}
 
 	url := fmt.Sprintf("%s/%s.json", client.BaseURL, groupId)
@@ -284,6 +123,7 @@ func (client *Client) GetFlags(groupNameOrId string, fetch func(url string) (*ht
 	return fetchedGroup, nil
 }
 
+// Sets a fetched flag group within the Client instance.
 func (client *Client) SetFlags(groupNameOrId string, group Group) error {
 	groupId := client.groupLookupTable[groupNameOrId]
 
@@ -322,6 +162,7 @@ func (client *Client) SetFlags(groupNameOrId string, group Group) error {
 	return nil
 }
 
+// Fetches and sets the flag group within the client to facilitate name->Id lookups.
 func (client *Client) SyncFlags(groupNameOrId string, fetch func(url string) (*http.Response, error)) error {
 
 	fetchedFlags, err := client.GetFlags(groupNameOrId, fetch)
@@ -334,10 +175,12 @@ func (client *Client) SyncFlags(groupNameOrId string, fetch func(url string) (*h
 
 }
 
+// Checks if a toggle, gradual, or selective flag should be enabled. Other methods exist for other flag types, such as value.
 func (client Client) Should(groupNameOrId string, featureNameOrId string) (bool, error) {
 	return client.ShouldCustomString(groupNameOrId, featureNameOrId, client.InstanceId)
 }
 
+// Checks if a toggle, gradual, or selective flag should be enabled. Uses a custom instance ID rather than the one set in the Client. Other methods exist for other flag types, such as value.
 func (client Client) ShouldCustomString(groupNameOrId string, featureNameOrId string, customInstanceId string) (bool, error) {
 
 	realIds, err := client.getRealIds(groupNameOrId, featureNameOrId)
@@ -411,6 +254,7 @@ func (client Client) ShouldCustomString(groupNameOrId string, featureNameOrId st
 	return false, nil
 }
 
+// Checks if a toggle, gradual, or selective flag should be enabled. Uses a custom instance ID as an int64 rather than the string set in the Client. Other methods exist for other flag types, such as value.
 func (client Client) ShouldCustomInt(groupNameOrId string, featureNameOrId string, customInstanceId int64) (bool, error) {
 
 	realIds, err := client.getRealIds(groupNameOrId, featureNameOrId)
@@ -482,6 +326,7 @@ func (client Client) ShouldCustomInt(groupNameOrId string, featureNameOrId strin
 	return false, nil
 }
 
+// Checks if a toggle, gradual, or selective flag should be enabled. Uses a custom instance ID as an float64 rather than the string set in the Client. Other methods exist for other flag types, such as value.
 func (client Client) ShouldCustomFloat(groupNameOrId string, featureNameOrId string, customInstanceId float64) (bool, error) {
 
 	realIds, err := client.getRealIds(groupNameOrId, featureNameOrId)
@@ -550,6 +395,7 @@ func (client Client) ShouldCustomFloat(groupNameOrId string, featureNameOrId str
 	return false, nil
 }
 
+// Gets an environment specific string value and falls back to a default if the feature is outside of its schedule.
 func (client *Client) ValueString(groupNameOrId string, featureNameOrId string, defaultValue string) (string, error) {
 
 	rawFeature, err := client.getRawFeature(groupNameOrId, featureNameOrId)
@@ -581,6 +427,7 @@ func (client *Client) ValueString(groupNameOrId string, featureNameOrId string, 
 	return valueStringFeature.Value, nil
 }
 
+// Gets an environment specific int64 value and falls back to a default if the feature is outside of its schedule.
 func (client *Client) ValueInt(groupNameOrId string, featureNameOrId string, defaultValue int64) (int64, error) {
 
 	rawFeature, err := client.getRawFeature(groupNameOrId, featureNameOrId)
@@ -620,6 +467,7 @@ func (client *Client) ValueInt(groupNameOrId string, featureNameOrId string, def
 	return valueIntFeature.Value, nil
 }
 
+// Gets an environment specific float64 value and falls back to a default if the feature is outside of its schedule.
 func (client *Client) ValueFloat(groupNameOrId string, featureNameOrId string, defaultValue float64) (float64, error) {
 	rawFeature, err := client.getRawFeature(groupNameOrId, featureNameOrId)
 

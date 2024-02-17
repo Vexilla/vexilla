@@ -2,6 +2,7 @@
   "recommendations": [
     "pantajoe.vscode-elixir-credo",
     "elixir-tools.elixir-tools",
-    "JakeBecker.elixir-ls"
+    "JakeBecker.elixir-ls",
+    "tamasfe.even-better-toml"
   ]
 }

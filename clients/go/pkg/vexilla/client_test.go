@@ -1,4 +1,4 @@
-package internal
+package vexilla
 
 import (
 	"net/http"
@@ -112,7 +112,6 @@ func TestClient(tester *testing.T) {
 		tester.Fatalf("Value:String should be 'foo', got: %v", value_string)
 	}
 
-
 	value_int, err := client.ValueInt("Value", "Integer", 0)
 
 	if err != nil {
@@ -171,7 +170,6 @@ func TestClient(tester *testing.T) {
 		tester.Fatalf("Scheduled:afterGlobal should be false, got: %v", after_global)
 	}
 
-
 	before_global_start_end, err := client.Should("Scheduled", "beforeGlobalStartEnd")
 
 	if err != nil {
@@ -201,7 +199,6 @@ func TestClient(tester *testing.T) {
 	if after_global_start_end != false {
 		tester.Fatalf("Scheduled:afterGlobalStartEnd should be false, got: %v", after_global_start_end)
 	}
-
 
 	before_global_daily, err := client.Should("Scheduled", "beforeGlobalDaily")
 
