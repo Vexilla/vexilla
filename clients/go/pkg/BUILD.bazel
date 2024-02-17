@@ -4,6 +4,7 @@ go_library(
     name = "pkg",
     srcs = [
         "./internal/hashing.go",
+        "./internal/json.go",
         "./internal/scheduling.go",
         "./internal/types.go",
         "./vexilla/client.go",
