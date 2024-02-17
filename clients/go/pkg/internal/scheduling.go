@@ -19,7 +19,7 @@ func IsScheduleActiveWithNow(schedule Schedule, scheduleType ScheduleType, now t
 		return true
 	case GlobalScheduleType, EnvironmentScheduleType:
 
-		startDate := time.UnixMilli(schedule.Start)
+		startDate := time.UnixMilli(schedule.Start).UTC()
 		startOfStartDate := time.Date(
 			startDate.Year(),
 			startDate.Month(),
@@ -30,7 +30,7 @@ func IsScheduleActiveWithNow(schedule Schedule, scheduleType ScheduleType, now t
 			0,
 			time.UTC,
 		)
-		endDate := time.UnixMilli(schedule.End)
+		endDate := time.UnixMilli(schedule.End).UTC()
 		endOfEndDate := time.Date(
 			endDate.Year(),
 			endDate.Month(),
@@ -53,7 +53,7 @@ func IsScheduleActiveWithNow(schedule Schedule, scheduleType ScheduleType, now t
 		case NoneScheduleTimeType:
 			return true
 		case StartEndScheduleTimeType:
-			isAfterStartDateTime := now.After(time.Date(
+			startDateTimestamp := time.Date(
 				startDate.Year(),
 				startDate.Month(),
 				startDate.Day(),
@@ -62,9 +62,9 @@ func IsScheduleActiveWithNow(schedule Schedule, scheduleType ScheduleType, now t
 				startTime.Second(),
 				startTime.Nanosecond(),
 				time.UTC,
-			))
+			).UnixMilli()
 
-			isBeforeEndDateTime := now.Before(time.Date(
+			endDateTimestamp := time.Date(
 				endDate.Year(),
 				endDate.Month(),
 				endDate.Day(),
@@ -73,8 +73,11 @@ func IsScheduleActiveWithNow(schedule Schedule, scheduleType ScheduleType, now t
 				endTime.Second(),
 				endTime.Nanosecond(),
 				time.UTC,
-			))
-			return isAfterStartDateTime && isBeforeEndDateTime
+			).UnixMilli()
+
+			nowTimestamp := now.UnixMilli()
+
+			return nowTimestamp >= startDateTimestamp && nowTimestamp <= endDateTimestamp
 		case DailyScheduleTimeType:
 
 			zeroDay := time.UnixMilli(0).UTC()
