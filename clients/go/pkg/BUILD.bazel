@@ -3,11 +3,11 @@ load("@rules_go//go:def.bzl", "go_library", "go_test")
 go_library(
     name = "pkg",
     srcs = [
-        "./internal/hashing.go",
-        "./internal/json.go",
-        "./internal/scheduling.go",
-        "./internal/types.go",
-        "./vexilla/client.go",
+        "internal/hashing.go",
+        "internal/json.go",
+        "internal/scheduling.go",
+        "internal/types.go",
+        "vexilla/client.go",
     ],
     importpath = "github.com/vexilla/vexilla/clients/go",
     visibility = ["//visibility:public"],
@@ -16,9 +16,9 @@ go_library(
 go_test(
     name = "pkg_test",
     srcs = [
-        "./internal/hashing_test.go",
-        "./internal/scheduling_test.go",
-        "./vexilla/client_test.go",
+        "internal/hashing_test.go",
+        "internal/scheduling_test.go",
+        "vexilla/client_test.go",
     ],
     embed = [":pkg"],
 )
