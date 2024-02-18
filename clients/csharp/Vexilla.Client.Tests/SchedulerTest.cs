@@ -28,44 +28,59 @@ namespace Vexilla.Client.Tests
         public void TestSchedulerActiveStartEnd()
         {
             var now = DateTimeOffset.Now;
-            var beforeSchedule = new Schedule
-            {
-                Start = now.AddDays(1).ToUnixTimeMilliseconds(),
-                End = now.AddDays(2).ToUnixTimeMilliseconds(),
-                Timezone = "UTC",
-                TimeType = ScheduleTimeType.StartEnd,
-                StartTime = 0,
-                EndTime = 0
-            };
 
-            Assert.False(Scheduler.IsScheduleActive(beforeSchedule,
-                ScheduleType.Global));
+            for(int hour = 0; hour < 24; hour++) {
 
-            var duringSchedule = new Schedule
-            {
-                Start = now.AddDays(-1).ToUnixTimeMilliseconds(),
-                End = now.AddDays(1).ToUnixTimeMilliseconds(),
-                Timezone = "UTC",
-                TimeType = ScheduleTimeType.StartEnd,
-                StartTime = 0,
-                EndTime = 0
-            };
+                var mocked_now = new DateTimeOffset(
+                    now.Year,
+                    now.Month,
+                    now.Day,
+                    hour,
+                    0,
+                    0,
+                    0,
+                    TimeSpan.Zero
+                );
 
-            Assert.True(Scheduler.IsScheduleActive(duringSchedule,
-                ScheduleType.Global));
+                var beforeSchedule = new Schedule
+                {
+                    Start = mocked_now.AddDays(1).ToUnixTimeMilliseconds(),
+                    End = mocked_now.AddDays(2).ToUnixTimeMilliseconds(),
+                    Timezone = "UTC",
+                    TimeType = ScheduleTimeType.StartEnd,
+                    StartTime = 0,
+                    EndTime = 0
+                };
 
-            var afterSchedule = new Schedule
-            {
-                Start = now.AddDays(-2).ToUnixTimeMilliseconds(),
-                End = now.AddDays(-1).ToUnixTimeMilliseconds(),
-                Timezone = "UTC",
-                TimeType = ScheduleTimeType.StartEnd,
-                StartTime = 0,
-                EndTime = 0
-            };
+                Assert.False(Scheduler.IsScheduleActive(beforeSchedule,
+                    ScheduleType.Global));
 
-            Assert.False(Scheduler.IsScheduleActive(afterSchedule,
-                ScheduleType.Global));
+                var duringSchedule = new Schedule
+                {
+                    Start = mocked_now.AddDays(-1).ToUnixTimeMilliseconds(),
+                    End = mocked_now.AddDays(1).ToUnixTimeMilliseconds(),
+                    Timezone = "UTC",
+                    TimeType = ScheduleTimeType.StartEnd,
+                    StartTime = 0,
+                    EndTime = 0
+                };
+
+                Assert.True(Scheduler.IsScheduleActive(duringSchedule,
+                    ScheduleType.Global));
+
+                var afterSchedule = new Schedule
+                {
+                    Start = mocked_now.AddDays(-2).ToUnixTimeMilliseconds(),
+                    End = mocked_now.AddDays(-1).ToUnixTimeMilliseconds(),
+                    Timezone = "UTC",
+                    TimeType = ScheduleTimeType.StartEnd,
+                    StartTime = 0,
+                    EndTime = 0
+                };
+
+                Assert.False(Scheduler.IsScheduleActive(afterSchedule,
+                    ScheduleType.Global));
+            }
         }
 
         [Test]

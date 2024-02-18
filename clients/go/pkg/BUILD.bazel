@@ -9,7 +9,7 @@ go_library(
         "./internal/types.go",
         "./vexilla/client.go",
     ],
-    importpath = "github.com/vexilla/vexilla/clients/go/pkg",
+    importpath = "github.com/vexilla/vexilla/clients/go",
     visibility = ["//visibility:public"],
 )
 
