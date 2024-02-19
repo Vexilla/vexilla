@@ -34,50 +34,64 @@ class TestScheduler(unittest.TestCase):
         """
         now = arrow.utcnow()
 
-        before_schedule = Schedule(
-            start=int(now.shift(days=1).timestamp()) * 1000,
-            end=int(now.shift(days=2).timestamp()) * 1000,
-            timezone="UTC",
-            timeType=ScheduleTimeType.START_END,
-            startTime=0,
-            endTime=0,
-        )
+        for hour in range(24):
 
-        before_schedule_active = Scheduler.is_schedule_active(
-            before_schedule, ScheduleType.GLOBAL
-        )
+            mocked_now = Arrow(
+                now.year,
+                now.month,
+                now.day,
+                hour,
+                0,
+                0,
+                0,
+                dateutil_tz.tzutc(),
+                fold=getattr(now, "fold", 0),
+            )
 
-        self.assertFalse(before_schedule_active)
+            before_schedule = Schedule(
+                start=int(mocked_now.shift(days=1).timestamp()) * 1000,
+                end=int(mocked_now.shift(days=2).timestamp()) * 1000,
+                timezone="UTC",
+                timeType=ScheduleTimeType.START_END,
+                startTime=0,
+                endTime=0,
+            )
 
-        during_schedule = Schedule(
-            start=int(now.shift(days=-1).timestamp()) * 1000,
-            end=int(now.shift(days=1).timestamp()) * 1000,
-            timezone="UTC",
-            timeType=ScheduleTimeType.START_END,
-            startTime=0,
-            endTime=0,
-        )
+            before_schedule_active = Scheduler.is_schedule_active(
+                before_schedule, ScheduleType.GLOBAL
+            )
 
-        during_schedule_active = Scheduler.is_schedule_active(
-            during_schedule, ScheduleType.GLOBAL
-        )
+            self.assertFalse(before_schedule_active)
 
-        self.assertTrue(during_schedule_active)
+            during_schedule = Schedule(
+                start=int(mocked_now.shift(days=-1).timestamp()) * 1000,
+                end=int(mocked_now.shift(days=1).timestamp()) * 1000,
+                timezone="UTC",
+                timeType=ScheduleTimeType.START_END,
+                startTime=0,
+                endTime=0,
+            )
 
-        after_schedule = Schedule(
-            start=int(now.shift(days=-2).timestamp()) * 1000,
-            end=int(now.shift(days=-1).timestamp()) * 1000,
-            timezone="UTC",
-            timeType=ScheduleTimeType.START_END,
-            startTime=0,
-            endTime=0,
-        )
+            during_schedule_active = Scheduler.is_schedule_active(
+                during_schedule, ScheduleType.GLOBAL
+            )
 
-        after_schedule_active = Scheduler.is_schedule_active(
-            after_schedule, ScheduleType.GLOBAL
-        )
+            self.assertTrue(during_schedule_active)
 
-        self.assertFalse(after_schedule_active)
+            after_schedule = Schedule(
+                start=int(mocked_now.shift(days=-2).timestamp()) * 1000,
+                end=int(mocked_now.shift(days=-1).timestamp()) * 1000,
+                timezone="UTC",
+                timeType=ScheduleTimeType.START_END,
+                startTime=0,
+                endTime=0,
+            )
+
+            after_schedule_active = Scheduler.is_schedule_active(
+                after_schedule, ScheduleType.GLOBAL
+            )
+
+            self.assertFalse(after_schedule_active)
 
     def test_schedule_active_daily(self):
         """
