@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+
+namespace Vexilla\Tests;
+
 use PHPUnit\Framework\TestCase;
 use Vexilla\Hasher;
 

@@ -1,4 +1,4 @@
-<?
+<?php
 
 namespace Vexilla;
 
@@ -20,7 +20,7 @@ class Scheduler
 
     static function isScheduleActive(Schedule $schedule, string $scheduleType): bool
     {
-        return Scheduler::isScheduleActiveWithNow($schedule, $scheduleType, Carbon::now());
+        return Scheduler::isScheduleActiveWithNow($schedule, $scheduleType, Carbon::now("UTC"));
     }
 
     static function isScheduleActiveWithNow(Schedule $schedule, string $scheduleType, Carbon $now): bool
@@ -46,8 +46,6 @@ class Scheduler
                 if (!$now->betweenIncluded($startOfStartDate, $endOfEndDate)) {
                     return false;
                 }
-
-                echo "Made it past WHOLE check";
 
                 $startTime = Carbon::createFromTimestampMsUTC($schedule->startTime);
                 $endTime = Carbon::createFromTimestampMsUTC($schedule->endTime);
@@ -94,6 +92,10 @@ class Scheduler
                     $now->year,
                     $now->month,
                     $now->day,
+                    0,
+                    0,
+                    0,
+                    "UTC"
                 )->timestamp * 1000;
 
                 $zeroedStartTimestamp = Carbon::create(
@@ -103,6 +105,7 @@ class Scheduler
                     $startTime->hour,
                     $startTime->minute,
                     $startTime->second,
+                    "UTC"
                 )->timestamp * 1000;
 
 
@@ -113,6 +116,7 @@ class Scheduler
                     $endTime->hour,
                     $endTime->minute,
                     $endTime->second,
+                    "UTC"
                 );
 
                 $zeroedEndTimestamp = $zeroedEndDateTime->timestamp * 1000;
@@ -121,9 +125,9 @@ class Scheduler
                 $endTimestamp = $todayZeroTimestamp + $zeroedEndTimestamp;
 
                 if ($zeroedStartTimestamp > $zeroedEndTimestamp) {
-                    return $startTimestamp <= $nowTimestamp || $nowTimestamp >= $endTimestamp;
+                    return $startTimestamp <= $nowTimestamp || $nowTimestamp <= $endTimestamp;
                 } else {
-                    return $startTimestamp <= $nowTimestamp && $nowTimestamp >= $endTimestamp;
+                    return $startTimestamp <= $nowTimestamp && $nowTimestamp <= $endTimestamp;
                 }
 
             default:

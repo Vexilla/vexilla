@@ -1,8 +1,6 @@
 <?php
 declare(strict_types=1);
-namespace VexillaTest;
-
-require 'vendor/autoload.php';
+namespace Vexilla\Tests;
 
 use Carbon\Carbon;
 use PHPUnit\Framework\TestCase;
@@ -23,51 +21,63 @@ final class SchedulerTest extends TestCase
   {
     $now = Carbon::now();
 
-    $beforeSchedule = new Schedule(
-      $now->clone()->addDay()->timestamp * 1000,
-      $now->clone()->addDays(2)->timestamp * 1000,
-      'UTC',
-      ScheduleTimeType::START_END,
-      0,
-      0,
-    );
+    for ($hour = 0; $hour < 24; $hour++) {
 
-    $isBeforeScheduleActive = Scheduler::isScheduleActive($beforeSchedule, ScheduleType::GLOBAL );
+      $mockedNow = Carbon::create(
+        $now->year,
+        $now->month,
+        $now->day,
+        $hour,
+        0,
+        0,
+      );
 
-    $this->assertFalse($isBeforeScheduleActive);
+      $beforeSchedule = new Schedule(
+        $mockedNow->clone()->addDay()->timestamp * 1000,
+        $mockedNow->clone()->addDays(2)->timestamp * 1000,
+        'UTC',
+        ScheduleTimeType::START_END,
+        0,
+        0,
+      );
 
-    $duringSchedule = new Schedule(
-      $now->clone()->subDay()->timestamp * 1000,
-      $now->clone()->addDay()->timestamp * 1000,
-      'UTC',
-      ScheduleTimeType::START_END,
-      0,
-      0,
-    );
+      $isBeforeScheduleActive = Scheduler::isScheduleActive($beforeSchedule, ScheduleType::GLOBAL );
 
-    $isDuringScheduleActive = Scheduler::isScheduleActive($duringSchedule, ScheduleType::GLOBAL );
+      $this->assertFalse($isBeforeScheduleActive);
 
-    $this->assertTrue($isDuringScheduleActive);
+      $duringSchedule = new Schedule(
+        $mockedNow->clone()->subDay()->timestamp * 1000,
+        $mockedNow->clone()->addDay()->timestamp * 1000,
+        'UTC',
+        ScheduleTimeType::START_END,
+        0,
+        0,
+      );
+
+      $isDuringScheduleActive = Scheduler::isScheduleActive($duringSchedule, ScheduleType::GLOBAL );
+
+      $this->assertTrue($isDuringScheduleActive);
 
 
-    $AfterSchedule = new Schedule(
-      $now->clone()->subDays(2)->timestamp * 1000,
-      $now->clone()->subDay()->timestamp * 1000,
-      'UTC',
-      ScheduleTimeType::START_END,
-      0,
-      0,
-    );
+      $AfterSchedule = new Schedule(
+        $mockedNow->clone()->subDays(2)->timestamp * 1000,
+        $mockedNow->clone()->subDay()->timestamp * 1000,
+        'UTC',
+        ScheduleTimeType::START_END,
+        0,
+        0,
+      );
 
-    $isAfterScheduleActive = Scheduler::isScheduleActive($AfterSchedule, ScheduleType::GLOBAL );
+      $isAfterScheduleActive = Scheduler::isScheduleActive($AfterSchedule, ScheduleType::GLOBAL );
 
-    $this->assertFalse($isAfterScheduleActive);
+      $this->assertFalse($isAfterScheduleActive);
+    }
   }
 
   public function testActiveDaily()
   {
 
-    $now = Carbon::now();
+    $now = Carbon::now("UTC");
 
     for ($hour = 0; $hour < 24; $hour++) {
 
@@ -82,8 +92,8 @@ final class SchedulerTest extends TestCase
 
 
       $beforeDaySchedule = new Schedule(
-        $now->clone()->subDay()->timestamp * 1000,
-        $now->clone()->addDay()->timestamp * 1000,
+        $mockedNow->clone()->subDay()->timestamp * 1000,
+        $mockedNow->clone()->addDay()->timestamp * 1000,
         'UTC',
         ScheduleTimeType::DAILY,
         $mockedNow->clone()->addHour()->timestamp * 1000,
@@ -92,11 +102,11 @@ final class SchedulerTest extends TestCase
 
       $isBeforeDayScheduleActive = Scheduler::isScheduleActiveWithNow($beforeDaySchedule, ScheduleType::GLOBAL , $mockedNow);
 
-      $this->assertFalse($isBeforeDayScheduleActive);
+      $this->assertFalse($isBeforeDayScheduleActive, "Hour $hour: isBeforeScheduleActive");
 
       $duringDaySchedule = new Schedule(
-        $now->clone()->subDay()->timestamp * 1000,
-        $now->clone()->addDay()->timestamp * 1000,
+        $mockedNow->clone()->subDay()->timestamp * 1000,
+        $mockedNow->clone()->addDay()->timestamp * 1000,
         'UTC',
         ScheduleTimeType::DAILY,
         $mockedNow->clone()->subHour()->timestamp * 1000,
@@ -105,12 +115,12 @@ final class SchedulerTest extends TestCase
 
       $isDuringDayScheduleActive = Scheduler::isScheduleActiveWithNow($duringDaySchedule, ScheduleType::GLOBAL , $mockedNow);
 
-      $this->assertTrue($isDuringDayScheduleActive);
+      $this->assertTrue($isDuringDayScheduleActive, "Hour $hour: isDuringScheduleActive");
 
 
       $afterDaySchedule = new Schedule(
-        $now->clone()->subDay()->timestamp * 1000,
-        $now->clone()->addDay()->timestamp * 1000,
+        $mockedNow->clone()->subDay()->timestamp * 1000,
+        $mockedNow->clone()->addDay()->timestamp * 1000,
         'UTC',
         ScheduleTimeType::DAILY,
         $mockedNow->clone()->subHours(3)->timestamp * 1000,
@@ -119,7 +129,7 @@ final class SchedulerTest extends TestCase
 
       $isAfterDayScheduleActive = Scheduler::isScheduleActiveWithNow($afterDaySchedule, ScheduleType::GLOBAL , $mockedNow);
 
-      $this->assertFalse($isAfterDayScheduleActive);
+      $this->assertFalse($isAfterDayScheduleActive, "Hour $hour: isAfterScheduleActive");
     }
   }
 }
