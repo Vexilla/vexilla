@@ -30,7 +30,7 @@ If you're using Apple Silicon, you may need to take additional steps to ensure c
    brew install --build-from-source gcc
    ```
 
-2. **Install Xcode Command Line Tools**: These tools are also required for "libvps". If not installed, you can install them with:
+2. **Install Xcode Command Line Tools**: These tools are also required for "libvips". If not installed, you can install them with:
 
    ```bash
    xcode-select --install
