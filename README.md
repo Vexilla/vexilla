@@ -24,7 +24,7 @@ If you're using Apple Silicon, you may need to take additional steps to ensure c
 <details>
 <summary>Follow Instructions</summary>
 
-1. **Install GCC**: The "libvps" dependency relies on gcc. To install gcc from source, use Homebrew:
+1. **Install GCC**: The "libvips" dependency relies on gcc. To install gcc from source, use Homebrew:
 
    ```bash
    brew install --build-from-source gcc
