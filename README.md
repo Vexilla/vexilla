@@ -11,11 +11,13 @@ This project requires the following dependencies:
 
 ## Getting Started with Development
 
+Thank you for wanting to contribute, just follow the steps below
+
 1. **Clone the Repository**: Clone this repository to your local machine using Git, and navigate to the project directory
 
 2. **Install Dependencies**: Use `pnpm install` to install project dependencies. For other `pnpm` commands, navigate to specific apps in this monorepo. For example, to run build or development scripts, use `pnpm run dev` from the app's directory
 
-## Developing on Apple Silicon
+### Developing on Apple Silicon
 
 If you're using Apple Silicon, you may need to take additional steps to ensure compatibility.
 
