@@ -21,52 +21,52 @@ app.get("/:fileName", (req, res) => {
     );
     const fileContents = mustache.render(template, {
       beforeGlobal: {
-        start: dayjs().add(1, "day").unix() * 1000,
-        end: dayjs().add(3, "day").unix() * 1000,
+        start: dayjs.utc().add(1, "day").unix() * 1000,
+        end: dayjs.utc().add(3, "day").unix() * 1000,
       },
       duringGlobal: {
-        start: dayjs().subtract(1, "day").unix() * 1000,
-        end: dayjs().add(1, "day").unix() * 1000,
+        start: dayjs.utc().subtract(1, "day").unix() * 1000,
+        end: dayjs.utc().add(1, "day").unix() * 1000,
       },
       afterGlobal: {
-        start: dayjs().subtract(3, "day").unix() * 1000,
-        end: dayjs().subtract(1, "day").unix() * 1000,
+        start: dayjs.utc().subtract(3, "day").unix() * 1000,
+        end: dayjs.utc().subtract(1, "day").unix() * 1000,
       },
 
       beforeGlobalStartEnd: {
-        start: dayjs().unix() * 1000,
-        end: dayjs().add(2, "day").unix() * 1000,
+        start: dayjs.utc().unix() * 1000,
+        end: dayjs.utc().add(2, "day").unix() * 1000,
         startTime: getZeroRelativeTime().add(1, "hour").unix() * 1000,
         endTime: getZeroRelativeTime().add(3, "hour").unix() * 1000,
       },
       duringGlobalStartEnd: {
-        start: dayjs().unix() * 1000,
-        end: dayjs().add(2, "day").unix() * 1000,
+        start: dayjs.utc().unix() * 1000,
+        end: dayjs.utc().add(1, "day").unix() * 1000,
         startTime: getZeroRelativeTime().subtract(1, "hour").unix() * 1000,
         endTime: getZeroRelativeTime().add(2, "hour").unix() * 1000,
       },
       afterGlobalStartEnd: {
-        start: dayjs().subtract(2, "day").unix() * 1000,
-        end: dayjs().unix() * 1000,
+        start: dayjs.utc().subtract(2, "day").unix() * 1000,
+        end: dayjs.utc().unix() * 1000,
         startTime: getZeroRelativeTime().subtract(3, "hour").unix() * 1000,
         endTime: getZeroRelativeTime().subtract(1, "hour").unix() * 1000,
       },
 
       beforeGlobalDaily: {
-        start: dayjs().subtract(1, "day").unix() * 1000,
-        end: dayjs().add(1, "day").unix() * 1000,
+        start: dayjs.utc().subtract(1, "day").unix() * 1000,
+        end: dayjs.utc().add(1, "day").unix() * 1000,
         startTime: getZeroRelativeTime().subtract(3, "hour").unix() * 1000,
         endTime: getZeroRelativeTime().subtract(1, "hour").unix() * 1000,
       },
       duringGlobalDaily: {
-        start: dayjs().subtract(1, "day").unix() * 1000,
-        end: dayjs().add(1, "day").unix() * 1000,
+        start: dayjs.utc().subtract(1, "day").unix() * 1000,
+        end: dayjs.utc().add(1, "day").unix() * 1000,
         startTime: getZeroRelativeTime().subtract(1, "hour").unix() * 1000,
         endTime: getZeroRelativeTime().add(1, "hour").unix() * 1000,
       },
       afterGlobalDaily: {
-        start: dayjs().subtract(1, "day").unix() * 1000,
-        end: dayjs().add(1, "day").unix() * 1000,
+        start: dayjs.utc().subtract(1, "day").unix() * 1000,
+        end: dayjs.utc().add(1, "day").unix() * 1000,
         startTime: getZeroRelativeTime().subtract(3, "hour").unix() * 1000,
         endTime: getZeroRelativeTime().subtract(1, "hour").unix() * 1000,
       },

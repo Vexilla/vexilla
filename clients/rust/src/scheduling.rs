@@ -73,6 +73,14 @@ pub fn is_schedule_active_with_now(
     schedule_type: ScheduleType,
     now: DateTime<Utc>,
 ) -> Option<bool> {
+    let now_millis = now.timestamp_millis();
+
+    let start_time = Utc.timestamp_millis_opt(schedule.start_time).earliest()?;
+    // .timestamp_millis();
+
+    let end_time = Utc.timestamp_millis_opt(schedule.end_time).latest()?;
+    // .timestamp_millis();
+
     match (schedule_type, schedule.time_type) {
         (ScheduleType::Empty, _) => Some(true),
         (ScheduleType::Global, _) | (ScheduleType::Environment, _) => {
@@ -98,14 +106,50 @@ pub fn is_schedule_active_with_now(
                 (_, _) => false,
             };
 
-            println!("is_active_date: {is_active_date}");
-
             match (is_active_date, schedule.time_type) {
                 (true, ScheduleTimeType::None) => Some(true),
                 (true, ScheduleTimeType::StartEnd) => {
-                    let start_time = Utc.timestamp_millis_opt(schedule.start_time).earliest()?;
+                    // let start_time = Utc
+                    //     .timestamp_millis_opt(schedule.start_time)
+                    //     .earliest()?
+                    //     .timestamp_millis();
 
-                    let end_time = Utc.timestamp_millis_opt(schedule.end_time).latest()?;
+                    // let end_time = Utc
+                    //     .timestamp_millis_opt(schedule.end_time)
+                    //     .latest()?
+                    //     .timestamp_millis();
+
+                    let start_date_zero_timestamp = start_date
+                        .with_hour(0)?
+                        .with_minute(0)?
+                        .with_second(0)?
+                        .with_nanosecond(0)?
+                        .timestamp_millis();
+
+                    // let end_date_zero_timestamp = end_date
+                    //     .with_hour(0)?
+                    //     .with_minute(0)?
+                    //     .with_second(0)?
+                    //     .with_nanosecond(0)?
+                    //     .timestamp_millis();
+
+                    let start_date_with_start_time = start_date
+                        .with_hour(start_time.hour())?
+                        .with_minute(start_time.minute())?
+                        .with_second(start_time.second())?
+                        .with_nanosecond(start_time.nanosecond())?
+                        .timestamp_millis();
+
+                    let end_date_with_end_time = &end_date
+                        .with_hour(end_time.hour())?
+                        .with_minute(end_time.minute())?
+                        .with_second(end_time.second())?
+                        .with_nanosecond(end_time.nanosecond())?
+                        .timestamp_millis();
+
+                    let now_timestamp = now.timestamp_millis();
+
+                    println!("START: {start_date_with_start_time} - NOW: {now_timestamp} - END: {end_date_with_end_time}");
 
                     match (
                         now.ge(&start_date
@@ -122,13 +166,19 @@ pub fn is_schedule_active_with_now(
                         (true, true) => Some(true),
                         (_, _) => Some(false),
                     }
+
+                    // let start = start_date_zero_timestamp + start_time;
+                    // let end = end_date_zero_timestamp + end_time;
+                    // if start > end {
+                    //     Some(now_millis >= start || now_millis <= end)
+                    // } else {
+                    //     Some(now_millis >= start && now_millis <= end)
+                    // }
                 }
                 (true, ScheduleTimeType::Daily) => {
                     let zero_day = Utc.timestamp_millis_opt(0).earliest()?;
                     let start_time = Utc.timestamp_millis_opt(schedule.start_time).earliest()?;
                     let end_time = Utc.timestamp_millis_opt(schedule.end_time).latest()?;
-
-                    let now_millis = now.timestamp_millis();
 
                     let today_zero_timestamp = now
                         .with_hour(0)?
@@ -190,42 +240,67 @@ mod scheduling_tests {
     #[test]
     fn safe_is_schedule_active_start_end() {
         let now = Utc::now();
+        let zero_day = Utc.timestamp_millis_opt(0).earliest().unwrap();
 
-        let before_schedule = VexillaSchedule {
-            start: (now + Duration::days(1)).timestamp_millis(),
-            end: (now + Duration::days(2)).timestamp_millis(),
-            timezone: "UTC".to_string(),
-            time_type: ScheduleTimeType::None,
-            start_time: 0,
-            end_time: 0,
-        };
+        for hour in 0..24 {
+            println!("Hour {hour}");
 
-        let during_schedule = VexillaSchedule {
-            start: (now - Duration::days(1)).timestamp_millis(),
-            end: (now + Duration::days(1)).timestamp_millis(),
-            timezone: "UTC".to_string(),
-            time_type: ScheduleTimeType::None,
-            start_time: 0,
-            end_time: 0,
-        };
+            let mocked_now = now
+                .with_hour(hour)
+                .unwrap()
+                .with_minute(0)
+                .unwrap()
+                .with_second(0)
+                .unwrap()
+                .with_nanosecond(0)
+                .unwrap();
 
-        let after_schedule = VexillaSchedule {
-            start: (now - Duration::days(2)).timestamp_millis(),
-            end: (now - Duration::days(1)).timestamp_millis(),
-            timezone: "UTC".to_string(),
-            time_type: ScheduleTimeType::None,
-            start_time: 0,
-            end_time: 0,
-        };
+            // LEAVING OFF: start_time is calculated wrong. Need to get the zero relative hour of the day differently
 
-        let before_schedule_active = safe_is_schedule_active(before_schedule, ScheduleType::Global);
-        assert!(!before_schedule_active);
+            let before_schedule = VexillaSchedule {
+                start: now.timestamp_millis(),
+                end: now.timestamp_millis(),
+                timezone: "UTC".to_string(),
+                time_type: ScheduleTimeType::StartEnd,
+                start_time: (zero_day + Duration::hours(i64::from(hour) + 1)).timestamp_millis(),
+                end_time: (zero_day + Duration::hours(i64::from(hour) + 3)).timestamp_millis(),
+            };
 
-        let during_schedule_active = safe_is_schedule_active(during_schedule, ScheduleType::Global);
-        assert!(during_schedule_active);
+            let start_time = (zero_day + Duration::hours(i64::from(hour) + 1)).timestamp_millis();
+            let end_time = (zero_day + Duration::hours(i64::from(hour) + 3)).timestamp_millis();
 
-        let after_schedule_active = safe_is_schedule_active(after_schedule, ScheduleType::Global);
-        assert!(!after_schedule_active);
+            println!("start: {start_time} - end: {end_time}");
+
+            let before_schedule_active =
+                safe_is_schedule_active(before_schedule, ScheduleType::Global);
+            assert!(!before_schedule_active);
+
+            let during_schedule = VexillaSchedule {
+                start: now.timestamp_millis(),
+                end: now.timestamp_millis(),
+                timezone: "UTC".to_string(),
+                time_type: ScheduleTimeType::StartEnd,
+                start_time: (zero_day + Duration::hours(i64::from(hour) - 1)).timestamp_millis(),
+                end_time: (zero_day + Duration::hours(i64::from(hour) + 1)).timestamp_millis(),
+            };
+
+            let during_schedule_active =
+                safe_is_schedule_active(during_schedule, ScheduleType::Global);
+            assert!(during_schedule_active);
+
+            let after_schedule = VexillaSchedule {
+                start: now.timestamp_millis(),
+                end: now.timestamp_millis(),
+                timezone: "UTC".to_string(),
+                time_type: ScheduleTimeType::StartEnd,
+                start_time: (zero_day + Duration::hours(i64::from(hour) - 1)).timestamp_millis(),
+                end_time: (zero_day + Duration::hours(i64::from(hour) - 3)).timestamp_millis(),
+            };
+
+            let after_schedule_active =
+                safe_is_schedule_active(after_schedule, ScheduleType::Global);
+            assert!(!after_schedule_active);
+        }
     }
 
     #[test]
@@ -252,6 +327,14 @@ mod scheduling_tests {
             //     end_time: 0,
             // };
 
+            // let before_whole_schedule_active = safe_is_schedule_active_with_now(
+            //     before_whole_schedule,
+            //     ScheduleType::Global,
+            //     mocked_now,
+            // );
+
+            // assert!(!before_whole_schedule_active);
+
             let before_day_schedule = VexillaSchedule {
                 start: (mocked_now - Duration::days(1)).timestamp_millis(),
                 end: (mocked_now + Duration::days(1)).timestamp_millis(),
@@ -261,11 +344,12 @@ mod scheduling_tests {
                 end_time: (mocked_now + Duration::hours(3)).timestamp_millis(),
             };
 
-            let start_time = (mocked_now + Duration::hours(1)).timestamp_millis();
-            let end_time = (mocked_now + Duration::hours(3)).timestamp_millis();
-            let mocked_now_time = mocked_now.timestamp_millis();
-
-            println!("now: {mocked_now_time}, start_time: {start_time}, end_time: {end_time}");
+            let before_day_schedule_active = safe_is_schedule_active_with_now(
+                before_day_schedule,
+                ScheduleType::Global,
+                mocked_now,
+            );
+            assert!(!before_day_schedule_active);
 
             let during_schedule = VexillaSchedule {
                 start: (mocked_now - Duration::days(1)).timestamp_millis(),
@@ -276,6 +360,11 @@ mod scheduling_tests {
                 end_time: (mocked_now + Duration::hours(1)).timestamp_millis(),
             };
 
+            let during_schedule_active =
+                safe_is_schedule_active_with_now(during_schedule, ScheduleType::Global, mocked_now);
+
+            assert!(during_schedule_active);
+
             let after_day_schedule = VexillaSchedule {
                 start: (now - Duration::days(1)).timestamp_millis(),
                 end: (now + Duration::days(1)).timestamp_millis(),
@@ -285,6 +374,13 @@ mod scheduling_tests {
                 end_time: (mocked_now + Duration::hours(3)).timestamp_millis(),
             };
 
+            let after_day_schedule_active = safe_is_schedule_active_with_now(
+                after_day_schedule,
+                ScheduleType::Global,
+                mocked_now,
+            );
+            assert!(!after_day_schedule_active);
+
             // let after_whole_schedule = VexillaSchedule {
             //     start: (now - Duration::days(3)).timestamp_millis(),
             //     end: (now - Duration::days(1)).timestamp_millis(),
@@ -293,36 +389,6 @@ mod scheduling_tests {
             //     start_time: (mocked_now - Duration::hours(1)).timestamp_millis(),
             //     end_time: (mocked_now + Duration::hours(1)).timestamp_millis(),
             // };
-
-            println!("FooHour: {hour}");
-
-            // let before_whole_schedule_active = safe_is_schedule_active_with_now(
-            //     before_whole_schedule,
-            //     ScheduleType::Global,
-            //     mocked_now,
-            // );
-
-            // assert!(!before_whole_schedule_active);
-
-            let before_day_schedule_active = safe_is_schedule_active_with_now(
-                before_day_schedule,
-                ScheduleType::Global,
-                mocked_now,
-            );
-
-            assert!(!before_day_schedule_active);
-
-            let during_schedule_active =
-                safe_is_schedule_active_with_now(during_schedule, ScheduleType::Global, mocked_now);
-
-            assert!(during_schedule_active);
-
-            let after_day_schedule_active = safe_is_schedule_active_with_now(
-                after_day_schedule,
-                ScheduleType::Global,
-                mocked_now,
-            );
-            assert!(!after_day_schedule_active);
 
             // let after_whole_schedule_active = safe_is_schedule_active_with_now(
             //     after_whole_schedule,
