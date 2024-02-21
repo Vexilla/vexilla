@@ -1,6 +1,7 @@
 use crate::types::*;
 use chrono::prelude::*;
-use chrono::Duration;
+// use chrono::Duration;
+use log::{info, warn};
 
 pub fn is_scheduled_feature_active(feature: Feature) -> bool {
     match feature {
@@ -76,32 +77,26 @@ pub fn is_schedule_active_with_now(
 ) -> Option<bool> {
     let now_millis = now.timestamp_millis();
 
-    let start_time = Utc.timestamp_millis_opt(schedule.start_time).earliest()?;
-    // .timestamp_millis();
-
-    let end_time = Utc.timestamp_millis_opt(schedule.end_time).latest()?;
-    // .timestamp_millis();
-
     match (schedule_type, schedule.time_type) {
         (ScheduleType::Empty, _) => Some(true),
         (ScheduleType::Global, _) | (ScheduleType::Environment, _) => {
-            let start_date = Utc
-                .timestamp_millis_opt(schedule.start)
-                .earliest()?
+            let start_date = Utc.timestamp_millis_opt(schedule.start).earliest()?;
+
+            let start_of_start_date = start_date
                 .with_hour(0)?
                 .with_minute(0)?
                 .with_second(0)?
                 .with_nanosecond(0)?;
 
-            let end_date = Utc
-                .timestamp_millis_opt(schedule.end)
-                .latest()?
+            let end_date = Utc.timestamp_millis_opt(schedule.end).latest()?;
+
+            let end_of_end_date = end_date
                 .with_hour(23)?
                 .with_minute(59)?
                 .with_second(59)?
                 .with_nanosecond(999_999_999)?;
 
-            let is_active_date = match (now.ge(&start_date), now.le(&end_date)) {
+            let is_active_date = match (now.ge(&start_of_start_date), now.le(&end_of_end_date)) {
                 (true, true) => true,
                 (_, _) => false,
             };
@@ -112,137 +107,44 @@ pub fn is_schedule_active_with_now(
 
             match schedule.time_type {
                 ScheduleTimeType::None => Some(true),
-                // ScheduleTimeType::StartEnd => {
-                //     // let start_time = Utc
-                //     //     .timestamp_millis_opt(schedule.start_time)
-                //     //     .earliest()?
-                //     //     .timestamp_millis();
-
-                //     // let end_time = Utc
-                //     //     .timestamp_millis_opt(schedule.end_time)
-                //     //     .latest()?
-                //     //     .timestamp_millis();
-
-                //     let start_date_zero_timestamp = start_date
-                //         .with_hour(0)?
-                //         .with_minute(0)?
-                //         .with_second(0)?
-                //         .with_nanosecond(0)?
-                //         .timestamp_millis();
-
-                //     let end_date = end_date
-                //         .with_hour(0)?
-                //         .with_minute(0)?
-                //         .with_second(0)?
-                //         .with_nanosecond(0)?;
-
-                //     let end_date_zero_timestamp = end_date.timestamp_millis();
-
-                //     let start_date_with_start_time = start_date
-                //         .with_hour(start_time.hour())?
-                //         .with_minute(start_time.minute())?
-                //         .with_second(start_time.second())?
-                //         .with_nanosecond(start_time.nanosecond())?
-                //         .timestamp_millis();
-
-                //     let end_date_with_end_time = end_date
-                //         .with_hour(end_time.hour())?
-                //         .with_minute(end_time.minute())?
-                //         .with_second(end_time.second())?
-                //         .with_nanosecond(end_time.nanosecond())?
-                //         .timestamp_millis();
-
-                //     println!("START: {start_date_with_start_time} - NOW: {now_millis} - END: {end_date_with_end_time}");
-
-                //     // match (
-                //     //     now.ge(&start_date
-                //     //         .with_hour(start_time.hour())?
-                //     //         .with_minute(start_time.minute())?
-                //     //         .with_second(start_time.second())?
-                //     //         .with_nanosecond(start_time.nanosecond())?),
-                //     //     now.le(&end_date
-                //     //         .with_hour(end_time.hour())?
-                //     //         .with_minute(end_time.minute())?
-                //     //         .with_second(end_time.second())?
-                //     //         .with_nanosecond(end_time.nanosecond())?),
-                //     // ) {
-                //     //     (true, true) => Some(true),
-                //     //     (_, _) => Some(false),
-                //     // }
-
-                //     // let start = start_date_zero_timestamp + start_time.timestamp_millis();
-                //     // let mut end = end_date_zero_timestamp + end_time.timestamp_millis();
-
-                //     if start_date_zero_timestamp == end_date_zero_timestamp
-                //         && start_date_with_start_time > end_date_with_end_time
-                //     {
-                //         println!("start_date == end_date");
-                //         // end = (end_date + Duration::days(1)).timestamp_millis()
-                //         //     + end_time.timestamp_millis();
-
-                //         println!(
-                //             "START: {start_date_with_start_time} - NOW: {now_millis} - END: {end_date_with_end_time}"
-                //         );
-                //         Some(
-                //             now_millis >= start_date_with_start_time
-                //                 && now_millis <= end_date_with_end_time,
-                //         )
-                //     } else if start_date_with_start_time > end_date_with_end_time {
-                //         println!("START > END");
-                //         // let before = now_millis < start_date_with_start_time
-                //         //     && now_millis < end_date_with_end_time;
-                //         // let after = now_millis > start_date_with_start_time
-                //         //     && now_millis > end_date_with_end_time;
-
-                //         Some(
-                //             now_millis >= start_date_with_start_time
-                //                 || now_millis <= end_date_with_end_time,
-                //         )
-                //     } else {
-                //         println!(
-                //             "CHECKING: {start_date_zero_timestamp} == {end_date_zero_timestamp}"
-                //         );
-
-                //         println!("CHECKING start/end: {start_date_with_start_time} == {end_date_with_end_time}");
-                //         println!("COMMON CASE");
-                //         Some(
-                //             now_millis >= start_date_with_start_time
-                //                 && now_millis <= end_date_with_end_time,
-                //         )
-                //     }
-                // }
-                ScheduleTimeType::Daily | ScheduleTimeType::StartEnd => {
-                    let zero_day = Utc.timestamp_millis_opt(0).earliest()?;
-                    let start_time = Utc.timestamp_millis_opt(schedule.start_time).earliest()?;
-                    let end_time = Utc.timestamp_millis_opt(schedule.end_time).latest()?;
-
-                    let today_zero_timestamp = now
+                ScheduleTimeType::StartEnd => {
+                    let start_of_end_date = end_date
                         .with_hour(0)?
                         .with_minute(0)?
                         .with_second(0)?
-                        .with_nanosecond(0)?
+                        .with_nanosecond(0)?;
+
+                    let start_date_timestamp_with_start_time =
+                        start_of_start_date.timestamp_millis() + schedule.start_time;
+
+                    let end_date_timestamp_with_end_time =
+                        start_of_end_date.timestamp_millis() + schedule.end_time;
+
+                    Some(
+                        start_date_timestamp_with_start_time < now_millis
+                            && end_date_timestamp_with_end_time > now_millis,
+                    )
+                }
+                ScheduleTimeType::Daily => {
+                    let zero_day_with_now_time = Utc
+                        .timestamp_millis_opt(0)
+                        .earliest()?
+                        .with_hour(now.hour())?
+                        .with_minute(now.minute())?
+                        .with_second(now.second())?
+                        .with_nanosecond(now.nanosecond())?
                         .timestamp_millis();
 
-                    let zeroed_start_timestamp = zero_day
-                        .with_hour(start_time.hour())?
-                        .with_minute(start_time.minute())?
-                        .with_second(start_time.second())?
-                        .with_nanosecond(start_time.nanosecond())?
-                        .timestamp_millis();
-
-                    let zeroed_end_timestamp = zero_day
-                        .with_hour(end_time.hour())?
-                        .with_minute(end_time.minute())?
-                        .with_second(end_time.second())?
-                        .with_nanosecond(end_time.nanosecond())?
-                        .timestamp_millis();
-
-                    let start = today_zero_timestamp + zeroed_start_timestamp;
-                    let end = today_zero_timestamp + zeroed_end_timestamp;
-                    if start > end {
-                        Some(now_millis >= start || now_millis <= end)
+                    if schedule.start_time > schedule.end_time {
+                        Some(
+                            schedule.start_time <= zero_day_with_now_time
+                                || schedule.end_time >= zero_day_with_now_time,
+                        )
                     } else {
-                        Some(now_millis >= start && now_millis <= end)
+                        Some(
+                            schedule.start_time <= zero_day_with_now_time
+                                && schedule.end_time >= zero_day_with_now_time,
+                        )
                     }
                 }
             }
@@ -278,9 +180,6 @@ mod scheduling_tests {
         let zero_day = Utc.timestamp_millis_opt(0).earliest().unwrap();
 
         for hour in 0..24 {
-            println!("--------------------");
-            println!("Hour {hour}");
-
             let mocked_now = now
                 .with_hour(hour)
                 .unwrap()
@@ -299,13 +198,6 @@ mod scheduling_tests {
                 start_time: (zero_day + Duration::hours(i64::from(hour) + 1)).timestamp_millis(),
                 end_time: (zero_day + Duration::hours(i64::from(hour) + 3)).timestamp_millis(),
             };
-
-            let start_time = (zero_day + Duration::hours(i64::from(hour) + 1)).timestamp_millis();
-            let end_time = (zero_day + Duration::hours(i64::from(hour) + 3)).timestamp_millis();
-
-            println!("start: {start_time} - end: {end_time}");
-
-            // foo
 
             let before_schedule_active =
                 safe_is_schedule_active_with_now(before_schedule, ScheduleType::Global, mocked_now);
@@ -345,9 +237,6 @@ mod scheduling_tests {
         let zero_day = Utc.timestamp_millis_opt(0).earliest().unwrap();
 
         for hour in 0..24 {
-            println!("--------------------");
-            println!("Hour {hour}");
-
             let mocked_now = now
                 .with_hour(hour)
                 .unwrap()
@@ -359,19 +248,13 @@ mod scheduling_tests {
                 .unwrap();
 
             let before_schedule = VexillaSchedule {
-                start: (mocked_now - Duration::days(1)).timestamp_millis(),
-                end: (mocked_now + Duration::days(1)).timestamp_millis(),
+                start: (mocked_now).timestamp_millis(),
+                end: (mocked_now + Duration::days(3)).timestamp_millis(),
                 timezone: "UTC".to_string(),
                 time_type: ScheduleTimeType::StartEnd,
                 start_time: (zero_day + Duration::hours(i64::from(hour) + 1)).timestamp_millis(),
                 end_time: (zero_day + Duration::hours(i64::from(hour) + 3)).timestamp_millis(),
             };
-
-            let start_time = (zero_day + Duration::hours(i64::from(hour) + 1)).timestamp_millis();
-            let end_time = (zero_day + Duration::hours(i64::from(hour) + 3)).timestamp_millis();
-
-            println!("start: {start_time} - end: {end_time}");
-            //
 
             let before_schedule_active =
                 safe_is_schedule_active_with_now(before_schedule, ScheduleType::Global, mocked_now);
@@ -391,8 +274,8 @@ mod scheduling_tests {
             assert!(during_schedule_active);
 
             let after_schedule = VexillaSchedule {
-                start: (mocked_now - Duration::days(1)).timestamp_millis(),
-                end: (mocked_now + Duration::days(1)).timestamp_millis(),
+                start: (mocked_now - Duration::days(3)).timestamp_millis(),
+                end: (mocked_now).timestamp_millis(),
                 timezone: "UTC".to_string(),
                 time_type: ScheduleTimeType::StartEnd,
                 start_time: (zero_day + Duration::hours(i64::from(hour) - 1)).timestamp_millis(),
@@ -421,13 +304,23 @@ mod scheduling_tests {
                 .with_nanosecond(0)
                 .unwrap();
 
+            let zero_day_with_mocked_time = zero_day
+                .with_hour(hour)
+                .unwrap()
+                .with_minute(0)
+                .unwrap()
+                .with_second(0)
+                .unwrap()
+                .with_nanosecond(0)
+                .unwrap();
+
             let before_whole_schedule = VexillaSchedule {
                 start: (mocked_now + Duration::days(1)).timestamp_millis(),
                 end: (mocked_now + Duration::days(1)).timestamp_millis(),
                 timezone: "UTC".to_string(),
                 time_type: ScheduleTimeType::Daily,
-                start_time: (zero_day - Duration::hours(1)).timestamp_millis(),
-                end_time: (zero_day + Duration::hours(1)).timestamp_millis(),
+                start_time: (zero_day_with_mocked_time - Duration::hours(1)).timestamp_millis(),
+                end_time: (zero_day_with_mocked_time + Duration::hours(1)).timestamp_millis(),
             };
 
             let before_whole_schedule_active = safe_is_schedule_active_with_now(
@@ -443,8 +336,8 @@ mod scheduling_tests {
                 end: mocked_now.timestamp_millis(),
                 timezone: "UTC".to_string(),
                 time_type: ScheduleTimeType::Daily,
-                start_time: (zero_day + Duration::hours(1)).timestamp_millis(),
-                end_time: (zero_day + Duration::hours(3)).timestamp_millis(),
+                start_time: (zero_day_with_mocked_time + Duration::hours(1)).timestamp_millis(),
+                end_time: (zero_day_with_mocked_time + Duration::hours(3)).timestamp_millis(),
             };
 
             let before_day_schedule_active = safe_is_schedule_active_with_now(
@@ -459,8 +352,8 @@ mod scheduling_tests {
                 end: mocked_now.timestamp_millis(),
                 timezone: "UTC".to_string(),
                 time_type: ScheduleTimeType::Daily,
-                start_time: (zero_day - Duration::hours(1)).timestamp_millis(),
-                end_time: (zero_day + Duration::hours(1)).timestamp_millis(),
+                start_time: (zero_day_with_mocked_time - Duration::hours(1)).timestamp_millis(),
+                end_time: (zero_day_with_mocked_time + Duration::hours(1)).timestamp_millis(),
             };
 
             let during_schedule_active =
@@ -473,8 +366,8 @@ mod scheduling_tests {
                 end: mocked_now.timestamp_millis(),
                 timezone: "UTC".to_string(),
                 time_type: ScheduleTimeType::Daily,
-                start_time: (zero_day + Duration::hours(1)).timestamp_millis(),
-                end_time: (zero_day + Duration::hours(3)).timestamp_millis(),
+                start_time: (zero_day_with_mocked_time + Duration::hours(1)).timestamp_millis(),
+                end_time: (zero_day_with_mocked_time + Duration::hours(3)).timestamp_millis(),
             };
 
             let after_day_schedule_active = safe_is_schedule_active_with_now(
@@ -489,8 +382,8 @@ mod scheduling_tests {
                 end: (mocked_now - Duration::days(1)).timestamp_millis(),
                 timezone: "UTC".to_string(),
                 time_type: ScheduleTimeType::Daily,
-                start_time: (mocked_now - Duration::hours(1)).timestamp_millis(),
-                end_time: (mocked_now + Duration::hours(1)).timestamp_millis(),
+                start_time: (zero_day_with_mocked_time - Duration::hours(1)).timestamp_millis(),
+                end_time: (zero_day_with_mocked_time + Duration::hours(1)).timestamp_millis(),
             };
 
             let after_whole_schedule_active = safe_is_schedule_active_with_now(
@@ -519,13 +412,23 @@ mod scheduling_tests {
                 .with_nanosecond(0)
                 .unwrap();
 
+            let zero_day_with_mocked_time = zero_day
+                .with_hour(hour)
+                .unwrap()
+                .with_minute(0)
+                .unwrap()
+                .with_second(0)
+                .unwrap()
+                .with_nanosecond(0)
+                .unwrap();
+
             let before_whole_schedule = VexillaSchedule {
-                start: (now - Duration::days(1)).timestamp_millis(),
-                end: (now - Duration::days(1)).timestamp_millis(),
+                start: (mocked_now - Duration::days(1)).timestamp_millis(),
+                end: (mocked_now - Duration::days(1)).timestamp_millis(),
                 timezone: "UTC".to_string(),
                 time_type: ScheduleTimeType::Daily,
-                start_time: (zero_day - Duration::hours(1)).timestamp_millis(),
-                end_time: (zero_day + Duration::hours(1)).timestamp_millis(),
+                start_time: (zero_day_with_mocked_time - Duration::hours(1)).timestamp_millis(),
+                end_time: (zero_day_with_mocked_time + Duration::hours(1)).timestamp_millis(),
             };
 
             let before_whole_schedule_active = safe_is_schedule_active_with_now(
@@ -533,7 +436,6 @@ mod scheduling_tests {
                 ScheduleType::Global,
                 mocked_now,
             );
-
             assert!(!before_whole_schedule_active);
 
             let before_day_schedule = VexillaSchedule {
@@ -541,8 +443,8 @@ mod scheduling_tests {
                 end: (mocked_now + Duration::days(1)).timestamp_millis(),
                 timezone: "UTC".to_string(),
                 time_type: ScheduleTimeType::Daily,
-                start_time: (zero_day + Duration::hours(1)).timestamp_millis(),
-                end_time: (zero_day + Duration::hours(3)).timestamp_millis(),
+                start_time: (zero_day_with_mocked_time + Duration::hours(1)).timestamp_millis(),
+                end_time: (zero_day_with_mocked_time + Duration::hours(3)).timestamp_millis(),
             };
 
             let before_day_schedule_active = safe_is_schedule_active_with_now(
@@ -557,22 +459,21 @@ mod scheduling_tests {
                 end: (mocked_now + Duration::days(1)).timestamp_millis(),
                 timezone: "UTC".to_string(),
                 time_type: ScheduleTimeType::Daily,
-                start_time: (zero_day - Duration::hours(1)).timestamp_millis(),
-                end_time: (zero_day + Duration::hours(1)).timestamp_millis(),
+                start_time: (zero_day_with_mocked_time - Duration::hours(1)).timestamp_millis(),
+                end_time: (zero_day_with_mocked_time + Duration::hours(1)).timestamp_millis(),
             };
 
             let during_schedule_active =
                 safe_is_schedule_active_with_now(during_schedule, ScheduleType::Global, mocked_now);
-
             assert!(during_schedule_active);
 
             let after_day_schedule = VexillaSchedule {
-                start: (now - Duration::days(1)).timestamp_millis(),
-                end: (now + Duration::days(1)).timestamp_millis(),
+                start: (mocked_now - Duration::days(1)).timestamp_millis(),
+                end: (mocked_now + Duration::days(1)).timestamp_millis(),
                 timezone: "UTC".to_string(),
                 time_type: ScheduleTimeType::Daily,
-                start_time: (zero_day + Duration::hours(1)).timestamp_millis(),
-                end_time: (zero_day + Duration::hours(3)).timestamp_millis(),
+                start_time: (zero_day_with_mocked_time + Duration::hours(1)).timestamp_millis(),
+                end_time: (zero_day_with_mocked_time + Duration::hours(3)).timestamp_millis(),
             };
 
             let after_day_schedule_active = safe_is_schedule_active_with_now(
@@ -583,12 +484,12 @@ mod scheduling_tests {
             assert!(!after_day_schedule_active);
 
             let after_whole_schedule = VexillaSchedule {
-                start: (now - Duration::days(1)).timestamp_millis(),
-                end: (now - Duration::days(1)).timestamp_millis(),
+                start: (mocked_now - Duration::days(1)).timestamp_millis(),
+                end: (mocked_now - Duration::days(1)).timestamp_millis(),
                 timezone: "UTC".to_string(),
                 time_type: ScheduleTimeType::Daily,
-                start_time: (zero_day - Duration::hours(1)).timestamp_millis(),
-                end_time: (zero_day + Duration::hours(1)).timestamp_millis(),
+                start_time: (zero_day_with_mocked_time - Duration::hours(1)).timestamp_millis(),
+                end_time: (zero_day_with_mocked_time + Duration::hours(1)).timestamp_millis(),
             };
 
             let after_whole_schedule_active = safe_is_schedule_active_with_now(
@@ -596,7 +497,6 @@ mod scheduling_tests {
                 ScheduleType::Global,
                 mocked_now,
             );
-
             assert!(!after_whole_schedule_active);
         }
     }
