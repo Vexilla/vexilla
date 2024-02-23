@@ -22,7 +22,7 @@ class Scheduler:
         if schedule_type not in {ScheduleType.ENVIRONMENT, ScheduleType.GLOBAL}:
             return True
 
-        now = Arrow.utcfromtimestamp(now / 1000)
+        now_datetime = Arrow.utcfromtimestamp(now / 1000)
 
         start_date = Arrow.utcfromtimestamp(schedule.start / 1000)
         start_of_start_date = Arrow(
@@ -50,7 +50,7 @@ class Scheduler:
             fold=getattr(end_date, "fold", 0),
         )
 
-        if not now.is_between(start_of_start_date, end_of_end_date, "[]"):
+        if not now_datetime.is_between(start_of_start_date, end_of_end_date, "[]"):
             return False
 
         start_time = Arrow.utcfromtimestamp(schedule.start_time / 1000)
@@ -59,40 +59,33 @@ class Scheduler:
         if schedule.time_type is ScheduleTimeType.NONE:
             return True
         elif schedule.time_type is ScheduleTimeType.START_END:
-            start_date_time = Arrow(
-                start_date.year,
-                start_date.month,
-                start_date.day,
-                start_time.hour,
-                start_time.minute,
-                start_time.second,
-                start_time.microsecond,
-                dateutil_tz.tzutc(),
-                fold=getattr(start_date, "fold", 0),
-            )
 
-            end_date_time = Arrow(
+            start_of_end_date = Arrow(
                 end_date.year,
                 end_date.month,
                 end_date.day,
-                end_time.hour,
-                end_time.minute,
-                end_time.second,
-                end_time.microsecond,
+                0,
+                0,
+                0,
+                0,
                 dateutil_tz.tzutc(),
-                fold=getattr(start_date, "fold", 0),
+                fold=getattr(end_date, "fold", 0),
             )
 
-            return now.is_between(start_date_time, end_date_time, "[]")
+            start_date_timestamp_with_start_time = int(start_of_start_date.timestamp()) * 1000 + schedule.start_time
+
+            end_date_timestamp_with_end_time = int(start_of_end_date.timestamp()) * 1000 + schedule.end_time
+
+            return start_date_timestamp_with_start_time < now and end_date_timestamp_with_end_time > now
 
         elif schedule.time_type is ScheduleTimeType.DAILY:
             zero_day = Arrow.utcfromtimestamp(0)
-            now_timestamp = now.timestamp()
+            now_timestamp = now_datetime.timestamp()
 
             today_zero_date_time = Arrow(
-                now.year,
-                now.month,
-                now.day,
+                now_datetime.year,
+                now_datetime.month,
+                now_datetime.day,
                 0,
                 0,
                 0,
