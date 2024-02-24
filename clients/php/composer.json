@@ -39,9 +39,10 @@
   },
   "scripts": {
     "test": [
-      "composer install",
-      "ls -a",
-      "composer exec phpunit -- --coverage-text --coverage-filter src/*.php --verbose --bootstrap vendor/autoload.php tests/*.php"
+      "./vendor/bin/phpunit --verbose --bootstrap vendor/autoload.php tests/*.php"
+    ],
+    "coverage": [
+      "composer exec phpunit -- --coverage-text --coverage-filter src/**/*.php --verbose --bootstrap vendor/autoload.php tests/*.php"
     ]
   }
 }
