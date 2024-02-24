@@ -14,6 +14,8 @@ object Scheduler {
 
     fun isScheduleActiveWithNow(schedule: Schedule, scheduleType: ScheduleType, now: Instant): Boolean {
 
+        val nowMillis = now.toEpochMilliseconds()
+
         when (scheduleType) {
             ScheduleType.EMPTY -> return true
             ScheduleType.GLOBAL,
@@ -46,27 +48,19 @@ object Scheduler {
                 when (schedule.timeType) {
                     ScheduleTimeType.NONE -> return true
                     ScheduleTimeType.START_END -> {
-                        val startDateTime = LocalDateTime(
-                            startDate.toLocalDateTime(TimeZone.UTC).date,
-                            LocalTime(
-                                startTime.hour,
-                                startTime.minute,
-                                startTime.second,
-                                startTime.nanosecond
-                            )
-                        ).toInstant(TimeZone.UTC)
 
-                        val endDateTime = LocalDateTime(
+                        val startOfEndDate = LocalDateTime(
                             endDate.toLocalDateTime(TimeZone.UTC).date,
                             LocalTime(
-                                endTime.hour,
-                                endTime.minute,
-                                endTime.second,
-                                endTime.nanosecond
+                                0, 0, 0, 0
                             )
                         ).toInstant(TimeZone.UTC)
 
-                        return (startDateTime..endDateTime).contains(now)
+                        val startDateTimestampWithStartTime =
+                            startOfStartDate.toEpochMilliseconds() + schedule.startTime
+                        val endDateTimestampWithEndTime = startOfEndDate.toEpochMilliseconds() + schedule.endTime
+
+                        return nowMillis in startDateTimestampWithStartTime..endDateTimestampWithEndTime
                     }
 
                     ScheduleTimeType.DAILY -> {
