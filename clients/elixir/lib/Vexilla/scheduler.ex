@@ -9,11 +9,6 @@ defmodule Scheduler do
   @doc """
   Checks if a feature's schedule is active
 
-  ## Examples
-
-    iex> Scheduler.is_scheduled_feature_active(Scheduler.get_example_feature())
-    true
-
   """
   def is_scheduled_feature_active(feature) do
     is_schedule_active(feature["schedule"], feature["scheduleType"])
@@ -29,6 +24,9 @@ defmodule Scheduler do
         true
 
       schedule_type when schedule_type in [schedule_type_global, schedule_type_environment] ->
+
+        now_millis =  datetime |> Timex.to_unix |> Kernel.*(1000)
+
         start_date = Timex.from_unix(schedule["start"], :millisecond)
         start_of_start_date = Timex.beginning_of_day(start_date)
 
@@ -50,25 +48,15 @@ defmodule Scheduler do
             true
 
           {^time_type_start_end, true} ->
-            start_day_with_start_time =
-              Timex.set(start_date,
-                hour: start_time.hour,
-                minute: start_time.minute,
-                second: start_time.second,
-                microsecond: start_time.microsecond
-              )
 
-            end_day_with_start_time =
-              Timex.set(end_date,
-                hour: end_time.hour,
-                minute: end_time.minute,
-                second: end_time.second,
-                microsecond: end_time.microsecond
-              )
+            start_of_end_date = Timex.beginning_of_day(end_date)
 
-            Timex.between?(datetime, start_day_with_start_time, end_day_with_start_time,
-              inclusive: true
-            )
+            start_date_timestamp_with_start_time = (start_of_start_date  |> Timex.to_unix |> Kernel.*(1000)) + schedule["startTime"]
+
+            end_date_timestamp_with_end_time = (start_of_end_date  |> Timex.to_unix |> Kernel.*(1000)) + schedule["endTime"]
+
+            start_date_timestamp_with_start_time <= now_millis && now_millis <= end_date_timestamp_with_end_time
+
 
           {^time_type_daily, true} ->
             zero_day = Timex.from_unix(0, :millisecond)
