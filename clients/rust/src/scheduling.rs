@@ -1,7 +1,5 @@
 use crate::types::*;
 use chrono::prelude::*;
-// use chrono::Duration;
-use log::{info, warn};
 
 pub fn is_scheduled_feature_active(feature: Feature) -> bool {
     match feature {
@@ -121,8 +119,8 @@ pub fn is_schedule_active_with_now(
                         start_of_end_date.timestamp_millis() + schedule.end_time;
 
                     Some(
-                        start_date_timestamp_with_start_time < now_millis
-                            && end_date_timestamp_with_end_time > now_millis,
+                        start_date_timestamp_with_start_time <= now_millis
+                            && end_date_timestamp_with_end_time >= now_millis,
                     )
                 }
                 ScheduleTimeType::Daily => {
