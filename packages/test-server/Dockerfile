@@ -9,5 +9,3 @@ RUN apk add curl
 RUN npm install
 
 CMD npm run start
-
-# CMD sh

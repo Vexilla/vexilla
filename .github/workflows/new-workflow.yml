@@ -1,0 +1,38 @@
+name: Test
+on:
+  push:
+    branches:
+      - "*"
+    paths-ignore:
+      - "**.md"
+
+jobs:
+  test-php:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            php:
+              - 'clients/php/**'
+            app:
+              - 'apps/app/**'
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: /tmp/composer-cache
+          key: ${{ runner.os }}-${{ hashFiles('./clients/php/composer.lock') }}
+
+      - name: Start environment
+        run: docker compose up -d
+
+      - name: Install Composer
+        run: docker compose exec php composer install --no-interaction
+
+      - name: Run tests
+        run: docker compose exec php composer test

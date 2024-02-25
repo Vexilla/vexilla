@@ -9,15 +9,8 @@ final class ClientTest extends TestCase
 
   public function testClient()
   {
-    $testServerHost = getenv('TEST_SERVER_HOST');
-    if (!$testServerHost) {
-      $testServerHost = 'localhost';
-    }
-
-    echo "Test Server Host:" . $testServerHost;
-
     $client = new Client(
-      "http://$testServerHost",
+      "http://test-server:3000",
       'dev',
       $this->uuid,
       true

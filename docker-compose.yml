@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  test-server:
+    build: ./packages/test-server
+    ports:
+      - "3000:3000"
+
+  php:
+    depends_on:
+      - test-server
+    build: ./clients/php
+    volumes:
+      - ./clients/php:/var/www/html
