@@ -14,6 +14,8 @@ func IsScheduleActive(schedule Schedule, scheduleType ScheduleType) bool {
 
 func IsScheduleActiveWithNow(schedule Schedule, scheduleType ScheduleType, now time.Time) bool {
 
+	nowMillis := now.UnixMilli()
+
 	switch scheduleType {
 	case EmptyScheduleType:
 		return true
@@ -42,7 +44,7 @@ func IsScheduleActiveWithNow(schedule Schedule, scheduleType ScheduleType, now t
 			time.UTC,
 		)
 
-		if !now.After(startOfStartDate) || !now.Before(endOfEndDate) {
+		if startOfStartDate.UnixMilli() > nowMillis || nowMillis > endOfEndDate.UnixMilli() {
 			return false
 		}
 
@@ -53,31 +55,23 @@ func IsScheduleActiveWithNow(schedule Schedule, scheduleType ScheduleType, now t
 		case NoneScheduleTimeType:
 			return true
 		case StartEndScheduleTimeType:
-			startDateTimestamp := time.Date(
-				startDate.Year(),
-				startDate.Month(),
-				startDate.Day(),
-				startTime.Hour(),
-				startTime.Minute(),
-				startTime.Second(),
-				startTime.Nanosecond(),
-				time.UTC,
-			).UnixMilli()
 
-			endDateTimestamp := time.Date(
+			startOfEndDate := time.Date(
 				endDate.Year(),
 				endDate.Month(),
 				endDate.Day(),
-				endTime.Hour(),
-				endTime.Minute(),
-				endTime.Second(),
-				endTime.Nanosecond(),
+				0,
+				0,
+				0,
+				0,
 				time.UTC,
-			).UnixMilli()
+			)
 
-			nowTimestamp := now.UnixMilli()
+			startDateTimestampWithStartTime := startOfStartDate.UnixMilli() + schedule.StartTime
+			endDateTimestampWithEndTime := startOfEndDate.UnixMilli() + schedule.EndTime
 
-			return nowTimestamp >= startDateTimestamp && nowTimestamp <= endDateTimestamp
+			return startDateTimestampWithStartTime <= nowMillis && nowMillis <= endDateTimestampWithEndTime
+
 		case DailyScheduleTimeType:
 
 			zeroDay := time.UnixMilli(0).UTC()
