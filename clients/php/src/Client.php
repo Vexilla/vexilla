@@ -177,13 +177,17 @@ class Client
             $this->environmentLookupTable = [];
         }
 
-        if (!$this->environmentLookupTable[$flagGroup->groupId]) {
+        if (!isset($this->environmentLookupTable, $flagGroup->groupId)) {
             $this->environmentLookupTable[$flagGroup->groupId] = [];
         }
 
         foreach ($flagGroup->environments as $environment) {
             $this->environmentLookupTable[$flagGroup->groupId][$environment->name] = $environment->environmentId;
             $this->environmentLookupTable[$flagGroup->groupId][$environment->environmentId] = $environment->environmentId;
+        }
+
+        if (!isset($this->featureLookupTable, $flagGroup->groupId)) {
+            $this->featureLookupTable[$flagGroup->groupId] = [];
         }
 
         foreach ($flagGroup->features as $feature) {
