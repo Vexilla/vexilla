@@ -31,10 +31,13 @@ export function isScheduleActiveWithNow(
 
   const currentTime = dayjs.utc(now);
 
-  const startDate = dayjs.utc(schedule.start).startOf("day");
-  const endDate = dayjs.utc(schedule.end).endOf("day");
+  const startOfStartDate = dayjs.utc(schedule.start).startOf("day");
+  const endOfEndDate = dayjs.utc(schedule.end).endOf("day");
 
-  if (currentTime.isBefore(startDate) || currentTime.isAfter(endDate)) {
+  if (
+    currentTime.isBefore(startOfStartDate) ||
+    currentTime.isAfter(endOfEndDate)
+  ) {
     return false;
   }
 
@@ -46,21 +49,16 @@ export function isScheduleActiveWithNow(
   const endTime = dayjs.utc(schedule.endTime);
 
   if (schedule.timeType === "start/end") {
-    const startDayWithStartTime = startDate
-      .set("hour", startTime.hour())
-      .set("minute", startTime.minute())
-      .set("second", startTime.second())
-      .set("millisecond", startTime.millisecond());
+    const startOfEndDate = dayjs.utc(schedule.end).startOf("day");
 
-    const endDayWithEndTime = endDate
-      .set("hour", endTime.hour())
-      .set("minute", endTime.minute())
-      .set("second", endTime.second())
-      .set("millisecond", endTime.millisecond());
+    const startDateTimestampWithStartTime =
+      startOfStartDate.unix() * 1000 + schedule.startTime;
+    const endDateTimestampWithEndTime =
+      startOfEndDate.unix() * 1000 + schedule.endTime;
 
     return (
-      currentTime.isAfter(startDayWithStartTime) &&
-      currentTime.isBefore(endDayWithEndTime)
+      startDateTimestampWithStartTime <= now &&
+      now <= endDateTimestampWithEndTime
     );
   } else if (schedule.timeType === "daily") {
     const zeroDay = dayjs.utc(0);

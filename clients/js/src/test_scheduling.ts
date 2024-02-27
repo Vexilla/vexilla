@@ -4,18 +4,18 @@ import dayjs from "dayjs";
 import { labelledAssert } from "./utils/testing";
 
 const now = dayjs.utc();
-const nowWithZeroTime = now
-  .set("hour", 0)
-  .set("minute", 0)
-  .set("second", 0)
-  .set("millisecond", 0);
+// const nowWithZeroTime = now
+//   .set("hour", 0)
+//   .set("minute", 0)
+//   .set("second", 0)
+//   .set("millisecond", 0);
 
 const zeroDay = dayjs.utc(0);
-const zeroDayWithCurrentTime = zeroDay
-  .set("hour", now.hour())
-  .set("minute", now.minute())
-  .set("second", now.second())
-  .set("millisecond", now.millisecond());
+// const zeroDayWithMockedTime = zeroDay
+//   .set("hour", now.hour())
+//   .set("minute", now.minute())
+//   .set("second", now.second())
+//   .set("millisecond", now.millisecond());
 
 /*
 
@@ -69,9 +69,21 @@ const scheduleAfter: VexillaSchedule = {
   endTime: 0,
 };
 
-const shouldBefore = isScheduleActive(scheduleBefore, "global");
-const shouldDuring = isScheduleActive(scheduleDuring, "global");
-const shouldAfter = isScheduleActive(scheduleAfter, "global");
+const shouldBefore = isScheduleActiveWithNow(
+  scheduleBefore,
+  "global",
+  now.unix() * 1000
+);
+const shouldDuring = isScheduleActiveWithNow(
+  scheduleDuring,
+  "global",
+  now.unix() * 1000
+);
+const shouldAfter = isScheduleActiveWithNow(
+  scheduleAfter,
+  "global",
+  now.unix() * 1000
+);
 
 labelledAssert(
   !shouldBefore,
@@ -88,142 +100,350 @@ labelledAssert(
 
 /*
 
-  StartEnd
+  StartEnd - Single Day
 
 */
 
-const scheduleForStartEndBefore: VexillaSchedule = {
-  start: nowWithZeroTime.unix() * 1000,
-  end: nowWithZeroTime.add(1, "day").unix() * 1000,
-  timezone: "UTC",
-  timeType: "start/end",
-  // startTime: now.add(1, "hour").unix() * 1000,
-  // endTime: now.add(3, "hour").unix() * 1000,
-  startTime: zeroDayWithCurrentTime.add(1, "hour").unix() * 1000,
-  endTime: zeroDayWithCurrentTime.add(3, "hour").unix() * 1000,
-};
-
-const scheduleForStartEndDuring: VexillaSchedule = {
-  start: nowWithZeroTime.unix() * 1000,
-  end: nowWithZeroTime.add(1, "day").unix() * 1000,
-  timezone: "UTC",
-  timeType: "start/end",
-  startTime: zeroDayWithCurrentTime.subtract(1, "hour").unix() * 1000,
-  endTime: zeroDayWithCurrentTime.add(1, "hour").unix() * 1000,
-};
-
-const scheduleForStartEndAfter: VexillaSchedule = {
-  start: nowWithZeroTime.subtract(1, "day").unix() * 1000,
-  end: nowWithZeroTime.unix() * 1000,
-  timezone: "UTC",
-  timeType: "start/end",
-  startTime: zeroDayWithCurrentTime.subtract(3, "hour").unix() * 1000,
-  endTime: zeroDayWithCurrentTime.subtract(1, "hour").unix() * 1000,
-};
-
-const shouldStartEndBefore = isScheduleActive(
-  scheduleForStartEndBefore,
-  "global"
-);
-const shouldStartEndDuring = isScheduleActive(
-  scheduleForStartEndDuring,
-  "global"
-);
-const shouldStartEndAfter = isScheduleActive(
-  scheduleForStartEndAfter,
-  "global"
-);
-
-labelledAssert(
-  !shouldStartEndBefore,
-  "Should be before schedule for schedule with start/end time"
-);
-labelledAssert(
-  shouldStartEndDuring,
-  "Should be within schedule for schedule with start/end time"
-);
-labelledAssert(
-  !shouldStartEndAfter,
-  "Should be after schedule for schedule with start/end time"
-);
-
-/*
-
-  Daily
-
-*/
-
-// testDailyScheduleWithNow(0, "Zero");
 for (let hour = 0; hour < 24; hour++) {
-  testDailyScheduleWithNow(
-    dayjs().set("hour", hour).set("minute", 0).set("second", 0).unix() * 1000,
-    `Today Hour ${hour}`
+  const mockedNow = now.set("hour", hour);
+  const zeroDayWithMockedTime = zeroDay.set("hour", hour);
+
+  const scheduleForStartEndBefore: VexillaSchedule = {
+    start: mockedNow.unix() * 1000,
+    end: mockedNow.unix() * 1000,
+    timezone: "UTC",
+    timeType: "start/end",
+    startTime: zeroDayWithMockedTime.add(1, "hour").unix() * 1000,
+    endTime: zeroDayWithMockedTime.add(3, "hour").unix() * 1000,
+  };
+
+  const shouldStartEndBefore = isScheduleActiveWithNow(
+    scheduleForStartEndBefore,
+    "global",
+    mockedNow.unix() * 1000
+  );
+  labelledAssert(
+    !shouldStartEndBefore,
+    `Hour: ${hour}: Should be before schedule for schedule with start/end single day`
+  );
+
+  const scheduleForStartEndDuring: VexillaSchedule = {
+    start: mockedNow.unix() * 1000,
+    end: mockedNow.unix() * 1000,
+    timezone: "UTC",
+    timeType: "start/end",
+    startTime: zeroDayWithMockedTime.subtract(1, "hour").unix() * 1000,
+    endTime: zeroDayWithMockedTime.add(1, "hour").unix() * 1000,
+  };
+
+  const shouldStartEndDuring = isScheduleActiveWithNow(
+    scheduleForStartEndDuring,
+    "global",
+    mockedNow.unix() * 1000
+  );
+  labelledAssert(
+    shouldStartEndDuring,
+    `Hour: ${hour}: Should be within schedule for schedule with start/end single day`
+  );
+
+  const scheduleForStartEndAfter: VexillaSchedule = {
+    start: mockedNow.unix() * 1000,
+    end: mockedNow.unix() * 1000,
+    timezone: "UTC",
+    timeType: "start/end",
+    startTime: zeroDayWithMockedTime.subtract(3, "hour").unix() * 1000,
+    endTime: zeroDayWithMockedTime.subtract(1, "hour").unix() * 1000,
+  };
+
+  const shouldStartEndAfter = isScheduleActiveWithNow(
+    scheduleForStartEndAfter,
+    "global",
+    mockedNow.unix() * 1000
+  );
+
+  labelledAssert(
+    !shouldStartEndAfter,
+    `Hour: ${hour}: Should be after schedule for schedule with start/end single day`
   );
 }
 
-function testDailyScheduleWithNow(mockedNow: number, label: string) {
-  const mockedNowDateTime = dayjs.utc(mockedNow);
+/*
 
-  const zeroDayWithMockedTime = zeroDay
-    .set("hour", mockedNowDateTime.hour())
-    .set("minute", mockedNowDateTime.minute())
-    .set("second", mockedNowDateTime.second())
-    .set("millisecond", mockedNowDateTime.millisecond());
+  StartEnd - Multi Day
 
-  const scheduleForDailyBefore: VexillaSchedule = {
-    start: mockedNowDateTime.subtract(2, "day").unix() * 1000,
-    end: mockedNowDateTime.add(2, "day").unix() * 1000,
+*/
+
+for (let hour = 0; hour < 24; hour++) {
+  const mockedNow = now.set("hour", hour);
+  const zeroDayWithMockedTime = zeroDay.set("hour", hour);
+
+  const scheduleForStartEndBefore: VexillaSchedule = {
+    start: mockedNow.add(1, "day").unix() * 1000,
+    end: mockedNow.add(3, "day").unix() * 1000,
+    timezone: "UTC",
+    timeType: "start/end",
+    startTime: zeroDayWithMockedTime.add(1, "hour").unix() * 1000,
+    endTime: zeroDayWithMockedTime.add(3, "hour").unix() * 1000,
+  };
+
+  const shouldStartEndBefore = isScheduleActiveWithNow(
+    scheduleForStartEndBefore,
+    "global",
+    mockedNow.unix() * 1000
+  );
+  labelledAssert(
+    !shouldStartEndBefore,
+    `Hour: ${hour}: Should be before schedule for schedule with start/end multi day`
+  );
+
+  const scheduleForStartEndDuring: VexillaSchedule = {
+    start: mockedNow.subtract(1, "day").unix() * 1000,
+    end: mockedNow.add(1, "day").unix() * 1000,
+    timezone: "UTC",
+    timeType: "start/end",
+    startTime: zeroDayWithMockedTime.subtract(1, "hour").unix() * 1000,
+    endTime: zeroDayWithMockedTime.add(1, "hour").unix() * 1000,
+  };
+
+  const shouldStartEndDuring = isScheduleActiveWithNow(
+    scheduleForStartEndDuring,
+    "global",
+    mockedNow.unix() * 1000
+  );
+  labelledAssert(
+    shouldStartEndDuring,
+    `Hour: ${hour}: Should be within schedule for schedule with start/end multi day`
+  );
+
+  const scheduleForStartEndAfter: VexillaSchedule = {
+    start: mockedNow.subtract(3, "day").unix() * 1000,
+    end: mockedNow.subtract(1, "day").unix() * 1000,
+    timezone: "UTC",
+    timeType: "start/end",
+    startTime: zeroDayWithMockedTime.subtract(3, "hour").unix() * 1000,
+    endTime: zeroDayWithMockedTime.subtract(1, "hour").unix() * 1000,
+  };
+
+  const shouldStartEndAfter = isScheduleActiveWithNow(
+    scheduleForStartEndAfter,
+    "global",
+    mockedNow.unix() * 1000
+  );
+
+  labelledAssert(
+    !shouldStartEndAfter,
+    `Hour: ${hour}: Should be after schedule for schedule with start/end multi day`
+  );
+}
+
+/*
+
+  Daily - Single Day
+
+*/
+
+for (let hour = 0; hour < 24; hour++) {
+  const mockedNow = now.set("hour", hour);
+  const zeroDayWithMockedTime = zeroDay.set("hour", hour);
+
+  const scheduleForDailyBeforeWhole: VexillaSchedule = {
+    start: mockedNow.unix() * 1000,
+    end: mockedNow.unix() * 1000,
     timezone: "UTC",
     timeType: "daily",
     startTime: zeroDayWithMockedTime.add(1, "hour").unix() * 1000,
     endTime: zeroDayWithMockedTime.add(3, "hour").unix() * 1000,
   };
 
+  const shouldDailyBeforeWhole = isScheduleActiveWithNow(
+    scheduleForDailyBeforeWhole,
+    "global",
+    mockedNow.unix() * 1000
+  );
+  labelledAssert(
+    !shouldDailyBeforeWhole,
+    `Hour: ${hour}: Should be before schedule for whole schedule with daily time`
+  );
+
+  const scheduleForDailyBeforeDay: VexillaSchedule = {
+    start: mockedNow.unix() * 1000,
+    end: mockedNow.unix() * 1000,
+    timezone: "UTC",
+    timeType: "daily",
+    startTime: zeroDayWithMockedTime.add(1, "hour").unix() * 1000,
+    endTime: zeroDayWithMockedTime.add(3, "hour").unix() * 1000,
+  };
+
+  const shouldDailyBeforeDay = isScheduleActiveWithNow(
+    scheduleForDailyBeforeDay,
+    "global",
+    mockedNow.unix() * 1000
+  );
+  labelledAssert(
+    !shouldDailyBeforeDay,
+    `Hour: ${hour}: Should be before schedule for day schedule with daily time`
+  );
+
   const scheduleForDailyDuring: VexillaSchedule = {
-    start: mockedNowDateTime.subtract(2, "day").unix() * 1000,
-    end: mockedNowDateTime.add(2, "day").unix() * 1000,
+    start: mockedNow.unix() * 1000,
+    end: mockedNow.unix() * 1000,
     timezone: "UTC",
     timeType: "daily",
     startTime: zeroDayWithMockedTime.subtract(1, "hour").unix() * 1000,
     endTime: zeroDayWithMockedTime.add(1, "hour").unix() * 1000,
   };
 
-  const scheduleForDailyAfter: VexillaSchedule = {
-    start: mockedNowDateTime.subtract(2, "day").unix() * 1000,
-    end: mockedNowDateTime.add(2, "day").unix() * 1000,
+  const shouldDailyDuring = isScheduleActiveWithNow(
+    scheduleForDailyDuring,
+    "global",
+    mockedNow.unix() * 1000
+  );
+  labelledAssert(
+    shouldDailyDuring,
+    `Hour ${hour}: Should be within schedule for schedule with daily time`
+  );
+
+  const scheduleForDailyAfterDay: VexillaSchedule = {
+    start: mockedNow.unix() * 1000,
+    end: mockedNow.unix() * 1000,
     timezone: "UTC",
     timeType: "daily",
     startTime: zeroDayWithMockedTime.subtract(3, "hour").unix() * 1000,
     endTime: zeroDayWithMockedTime.subtract(1, "hour").unix() * 1000,
   };
 
-  const shouldDailyBefore = isScheduleActiveWithNow(
-    scheduleForDailyBefore,
+  const shouldDailyAfterDay = isScheduleActiveWithNow(
+    scheduleForDailyAfterDay,
     "global",
-    mockedNow
+    mockedNow.unix() * 1000
   );
   labelledAssert(
-    !shouldDailyBefore,
-    `${label}: Should be before schedule for schedule with daily time`
+    !shouldDailyAfterDay,
+    `Hour ${hour}: Should be after schedule for day schedule with daily time`
   );
+
+  const scheduleForDailyAfterWhole: VexillaSchedule = {
+    start: mockedNow.unix() * 1000,
+    end: mockedNow.unix() * 1000,
+    timezone: "UTC",
+    timeType: "daily",
+    startTime: zeroDayWithMockedTime.subtract(3, "hour").unix() * 1000,
+    endTime: zeroDayWithMockedTime.subtract(1, "hour").unix() * 1000,
+  };
+
+  const shouldDailyAfterWhole = isScheduleActiveWithNow(
+    scheduleForDailyAfterWhole,
+    "global",
+    mockedNow.unix() * 1000
+  );
+  labelledAssert(
+    !shouldDailyAfterWhole,
+    `Hour ${hour}: Should be after schedule for day schedule with daily time`
+  );
+}
+
+/*
+
+  Daily - Multi Day
+
+*/
+
+for (let hour = 0; hour < 24; hour++) {
+  const mockedNow = now.set("hour", hour);
+  const zeroDayWithMockedTime = zeroDay.set("hour", hour);
+
+  const scheduleForDailyBeforeWhole: VexillaSchedule = {
+    start: mockedNow.add(1, "day").unix() * 1000,
+    end: mockedNow.add(3, "day").unix() * 1000,
+    timezone: "UTC",
+    timeType: "daily",
+    startTime: zeroDayWithMockedTime.add(1, "hour").unix() * 1000,
+    endTime: zeroDayWithMockedTime.add(3, "hour").unix() * 1000,
+  };
+
+  const shouldDailyBeforeWhole = isScheduleActiveWithNow(
+    scheduleForDailyBeforeWhole,
+    "global",
+    mockedNow.unix() * 1000
+  );
+  labelledAssert(
+    !shouldDailyBeforeWhole,
+    `Hour: ${hour}: Should be before schedule for whole schedule with daily time`
+  );
+
+  const scheduleForDailyBeforeDay: VexillaSchedule = {
+    start: mockedNow.subtract(1, "day").unix() * 1000,
+    end: mockedNow.add(1, "day").unix() * 1000,
+    timezone: "UTC",
+    timeType: "daily",
+    startTime: zeroDayWithMockedTime.add(1, "hour").unix() * 1000,
+    endTime: zeroDayWithMockedTime.add(3, "hour").unix() * 1000,
+  };
+
+  const shouldDailyBeforeDay = isScheduleActiveWithNow(
+    scheduleForDailyBeforeDay,
+    "global",
+    mockedNow.unix() * 1000
+  );
+  labelledAssert(
+    !shouldDailyBeforeDay,
+    `Hour: ${hour}: Should be before schedule for day schedule with daily time`
+  );
+
+  const scheduleForDailyDuring: VexillaSchedule = {
+    start: mockedNow.subtract(1, "day").unix() * 1000,
+    end: mockedNow.add(1, "day").unix() * 1000,
+    timezone: "UTC",
+    timeType: "daily",
+    startTime: zeroDayWithMockedTime.subtract(1, "hour").unix() * 1000,
+    endTime: zeroDayWithMockedTime.add(1, "hour").unix() * 1000,
+  };
 
   const shouldDailyDuring = isScheduleActiveWithNow(
     scheduleForDailyDuring,
     "global",
-    mockedNow
+    mockedNow.unix() * 1000
   );
   labelledAssert(
     shouldDailyDuring,
-    `${label}: Should be within schedule for schedule with daily time`
+    `Hour ${hour}: Should be within schedule for schedule with daily time`
   );
 
-  const shouldDailyAfter = isScheduleActiveWithNow(
-    scheduleForDailyAfter,
+  const scheduleForDailyAfterDay: VexillaSchedule = {
+    start: mockedNow.subtract(2, "day").unix() * 1000,
+    end: mockedNow.add(2, "day").unix() * 1000,
+    timezone: "UTC",
+    timeType: "daily",
+    startTime: zeroDayWithMockedTime.subtract(3, "hour").unix() * 1000,
+    endTime: zeroDayWithMockedTime.subtract(1, "hour").unix() * 1000,
+  };
+
+  const shouldDailyAfterDay = isScheduleActiveWithNow(
+    scheduleForDailyAfterDay,
     "global",
-    mockedNow
+    mockedNow.unix() * 1000
   );
   labelledAssert(
-    !shouldDailyAfter,
-    `${label}: Should be after schedule for schedule with daily time`
+    !shouldDailyAfterDay,
+    `Hour ${hour}: Should be after schedule for day schedule with daily time`
+  );
+
+  const scheduleForDailyAfterWhole: VexillaSchedule = {
+    start: mockedNow.subtract(3, "day").unix() * 1000,
+    end: mockedNow.subtract(1, "day").unix() * 1000,
+    timezone: "UTC",
+    timeType: "daily",
+    startTime: zeroDayWithMockedTime.subtract(3, "hour").unix() * 1000,
+    endTime: zeroDayWithMockedTime.subtract(1, "hour").unix() * 1000,
+  };
+
+  const shouldDailyAfterWhole = isScheduleActiveWithNow(
+    scheduleForDailyAfterWhole,
+    "global",
+    mockedNow.unix() * 1000
+  );
+  labelledAssert(
+    !shouldDailyAfterWhole,
+    `Hour ${hour}: Should be after schedule for day schedule with daily time`
   );
 }
