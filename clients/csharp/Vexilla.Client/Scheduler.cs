@@ -13,7 +13,7 @@ namespace Vexilla.Client
             string scheduleType)
         {
             return IsScheduleActiveWithNow(schedule, scheduleType,
-                DateTimeOffset.Now);
+                DateTimeOffset.UtcNow);
         }
 
         public static bool IsScheduleActiveWithNow(Schedule schedule,
@@ -25,6 +25,8 @@ namespace Vexilla.Client
                     return true;
                 case ScheduleType.Global:
                 case ScheduleType.Environment:
+
+                    var nowTimestamp = now.ToUnixTimeMilliseconds();
 
                     var startDateTimeOffset =
                         DateTimeOffset.FromUnixTimeMilliseconds(schedule.Start);
@@ -52,7 +54,7 @@ namespace Vexilla.Client
                         endDateTimeOffset.Offset
                     );
 
-                    if (now <= startOfStartDate || now >= endOfEndDate)
+                    if (now < startOfStartDate || now > endOfEndDate)
                     {
                         return false;
                     }
@@ -71,35 +73,29 @@ namespace Vexilla.Client
                             return true;
 
                         case ScheduleTimeType.StartEnd:
-                            var startDateTime = new DateTimeOffset(
-                                startDateTimeOffset.Year,
-                                startDateTimeOffset.Month,
-                                startDateTimeOffset.Day,
-                                startTime.Hour,
-                                startTime.Minute,
-                                startTime.Second,
-                                startTime.Millisecond,
-                                startDateTimeOffset.Offset
-                            );
 
-                            var endDateTime = new DateTimeOffset(
+                            var startOfEndDate =  new DateTimeOffset(
                                 endDateTimeOffset.Year,
                                 endDateTimeOffset.Month,
                                 endDateTimeOffset.Day,
-                                endTime.Hour,
-                                endTime.Minute,
-                                endTime.Second,
-                                endTime.Millisecond,
+                                0,
+                                0,
+                                0,
                                 endDateTimeOffset.Offset
                             );
 
-                            return now >= startDateTime && now <= endDateTime;
+                            var startDateTimestampWithStartTime = startOfStartDate.ToUnixTimeMilliseconds() + schedule.StartTime;
+
+                            var endDateTimestampWithEndTime = startOfEndDate.ToUnixTimeMilliseconds() + schedule.EndTime;
+
+                            Console.WriteLine(string.Format("start: {0} - now: {1} - end: {2}", startDateTimestampWithStartTime, nowTimestamp, endDateTimestampWithEndTime));
+
+                            return startDateTimestampWithStartTime <= nowTimestamp && nowTimestamp <= endDateTimestampWithEndTime;
 
                         case ScheduleTimeType.Daily:
 
                             var zeroDay =
                                 DateTimeOffset.FromUnixTimeMilliseconds(0);
-                            var nowTimestamp = now.ToUnixTimeMilliseconds();
 
                             var todayZeroTimestamp = new DateTimeOffset(
                                 now.Year,
