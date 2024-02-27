@@ -1,4 +1,4 @@
-<?
+<?php
 
 namespace Vexilla;
 
@@ -20,7 +20,7 @@ class Scheduler
 
     static function isScheduleActive(Schedule $schedule, string $scheduleType): bool
     {
-        return Scheduler::isScheduleActiveWithNow($schedule, $scheduleType, Carbon::now());
+        return Scheduler::isScheduleActiveWithNow($schedule, $scheduleType, Carbon::now("UTC"));
     }
 
     static function isScheduleActiveWithNow(Schedule $schedule, string $scheduleType, Carbon $now): bool
@@ -47,20 +47,17 @@ class Scheduler
                     return false;
                 }
 
-                echo "Made it past WHOLE check";
-
-                $startTime = Carbon::createFromTimestampMsUTC($schedule->startTime);
-                $endTime = Carbon::createFromTimestampMsUTC($schedule->endTime);
-
-                return Scheduler::isScheduleTimeActive($schedule->timeType, $now, $startDate, $startTime, $endDate, $endTime);
+                return Scheduler::isScheduleTimeActive($schedule->timeType, $now, $startDate, $schedule->startTime, $endDate, $schedule->endTime);
 
             default:
                 return false;
         }
     }
 
-    private static function isScheduleTimeActive(string $timeType, Carbon $now, Carbon $startDate, Carbon $startTime, Carbon $endDate, Carbon $endTime): bool
+    private static function isScheduleTimeActive(string $timeType, Carbon $now, Carbon $startDate, int $startTime, Carbon $endDate, int $endTime): bool
     {
+        $nowMillis = $now->timestamp * 1000;
+
         switch ($timeType) {
 
             case ScheduleTimeType::NONE:
@@ -68,63 +65,57 @@ class Scheduler
 
             case ScheduleTimeType::START_END:
 
-                $startDateTime = $startDate->clone();
-                $startDateTime
-                    ->setHours($startTime->hour)
-                    ->setMinutes($startTime->minute)
-                    ->setSeconds($startTime->second)
-                    ->setMicroseconds($startTime->microsecond);
+                $startOfStartDate = $startDate->clone();
+                $startOfStartDate->setHours(0);
+                $startOfStartDate->setMinutes(0);
+                $startOfStartDate->setSeconds(0);
+                $startOfStartDate->setMicroseconds(0);
 
+                $startOfStartDateMillis = $startOfStartDate->timestamp * 1000;
 
-                $endDateTime = $endDate->clone();
-                $endDateTime
-                    ->setHours($endTime->hour)
-                    ->setMinutes($endTime->minute)
-                    ->setSeconds($endTime->second)
-                    ->setMicroseconds($endTime->microsecond);
+                $startOfEndDate = $endDate->clone();
+                $startOfEndDate->setHours(0);
+                $startOfEndDate->setMinutes(0);
+                $startOfEndDate->setSeconds(0);
+                $startOfEndDate->setMicroseconds(0);
 
-                return $now->betweenIncluded($startDateTime, $endDateTime);
+                $startOfEndDateMillis = $startOfEndDate->timestamp * 1000;
+
+                $startDateTimestampWithStartTime = $startOfStartDateMillis + $startTime;
+                $endDateTimestampWithEndTime = $startOfEndDateMillis + $endTime;
+
+                return $startDateTimestampWithStartTime <= $nowMillis && $nowMillis <= $endDateTimestampWithEndTime;
 
             case ScheduleTimeType::DAILY:
 
                 $zeroDay = Carbon::createFromTimestampMsUTC(0);
-                $nowTimestamp = $now->timestamp * 1000;
 
-                $todayZeroTimestamp = Carbon::create(
-                    $now->year,
-                    $now->month,
-                    $now->day,
-                )->timestamp * 1000;
+                $zeroDayWithNow = $zeroDay->clone()
+                    ->setHours($now->hour)
+                    ->setMinutes($now->minute)
+                    ->setSeconds($now->second)
+                    ->setMilliseconds($now->millisecond);
 
-                $zeroedStartTimestamp = Carbon::create(
-                    $zeroDay->year,
-                    $zeroDay->month,
-                    $zeroDay->day,
-                    $startTime->hour,
-                    $startTime->minute,
-                    $startTime->second,
-                )->timestamp * 1000;
+                $zeroDayWithNowTimestamp = $zeroDayWithNow->timestamp * 1000;
 
-
-                $zeroedEndDateTime = Carbon::create(
-                    $zeroDay->year,
-                    $zeroDay->month,
-                    $zeroDay->day,
-                    $endTime->hour,
-                    $endTime->minute,
-                    $endTime->second,
-                );
-
-                $zeroedEndTimestamp = $zeroedEndDateTime->timestamp * 1000;
-
-                $startTimestamp = $todayZeroTimestamp + $zeroedStartTimestamp;
-                $endTimestamp = $todayZeroTimestamp + $zeroedEndTimestamp;
-
-                if ($zeroedStartTimestamp > $zeroedEndTimestamp) {
-                    return $startTimestamp <= $nowTimestamp || $nowTimestamp >= $endTimestamp;
+                if ($startTime > $endTime) {
+                    return $startTime <= $zeroDayWithNowTimestamp || $zeroDayWithNowTimestamp <= $endTime;
                 } else {
-                    return $startTimestamp <= $nowTimestamp && $nowTimestamp >= $endTimestamp;
+                    return $startTime <= $zeroDayWithNowTimestamp && $zeroDayWithNowTimestamp <= $endTime;
                 }
+
+
+            // if schedule.start_time > schedule.end_time {
+            //     Some(
+            //         schedule.start_time <= zero_day_with_now_time
+            //             || schedule.end_time >= zero_day_with_now_time,
+            //     )
+            // } else {
+            //     Some(
+            //         schedule.start_time <= zero_day_with_now_time
+            //             && schedule.end_time >= zero_day_with_now_time,
+            //     )
+            // }
 
             default:
                 return false;

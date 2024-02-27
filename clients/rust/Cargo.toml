@@ -18,3 +18,4 @@ convert_case = "^0.3.2"
 thiserror = "1.0"
 chrono = { version = "0.4.26" }
 chrono-tz = "0.8.3"
+log = "*"

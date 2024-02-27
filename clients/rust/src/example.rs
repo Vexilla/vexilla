@@ -1,3 +1,5 @@
+#![allow(unused)]
+#![allow(non_snake_case)]
 /*
   This file has been generated from your remote Vexilla Feature Flags file.
 

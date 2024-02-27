@@ -1,0 +1,15 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "vexilla",
+    srcs = ["client.go"],
+    importpath = "github.com/vexilla/vexilla/clients/go/pkg/vexilla",
+    visibility = ["//visibility:public"],
+    deps = ["//clients/go/pkg/internal"],
+)
+
+go_test(
+    name = "vexilla_test",
+    srcs = ["client_test.go"],
+    embed = [":vexilla"],
+)

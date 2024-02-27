@@ -21,19 +21,28 @@
   "autoload": {
     "psr-4": {
       "Vexilla\\": "src/"
-    }
+    },
+    "classmap": [
+      "src/",
+      "tests/"
+    ]
   },
   "autoload-dev": {
     "psr-4": {
       "Vexilla\\": "src/",
-      "VexillaTest\\": "tests/"
-    }
+      "Vexilla\\Tests\\": "tests/"
+    },
+    "classmap": [
+      "src/",
+      "tests/"
+    ]
   },
   "scripts": {
     "test": [
-      "composer install",
-      "ls -a",
-      "./vendor/bin/phpunit --coverage-text --coverage-filter src/*.php --verbose --bootstrap vendor/autoload.php tests/*.php"
+      "./vendor/bin/phpunit --verbose --bootstrap vendor/autoload.php tests/*.php"
+    ],
+    "coverage": [
+      "composer exec phpunit -- --coverage-text --coverage-filter src/**/*.php --verbose --bootstrap vendor/autoload.php tests/*.php"
     ]
   }
 }

@@ -289,7 +289,7 @@ impl SelectiveFeature {
     }
 }
 
-#[derive(Clone, Copy, Debug, EnumString, Deserialize, Default)]
+#[derive(Clone, Copy, Debug, EnumString, Deserialize, Default, strum_macros::Display)]
 #[strum(serialize_all = "camelCase")]
 pub enum ScheduleTimeType {
     #[default]

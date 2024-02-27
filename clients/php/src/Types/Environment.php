@@ -2,18 +2,21 @@
 
 namespace Vexilla\Types;
 
-class Environment {
+class Environment
+{
     public string $name;
     public string $environmentId;
     public array $features;
 
-    function __construct(string $name, string $environmentId, array $features) {
+    function __construct(string $name, string $environmentId, array $features)
+    {
         $this->name = $name;
         $this->environmentId = $environmentId;
         $this->features = $features;
     }
 
-    function getFeature(string $featureId): ?Feature {
+    function getFeature(string $featureId): ?Feature
+    {
         $feature = $this->features[$featureId];
         if ($feature) {
             return $feature;
@@ -22,7 +25,8 @@ class Environment {
         }
     }
 
-    function getToggleFeature(string $featureId): ?ToggleFeature {
+    function getToggleFeature(string $featureId): ?ToggleFeature
+    {
         $feature = $this->features[$featureId];
         if ($feature && $feature->featureType === FeatureType::TOGGLE) {
             return $feature;
@@ -31,7 +35,8 @@ class Environment {
         }
     }
 
-    function getGradualFeature(string $featureId): ?GradualFeature {
+    function getGradualFeature(string $featureId): ?GradualFeature
+    {
         $feature = $this->features[$featureId];
         if ($feature && $feature->featureType === FeatureType::GRADUAL) {
             return $feature;
@@ -40,7 +45,8 @@ class Environment {
         }
     }
 
-    function getSelectiveFeature(string $featureId): ?SelectiveFeature {
+    function getSelectiveFeature(string $featureId): ?SelectiveFeature
+    {
         $feature = $this->features[$featureId];
         if ($feature && $feature->featureType === FeatureType::SELECTIVE) {
             return $feature;
@@ -49,7 +55,8 @@ class Environment {
         }
     }
 
-    function getValueStringFeature(string $featureId): ?ValueStringFeature {
+    function getValueStringFeature(string $featureId): ?ValueStringFeature
+    {
         $feature = $this->features[$featureId];
 
         if ($feature && $feature->featureType === FeatureType::VALUE && $feature->valueType === ValueType::STRING) {
@@ -59,7 +66,8 @@ class Environment {
         }
     }
 
-    function getValueIntFeature(string $featureId): ?ValueIntFeature {
+    function getValueIntFeature(string $featureId): ?ValueIntFeature
+    {
         $feature = $this->features[$featureId];
 
         if ($feature && $feature->featureType === FeatureType::VALUE && $feature->numberType === NumberType::INT) {
@@ -69,7 +77,8 @@ class Environment {
         }
     }
 
-    function getValueFloatFeature(string $featureId): ?ValueFloatFeature {
+    function getValueFloatFeature(string $featureId): ?ValueFloatFeature
+    {
         $feature = $this->features[$featureId];
         if ($feature && $feature->featureType === FeatureType::VALUE && $feature->numberType === NumberType::FLOAT) {
             return $feature;

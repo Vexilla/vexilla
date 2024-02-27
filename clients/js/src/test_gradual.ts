@@ -10,4 +10,4 @@ console.log("WORKING SEED", hashString(uuid, workingSeed));
 assert.ok(hashString(uuid, workingSeed) <= 0.4);
 
 console.log("NON WORKING SEED", hashString(uuid, nonWorkingSeed));
-assert.ok(hashString(uuid, workingSeed) > 0.4);
+assert.ok(hashString(uuid, nonWorkingSeed) > 0.4);

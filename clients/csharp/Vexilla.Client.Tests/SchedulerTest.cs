@@ -1,5 +1,6 @@
 using System;
 using NUnit.Framework;
+using System.Text.Json;
 
 namespace Vexilla.Client.Tests
 {
@@ -25,55 +26,14 @@ namespace Vexilla.Client.Tests
         }
 
         [Test]
-        public void TestSchedulerActiveStartEnd()
+        public void TestSchedulerActiveStartEndSingleDay()
         {
-            var now = DateTimeOffset.Now;
-            var beforeSchedule = new Schedule
-            {
-                Start = now.AddDays(1).ToUnixTimeMilliseconds(),
-                End = now.AddDays(2).ToUnixTimeMilliseconds(),
-                Timezone = "UTC",
-                TimeType = ScheduleTimeType.StartEnd,
-                StartTime = 0,
-                EndTime = 0
-            };
+            var now = DateTimeOffset.UtcNow;
+            var zeroDay = DateTimeOffset.FromUnixTimeMilliseconds(0);
 
-            Assert.False(Scheduler.IsScheduleActive(beforeSchedule,
-                ScheduleType.Global));
-
-            var duringSchedule = new Schedule
-            {
-                Start = now.AddDays(-1).ToUnixTimeMilliseconds(),
-                End = now.AddDays(1).ToUnixTimeMilliseconds(),
-                Timezone = "UTC",
-                TimeType = ScheduleTimeType.StartEnd,
-                StartTime = 0,
-                EndTime = 0
-            };
-
-            Assert.True(Scheduler.IsScheduleActive(duringSchedule,
-                ScheduleType.Global));
-
-            var afterSchedule = new Schedule
-            {
-                Start = now.AddDays(-2).ToUnixTimeMilliseconds(),
-                End = now.AddDays(-1).ToUnixTimeMilliseconds(),
-                Timezone = "UTC",
-                TimeType = ScheduleTimeType.StartEnd,
-                StartTime = 0,
-                EndTime = 0
-            };
-
-            Assert.False(Scheduler.IsScheduleActive(afterSchedule,
-                ScheduleType.Global));
-        }
-
-        [Test]
-        public void TestSchedulingActiveDaily()
-        {
-            var now = DateTimeOffset.Now;
             for(int hour = 0; hour < 24; hour++) {
-                var mocked_now = new DateTimeOffset(
+
+                var mockedNow = new DateTimeOffset(
                     now.Year,
                     now.Month,
                     now.Day,
@@ -84,46 +44,317 @@ namespace Vexilla.Client.Tests
                     TimeSpan.Zero
                 );
 
-                var beforeDaySchedule = new Schedule
+                var zeroDayWithMockedTime = new DateTimeOffset(
+                    zeroDay.Year,
+                    zeroDay.Month,
+                    zeroDay.Day,
+                    hour,
+                    0,
+                    0,
+                    0,
+                    TimeSpan.Zero
+                );
+
+                var beforeSchedule = new Schedule
                 {
-                    Start = now.AddDays(-1).ToUnixTimeMilliseconds(),
-                    End = now.AddDays(1).ToUnixTimeMilliseconds(),
+                    Start = mockedNow.ToUnixTimeMilliseconds(),
+                    End = mockedNow.ToUnixTimeMilliseconds(),
+                    Timezone = "UTC",
+                    TimeType = ScheduleTimeType.StartEnd,
+                    StartTime = zeroDayWithMockedTime.AddHours(1).ToUnixTimeMilliseconds(),
+                    EndTime = zeroDayWithMockedTime.AddHours(3).ToUnixTimeMilliseconds()
+                };
+
+                Assert.False(Scheduler.IsScheduleActiveWithNow(beforeSchedule,
+                    ScheduleType.Global, mockedNow));
+
+                var duringSchedule = new Schedule
+                {
+                    Start = mockedNow.ToUnixTimeMilliseconds(),
+                    End = mockedNow.ToUnixTimeMilliseconds(),
+                    Timezone = "UTC",
+                    TimeType = ScheduleTimeType.StartEnd,
+                    StartTime = zeroDayWithMockedTime.AddHours(-1).ToUnixTimeMilliseconds(),
+                    EndTime = zeroDayWithMockedTime.AddHours(1).ToUnixTimeMilliseconds()
+                };
+
+                Assert.True(Scheduler.IsScheduleActiveWithNow(duringSchedule,
+                    ScheduleType.Global, mockedNow));
+
+                var afterSchedule = new Schedule
+                {
+                    Start = mockedNow.ToUnixTimeMilliseconds(),
+                    End = mockedNow.ToUnixTimeMilliseconds(),
+                    Timezone = "UTC",
+                    TimeType = ScheduleTimeType.StartEnd,
+                    StartTime = zeroDayWithMockedTime.AddHours(-3).ToUnixTimeMilliseconds(),
+                    EndTime = zeroDayWithMockedTime.AddHours(-1).ToUnixTimeMilliseconds()
+                };
+
+                Assert.False(Scheduler.IsScheduleActiveWithNow(afterSchedule,
+                    ScheduleType.Global, mockedNow));
+            }
+        }
+
+        [Test]
+        public void TestSchedulerActiveStartEndMultiDay()
+        {
+            var now = DateTimeOffset.Now;
+            var zeroDay = DateTimeOffset.FromUnixTimeMilliseconds(0);
+
+            for(int hour = 0; hour < 24; hour++) {
+
+                var mockedNow = new DateTimeOffset(
+                    now.Year,
+                    now.Month,
+                    now.Day,
+                    hour,
+                    0,
+                    0,
+                    0,
+                    TimeSpan.Zero
+                );
+
+                var zeroDayWithMockedTime = new DateTimeOffset(
+                    zeroDay.Year,
+                    zeroDay.Month,
+                    zeroDay.Day,
+                    hour,
+                    0,
+                    0,
+                    0,
+                    TimeSpan.Zero
+                );
+
+                var beforeSchedule = new Schedule
+                {
+                    Start = mockedNow.AddDays(1).ToUnixTimeMilliseconds(),
+                    End = mockedNow.AddDays(2).ToUnixTimeMilliseconds(),
+                    Timezone = "UTC",
+                    TimeType = ScheduleTimeType.StartEnd,
+                    StartTime = zeroDayWithMockedTime.AddHours(1).ToUnixTimeMilliseconds(),
+                    EndTime = zeroDayWithMockedTime.AddHours(3).ToUnixTimeMilliseconds()
+                };
+
+                Assert.False(Scheduler.IsScheduleActiveWithNow(beforeSchedule,
+                    ScheduleType.Global, mockedNow));
+
+                var duringSchedule = new Schedule
+                {
+                    Start = mockedNow.AddDays(-1).ToUnixTimeMilliseconds(),
+                    End = mockedNow.AddDays(1).ToUnixTimeMilliseconds(),
+                    Timezone = "UTC",
+                    TimeType = ScheduleTimeType.StartEnd,
+                    StartTime = zeroDayWithMockedTime.AddHours(-1).ToUnixTimeMilliseconds(),
+                    EndTime = zeroDayWithMockedTime.AddHours(1).ToUnixTimeMilliseconds()
+                };
+
+                Assert.True(Scheduler.IsScheduleActiveWithNow(duringSchedule,
+                    ScheduleType.Global, mockedNow));
+
+                var afterSchedule = new Schedule
+                {
+                    Start = mockedNow.AddDays(-2).ToUnixTimeMilliseconds(),
+                    End = mockedNow.AddDays(-1).ToUnixTimeMilliseconds(),
+                    Timezone = "UTC",
+                    TimeType = ScheduleTimeType.StartEnd,
+                    StartTime = zeroDayWithMockedTime.AddHours(-3).ToUnixTimeMilliseconds(),
+                    EndTime = zeroDayWithMockedTime.AddHours(-1).ToUnixTimeMilliseconds()
+                };
+
+                Assert.False(Scheduler.IsScheduleActiveWithNow(afterSchedule,
+                    ScheduleType.Global, mockedNow));
+            }
+        }
+
+        [Test]
+        public void TestSchedulingActiveDailySingleDay()
+        {
+            var now = DateTimeOffset.Now;
+            var zeroDay = DateTimeOffset.FromUnixTimeMilliseconds(0);
+
+            for(int hour = 0; hour < 24; hour++) {
+                var mockedNow = new DateTimeOffset(
+                    now.Year,
+                    now.Month,
+                    now.Day,
+                    hour,
+                    0,
+                    0,
+                    0,
+                    TimeSpan.Zero
+                );
+
+                var zeroDayWithMockedTime = new DateTimeOffset(
+                    zeroDay.Year,
+                    zeroDay.Month,
+                    zeroDay.Day,
+                    hour,
+                    0,
+                    0,
+                    0,
+                    TimeSpan.Zero
+                );
+
+                var beforeWholeSchedule = new Schedule
+                {
+                    Start = mockedNow.AddDays(1).ToUnixTimeMilliseconds(),
+                    End = mockedNow.AddDays(1).ToUnixTimeMilliseconds(),
                     Timezone = "UTC",
                     TimeType = ScheduleTimeType.Daily,
-                    StartTime = mocked_now.AddHours(1).ToUnixTimeMilliseconds(),
-                    EndTime = mocked_now.AddHours(3).ToUnixTimeMilliseconds()
+                    StartTime = zeroDayWithMockedTime.AddHours(1).ToUnixTimeMilliseconds(),
+                    EndTime = zeroDayWithMockedTime.AddHours(3).ToUnixTimeMilliseconds()
+                };
+
+                Assert.False(Scheduler.IsScheduleActiveWithNow(beforeWholeSchedule,
+                    ScheduleType.Global, mockedNow));
+
+                var beforeDaySchedule = new Schedule
+                {
+                    Start = mockedNow.ToUnixTimeMilliseconds(),
+                    End = mockedNow.ToUnixTimeMilliseconds(),
+                    Timezone = "UTC",
+                    TimeType = ScheduleTimeType.Daily,
+                    StartTime = zeroDayWithMockedTime.AddHours(1).ToUnixTimeMilliseconds(),
+                    EndTime = zeroDayWithMockedTime.AddHours(3).ToUnixTimeMilliseconds()
                 };
 
                 Assert.False(Scheduler.IsScheduleActiveWithNow(beforeDaySchedule,
-                    ScheduleType.Global, mocked_now));
+                    ScheduleType.Global, mockedNow));
+
+                var duringSchedule = new Schedule
+                {
+                    Start = mockedNow.ToUnixTimeMilliseconds(),
+                    End = mockedNow.ToUnixTimeMilliseconds(),
+                    Timezone = "UTC",
+                    TimeType = ScheduleTimeType.Daily,
+                    StartTime = zeroDayWithMockedTime.AddHours(-1).ToUnixTimeMilliseconds(),
+                    EndTime = zeroDayWithMockedTime.AddHours(1).ToUnixTimeMilliseconds()
+                };
+
+                Assert.True(Scheduler.IsScheduleActiveWithNow(duringSchedule,
+                    ScheduleType.Global, mockedNow));
+
+                var afterDaySchedule = new Schedule
+                {
+                    Start = mockedNow.ToUnixTimeMilliseconds(),
+                    End = mockedNow.ToUnixTimeMilliseconds(),
+                    Timezone = "UTC",
+                    TimeType = ScheduleTimeType.Daily,
+                    StartTime = zeroDayWithMockedTime.AddHours(-3).ToUnixTimeMilliseconds(),
+                    EndTime = zeroDayWithMockedTime.AddHours(-1).ToUnixTimeMilliseconds()
+                };
+                Assert.False(Scheduler.IsScheduleActiveWithNow(afterDaySchedule,
+                    ScheduleType.Global, mockedNow));
+
+                var afterWholeSchedule = new Schedule
+                {
+                    Start = mockedNow.AddDays(-1).ToUnixTimeMilliseconds(),
+                    End = mockedNow.AddDays(-1).ToUnixTimeMilliseconds(),
+                    Timezone = "UTC",
+                    TimeType = ScheduleTimeType.Daily,
+                    StartTime = zeroDayWithMockedTime.AddHours(-3).ToUnixTimeMilliseconds(),
+                    EndTime = zeroDayWithMockedTime.AddHours(-1).ToUnixTimeMilliseconds()
+                };
+                Assert.False(Scheduler.IsScheduleActiveWithNow(afterWholeSchedule,
+                    ScheduleType.Global, mockedNow));
+            }
+        }
+
+
+        [Test]
+        public void TestSchedulingActiveDailyMultiDay()
+        {
+            var now = DateTimeOffset.Now;
+            var zeroDay = DateTimeOffset.FromUnixTimeMilliseconds(0);
+
+            for(int hour = 0; hour < 24; hour++) {
+                var mockedNow = new DateTimeOffset(
+                    now.Year,
+                    now.Month,
+                    now.Day,
+                    hour,
+                    0,
+                    0,
+                    0,
+                    TimeSpan.Zero
+                );
+
+                var zeroDayWithMockedTime = new DateTimeOffset(
+                    zeroDay.Year,
+                    zeroDay.Month,
+                    zeroDay.Day,
+                    hour,
+                    0,
+                    0,
+                    0,
+                    TimeSpan.Zero
+                );
+
+                var beforeWholeSchedule = new Schedule
+                {
+                    Start = mockedNow.AddDays(1).ToUnixTimeMilliseconds(),
+                    End = mockedNow.AddDays(3).ToUnixTimeMilliseconds(),
+                    Timezone = "UTC",
+                    TimeType = ScheduleTimeType.Daily,
+                    StartTime = zeroDayWithMockedTime.AddHours(1).ToUnixTimeMilliseconds(),
+                    EndTime = zeroDayWithMockedTime.AddHours(3).ToUnixTimeMilliseconds()
+                };
+
+                Assert.False(Scheduler.IsScheduleActiveWithNow(beforeWholeSchedule,
+                    ScheduleType.Global, mockedNow));
+
+                var beforeDaySchedule = new Schedule
+                {
+                    Start = mockedNow.AddDays(-1).ToUnixTimeMilliseconds(),
+                    End = mockedNow.AddDays(1).ToUnixTimeMilliseconds(),
+                    Timezone = "UTC",
+                    TimeType = ScheduleTimeType.Daily,
+                    StartTime = zeroDayWithMockedTime.AddHours(1).ToUnixTimeMilliseconds(),
+                    EndTime = zeroDayWithMockedTime.AddHours(3).ToUnixTimeMilliseconds()
+                };
+
+                Assert.False(Scheduler.IsScheduleActiveWithNow(beforeDaySchedule,
+                    ScheduleType.Global, mockedNow));
 
 
                 var duringSchedule = new Schedule
                 {
-                    Start = now.AddDays(-1).ToUnixTimeMilliseconds(),
-                    End = now.AddDays(1).ToUnixTimeMilliseconds(),
+                    Start = mockedNow.AddDays(-1).ToUnixTimeMilliseconds(),
+                    End = mockedNow.AddDays(1).ToUnixTimeMilliseconds(),
                     Timezone = "UTC",
                     TimeType = ScheduleTimeType.Daily,
-                    StartTime = mocked_now.AddHours(-1).ToUnixTimeMilliseconds(),
-                    EndTime = mocked_now.AddHours(1).ToUnixTimeMilliseconds()
+                    StartTime = zeroDayWithMockedTime.AddHours(-1).ToUnixTimeMilliseconds(),
+                    EndTime = zeroDayWithMockedTime.AddHours(1).ToUnixTimeMilliseconds()
                 };
 
                 Assert.True(Scheduler.IsScheduleActiveWithNow(duringSchedule,
-                    ScheduleType.Global, mocked_now));
+                    ScheduleType.Global, mockedNow));
 
                 var afterDaySchedule = new Schedule
                 {
-                    Start = now.AddDays(-1).ToUnixTimeMilliseconds(),
-                    End = now.AddDays(1).ToUnixTimeMilliseconds(),
+                    Start = mockedNow.AddDays(-1).ToUnixTimeMilliseconds(),
+                    End = mockedNow.AddDays(1).ToUnixTimeMilliseconds(),
                     Timezone = "UTC",
                     TimeType = ScheduleTimeType.Daily,
-                    StartTime = mocked_now.AddHours(-3).ToUnixTimeMilliseconds(),
-                    EndTime = mocked_now.AddHours(-1).ToUnixTimeMilliseconds()
+                    StartTime = zeroDayWithMockedTime.AddHours(-3).ToUnixTimeMilliseconds(),
+                    EndTime = zeroDayWithMockedTime.AddHours(-1).ToUnixTimeMilliseconds()
                 };
                 Assert.False(Scheduler.IsScheduleActiveWithNow(afterDaySchedule,
-                    ScheduleType.Global, mocked_now));
-            }
+                    ScheduleType.Global, mockedNow));
 
+                var afterWholeSchedule = new Schedule
+                {
+                    Start = mockedNow.AddDays(-3).ToUnixTimeMilliseconds(),
+                    End = mockedNow.AddDays(-1).ToUnixTimeMilliseconds(),
+                    Timezone = "UTC",
+                    TimeType = ScheduleTimeType.Daily,
+                    StartTime = zeroDayWithMockedTime.AddHours(-3).ToUnixTimeMilliseconds(),
+                    EndTime = zeroDayWithMockedTime.AddHours(-1).ToUnixTimeMilliseconds()
+                };
+                Assert.False(Scheduler.IsScheduleActiveWithNow(afterWholeSchedule,
+                    ScheduleType.Global, mockedNow));
+            }
         }
     }
 }
