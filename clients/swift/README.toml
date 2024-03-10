@@ -1,52 +1,57 @@
-LanguageName = 'cocoa'
-LanguageDisplayName = "Cocoa (iOS and OSX)"
-InstallInstructions = '''
-Warning: This library is currently written to work with Apple operating systems only. If you are using server-side swift, you will likely run into issues with our use of Foundation and async/await.
+LanguageName = 'swift'
+LanguageDisplayName = "Swift"
+Warning='''
 
-Add VexillaClient as a dependency via Swift Packages
+Warning: This library is currently written to work with Apple operating systems only. If you are using server-side swift, you will likely run into issues with our use of Foundation and async/await.
+'''
+InstallInstructions = '''
+Add VexillaClient as a dependency via SwiftPM or CocoaPods
 [https://developer.apple.com/documentation/xcode/adding_package_dependencies_to_your_app](https://developer.apple.com/documentation/xcode/adding_package_dependencies_to_your_app)
 
 '''
-CustomInstanceHash = "customInstanceHash"
-SyncFlags = "fetchFlags"
+CustomInstanceHash = "instanceId"
+SyncFlags = "syncFlags"
 SetupSnippet = '''
 ```swift
-var client = VexillaClient(environment: "dev", baseUrl: "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com", customInstanceHash: userId)
+let client = VexillaClient(environment: "dev", baseUrl: "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com", instanceId: "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a")
 
-client.fetchFlags(fileName: "features.json", fetchCompletionHandler: { flags, error in
+try await vexillaClient.syncFlags(groupNameOrId: "Gradual") { urlString -> String in
+    let url = URL(string: urlString)!
+    let request = URLRequest(url: url)
 
-    guard flags != nil else {
-        dump("Error: Flags were nil in test")
-        return
+    return try await withCheckedThrowingContinuation { continuation in
+        URLSession.shared.dataTask(with: request) { data, _, error in
+            if error != nil {
+                return continuation.resume(throwing: "could not fetch gradual group")
+            }
+            return continuation.resume(returning: String(decoding: data!, as: UTF8.self))
+        }.resume()
     }
-
-    client.setFlags(flags: flags!)
-
-)}
+}
 ```
 '''
 Should = "Should"
 UsageSnippet = '''
 ```swift
-shouldGradual = client.should(FEATURE_NAME)
+let shouldGradual = client.should(FEATURE_NAME)
 ```
 '''
 Example = '''
 ```swift
-var client = VexillaClient(environment: "dev", baseUrl: "https://streamparrot-feature-flags.s3.amazonaws.com", customInstanceHash: "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a")
+var client = VexillaClient(environment: "dev", baseUrl: "https://streamparrot-feature-flags.s3.amazonaws.com", instanceId: "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a")
 
-client.fetchFlags(fileName: "features.json", fetchCompletionHandler: { flags, error in
+try await vexillaClient.syncFlags(groupNameOrId: "Gradual") { urlString -> String in
+    let url = URL(string: urlString)!
+    let request = URLRequest(url: url)
 
-    guard flags != nil else {
-        dump("Error: Flags were nil in test")
-        return
+    return try await withCheckedThrowingContinuation { continuation in
+        URLSession.shared.dataTask(with: request) { data, _, error in
+            if error != nil {
+                return continuation.resume(throwing: "could not fetch gradual group")
+            }
+            return continuation.resume(returning: String(decoding: data!, as: UTF8.self))
+        }.resume()
     }
-
-    client.setFlags(flags: flags!)
-
-    if client.should(FEATURE_NAME) {
-        // Do the thing
-    }
-)}
+}
 ```
 '''
