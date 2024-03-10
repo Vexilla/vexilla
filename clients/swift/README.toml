@@ -1,6 +1,8 @@
 LanguageName = 'cocoa'
 LanguageDisplayName = "Cocoa (iOS and OSX)"
 InstallInstructions = '''
+Warning: This library is currently written to work with Apple operating systems only. If you are using server-side swift, you will likely run into issues with our use of Foundation and async/await.
+
 Add VexillaClient as a dependency via Swift Packages
 [https://developer.apple.com/documentation/xcode/adding_package_dependencies_to_your_app](https://developer.apple.com/documentation/xcode/adding_package_dependencies_to_your_app)
 

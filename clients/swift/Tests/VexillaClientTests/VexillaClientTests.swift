@@ -1,34 +1,178 @@
-import XCTest
 @testable import VexillaClient
+import XCTest
 
 final class VexillaClientTests: XCTestCase {
-    func testExample() {
+  var vexillaClient: VexillaClient = .init(environment: "dev", baseUrl: ProcessInfo.processInfo.environment["TEST_SERVER_HOST"] ?? "http://localhost:3000", instanceId: "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a")
 
-        let expectation = XCTestExpectation(description: "Download flags")
+  @MainActor
+  override func setUp() async throws {
+    let manifest: Manifest = try await vexillaClient.getManifest { urlString -> String in
+      let url = URL(string: urlString)!
+      let request = URLRequest(url: url)
 
-        var client = VexillaClient(environment: "dev", baseUrl: "https://streamparrot-feature-flags.s3.amazonaws.com", customInstanceHash: "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a")
+      return try await withCheckedThrowingContinuation { continuation in
+        URLSession.shared.dataTask(with: request) { data, _, error in
+          if error != nil {
+            return continuation.resume(throwing: "could not fetch manifest")
+          }
+          return continuation.resume(returning: String(decoding: data!, as: UTF8.self))
+        }.resume()
+      }
+    }
+    vexillaClient.setManifest(manifest: manifest)
 
-        client.fetchFlags(fileName: "features.json", fetchCompletionHandler: { flags, error in
+    try await vexillaClient.syncManifest { urlString -> String in
+      let url = URL(string: urlString)!
+      let request = URLRequest(url: url)
 
-            guard flags != nil else {
-                dump("Error: Flags were nil in test")
-                return
-            }
+      return try await withCheckedThrowingContinuation { continuation in
+        URLSession.shared.dataTask(with: request) { data, _, error in
+          if error != nil {
+            return continuation.resume(throwing: "could not fetch manifest")
+          }
+          return continuation.resume(returning: String(decoding: data!, as: UTF8.self))
+        }.resume()
+      }
+    }
+  }
 
-            client.setFlags(flags: flags!)
+  func testGradual() async throws {
+    let gradualGroup: Group = try await vexillaClient.getFlags(groupNameOrId: "Gradual") { urlString -> String in
+      let url = URL(string: urlString)!
+      let request = URLRequest(url: url)
 
-            XCTAssertEqual(client.should(featureName: "testingWorkingGradual"), true)
-
-            XCTAssertEqual(client.should(featureName: "testingNonWorkingGradual"), false)
-
-            expectation.fulfill()
-        })
-
-        wait(for: [expectation], timeout: 30.0)
-
+      return try await withCheckedThrowingContinuation { continuation in
+        URLSession.shared.dataTask(with: request) { data, _, error in
+          if error != nil {
+            return continuation.resume(throwing: "could not fetch gradual group")
+          }
+          return continuation.resume(returning: String(decoding: data!, as: UTF8.self))
+        }.resume()
+      }
     }
 
-    static var allTests = [
-        ("testExample", testExample),
-    ]
+    try vexillaClient.setFlags(groupNameOrId: "Gradual", group: gradualGroup)
+
+    try await vexillaClient.syncFlags(groupNameOrId: "Gradual") { urlString -> String in
+      let url = URL(string: urlString)!
+      let request = URLRequest(url: url)
+
+      return try await withCheckedThrowingContinuation { continuation in
+        URLSession.shared.dataTask(with: request) { data, _, error in
+          if error != nil {
+            return continuation.resume(throwing: "could not fetch gradual group")
+          }
+          return continuation.resume(returning: String(decoding: data!, as: UTF8.self))
+        }.resume()
+      }
+    }
+
+    XCTAssertTrue(try vexillaClient.should(groupNameOrId: "Gradual", featureNameOrId: "testingWorkingGradual"))
+    XCTAssertFalse(try vexillaClient.should(groupNameOrId: "Gradual", featureNameOrId: "testingNonWorkingGradual"))
+  }
+
+  func testSelective() async throws {
+    try await vexillaClient.syncFlags(groupNameOrId: "Selective") { urlString -> String in
+      let url = URL(string: urlString)!
+      let request = URLRequest(url: url)
+
+      return try await withCheckedThrowingContinuation { continuation in
+        URLSession.shared.dataTask(with: request) { data, _, error in
+          if error != nil {
+            return continuation.resume(throwing: "could not fetch selective group")
+          }
+          return continuation.resume(returning: String(decoding: data!, as: UTF8.self))
+        }.resume()
+      }
+    }
+
+    XCTAssertTrue(try vexillaClient.should(groupNameOrId: "Selective", featureNameOrId: "String"))
+
+    XCTAssertTrue(try vexillaClient.shouldCustomString(groupNameOrId: "Selective", featureNameOrId: "String", instanceId: "shouldBeInList"))
+    XCTAssertFalse(try vexillaClient.shouldCustomString(groupNameOrId: "Selective", featureNameOrId: "String", instanceId: "shouldNOTBeInList"))
+
+    XCTAssertTrue(try vexillaClient.shouldCustomInt(groupNameOrId: "Selective", featureNameOrId: "Number", instanceId: 42))
+    XCTAssertTrue(try vexillaClient.shouldCustomInt64(groupNameOrId: "Selective", featureNameOrId: "Number", instanceId: 42))
+
+    XCTAssertFalse(try vexillaClient.shouldCustomInt(groupNameOrId: "Selective", featureNameOrId: "Number", instanceId: 43))
+    XCTAssertFalse(try vexillaClient.shouldCustomInt64(groupNameOrId: "Selective", featureNameOrId: "Number", instanceId: 43))
+  }
+
+  func testValue() async throws {
+    try await vexillaClient.syncFlags(groupNameOrId: "Value") { urlString -> String in
+      let url = URL(string: urlString)!
+      let request = URLRequest(url: url)
+
+      return try await withCheckedThrowingContinuation { continuation in
+        URLSession.shared.dataTask(with: request) { data, _, error in
+          if error != nil {
+            return continuation.resume(throwing: "could not fetch value group")
+          }
+          return continuation.resume(returning: String(decoding: data!, as: UTF8.self))
+        }.resume()
+      }
+    }
+
+    XCTAssertEqual("foo", try vexillaClient.valueString(groupNameOrId: "Value", featureNameOrId: "String", defaultString: ""))
+
+    XCTAssertEqual(42, try vexillaClient.valueInt(groupNameOrId: "Value", featureNameOrId: "Integer", defaultInt32: 0))
+    XCTAssertEqual(42, try vexillaClient.valueInt64(groupNameOrId: "Value", featureNameOrId: "Integer", defaultInt64: 0))
+
+    XCTAssertEqual(42.42, try vexillaClient.valueFloat(groupNameOrId: "Value", featureNameOrId: "Float", defaultFloat32: 0.0))
+    XCTAssertEqual(42.42, try vexillaClient.valueFloat64(groupNameOrId: "Value", featureNameOrId: "Float", defaultFloat64: 0.0))
+
+    try await vexillaClient.syncFlags(groupNameOrId: "Scheduled") { urlString -> String in
+      let url = URL(string: urlString)!
+      let request = URLRequest(url: url)
+
+      return try await withCheckedThrowingContinuation { continuation in
+        URLSession.shared.dataTask(with: request) { data, _, error in
+          if error != nil {
+            return continuation.resume(throwing: "could not fetch scheduled group")
+          }
+          return continuation.resume(returning: String(decoding: data!, as: UTF8.self))
+        }.resume()
+      }
+    }
+
+    XCTAssertFalse(try vexillaClient.should(groupNameOrId: "Scheduled", featureNameOrId: "beforeGlobal"))
+    XCTAssertTrue(try vexillaClient.should(groupNameOrId: "Scheduled", featureNameOrId: "duringGlobal"))
+    XCTAssertFalse(try vexillaClient.should(groupNameOrId: "Scheduled", featureNameOrId: "afterGlobal"))
+
+    XCTAssertFalse(try vexillaClient.should(groupNameOrId: "Scheduled", featureNameOrId: "beforeGlobalStartEnd"))
+    XCTAssertTrue(try vexillaClient.should(groupNameOrId: "Scheduled", featureNameOrId: "duringGlobalStartEnd"))
+    XCTAssertFalse(try vexillaClient.should(groupNameOrId: "Scheduled", featureNameOrId: "afterGlobalStartEnd"))
+
+    XCTAssertFalse(try vexillaClient.should(groupNameOrId: "Scheduled", featureNameOrId: "beforeGlobalDaily"))
+    XCTAssertTrue(try vexillaClient.should(groupNameOrId: "Scheduled", featureNameOrId: "duringGlobalDaily"))
+    XCTAssertFalse(try vexillaClient.should(groupNameOrId: "Scheduled", featureNameOrId: "afterGlobalDaily"))
+  }
+
+  func testScheduled() async throws {
+    try await vexillaClient.syncFlags(groupNameOrId: "Scheduled") { urlString -> String in
+      let url = URL(string: urlString)!
+      let request = URLRequest(url: url)
+
+      return try await withCheckedThrowingContinuation { continuation in
+        URLSession.shared.dataTask(with: request) { data, _, error in
+          if error != nil {
+            return continuation.resume(throwing: "could not fetch scheduled group")
+          }
+          return continuation.resume(returning: String(decoding: data!, as: UTF8.self))
+        }.resume()
+      }
+    }
+
+    XCTAssertFalse(try vexillaClient.should(groupNameOrId: "Scheduled", featureNameOrId: "beforeGlobal"))
+    XCTAssertTrue(try vexillaClient.should(groupNameOrId: "Scheduled", featureNameOrId: "duringGlobal"))
+    XCTAssertFalse(try vexillaClient.should(groupNameOrId: "Scheduled", featureNameOrId: "afterGlobal"))
+
+    XCTAssertFalse(try vexillaClient.should(groupNameOrId: "Scheduled", featureNameOrId: "beforeGlobalStartEnd"))
+    XCTAssertTrue(try vexillaClient.should(groupNameOrId: "Scheduled", featureNameOrId: "duringGlobalStartEnd"))
+    XCTAssertFalse(try vexillaClient.should(groupNameOrId: "Scheduled", featureNameOrId: "afterGlobalStartEnd"))
+
+    XCTAssertFalse(try vexillaClient.should(groupNameOrId: "Scheduled", featureNameOrId: "beforeGlobalDaily"))
+    XCTAssertTrue(try vexillaClient.should(groupNameOrId: "Scheduled", featureNameOrId: "duringGlobalDaily"))
+    XCTAssertFalse(try vexillaClient.should(groupNameOrId: "Scheduled", featureNameOrId: "afterGlobalDaily"))
+  }
 }
