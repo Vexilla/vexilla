@@ -19,7 +19,6 @@ swift_test(
         "Tests/VexillaClientTests/HashingTests.swift",
         "Tests/VexillaClientTests/SchedulingTests.swift",
         "Tests/VexillaClientTests/VexillaClientTests.swift",
-        "Tests/VexillaClientTests/XCTestManifests.swift",
     ],
     target_compatible_with = ["@platforms//os:macos"],
     deps = [":vexilla_client_lib"],
