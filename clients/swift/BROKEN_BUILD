@@ -3,11 +3,11 @@ load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library", "swift_test")
 swift_library(
     name = "vexilla_client_lib",
     srcs = [
-        "Sources/Hashing.swift",
-        "Sources/Scheduling.swift",
-        "Sources/Types.swift",
-        "Sources/Utils.swift",
-        "Sources/VexillaClient.swift",
+        "Sources/VexillaClient/Hashing.swift",
+        "Sources/VexillaClient/Scheduling.swift",
+        "Sources/VexillaClient/Types.swift",
+        "Sources/VexillaClient/Utils.swift",
+        "Sources/VexillaClient/VexillaClient.swift",
     ],
     tags = [],
 )
