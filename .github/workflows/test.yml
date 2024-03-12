@@ -158,9 +158,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: swift-actions/setup-swift@v2
+      # - uses: swift-actions/setup-swift@v2
+      #   with:
+      #     swift-version: "5.5.2"
+      - name: Install Swift
+        uses: slashmo/install-swift@v0.1.0
         with:
-          swift-version: "5.5.2"
+          version: 5.5.2
 
       - name: Get swift version
         run: swift --version
