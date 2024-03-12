@@ -223,3 +223,27 @@ maven_install(
 load("@maven//:defs.bzl", "pinned_maven_install")
 
 pinned_maven_install()
+
+# Swift
+
+# Maybe not needed since we can use the MODULE version of setup
+
+# http_archive(
+#     name = "build_bazel_rules_swift",
+#     sha256 = "7aabe3bbef8d2e07c9ee07acb386f0a257bd2f76ea8e21005688b506dc8da67b",
+#     url = "https://github.com/bazelbuild/rules_swift/releases/download/1.16.0/rules_swift.1.16.0.tar.gz",
+# )
+
+# load(
+#     "@build_bazel_rules_swift//swift:repositories.bzl",
+#     "swift_rules_dependencies",
+# )
+
+# swift_rules_dependencies()
+
+# load(
+#     "@build_bazel_rules_swift//swift:extras.bzl",
+#     "swift_rules_extra_dependencies",
+# )
+
+# swift_rules_extra_dependencies()
