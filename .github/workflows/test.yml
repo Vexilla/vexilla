@@ -141,7 +141,8 @@ jobs:
           TEST_SERVER_HOST: test-server:3000
 
   test-bazel:
-    runs-on: ubuntu-latest
+    # Must use 20.04 currently since Swift does not have 5.5.x support for 22.04
+    runs-on: ubuntu-20.04
     needs: ["publish-test-server"]
 
     services:
@@ -158,13 +159,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # - uses: swift-actions/setup-swift@v2
-      #   with:
-      #     swift-version: "5.5.2"
-      - name: Install Swift
-        uses: slashmo/install-swift@v0.1.0
+      - uses: swift-actions/setup-swift@v2
         with:
-          version: 5.5.2
+          swift-version: "5.5.2"
+
+      # This action gave us a much better error message related to the swift toolchain availability, but it is less maintained
+      # - name: Install Swift
+      #   uses: slashmo/install-swift@v0.1.0
+      #   with:
+      #     version: 5.5.2
 
       - name: Get swift version
         run: swift --version
