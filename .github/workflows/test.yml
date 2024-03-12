@@ -209,7 +209,7 @@ jobs:
 
   test-swift:
     runs-on: ubuntu-latest
-    container: swift:5.5-focal-slim
+    container: swift:5.5-focal
     needs: ["publish-test-server"]
 
     services:
