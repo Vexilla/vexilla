@@ -6,7 +6,9 @@ import XCTest
 #endif
 
 final class VexillaClientTests: XCTestCase {
-  var vexillaClient: VexillaClient = .init(environment: "dev", baseUrl: "http://\(ProcessInfo.processInfo.environment["TEST_SERVER_HOST"]) ?? 'localhost:3000'", instanceId: "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a")
+  let baseHost = ProcessInfo.processInfo.environment["TEST_SERVER_HOST"] ?? "localhost:3000"
+  let baseUrl = "http://\(baseHost)"
+  var vexillaClient: VexillaClient = .init(environment: "dev", baseUrl: baseUrl, instanceId: "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a")
 
   override func setUp() async throws {
     let manifest: Manifest = try await vexillaClient.getManifest { urlString -> String in

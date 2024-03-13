@@ -227,6 +227,7 @@ jobs:
       - uses: actions/checkout@v3
       - run: |
           cd ./clients/swift
+          swift build
           swift test
         env:
           TEST_SERVER_HOST: test-server:3000
