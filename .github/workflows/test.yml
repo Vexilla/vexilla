@@ -184,6 +184,7 @@ jobs:
       - run: bazel coverage --combined_report=lcov //...
         # - run: bazel test //...
         env:
+          CC: clang
           TEST_SERVER_HOST: test-server
 
   test-kotlin:
