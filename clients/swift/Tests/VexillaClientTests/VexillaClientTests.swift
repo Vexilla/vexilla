@@ -10,15 +10,13 @@ final class VexillaClientTests: XCTestCase {
   var vexillaClient: VexillaClient? = nil
 
   override func setUp() async throws {
-    var baseHost = ProcessInfo.processInfo.environment["TEST_SERVER_HOST"]
-    if baseHost == nil {
-      baseHost = "localhost:3000"
-    }
+    let baseHost = ProcessInfo.processInfo.environment["TEST_SERVER_HOST"] ?? "localhost:3000"
 
     let baseUrl = "http://\(baseHost)"
     var vexillaClient = VexillaClient(environment: "dev", baseUrl: baseUrl, instanceId: "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a")
 
     let manifest: Manifest = try await vexillaClient.getManifest { urlString -> String in
+      print("WTF: ", urlString)
       let url = URL(string: urlString)!
       let request = URLRequest(url: url)
 
