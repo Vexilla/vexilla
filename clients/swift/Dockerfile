@@ -1,4 +1,4 @@
-FROM swift:5.5-focal-slim
+FROM swift:5.5-focal
 
 WORKDIR /home/client
 

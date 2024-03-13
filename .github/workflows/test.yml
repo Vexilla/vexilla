@@ -159,19 +159,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: swift-actions/setup-swift@v2
-        with:
-          swift-version: "5.5.2"
-
-      # This action gave us a much better error message related to the swift toolchain availability, but it is less maintained
-      # - name: Install Swift
-      #   uses: slashmo/install-swift@v0.1.0
-      #   with:
-      #     version: 5.5.2
-
-      - name: Get swift version
-        run: swift --version
-
       - name: Cache Bazel
         uses: actions/cache@v3
         with:
@@ -180,14 +167,9 @@ jobs:
           key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel') }}
           restore-keys: |
             ${{ runner.os }}-bazel-
-      - run: CC=clang bazel build //...
-      - run: bazel test //...
+      - run: bazel build //...
+      - run: bazel coverage --combined_report=lcov //...
         env:
-          CC: clang
-          TEST_SERVER_HOST: test-server
-      - run: CC=clang bazel coverage --combined_report=lcov //...
-        env:
-          CC: clang
           TEST_SERVER_HOST: test-server
 
   test-kotlin:
@@ -225,27 +207,26 @@ jobs:
         # env:
         #   TEST_SERVER_HOST: test-server
 
-  # test-swift:
-  #   runs-on: ubuntu-latest
-  #   container: swift:5.5-focal
-  #   needs: ["publish-test-server"]
+  test-swift:
+    runs-on: ubuntu-latest
+    container: swift:5.5-focal
+    needs: ["publish-test-server"]
 
-  #   services:
-  #     test-server:
-  #       credentials:
-  #         username: vexilla
-  #         password: ${{secrets.GITHUB_TOKEN}}
-  #       image: ghcr.io/vexilla/test-server:latest
-  #       ports:
-  #         - 3000:3000
-  #       options: |
-  #         --health-cmd "curl -f http://localhost:3000/manifest.json"
+    services:
+      test-server:
+        credentials:
+          username: vexilla
+          password: ${{secrets.GITHUB_TOKEN}}
+        image: ghcr.io/vexilla/test-server:latest
+        ports:
+          - 3000:3000
+        options: |
+          --health-cmd "curl -f http://localhost:3000/manifest.json"
 
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     #  LEAVING OFF: Build fails at setUp and then complains about all sorts of undefined props/methods that definitely work locally
-  #     - run: |
-  #         cd ./clients/swift
-  #         swift test
-  #       env:
-  #         TEST_SERVER_HOST: test-server:3000
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          cd ./clients/swift
+          swift test
+        env:
+          TEST_SERVER_HOST: test-server:3000

@@ -8,7 +8,6 @@ import XCTest
 final class VexillaClientTests: XCTestCase {
   var vexillaClient: VexillaClient = .init(environment: "dev", baseUrl: ProcessInfo.processInfo.environment["TEST_SERVER_HOST"] ?? "http://localhost:3000", instanceId: "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a")
 
-  @MainActor
   override func setUp() async throws {
     let manifest: Manifest = try await vexillaClient.getManifest { urlString -> String in
       let url = URL(string: urlString)!
