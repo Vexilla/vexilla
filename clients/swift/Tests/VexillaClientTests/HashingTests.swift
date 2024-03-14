@@ -8,18 +8,18 @@ final class VexillaHashingTests: XCTestCase {
   private let seedB = 0.22
 
   func testStringWorking() {
-    XCTAssertEqual(hashString(stringToHash: uuid, seed: seedA) <= 0.4, true)
+    XCTAssertLessThanOrEqual(hashString(stringToHash: uuid, seed: seedA), 0.4)
   }
 
   func testStringNonWorking() {
-    XCTAssertEqual(hashString(stringToHash: uuid, seed: seedB) > 0.4, true)
+    XCTAssertGreaterThan(hashString(stringToHash: uuid, seed: seedB), 0.4)
   }
 
   func testInt() {
-    XCTAssertEqual(hashInt(intToHash: 42, seed: seedB) > 0.4, true)
+    XCTAssertGreaterThan(hashInt(intToHash: 42, seed: seedB), 0.4)
   }
 
   func testFloat() {
-    XCTAssertEqual(hashFloat(floatToHash: 42.42, seed: seedB) > 0.4, false)
+    XCTAssertLessThanOrEqual(hashFloat(floatToHash: 42.42, seed: seedB), 0.4)
   }
 }
