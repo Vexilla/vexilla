@@ -1,10 +1,9 @@
 import Foundation
 
 func hashString(stringToHash: String, seed: Float64) -> Float64 {
-  let chars = Array(stringToHash)
-
-  let total = chars.reduce(0) { a, b in
-    a + Int(b.asciiValue ?? 0)
+  var total = 0
+  for char in stringToHash.utf8 {
+    total += Int(char)
   }
 
   var calculated = Float64(total) * seed * 42.0
