@@ -16,8 +16,7 @@
         "startTime": 0,
         "endTime": 0
       },
-      "valueType": "string",
-      "numberType": "int"
+      "valueType": "string"
     },
     "dlvHPXpmQ94KIzt3V-y4D": {
       "name": "Number",

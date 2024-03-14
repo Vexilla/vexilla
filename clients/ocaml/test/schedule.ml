@@ -1,4 +1,5 @@
 open Vexilla
+open Private
 
 let one_day_s = Ptime.Span.of_int_s 86400
 let one_hour_s = Ptime.Span.of_int_s 3600
@@ -12,7 +13,7 @@ let () =
         [
           test_case "no schedule" `Quick (fun () ->
               let schedule =
-                Types.Schedule.make ~start:zero ~end':zero ~timezone:Utc
+                Private.Types.Schedule.make ~start:zero ~end':zero ~timezone:Utc
                   ~time_type:None ~start_time:zero ~end_time:zero
               in
               let expected = true in
@@ -161,5 +162,64 @@ let () =
                 |> Result.value ~default:false
               in
               check bool "equal" expected actual);
+          test_case "24 hour active start end single day" `Quick (fun () ->
+              let date = Ptime.to_date (Ptime_clock.now ()) in
+              let _ =
+                List.init 24 Fun.id
+                |> List.iter (fun hour ->
+                       let mocked_now =
+                         Date_time.of_date_time (date, ((0, hour, 0), 0))
+                         |> Option.get
+                       in
+                       let before_schedule =
+                         Types.Schedule.make ~start:mocked_now ~end':mocked_now
+                           ~timezone:Utc ~time_type:Start_end
+                           ~start_time:
+                             Date_time.(
+                               add_span_exn epoch (Span.of_hours (hour + 1)))
+                           ~end_time:
+                             Date_time.(
+                               add_span_exn epoch (Span.of_hours (hour + 3)))
+                       in
+                       let is_before_schedule_active =
+                         Schedule.is_schedule_active_with_now
+                           ~schedule:before_schedule ~schedule_type:Global
+                           mocked_now
+                         |> Result.get_ok
+                       in
+                       check bool
+                         (Fmt.str
+                            "is_before_schedule_active is false for hour: %d"
+                            hour)
+                         false is_before_schedule_active;
+                       let during_schedule =
+                         Types.Schedule.make ~start:mocked_now ~end':mocked_now
+                           ~timezone:Utc ~time_type:Start_end
+                           ~start_time:
+                             Date_time.(
+                               add_span_exn epoch (Span.of_hours (hour - 1)))
+                           ~end_time:
+                             Date_time.(
+                               add_span_exn epoch (Span.of_hours (hour + 1)))
+                       in
+                       let () =
+                         Fmt.pr "Hour: %d\nSchedule: %s" hour
+                           (Types.Schedule.show during_schedule)
+                       in
+                       let is_during_schedule_active =
+                         Schedule.is_schedule_active_with_now
+                           ~schedule:during_schedule ~schedule_type:Global
+                           mocked_now
+                         |> Result.get_ok
+                       in
+                       check bool
+                         (Fmt.str
+                            "is_during_schedule_active is true for hour: %d"
+                            hour)
+                         true is_during_schedule_active)
+              in
+
+              ());
         ] );
     ]
+;;

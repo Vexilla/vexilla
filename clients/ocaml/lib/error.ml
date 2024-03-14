@@ -14,3 +14,4 @@ let to_string = function
   | `Unsupported_should_feature_type feature_type ->
       Fmt.str "Unsupported should feature type: %s" feature_type
   | #t -> .
+;;

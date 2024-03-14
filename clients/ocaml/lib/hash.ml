@@ -7,3 +7,4 @@ let hash_instance_id ~seed instance_id =
   in
   let base = total *. seed *. 42.0 in
   Float.(rem (trunc base) 100.0 |> (Fun.flip div) 100.0)
+;;

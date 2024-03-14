@@ -24,13 +24,14 @@
   dune
   fmt
   lwt_ssl
-  ocaml {>= 4.14.1}
+  (ocaml (>= 4.14.1))
   ppx_deriving
   ppx_deriving_yojson
   ptime
   uri
   yojson
-  (alcotest :with-test))
+  (alcotest :with-test)
+  (alcotest_lwt :with-test))
  (tags (feature-flags)))
 
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/dune-files.html#dune-project
