@@ -1,14 +1,23 @@
 import Foundation
 
-// TODO: Make a proper Error enum for Scheduling
+// TODO: Make a proper Error enum for VexillaClient
 extension String: Error {}
+
+enum VexillaSchedulingError: Error {
+  case couldNotCreateUTCTimezone
+  case couldNotAddDayToEndDate
+}
+
+enum VexillaDecodingError: Error {
+  case couldNotDecodeRawValue(expectedType: Any.Type)
+}
 
 extension RawRepresentable {
   init(rawValue: RawValue) throws {
     if let result = Self(rawValue: rawValue) {
       self = result
     } else {
-      throw "Could not parse rawValue (\(rawValue)) into \(Self.self)"
+      throw VexillaDecodingError.couldNotDecodeRawValue(expectedType: Self.self)
     }
   }
 }
