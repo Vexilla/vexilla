@@ -1,44 +1,17 @@
-name: Test
+name: PR Test
 on:
   pull_request:
     types:
-      - closed
-  push:
-    branches:
-      - "*"
+      - opened
+      - edited
+      - reopened
     paths-ignore:
       - "**.md"
 
 jobs:
-  publish-test-server:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: "./packages/test-server"
-
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1
-        with:
-          registry: ghcr.io
-          username: vexilla
-          password: ${{secrets.GITHUB_TOKEN}}
-
-      - name: Build Test Server Image
-        run: |
-          docker build . --tag ghcr.io/vexilla/test-server:latest
-          docker push ghcr.io/vexilla/test-server:latest
-
   test-php:
     runs-on: ubuntu-latest
     container: php:7.4.33-fpm
-    needs: ["publish-test-server"]
 
     services:
       test-server:
@@ -82,7 +55,6 @@ jobs:
   test-python:
     runs-on: ubuntu-latest
     container: python:3.6.15
-    needs: ["publish-test-server"]
 
     services:
       test-server:
@@ -110,7 +82,6 @@ jobs:
   test-elixir:
     runs-on: ubuntu-latest
     container: elixir:1.15.7
-    needs: ["publish-test-server"]
 
     services:
       test-server:
@@ -146,7 +117,6 @@ jobs:
   test-bazel:
     # Must use 20.04 currently since Swift does not have 5.5.x support for 22.04
     runs-on: ubuntu-20.04
-    needs: ["publish-test-server"]
 
     services:
       test-server:
@@ -177,7 +147,6 @@ jobs:
 
   test-kotlin:
     runs-on: ubuntu-latest
-    needs: ["publish-test-server"]
 
     services:
       test-server:
@@ -213,7 +182,6 @@ jobs:
   test-swift:
     runs-on: ubuntu-latest
     container: swift:5.5-focal
-    needs: ["publish-test-server"]
 
     services:
       test-server:
