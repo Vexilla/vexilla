@@ -96,7 +96,6 @@ public struct VexillaClient {
         let (environment, feature) = try getFeature(groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId)
 
         if try !isScheduledFeatureActive(feature: feature) {
-            print("BAILING OUT AT INACTIVE SCHEDULE")
             return false
         }
 
