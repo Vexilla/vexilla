@@ -60,26 +60,8 @@ public struct Schedule: Decodable {
   let endTime: Int
 }
 
-extension Schedule {
-  init(fromDict: [String: Any]) throws {
-    start = try safeGet(dict: fromDict, key: "start")
-    end = try safeGet(dict: fromDict, key: "end")
-    timezone = try safeGet(dict: fromDict, key: "timezone")
-    let _timeType: String = try safeGet(dict: fromDict, key: "timeType")
-    timeType = try ScheduleTimeType(rawValue: _timeType)
-    startTime = try safeGet(dict: fromDict, key: "startTime")
-    endTime = try safeGet(dict: fromDict, key: "endTime")
-  }
-}
-
 public struct GroupMeta: Decodable {
   let version: String
-}
-
-extension GroupMeta {
-  init(fromDict: [String: Any]) throws {
-    version = try safeGet(dict: fromDict, key: "version")
-  }
 }
 
 protocol BaseFeature: Decodable {
@@ -90,350 +72,205 @@ protocol BaseFeature: Decodable {
   var schedule: Schedule { get }
 }
 
-public struct Feature: BaseFeature {
-  public let name: String
-  public let featureId: String
-  public var featureType: FeatureType
-  public let scheduleType: ScheduleType
-  public let schedule: Schedule
+public enum Feature: Decodable, BaseFeature {
+  private enum CodingKeys: String, CodingKey {
+    case featureType
+  }
 
-  init(fromDict: [String: Any]) throws {
-    name = try safeGet(dict: fromDict, key: "name")
-    featureId = try safeGet(dict: fromDict, key: "featureId")
-    let _featureType: String = try safeGet(dict: fromDict, key: "featureType")
-    featureType = try FeatureType(rawValue: _featureType)
-    let _scheduleType: String = try safeGet(dict: fromDict, key: "scheduleType")
-    scheduleType = try ScheduleType(rawValue: _scheduleType)
-    let rawSchedule: [String: Any] = try safeGet(dict: fromDict, key: "schedule")
-    schedule = try Schedule(fromDict: rawSchedule)
+  case toggle(ToggleFeature)
+  case gradual(GradualFeature)
+  case selective(SelectiveFeature)
+  case value(ValueFeature)
+
+  public init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    let featureType = try container.decode(FeatureType.self, forKey: .featureType)
+
+    switch featureType {
+    case .toggle:
+      self = try .toggle(ToggleFeature(from: decoder))
+    case .gradual:
+      self = try .gradual(GradualFeature(from: decoder))
+    case .selective:
+      self = try .selective(SelectiveFeature(from: decoder))
+    case .value:
+      self = try .value(ValueFeature(from: decoder))
+    }
+  }
+
+  // MARK: Helpful accessors for both internal and public use
+
+  public var name: String {
+    switch self {
+    case let .toggle(feature):
+      return feature.name
+    case let .gradual(feature):
+      return feature.name
+    case let .selective(feature):
+      return feature.name
+    case let .value(feature):
+      return feature.name
+    }
+  }
+
+  public var featureId: String {
+    switch self {
+    case let .toggle(feature):
+      return feature.featureId
+    case let .gradual(feature):
+      return feature.featureId
+    case let .selective(feature):
+      return feature.featureId
+    case let .value(feature):
+      return feature.featureId
+    }
+  }
+
+  public var featureType: FeatureType {
+    switch self {
+    case .toggle:
+      return .toggle
+    case .gradual:
+      return .gradual
+    case .selective:
+      return .selective
+    case .value:
+      return .value
+    }
+  }
+
+  public var scheduleType: ScheduleType {
+    switch self {
+    case let .toggle(feature):
+      return feature.scheduleType
+    case let .gradual(feature):
+      return feature.scheduleType
+    case let .selective(feature):
+      return feature.scheduleType
+    case let .value(feature):
+      return feature.scheduleType
+    }
+  }
+
+  public var schedule: Schedule {
+    switch self {
+    case let .toggle(feature):
+      return feature.schedule
+    case let .gradual(feature):
+      return feature.schedule
+    case let .selective(feature):
+      return feature.schedule
+    case let .value(feature):
+      return feature.schedule
+    }
   }
 }
 
 public struct ToggleFeature: BaseFeature {
   public let name: String
   public let featureId: String
-  public var featureType: FeatureType = .toggle
+  public var featureType: FeatureType { .toggle }
   public let scheduleType: ScheduleType
   public let schedule: Schedule
   public let value: Bool
-
-  init(fromDict: [String: Any]) throws {
-    name = try safeGet(dict: fromDict, key: "name")
-    featureId = try safeGet(dict: fromDict, key: "featureId")
-    let _featureType: String = try safeGet(dict: fromDict, key: "featureType")
-    featureType = try FeatureType(rawValue: _featureType)
-    let _scheduleType: String = try safeGet(dict: fromDict, key: "scheduleType")
-    scheduleType = try ScheduleType(rawValue: _scheduleType)
-    let rawSchedule: [String: Any] = try safeGet(dict: fromDict, key: "schedule")
-    schedule = try Schedule(fromDict: rawSchedule)
-
-    value = try safeGet(dict: fromDict, key: "value")
-  }
 }
 
 public struct GradualFeature: BaseFeature {
   public let name: String
   public let featureId: String
-  public var featureType: FeatureType = .gradual
+  public var featureType: FeatureType { .gradual }
   public let scheduleType: ScheduleType
   public let schedule: Schedule
   public let value: Float64
   public let seed: Float64
+}
 
-  init(fromDict: [String: Any]) throws {
-    name = try safeGet(dict: fromDict, key: "name")
-    featureId = try safeGet(dict: fromDict, key: "featureId")
-    let _featureType: String = try safeGet(dict: fromDict, key: "featureType")
-    featureType = try FeatureType(rawValue: _featureType)
-    let _scheduleType: String = try safeGet(dict: fromDict, key: "scheduleType")
-    scheduleType = try ScheduleType(rawValue: _scheduleType)
-    let rawSchedule: [String: Any] = try safeGet(dict: fromDict, key: "schedule")
-    schedule = try Schedule(fromDict: rawSchedule)
-
-    value = try safeGet(dict: fromDict, key: "value")
-    seed = try safeGet(dict: fromDict, key: "seed")
+public struct SelectiveFeature: BaseFeature {
+  private enum CodingKeys: String, CodingKey {
+    case name, featureId, scheduleType, schedule, valueType, numberType, value
   }
-}
 
-protocol BaseSelectiveFeature: BaseFeature {
-  var valueType: ValueType { get }
-}
+  public enum Value {
+    case string([String])
+    case int([Int64])
+    case float([Float64])
+  }
 
-public struct SelectiveFeature: BaseSelectiveFeature {
+  public init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    name = try container.decode(String.self, forKey: .name)
+    featureId = try container.decode(String.self, forKey: .featureId)
+    scheduleType = try container.decode(ScheduleType.self, forKey: .scheduleType)
+    schedule = try container.decode(Schedule.self, forKey: .schedule)
+    let valueType = try container.decode(ValueType.self, forKey: .valueType)
+
+    switch valueType {
+    case .string:
+      let value = try container.decode([String].self, forKey: .value)
+      self.value = .string(value)
+    case .number:
+      let numberType = try container.decode(NumberType.self, forKey: .numberType)
+      switch numberType {
+      case .int:
+        let value = try container.decode([Int64].self, forKey: .value)
+        self.value = .int(value)
+      case .float:
+        let value = try container.decode([Float64].self, forKey: .value)
+        self.value = .float(value)
+      }
+    }
+  }
+
   public let name: String
   public let featureId: String
-  public var featureType: FeatureType = .selective
+  public var featureType: FeatureType { .selective }
   public let scheduleType: ScheduleType
   public let schedule: Schedule
-  public let valueType: ValueType
-
-  init(fromDict: [String: Any]) throws {
-    name = try safeGet(dict: fromDict, key: "name")
-    featureId = try safeGet(dict: fromDict, key: "featureId")
-    let _featureType: String = try safeGet(dict: fromDict, key: "featureType")
-    featureType = try FeatureType(rawValue: _featureType)
-    let _scheduleType: String = try safeGet(dict: fromDict, key: "scheduleType")
-    scheduleType = try ScheduleType(rawValue: _scheduleType)
-    let rawSchedule: [String: Any] = try safeGet(dict: fromDict, key: "schedule")
-    schedule = try Schedule(fromDict: rawSchedule)
-
-    let _valueType: String = try safeGet(dict: fromDict, key: "valueType")
-    valueType = try ValueType(rawValue: _valueType)
-  }
+  public let value: Value
 }
 
-public struct SelectiveStringFeature: BaseSelectiveFeature {
+public struct ValueFeature: BaseFeature {
+  private enum CodingKeys: String, CodingKey {
+    case name, featureId, scheduleType, schedule, valueType, numberType, value
+  }
+
+  public enum Value {
+    case string(String)
+    case int(Int64)
+    case float(Float64)
+  }
+
+  public init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    name = try container.decode(String.self, forKey: .name)
+    featureId = try container.decode(String.self, forKey: .featureId)
+    scheduleType = try container.decode(ScheduleType.self, forKey: .scheduleType)
+    schedule = try container.decode(Schedule.self, forKey: .schedule)
+    let valueType = try container.decode(ValueType.self, forKey: .valueType)
+
+    switch valueType {
+    case .string:
+      let value = try container.decode(String.self, forKey: .value)
+      self.value = .string(value)
+    case .number:
+      let numberType = try container.decode(NumberType.self, forKey: .numberType)
+      switch numberType {
+      case .int:
+        let value = try container.decode(Int64.self, forKey: .value)
+        self.value = .int(value)
+      case .float:
+        let value = try container.decode(Float64.self, forKey: .value)
+        self.value = .float(value)
+      }
+    }
+  }
+
   public let name: String
   public let featureId: String
-  public var featureType: FeatureType = .selective
+  public var featureType: FeatureType { .value }
   public let scheduleType: ScheduleType
   public let schedule: Schedule
-  public var valueType: ValueType = .string
-  public let value: [String]
-
-  init(fromDict: [String: Any]) throws {
-    name = try safeGet(dict: fromDict, key: "name")
-    featureId = try safeGet(dict: fromDict, key: "featureId")
-    let _featureType: String = try safeGet(dict: fromDict, key: "featureType")
-    featureType = try FeatureType(rawValue: _featureType)
-    let _scheduleType: String = try safeGet(dict: fromDict, key: "scheduleType")
-    scheduleType = try ScheduleType(rawValue: _scheduleType)
-    let rawSchedule: [String: Any] = try safeGet(dict: fromDict, key: "schedule")
-    schedule = try Schedule(fromDict: rawSchedule)
-
-    let _valueType: String = try safeGet(dict: fromDict, key: "valueType")
-    valueType = try ValueType(rawValue: _valueType)
-    value = try safeGet(dict: fromDict, key: "value")
-  }
-}
-
-protocol BaseSelectiveNumberFeature: BaseSelectiveFeature {
-  var numberType: NumberType { get }
-}
-
-public struct SelectiveNumberFeature: BaseSelectiveNumberFeature {
-  public let name: String
-  public let featureId: String
-  public var featureType: FeatureType = .selective
-  public let scheduleType: ScheduleType
-  public let schedule: Schedule
-  public var valueType: ValueType = .number
-  public let numberType: NumberType
-
-  init(fromDict: [String: Any]) throws {
-    name = try safeGet(dict: fromDict, key: "name")
-    featureId = try safeGet(dict: fromDict, key: "featureId")
-    let _featureType: String = try safeGet(dict: fromDict, key: "featureType")
-    featureType = try FeatureType(rawValue: _featureType)
-    let _scheduleType: String = try safeGet(dict: fromDict, key: "scheduleType")
-    scheduleType = try ScheduleType(rawValue: _scheduleType)
-    let rawSchedule: [String: Any] = try safeGet(dict: fromDict, key: "schedule")
-    schedule = try Schedule(fromDict: rawSchedule)
-
-    let _valueType: String = try safeGet(dict: fromDict, key: "valueType")
-    valueType = try ValueType(rawValue: _valueType)
-    let _numberType: String = try safeGet(dict: fromDict, key: "numberType")
-    numberType = try NumberType(rawValue: _numberType)
-  }
-}
-
-public struct SelectiveIntFeature: BaseSelectiveNumberFeature {
-  public let name: String
-  public let featureId: String
-  public var featureType: FeatureType = .selective
-  public let scheduleType: ScheduleType
-  public let schedule: Schedule
-  public var valueType: ValueType = .number
-  public var numberType: NumberType = .int
-  public let value: [Int64]
-
-  init(fromDict: [String: Any]) throws {
-    name = try safeGet(dict: fromDict, key: "name")
-    featureId = try safeGet(dict: fromDict, key: "featureId")
-    let _featureType: String = try safeGet(dict: fromDict, key: "featureType")
-    featureType = try FeatureType(rawValue: _featureType)
-    let _scheduleType: String = try safeGet(dict: fromDict, key: "scheduleType")
-    scheduleType = try ScheduleType(rawValue: _scheduleType)
-    let rawSchedule: [String: Any] = try safeGet(dict: fromDict, key: "schedule")
-    schedule = try Schedule(fromDict: rawSchedule)
-
-    let _valueType: String = try safeGet(dict: fromDict, key: "valueType")
-    valueType = try ValueType(rawValue: _valueType)
-
-    let _numberType: String = try safeGet(dict: fromDict, key: "numberType")
-    numberType = try NumberType(rawValue: _numberType)
-    value = try safeGet(dict: fromDict, key: "value")
-  }
-}
-
-public struct SelectiveFloatFeature: BaseSelectiveNumberFeature {
-  public let name: String
-  public let featureId: String
-  public var featureType: FeatureType = .selective
-  public let scheduleType: ScheduleType
-  public let schedule: Schedule
-  public var valueType: ValueType = .number
-  public var numberType: NumberType = .float
-  public let value: [Float64]
-
-  init(fromDict: [String: Any]) throws {
-    name = try safeGet(dict: fromDict, key: "name")
-    featureId = try safeGet(dict: fromDict, key: "featureId")
-    let _featureType: String = try safeGet(dict: fromDict, key: "featureType")
-    featureType = try FeatureType(rawValue: _featureType)
-    let _scheduleType: String = try safeGet(dict: fromDict, key: "scheduleType")
-    scheduleType = try ScheduleType(rawValue: _scheduleType)
-    let rawSchedule: [String: Any] = try safeGet(dict: fromDict, key: "schedule")
-    schedule = try Schedule(fromDict: rawSchedule)
-
-    let _valueType: String = try safeGet(dict: fromDict, key: "valueType")
-    valueType = try ValueType(rawValue: _valueType)
-
-    let _numberType: String = try safeGet(dict: fromDict, key: "numberType")
-    numberType = try NumberType(rawValue: _numberType)
-    value = try safeGet(dict: fromDict, key: "value")
-  }
-}
-
-protocol BaseValueFeature: BaseFeature {
-  var valueType: ValueType { get }
-}
-
-public struct ValueFeature: BaseValueFeature {
-  public let name: String
-  public let featureId: String
-  public var featureType: FeatureType = .selective
-  public let scheduleType: ScheduleType
-  public let schedule: Schedule
-  public let valueType: ValueType
-
-  init(fromDict: [String: Any]) throws {
-    name = try safeGet(dict: fromDict, key: "name")
-    featureId = try safeGet(dict: fromDict, key: "featureId")
-    let _featureType: String = try safeGet(dict: fromDict, key: "featureType")
-    featureType = try FeatureType(rawValue: _featureType)
-    let _scheduleType: String = try safeGet(dict: fromDict, key: "scheduleType")
-    scheduleType = try ScheduleType(rawValue: _scheduleType)
-    let rawSchedule: [String: Any] = try safeGet(dict: fromDict, key: "schedule")
-    schedule = try Schedule(fromDict: rawSchedule)
-
-    let _valueType: String = try safeGet(dict: fromDict, key: "valueType")
-    valueType = try ValueType(rawValue: _valueType)
-  }
-}
-
-public struct ValueStringFeature: BaseValueFeature {
-  public let name: String
-  public let featureId: String
-  public var featureType: FeatureType = .selective
-  public let scheduleType: ScheduleType
-  public let schedule: Schedule
-  public var valueType: ValueType = .string
-  public let value: String
-
-  init(fromDict: [String: Any]) throws {
-    name = try safeGet(dict: fromDict, key: "name")
-    featureId = try safeGet(dict: fromDict, key: "featureId")
-    let _featureType: String = try safeGet(dict: fromDict, key: "featureType")
-    featureType = try FeatureType(rawValue: _featureType)
-    let _scheduleType: String = try safeGet(dict: fromDict, key: "scheduleType")
-    scheduleType = try ScheduleType(rawValue: _scheduleType)
-    let rawSchedule: [String: Any] = try safeGet(dict: fromDict, key: "schedule")
-    schedule = try Schedule(fromDict: rawSchedule)
-
-    let _valueType: String = try safeGet(dict: fromDict, key: "valueType")
-    valueType = try ValueType(rawValue: _valueType)
-    value = try safeGet(dict: fromDict, key: "value")
-  }
-}
-
-protocol BaseValueNumberFeature: BaseValueFeature {
-  var numberType: NumberType { get }
-}
-
-public struct ValueNumberFeature: BaseValueNumberFeature {
-  public let name: String
-  public let featureId: String
-  public var featureType: FeatureType = .selective
-  public let scheduleType: ScheduleType
-  public let schedule: Schedule
-  public var valueType: ValueType = .number
-  public let numberType: NumberType
-
-  init(fromDict: [String: Any]) throws {
-    name = try safeGet(dict: fromDict, key: "name")
-    featureId = try safeGet(dict: fromDict, key: "featureId")
-    let _featureType: String = try safeGet(dict: fromDict, key: "featureType")
-    featureType = try FeatureType(rawValue: _featureType)
-    let _scheduleType: String = try safeGet(dict: fromDict, key: "scheduleType")
-    scheduleType = try ScheduleType(rawValue: _scheduleType)
-    let rawSchedule: [String: Any] = try safeGet(dict: fromDict, key: "schedule")
-    schedule = try Schedule(fromDict: rawSchedule)
-
-    let _valueType: String = try safeGet(dict: fromDict, key: "valueType")
-    valueType = try ValueType(rawValue: _valueType)
-
-    let _numberType: String = try safeGet(dict: fromDict, key: "numberType")
-    numberType = try NumberType(rawValue: _numberType)
-  }
-}
-
-public struct ValueIntFeature: BaseValueNumberFeature {
-  public let name: String
-  public let featureId: String
-  public var featureType: FeatureType = .selective
-  public let scheduleType: ScheduleType
-  public let schedule: Schedule
-  public var valueType: ValueType = .number
-  public var numberType: NumberType = .int
-  public let value: Int64
-
-  init(fromDict: [String: Any]) throws {
-    name = try safeGet(dict: fromDict, key: "name")
-    featureId = try safeGet(dict: fromDict, key: "featureId")
-    let _featureType: String = try safeGet(dict: fromDict, key: "featureType")
-    featureType = try FeatureType(rawValue: _featureType)
-    let _scheduleType: String = try safeGet(dict: fromDict, key: "scheduleType")
-    scheduleType = try ScheduleType(rawValue: _scheduleType)
-    let rawSchedule: [String: Any] = try safeGet(dict: fromDict, key: "schedule")
-    schedule = try Schedule(fromDict: rawSchedule)
-
-    let _valueType: String = try safeGet(dict: fromDict, key: "valueType")
-    valueType = try ValueType(rawValue: _valueType)
-
-    let _numberType: String = try safeGet(dict: fromDict, key: "numberType")
-    numberType = try NumberType(rawValue: _numberType)
-    value = try safeGet(dict: fromDict, key: "value")
-  }
-}
-
-public struct ValueFloatFeature: BaseValueNumberFeature {
-  public let name: String
-  public let featureId: String
-  public var featureType: FeatureType = .selective
-  public let scheduleType: ScheduleType
-  public let schedule: Schedule
-  public var valueType: ValueType = .number
-  public var numberType: NumberType = .float
-  public let value: Float64
-
-  init(fromDict: [String: Any]) throws {
-    name = try safeGet(dict: fromDict, key: "name")
-    featureId = try safeGet(dict: fromDict, key: "featureId")
-    let _featureType: String = try safeGet(dict: fromDict, key: "featureType")
-    featureType = try FeatureType(rawValue: _featureType)
-    let _scheduleType: String = try safeGet(dict: fromDict, key: "scheduleType")
-    scheduleType = try ScheduleType(rawValue: _scheduleType)
-    let rawSchedule: [String: Any] = try safeGet(dict: fromDict, key: "schedule")
-    schedule = try Schedule(fromDict: rawSchedule)
-
-    let _valueType: String = try safeGet(dict: fromDict, key: "valueType")
-    valueType = try ValueType(rawValue: _valueType)
-
-    let _numberType: String = try safeGet(dict: fromDict, key: "numberType")
-    numberType = try NumberType(rawValue: _numberType)
-    value = try safeGet(dict: fromDict, key: "value")
-  }
+  public let value: Value
 }
 
 public struct ManifestGroup: Decodable {
@@ -446,163 +283,16 @@ public struct Manifest: Decodable {
   public let groups: [ManifestGroup]
 }
 
-public struct Environment {
+public struct Environment: Decodable {
   public let name: String
   public let environmentId: String
-  public let rawFeatures: [String: Feature]
-
-  let toggleFeatures: [String: ToggleFeature]
-  let gradualFeatures: [String: GradualFeature]
-
-  let selectiveFeatures: [String: SelectiveFeature]
-  let selectiveStringFeatures: [String: SelectiveStringFeature]
-  let selectiveNumberFeatures: [String: SelectiveNumberFeature]
-  let selectiveIntFeatures: [String: SelectiveIntFeature]
-  let selectiveFloatFeatures: [String: SelectiveFloatFeature]
-
-  let valueFeatures: [String: ValueFeature]
-  let valueStringFeatures: [String: ValueStringFeature]
-  let valueNumberFeatures: [String: ValueNumberFeature]
-  let valueIntFeatures: [String: ValueIntFeature]
-  let valueFloatFeatures: [String: ValueFloatFeature]
-
-  init(fromDict: [String: Any]) throws {
-    // let data = try JSONSerialization.jsonObject(with: Data(json.utf8), options: .allowFragments) as? [String: Any]
-
-    name = try safeGet(dict: fromDict, key: "name")
-    environmentId = try safeGet(dict: fromDict, key: "environmentId")
-
-    let _features: [String: [String: Any]] = try safeGet(dict: fromDict, key: "features")
-
-    var _rawFeatures: [String: Feature] = [:]
-
-    var _toggleFeatures: [String: ToggleFeature] = [:]
-    var _gradualFeatures: [String: GradualFeature] = [:]
-
-    var _selectiveFeatures: [String: SelectiveFeature] = [:]
-    var _selectiveStringFeatures: [String: SelectiveStringFeature] = [:]
-    var _selectiveNumberFeatures: [String: SelectiveNumberFeature] = [:]
-    var _selectiveIntFeatures: [String: SelectiveIntFeature] = [:]
-    var _selectiveFloatFeatures: [String: SelectiveFloatFeature] = [:]
-
-    var _valueFeatures: [String: ValueFeature] = [:]
-    var _valueStringFeatures: [String: ValueStringFeature] = [:]
-    var _valueNumberFeatures: [String: ValueNumberFeature] = [:]
-    var _valueIntFeatures: [String: ValueIntFeature] = [:]
-    var _valueFloatFeatures: [String: ValueFloatFeature] = [:]
-
-    for (key, value) in _features {
-      let rawFeature = try Feature(fromDict: value)
-      _rawFeatures[key] = rawFeature
-
-      switch rawFeature.featureType {
-      case .toggle:
-        let toggleFeature = try ToggleFeature(fromDict: value)
-        _toggleFeatures[key] = toggleFeature
-      case .gradual:
-        let gradualFeature = try GradualFeature(fromDict: value)
-        _gradualFeatures[key] = gradualFeature
-      case .selective:
-        let selectiveFeature = try SelectiveFeature(fromDict: value)
-        _selectiveFeatures[key] = selectiveFeature
-
-        switch selectiveFeature.valueType {
-        case .string:
-          let selectiveStringFeature = try SelectiveStringFeature(fromDict: value)
-          _selectiveStringFeatures[key] = selectiveStringFeature
-
-        case .number:
-          let selectiveNumberFeature = try SelectiveNumberFeature(fromDict: value)
-          _selectiveNumberFeatures[key] = selectiveNumberFeature
-
-          switch selectiveNumberFeature.numberType {
-          case .int:
-            let selectiveIntFeature = try SelectiveIntFeature(fromDict: value)
-            _selectiveIntFeatures[key] = selectiveIntFeature
-
-          case .float:
-            let selectiveFloatFeature = try SelectiveFloatFeature(fromDict: value)
-            _selectiveFloatFeatures[key] = selectiveFloatFeature
-          }
-        }
-
-      case .value:
-        let valueFeature = try ValueFeature(fromDict: value)
-        _valueFeatures[key] = valueFeature
-
-        switch valueFeature.valueType {
-        case .string:
-          let valueStringFeature = try ValueStringFeature(fromDict: value)
-          _valueStringFeatures[key] = valueStringFeature
-
-        case .number:
-          let valueNumberFeature = try ValueNumberFeature(fromDict: value)
-          _valueNumberFeatures[key] = valueNumberFeature
-
-          switch valueNumberFeature.numberType {
-          case .int:
-            let valueIntFeature = try ValueIntFeature(fromDict: value)
-            _valueIntFeatures[key] = valueIntFeature
-
-          case .float:
-            let valueFloatFeature = try ValueFloatFeature(fromDict: value)
-            _valueFloatFeatures[key] = valueFloatFeature
-          }
-        }
-      }
-    }
-
-    rawFeatures = _rawFeatures
-
-    toggleFeatures = _toggleFeatures
-    gradualFeatures = _gradualFeatures
-
-    selectiveFeatures = _selectiveFeatures
-    selectiveStringFeatures = _selectiveStringFeatures
-    selectiveNumberFeatures = _selectiveNumberFeatures
-    selectiveIntFeatures = _selectiveIntFeatures
-    selectiveFloatFeatures = _selectiveFloatFeatures
-
-    valueFeatures = _valueFeatures
-    valueStringFeatures = _valueStringFeatures
-    valueNumberFeatures = _valueNumberFeatures
-    valueIntFeatures = _valueIntFeatures
-    valueFloatFeatures = _valueFloatFeatures
-  }
+  public let features: [String: Feature]
 }
 
-public struct Group {
+public struct Group: Decodable {
   public let name: String
   public let groupId: String
   public let meta: GroupMeta
   public let environments: [String: Environment]
   public let features: [String: Feature]
-
-  init(json: String) throws {
-    // Maybe have a separate assertion here if the jsonObject function fails
-    let data = try JSONSerialization.jsonObject(with: Data(json.utf8), options: .allowFragments) as? [String: Any]
-
-    name = try safeGet(dict: data, key: "name")
-    groupId = try safeGet(dict: data, key: "groupId")
-
-    let _groupMeta: [String: Any] = try safeGet(dict: data, key: "meta")
-    let metaVersion: String = try safeGet(dict: _groupMeta, key: "version")
-    meta = GroupMeta(version: metaVersion)
-
-    var _environments: [String: Environment] = [:]
-    let _rawEnvironments: [String: [String: Any]] = try safeGet(dict: data, key: "environments")
-    for (key, value) in _rawEnvironments {
-      _environments[key] = try Environment(fromDict: value)
-    }
-
-    environments = _environments
-
-    var _features: [String: Feature] = [:]
-    let _rawFeatures: [String: [String: Any]] = try safeGet(dict: data, key: "features")
-    for (key, value) in _rawFeatures {
-      _features[key] = try Feature(fromDict: value)
-    }
-
-    features = _features
-  }
 }

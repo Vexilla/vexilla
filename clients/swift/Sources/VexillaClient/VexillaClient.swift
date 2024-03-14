@@ -19,14 +19,13 @@ public struct VexillaClient {
         self.instanceId = instanceId
     }
 
-    public func getManifest(fetch: (String) async throws -> String) async throws -> Manifest {
-        let url = "\(baseUrl)/manifest.json"
+    public func getManifest(fetch: (URL) async throws -> Data) async throws -> Manifest {
+        guard let url = URL(string: "\(baseUrl)/manifest.json") else {
+            throw "Internal VexillaClient Error: Invalid URL"
+        }
         let response = try await fetch(url)
 
-        // print("getManifest Response", response.utf8)
-        let responseData = Data(response.utf8)
-        let manifest = try JSONDecoder().decode(Manifest.self, from: responseData)
-        return manifest
+        return try JSONDecoder().decode(Manifest.self, from: response)
     }
 
     public mutating func setManifest(manifest: Manifest) {
@@ -41,28 +40,27 @@ public struct VexillaClient {
         groupLookupTable = _groupLookupTable
     }
 
-    public mutating func syncManifest(fetch: (String) async throws -> String) async throws {
+    public mutating func syncManifest(fetch: (URL) async throws -> Data) async throws {
         let manifest = try await getManifest(fetch: fetch)
         setManifest(manifest: manifest)
     }
 
-    public func getFlags(groupNameOrId: String, fetch: (String) async throws -> String) async throws -> Group {
-        let groupId: String = try safeGet(dict: groupLookupTable, key: groupNameOrId, errorMessage: "Group ID (\(groupNameOrId)) not found in lookup table. Did you fetch and set the manifest, yet?")
-        let url = "\(baseUrl)/\(groupId).json"
-        let response = try await fetch(url)
-        // let responseData = Data(response.utf8)
-        do {
-            // let group = try JSONDecoder().decode(Group.self, from: responseData)
-            let group = try Group(json: response)
-            return group
-        } catch {
-            print("GROUP ERROR", error)
-            throw error
+    public func getFlags(groupNameOrId: String, fetch: (URL) async throws -> Data) async throws -> Group {
+        guard let groupId = groupLookupTable[groupNameOrId] else {
+            throw "Group ID (\(groupNameOrId)) not found in lookup table. Did you fetch and set the manifest, yet?"
         }
+        let url = "\(baseUrl)/\(groupId).json"
+        guard let url = URL(string: url) else {
+            throw "Internal VexillaClient Error: Invalid URL"
+        }
+        let response = try await fetch(url)
+        return try JSONDecoder().decode(Group.self, from: response)
     }
 
     public mutating func setFlags(groupNameOrId: String, group: Group) throws {
-        let groupId: String = try safeGet(dict: groupLookupTable, key: groupNameOrId, errorMessage: "Group ID (\(groupNameOrId)) not found in lookup table. Did you fetch and set the manifest, yet?")
+        guard let groupId = groupLookupTable[groupNameOrId] else {
+            throw "Group ID (\(groupNameOrId)) not found in lookup table. Did you fetch and set the manifest, yet?"
+        }
 
         flagGroups[groupId] = group
 
@@ -83,7 +81,7 @@ public struct VexillaClient {
         }
     }
 
-    public mutating func syncFlags(groupNameOrId: String, fetch: (String) async throws -> String) async throws {
+    public mutating func syncFlags(groupNameOrId: String, fetch: (URL) async throws -> Data) async throws {
         let group = try await getFlags(groupNameOrId: groupNameOrId, fetch: fetch)
         try setFlags(groupNameOrId: groupNameOrId, group: group)
     }
@@ -93,31 +91,26 @@ public struct VexillaClient {
     }
 
     public func shouldCustomString(groupNameOrId: String, featureNameOrId: String, instanceId: String) throws -> Bool {
-        let (environment, feature) = try getFeature(groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId)
+        let feature = try getFeature(groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId)
 
-        if try !isScheduledFeatureActive(feature: feature) {
+        guard try isScheduledFeatureActive(feature: feature) else {
             return false
         }
 
-        switch feature.featureType {
-        case .toggle:
-            let toggleFeature: ToggleFeature = try safeGet(dict: environment.toggleFeatures, key: feature.featureId)
+        switch feature {
+        case .toggle(let toggleFeature):
             return toggleFeature.value
-        case .gradual:
-            let gradualFeature: GradualFeature = try safeGet(dict: environment.gradualFeatures, key: feature.featureId)
+        case .gradual(let gradualFeature):
             return hashString(stringToHash: instanceId, seed: gradualFeature.seed) <= gradualFeature.value
-        case .selective:
-            let selectiveFeature: SelectiveFeature = try safeGet(dict: environment.selectiveFeatures, key: feature.featureId)
-
-            switch selectiveFeature.valueType {
-            case .string:
-                let selectiveStringFeature: SelectiveStringFeature = try safeGet(dict: environment.selectiveStringFeatures, key: feature.featureId)
-                return selectiveStringFeature.value.contains(instanceId)
+        case .selective(let selectiveFeature):
+            switch selectiveFeature.value {
+            case .string(let values):
+                return values.contains(instanceId)
             default:
-                throw "should function must only be called for features with a valueType of 'string'. Try shouldCustomInt, shouldCustomInt64, shouldCustomFloat, or shouldCustomFloat64"
+                throw "\(#function) must only be called for features with a valueType of 'number'. Try should or shouldCustomString"
             }
         case .value:
-            throw "should cannot be called on features with featureType of 'value'"
+            throw "\(#function) should cannot be called on features with featureType of 'value'"
         }
     }
 
@@ -126,37 +119,26 @@ public struct VexillaClient {
     }
 
     public func shouldCustomInt64(groupNameOrId: String, featureNameOrId: String, instanceId: Int64) throws -> Bool {
-        let (environment, feature) = try getFeature(groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId)
+        let feature = try getFeature(groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId)
 
-        if try !isScheduledFeatureActive(feature: feature) {
+        guard try isScheduledFeatureActive(feature: feature) else {
             return false
         }
 
-        switch feature.featureType {
-        case .toggle:
-            let toggleFeature: ToggleFeature = try safeGet(dict: environment.toggleFeatures, key: feature.featureId)
+        switch feature {
+        case .toggle(let toggleFeature):
             return toggleFeature.value
-        case .gradual:
-            let gradualFeature: GradualFeature = try safeGet(dict: environment.gradualFeatures, key: feature.featureId)
+        case .gradual(let gradualFeature):
             return hashInt64(intToHash: instanceId, seed: gradualFeature.seed) > gradualFeature.value
-        case .selective:
-            let selectiveFeature: SelectiveFeature = try safeGet(dict: environment.selectiveFeatures, key: feature.featureId)
-
-            switch selectiveFeature.valueType {
-            case .number:
-                let selectiveNumberFeature: SelectiveNumberFeature = try safeGet(dict: environment.selectiveNumberFeatures, key: feature.featureId)
-                switch selectiveNumberFeature.numberType {
-                case .int:
-                    let selectiveIntFeature: SelectiveIntFeature = try safeGet(dict: environment.selectiveIntFeatures, key: feature.featureId)
-                    return selectiveIntFeature.value.contains(instanceId)
-                default:
-                    throw "shouldCustomInt/shouldCustomInt64 function must only be called for features with a numberType of 'int'. Try shouldFloat or shouldFloat64"
-                }
+        case .selective(let selectiveFeature):
+            switch selectiveFeature.value {
+            case .int(let values):
+                return values.contains(instanceId)
             default:
-                throw "shouldCustomInt/shouldCustomInt64 function must only be called for features with a valueType of 'number'. Try should or shouldCustomString"
+                throw "\(#function) must only be called for features with an int value. Try should or shouldCustomString"
             }
         case .value:
-            throw "should cannot be called on features with featureType of 'value'"
+            throw "\(#function) should cannot be called on features with featureType of 'value'"
         }
     }
 
@@ -165,88 +147,67 @@ public struct VexillaClient {
     }
 
     public func shouldCustomFloat64(groupNameOrId: String, featureNameOrId: String, instanceId: Float64) throws -> Bool {
-        let (environment, feature) = try getFeature(groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId)
+        let feature = try getFeature(groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId)
 
-        if try !isScheduledFeatureActive(feature: feature) {
+        guard try isScheduledFeatureActive(feature: feature) else {
             return false
         }
 
-        switch feature.featureType {
-        case .toggle:
-            let toggleFeature: ToggleFeature = try safeGet(dict: environment.toggleFeatures, key: feature.featureId)
+        switch feature {
+        case .toggle(let toggleFeature):
             return toggleFeature.value
-        case .gradual:
-            let gradualFeature: GradualFeature = try safeGet(dict: environment.gradualFeatures, key: feature.featureId)
+        case .gradual(let gradualFeature):
             return hashFloat64(floatToHash: instanceId, seed: gradualFeature.seed) > gradualFeature.value
-        case .selective:
-            let selectiveFeature: SelectiveFeature = try safeGet(dict: environment.selectiveFeatures, key: feature.featureId)
-
-            switch selectiveFeature.valueType {
-            case .number:
-                let selectiveNumberFeature: SelectiveNumberFeature = try safeGet(dict: environment.selectiveNumberFeatures, key: feature.featureId)
-                switch selectiveNumberFeature.numberType {
-                case .float:
-                    let selectiveFloatFeature: SelectiveFloatFeature = try safeGet(dict: environment.selectiveFloatFeatures, key: feature.featureId)
-                    return selectiveFloatFeature.value.contains(instanceId)
-                default:
-                    throw "shouldCustomFloat/shouldCustomFloat64 function must only be called for features with a numberType of 'float'. Try shouldInt or shouldInt64"
-                }
+        case .selective(let selectiveFeature):
+            switch selectiveFeature.value {
+            case .float(let values):
+                return values.contains(instanceId)
             default:
-                throw "shouldCustomFloat/shouldCustomFloat64 function must only be called for features with a valueType of 'number'. Try should or shouldCustomString"
+                throw "\(#function) must only be called for features with a valueType of 'number'. Try should or shouldCustomString"
             }
         case .value:
-            throw "should cannot be called on features with featureType of 'value'"
+            throw "\(#function) should cannot be called on features with featureType of 'value'"
         }
     }
 
     public func valueString(groupNameOrId: String, featureNameOrId: String, defaultString: String) throws -> String {
-        let (environment, feature) = try getFeature(groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId)
+        let feature = try getFeature(groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId)
 
-        if try !isScheduledFeatureActive(feature: feature) {
+        guard try isScheduledFeatureActive(feature: feature) else {
             return defaultString
         }
 
-        switch feature.featureType {
-        case .value:
-            let valueFeature: ValueFeature = try safeGet(dict: environment.valueFeatures, key: feature.featureId)
-
-            switch valueFeature.valueType {
-            case .string:
-                let valueStringFeature: ValueStringFeature = try safeGet(dict: environment.valueStringFeatures, key: feature.featureId)
-                return valueStringFeature.value
-            default:
-                throw "valueString function must only be called for features with a valueType of 'string'. Try valueInt, valueInt64, valueFloat, or valueFloat64"
-            }
-        default:
-            throw "valueString can only be called on features with featureType of 'value'"
+        guard case .value(let valueFeature) = feature else {
+            throw "\(#function) can only be called on features with featureType of 'value'"
         }
+
+        guard case .string(let string) = valueFeature.value else {
+            throw "\(#function) can only be called on features with a valueType of 'string'"
+        }
+
+        return string
     }
 
-    public func valueInt(groupNameOrId: String, featureNameOrId: String, defaultInt32: Int32) throws -> Int32 {
+    public func valueInt32(groupNameOrId: String, featureNameOrId: String, defaultInt32: Int32) throws -> Int32 {
         return try Int32(valueInt64(groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId, defaultInt64: Int64(defaultInt32)))
     }
 
     public func valueInt64(groupNameOrId: String, featureNameOrId: String, defaultInt64: Int64) throws -> Int64 {
-        let (environment, feature) = try getFeature(groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId)
+        let feature = try getFeature(groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId)
 
-        if try !isScheduledFeatureActive(feature: feature) {
+        guard try isScheduledFeatureActive(feature: feature) else {
             return defaultInt64
         }
 
-        switch feature.featureType {
-        case .value:
-            let valueFeature: ValueFeature = try safeGet(dict: environment.valueFeatures, key: feature.featureId)
-
-            switch valueFeature.valueType {
-            case .number:
-                let valueIntFeature: ValueIntFeature = try safeGet(dict: environment.valueIntFeatures, key: feature.featureId)
-                return valueIntFeature.value
-            default:
-                throw "valueInt/valueInt64 functions must only be called for features with a valueType of 'int'. Try valueString, valueFloat, or valueFloat64"
-            }
-        default:
-            throw "valueString can only be called on features with featureType of 'value'"
+        guard case .value(let valueFeature) = feature else {
+            throw "\(#function) can only be called on features with featureType of 'value'"
         }
+        
+        guard case .int(let int) = valueFeature.value else {
+            throw "\(#function) can only be called on features with a valueType of 'int'"
+        }
+
+        return int
     }
 
     public func valueFloat(groupNameOrId: String, featureNameOrId: String, defaultFloat32: Float32) throws -> Float32 {
@@ -254,45 +215,56 @@ public struct VexillaClient {
     }
 
     public func valueFloat64(groupNameOrId: String, featureNameOrId: String, defaultFloat64: Float64) throws -> Float64 {
-        let (environment, feature) = try getFeature(groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId)
+        let feature = try getFeature(groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId)
 
-        if try !isScheduledFeatureActive(feature: feature) {
+        guard try isScheduledFeatureActive(feature: feature) else {
             return defaultFloat64
         }
 
-        switch feature.featureType {
-        case .value:
-            let valueFeature: ValueFeature = try safeGet(dict: environment.valueFeatures, key: feature.featureId)
-
-            switch valueFeature.valueType {
-            case .number:
-                let valueFloatFeature: ValueFloatFeature = try safeGet(dict: environment.valueFloatFeatures, key: feature.featureId)
-                return valueFloatFeature.value
-            default:
-                throw "valueFloat/valueFloat64 functions must only be called for features with a valueType of 'float'. Try valueString, valueInt, or valueInt64"
-            }
-        default:
-            throw "valueString can only be called on features with featureType of 'value'"
+        guard case .value(let valueFeature) = feature else {
+            throw "\(#function) can only be called on features with featureType of 'value'"
         }
+
+        guard case .float(let float) = valueFeature.value else {
+            throw "\(#function) can only be called on features with a valueType of 'float'"
+        }
+
+        return float
     }
 
-    private func getFeature(groupNameOrId: String, featureNameOrId: String) throws -> (Environment, Feature) {
-        // print("GETTING FEATURE:", groupNameOrId)
-        // dump(groupLookupTable)
-        let groupId: String = try safeGet(dict: groupLookupTable, key: groupNameOrId)
+    private func getFeature(groupNameOrId: String, featureNameOrId: String) throws -> Feature {
+        guard let groupId = groupLookupTable[groupNameOrId] else {
+            throw "Group ID (\(groupNameOrId)) not found in lookup table. Did you fetch and set the manifest, yet?"
+        }
+        
+        guard let groupEnvironmentLookupTable = environmentLookupTable[groupId] else {
+            throw "Environment lookup table not found for group ID (\(groupId)). Did you fetch and set the manifest, yet?"
+        }
+        
+        guard let environmentId = groupEnvironmentLookupTable[environment] else {
+            throw "Environment (\(environment)) not found in lookup table. Did you fetch and set the manifest, yet?"
+        }
 
-        let groupEnvironmentLookupTable: [String: String] = try safeGet(dict: environmentLookupTable, key: groupId)
-        let environmentId: String = try safeGet(dict: groupEnvironmentLookupTable, key: environment)
+        guard let featureLookupTable = featureLookupTable[groupId] else {
+            throw "Feature lookup table not found for group ID (\(groupId)). Did you fetch and set the manifest, yet?"
+        }
 
-        let groupFeatureLookupTable: [String: String] = try safeGet(dict: featureLookupTable, key: groupId)
-        let featureId: String = try safeGet(dict: groupFeatureLookupTable, key: featureNameOrId)
+        guard let featureId = featureLookupTable[featureNameOrId] else {
+            throw "Feature ID (\(featureNameOrId)) not found in lookup table. Did you fetch and set the manifest, yet?"
+        }
 
-        let group: Group = try safeGet(dict: flagGroups, key: groupId)
+        guard let group = flagGroups[groupId] else {
+            throw "Group ID (\(groupId)) not found in lookup table. Did you fetch and set the manifest, yet?"
+        }
 
-        let environment: Environment = try safeGet(dict: group.environments, key: environmentId)
+        guard let environment = group.environments[environmentId] else {
+            throw "Environment (\(environment)) not found in lookup table. Did you fetch and set the manifest, yet?"
+        }
 
-        let feature: Feature = try safeGet(dict: environment.rawFeatures, key: featureId)
-
-        return (environment, feature)
+        guard let feature = environment.features[featureId] else {
+            throw "Feature ID (\(featureId)) not found in lookup table. Did you fetch and set the manifest, yet?"
+        }
+        
+        return feature
     }
 }
