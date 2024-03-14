@@ -7,36 +7,36 @@ class HasherTest {
 
     private val uuid = "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a";
 
-    private val nonWorkingSeed = 0.22;
-    private val workingSeed = 0.11;
+    private val seedA = 0.11; // Working for string test
+    private val seedB = 0.22; // Non-working for string test
 
     @Test
-    fun `should hash a string get a value under threshold for a working seed`() {
-        assertTrue(Hasher.hashString(this.uuid, this.workingSeed) <= 0.40)
+    fun `should hash a string and get a value under threshold for seed A`() {
+        assertTrue(Hasher.hashString(this.uuid, this.seedA) <= 0.40)
     }
 
     @Test
-    fun `should hash a string get a value above threshold for a non working seed`() {
-        assertTrue(Hasher.hashString(this.uuid, this.nonWorkingSeed) > 0.40)
+    fun `should hash a string and get a value above threshold for seed B`() {
+        assertTrue(Hasher.hashString(this.uuid, this.seedB) > 0.40)
     }
 
     @Test
-    fun `should hash a int get a value above threshold for a non working seed`() {
-        assertTrue(Hasher.hashInt(42, this.nonWorkingSeed) > 0.40)
+    fun `should hash a int and get a value above threshold for seed B`() {
+        assertTrue(Hasher.hashInt(42, this.seedB) > 0.40)
     }
 
     @Test
-    fun `should hash a long get a value above threshold for a non working seed`() {
-        assertTrue(Hasher.hashLong(42, this.nonWorkingSeed) > 0.40)
+    fun `should hash a long and get a value above threshold for seed B`() {
+        assertTrue(Hasher.hashLong(42, this.seedB) > 0.40)
     }
 
     @Test
-    fun `should hash a float get a value under threshold for a non working seed`() {
-        assertTrue(Hasher.hashFloat(42.42.toFloat(), this.nonWorkingSeed) < 0.40)
+    fun `should hash a float and get a value under threshold for seed B`() {
+        assertTrue(Hasher.hashFloat(42.42.toFloat(), this.seedB) <= 0.40)
     }
 
     @Test
-    fun `should hash a double get a value under threshold for a non working seed`() {
-        assertTrue(Hasher.hashDouble(42.42, this.nonWorkingSeed) < 0.40)
+    fun `should hash a double and get a value under threshold for a seed B`() {
+        assertTrue(Hasher.hashDouble(42.42, this.seedB) <= 0.40)
     }
 }

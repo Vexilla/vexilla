@@ -141,7 +141,8 @@ jobs:
           TEST_SERVER_HOST: test-server:3000
 
   test-bazel:
-    runs-on: ubuntu-latest
+    # Must use 20.04 currently since Swift does not have 5.5.x support for 22.04
+    runs-on: ubuntu-20.04
     needs: ["publish-test-server"]
 
     services:
@@ -168,7 +169,6 @@ jobs:
             ${{ runner.os }}-bazel-
       - run: bazel build //...
       - run: bazel coverage --combined_report=lcov //...
-        # - run: bazel test //...
         env:
           TEST_SERVER_HOST: test-server
 
@@ -206,3 +206,28 @@ jobs:
         # test-server not available on local network
         # env:
         #   TEST_SERVER_HOST: test-server
+
+  test-swift:
+    runs-on: ubuntu-latest
+    container: swift:5.5-focal
+    needs: ["publish-test-server"]
+
+    services:
+      test-server:
+        credentials:
+          username: vexilla
+          password: ${{secrets.GITHUB_TOKEN}}
+        image: ghcr.io/vexilla/test-server:latest
+        ports:
+          - 3000:3000
+        options: |
+          --health-cmd "curl -f http://localhost:3000/manifest.json"
+
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          cd ./clients/swift
+          swift build
+          swift test
+        env:
+          TEST_SERVER_HOST: test-server:3000

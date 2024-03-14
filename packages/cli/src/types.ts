@@ -7,4 +7,5 @@ export type Language =
   | "elixir"
   | "php"
   | "python"
-  | "kotlin";
+  | "kotlin"
+  | "swift";

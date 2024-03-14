@@ -296,4 +296,28 @@ data object {{{name}}}Group {
 }
 
 {{/groups}}`,
+  swift: `/*
+  {{{disclaimerText}}}
+*/
+
+{{#groups}}
+
+enum {{{name}}}Group {
+  static let name: String = "{{{rawName}}}"
+  static let id: String = "{{{id}}}"
+
+  enum Features {
+    {{#features}}
+    static let {{{name}}} = "{{{id}}}"
+    {{/features}}
+  }
+
+  enum Environments {
+    {{#environments}}
+    static let {{{name}}} = "{{{id}}}"
+    {{/environments}}
+  }
+}
+
+{{/groups}}`,
 };

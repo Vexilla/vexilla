@@ -182,13 +182,3 @@ data class Group(
     val environments: Map<String, Environment>,
     val features: Map<String, Feature>
 )
-
-data class FooGroup(
-    val id: String = "Foo",
-    val name: String = "Bar",
-
-    ) {
-    enum class Features(val FeatureName: String) {
-        FEATURE_1("feature_is_akshjdfgajkshfg"),
-    }
-}

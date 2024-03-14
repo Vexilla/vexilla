@@ -1,0 +1,57 @@
+LanguageName = 'swift'
+LanguageDisplayName = "Swift"
+Warning='''
+
+Warning: This library is currently written to work with Apple operating systems only. If you are using server-side swift, you will likely run into issues with our use of Foundation and async/await.
+'''
+InstallInstructions = '''
+Add VexillaClient as a dependency via SwiftPM or CocoaPods
+[https://developer.apple.com/documentation/xcode/adding_package_dependencies_to_your_app](https://developer.apple.com/documentation/xcode/adding_package_dependencies_to_your_app)
+
+'''
+CustomInstanceHash = "instanceId"
+SyncFlags = "syncFlags"
+SetupSnippet = '''
+```swift
+let client = VexillaClient(environment: "dev", baseUrl: "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com", instanceId: "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a")
+
+try await vexillaClient.syncFlags(groupNameOrId: "Gradual") { urlString -> String in
+    let url = URL(string: urlString)!
+    let request = URLRequest(url: url)
+
+    return try await withCheckedThrowingContinuation { continuation in
+        URLSession.shared.dataTask(with: request) { data, _, error in
+            if error != nil {
+                return continuation.resume(throwing: "could not fetch gradual group")
+            }
+            return continuation.resume(returning: String(decoding: data!, as: UTF8.self))
+        }.resume()
+    }
+}
+```
+'''
+Should = "Should"
+UsageSnippet = '''
+```swift
+let shouldGradual = client.should(FEATURE_NAME)
+```
+'''
+Example = '''
+```swift
+var client = VexillaClient(environment: "dev", baseUrl: "https://streamparrot-feature-flags.s3.amazonaws.com", instanceId: "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a")
+
+try await vexillaClient.syncFlags(groupNameOrId: "Gradual") { urlString -> String in
+    let url = URL(string: urlString)!
+    let request = URLRequest(url: url)
+
+    return try await withCheckedThrowingContinuation { continuation in
+        URLSession.shared.dataTask(with: request) { data, _, error in
+            if error != nil {
+                return continuation.resume(throwing: "could not fetch gradual group")
+            }
+            return continuation.resume(returning: String(decoding: data!, as: UTF8.self))
+        }.resume()
+    }
+}
+```
+'''

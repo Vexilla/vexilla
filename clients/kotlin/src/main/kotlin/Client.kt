@@ -89,7 +89,7 @@ class Client(
             is SelectiveFeature -> {
                 when (feature) {
                     is SelectiveStringFeature -> feature.value.contains(instanceId)
-                    else -> throw Error("should function must only be called for features with a valueType of 'string'. Try shouldInt, shouldLong, shouldFloat, or shouldDouble")
+                    else -> throw Error("should function must only be called for features with a valueType of 'string'. Try shouldCustomInt, shouldCustomLong, shouldCustomFloat, or shouldCustomDouble")
                 }
             }
 

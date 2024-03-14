@@ -117,6 +117,16 @@ const languageTransformers: Record<
       groups: groupsOutput,
     });
   },
+  swift: function (groups: PublishedGroup[], typePrefix = "", typeSuffix = "") {
+    const groupsOutput = groups.map(
+      parseGroup(typePrefix, typeSuffix, Case.camel, Case.pascal)
+    );
+
+    return mustache.render(templates.swift, {
+      disclaimerText,
+      groups: groupsOutput,
+    });
+  },
 
   //   csharp: function (groups: PublishedGroup[], typePrefix = "") {
   //     const tagsString = tags
@@ -263,7 +273,7 @@ const languageAliases: Record<string, Language> = {
   golang: "go",
   go: "go",
   php: "php",
-  // py: "python",
+  py: "python",
   python: "python",
   ex: "elixir",
   elixir: "elixir",
@@ -271,6 +281,7 @@ const languageAliases: Record<string, Language> = {
   // ruby: "ruby",
   rs: "rust",
   rust: "rust",
+  swift: "swift",
   // lua: "lua",
   // flutter: "dart",
   // dart: "dart",

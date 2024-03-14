@@ -1,0 +1,25 @@
+load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library", "swift_test")
+
+swift_library(
+    name = "vexilla_client_lib",
+    srcs = [
+        "Sources/VexillaClient/Hashing.swift",
+        "Sources/VexillaClient/Scheduling.swift",
+        "Sources/VexillaClient/Types.swift",
+        "Sources/VexillaClient/Utils.swift",
+        "Sources/VexillaClient/VexillaClient.swift",
+    ],
+    tags = [],
+)
+
+swift_test(
+    name = "vexilla_client_test",
+    srcs = [
+        "Tests/LinuxMain.swift",
+        "Tests/VexillaClientTests/HashingTests.swift",
+        "Tests/VexillaClientTests/SchedulingTests.swift",
+        "Tests/VexillaClientTests/VexillaClientTests.swift",
+    ],
+    target_compatible_with = ["@platforms//os:macos"],
+    deps = [":vexilla_client_lib"],
+)
