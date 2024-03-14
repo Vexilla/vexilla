@@ -21,11 +21,13 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "VexillaClient",
-            dependencies: []
+            dependencies: [],
+            path: "clients/swift/Sources/VexillaClient"
         ),
         .testTarget(
             name: "VexillaClientTests",
-            dependencies: ["VexillaClient"]
+            dependencies: ["VexillaClient"],
+            path: "clients/swift/Tests/VexillaClientTests"
         ),
     ]
 )
