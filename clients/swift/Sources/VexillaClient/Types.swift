@@ -82,7 +82,7 @@ public enum Feature: Decodable, BaseFeature {
   case selective(SelectiveFeature)
   case value(ValueFeature)
 
-  public init(from decoder: any Decoder) throws {
+  public init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     let featureType = try container.decode(FeatureType.self, forKey: .featureType)
 
@@ -196,7 +196,7 @@ public struct SelectiveFeature: BaseFeature {
     case float([Float64])
   }
 
-  public init(from decoder: any Decoder) throws {
+  public init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     name = try container.decode(String.self, forKey: .name)
     featureId = try container.decode(String.self, forKey: .featureId)
@@ -240,7 +240,7 @@ public struct ValueFeature: BaseFeature {
     case float(Float64)
   }
 
-  public init(from decoder: any Decoder) throws {
+  public init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     name = try container.decode(String.self, forKey: .name)
     featureId = try container.decode(String.self, forKey: .featureId)
