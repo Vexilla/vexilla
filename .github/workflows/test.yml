@@ -174,8 +174,8 @@ jobs:
       - run: |
           cd ./clients/ocaml
           opam install . --deps-only --with-test --locked
-          dune build
-          dune test
+          opam exec -- dune build
+          opam exec -- dune test
         env:
           TEST_SERVER_HOST: test-server:3000
 
