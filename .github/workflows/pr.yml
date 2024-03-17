@@ -205,7 +205,9 @@ jobs:
 
   test-ocaml:
     runs-on: ubuntu-latest
-    container: ocaml/opam:ubuntu-22.04-ocaml-4.14
+    container:
+      image: ocaml/opam:ubuntu-22.04-ocaml-4.14
+      options: --user root
 
     services:
       test-server:
