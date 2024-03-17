@@ -16,7 +16,7 @@
     "email": "cmgriffing@gmail.com",
     "url": "https://chrisgriffing.com"
   },
-  "license": "MIT",
+  "license": "BSL-1.0",
   "devDependencies": {
     "@types/node": "^14.14.13",
     "axios": "^0.21.0",
