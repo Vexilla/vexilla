@@ -4,16 +4,23 @@ include Ptime
 
 type t = Ptime.t
 
+
+let from_ms ~ms =
+  let- date_time =
+    ms |> float_of_int
+    |> fun x ->
+    x /. 1000. |> Ptime.of_float_s
+  in
+  Some date_time
+;;
+
 let of_yojson json =
   match json with
   | `Int f ->
-      let@ date_time =
-        f |> float_of_int
-        |> fun x ->
-        x /. 1000. |> Ptime.of_float_s
-        |> Option.to_result ~none:"Invalid date time while parsing json"
+      let@ date_time = from_ms ~ms:f
+      |> Option.to_result ~none:"Invalid date time while parsing json"
       in
-      Ok date_time
+        Ok date_time
   | _ -> Error "Invalid date time while parsing json"
 ;;
 
@@ -25,7 +32,10 @@ let make_date_with_time ?(time = ((0, 0, 0), 0)) t =
 let of_span_exn span = Ptime.of_span span |> Option.get
 let add_span_exn t span = Ptime.add_span t span |> Option.get
 let sub_span_exn t span = Ptime.sub_span t span |> Option.get
+
 let to_seconds_exn t = Ptime.to_span t |> Ptime.Span.to_int_s |> Option.get
+let to_ms_exn t = to_seconds_exn t |> Int.mul 1000
+
 let start_of_day t = make_date_with_time t |> Ptime.of_date_time
 
 let end_of_day t =
@@ -47,6 +57,9 @@ let to_seconds_res t =
   Ptime.to_span t |> Ptime.Span.to_int_s |> Option.to_result ~none:`Invalid_date
 ;;
 
+let to_ms_res t = to_seconds_res t |> Result.map (fun seconds -> Int.mul seconds 1000)
+;;
+
 module Constants = struct
   let epoch = Ptime.epoch
   let one_day_seconds = 86400
@@ -63,6 +76,7 @@ module Span = struct
   ;;
 
   let to_seconds_exn span = to_int_s span |> Option.get
+  let of_days days = of_int_s (days * Constants.one_day_seconds)
   let of_hours hours = of_int_s (hours * Constants.one_hour_seconds)
   let of_seconds = of_int_s
 end

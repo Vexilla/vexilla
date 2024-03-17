@@ -54,12 +54,12 @@ module Schedule = struct
 
   (* Note: Assume that we are converting from milliseconds -> second for Date_time.t at (de)serialization boundaries*)
   type t = {
-    start : Date_time.t;
-    end' : Date_time.t; [@key "end"]
+    start : int;
+    end' : int; [@key "end"]
     timezone : timezone;
     time_type : time_type; [@key "timeType"]
-    start_time : Date_time.t; [@key "startTime"]
-    end_time : Date_time.t; [@key "endTime"]
+    start_time : int; [@key "startTime"]
+    end_time : int; [@key "endTime"]
   }
   [@@deriving make, show, of_yojson { strict = false }]
 end
