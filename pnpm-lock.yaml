@@ -247,8 +247,8 @@ importers:
         specifier: ^0.8.2
         version: 0.8.2
       astro-toml:
-        specifier: ^0.1.3
-        version: 0.1.3(astro@4.0.7)
+        specifier: ^0.2.0
+        version: 0.2.0(astro@4.0.7)
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.0
@@ -8203,10 +8203,10 @@ packages:
       svgo: 2.8.0
     dev: false
 
-  /astro-toml@0.1.3(astro@4.0.7):
-    resolution: {integrity: sha512-Ol+0QO3F+EUSVwkyAEavhodwxLw4LWNWjkh7J0QfyGI+wugpeYX2vk5QN1DoE6BuvQm40Cofv5xPocnXyaq8oQ==}
+  /astro-toml@0.2.0(astro@4.0.7):
+    resolution: {integrity: sha512-LVcaHsw0T2jbDNGk4nbGy4wKEkkwepxNfeuszgdnML721G1kiY3V3j9Il45mSVsnE56AJitaYasP9+ZrRNmLag==}
     peerDependencies:
-      astro: ^2.10.12
+      astro: ^4.0.0
     dependencies:
       '@iarna/toml': 2.2.5
       astro: 4.0.7(@types/node@20.5.8)(typescript@5.3.3)
