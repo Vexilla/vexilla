@@ -236,9 +236,6 @@ jobs:
 
   test-ocaml:
     runs-on: ubuntu-latest
-    container:
-      image: ocaml/opam:ubuntu-22.04-ocaml-4.14
-      options: --user root
     needs: ["publish-test-server"]
 
     services:
@@ -254,11 +251,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Set-up OCaml 4.14
+        uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: "4.14"
+
       - run: |
           cd ./clients/ocaml
-          opam init
-          eval (opam env)
           opam install . --deps-only --with-test
+          dune build
           dune test
         env:
           TEST_SERVER_HOST: test-server:3000
