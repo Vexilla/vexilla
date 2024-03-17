@@ -12,7 +12,7 @@ func isScheduleActiveWithNow(schedule: Schedule, scheduleType: ScheduleType, now
   let nowSeconds = now.timeIntervalSince1970
   var calendar = Calendar(identifier: Calendar.Identifier.iso8601)
   guard let utc = TimeZone(identifier: "UTC") else {
-    throw "Could not create UTC calendar"
+    throw VexillaSchedulingError.couldNotCreateUTCTimezone
   }
   calendar.timeZone = utc
 
@@ -26,11 +26,11 @@ func isScheduleActiveWithNow(schedule: Schedule, scheduleType: ScheduleType, now
 
     let endDate = Date(timeIntervalSince1970: TimeInterval(schedule.end / 1000))
     guard let dayAfterEndDate = calendar.date(byAdding: .day, value: 1, to: endDate) else {
-      throw "could not add day to endDate"
+      throw VexillaSchedulingError.couldNotAddDayToEndDate
     }
     let endOfEndDate = calendar.startOfDay(for: dayAfterEndDate)
 
-    if startOfStartDate > now || endOfEndDate < now {
+    guard startOfStartDate <= now && endOfEndDate >= now else {
       return false
     }
 
