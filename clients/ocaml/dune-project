@@ -1,24 +1,24 @@
 (lang dune 3.10)
 
-(name vexilla_ocaml_sdk)
+(name vexilla_sdk)
 
 (generate_opam_files true)
 
 (source
- (github dmmulroy/vexilla-ocaml-sdk))
+ (github vexilla/vexilla))
 
-(authors "Dillon Mulroy")
+(authors "Dillon Mulroy" "Chris Griffing")
 
-(maintainers "Dillon Mulroy")
+(maintainers "Dillon Mulroy" "Chris Griffing")
 
-(license MIT)
+(license BSL)
 
-(documentation https://github.com/dmmulroy/vexilla-ocaml-sdk)
+(documentation https://github.com/vexilla/vexilla/clients/ocaml)
 
 (package
- (name vexilla_ocaml_sdk)
- (synopsis "Vexilla OCaml SDK")
- (description "Vexilla OCaml SDK")
+ (name vexilla_sdk)
+ (synopsis "Vexilla SDK")
+ (description "Vexilla SDK")
  (depends
   cohttp-lwt-unix
   dune
