@@ -257,9 +257,18 @@ jobs:
         with:
           ocaml-compiler: "4.14"
 
+      - name: Cache Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/ocaml
+          key: ${{ runner.os }}-ocaml-${{ hashFiles('**/*.opam.locked') }}
+          restore-keys: |
+            ${{ runner.os }}-ocaml-
+
       - run: |
           cd ./clients/ocaml
-          opam install . --deps-only --with-test
+          opam install . --deps-only --with-test --locked
           dune build
           dune test
         env:
