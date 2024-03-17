@@ -167,6 +167,7 @@ jobs:
         with:
           path: |
             ~/.cache/ocaml
+            /clients/ocaml/opam
           key: ${{ runner.os }}-ocaml-${{ hashFiles('**/*.opam.locked') }}
           restore-keys: |
             ${{ runner.os }}-ocaml-
