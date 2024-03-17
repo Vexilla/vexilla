@@ -104,19 +104,6 @@ class Scheduler
                     return $startTime <= $zeroDayWithNowTimestamp && $zeroDayWithNowTimestamp <= $endTime;
                 }
 
-
-            // if schedule.start_time > schedule.end_time {
-            //     Some(
-            //         schedule.start_time <= zero_day_with_now_time
-            //             || schedule.end_time >= zero_day_with_now_time,
-            //     )
-            // } else {
-            //     Some(
-            //         schedule.start_time <= zero_day_with_now_time
-            //             && schedule.end_time >= zero_day_with_now_time,
-            //     )
-            // }
-
             default:
                 return false;
         }
