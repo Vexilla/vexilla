@@ -11,8 +11,6 @@ To get started is easy.
 Add VexillaClient as a dependency via Swift Packages
 [https://developer.apple.com/documentation/xcode/adding_package_dependencies_to_your_app](https://developer.apple.com/documentation/xcode/adding_package_dependencies_to_your_app)
 
-
-
 ### Setup
 
 You will need to create a Client within your app. This optionally takes in the `customInstanceHash` for use with gradual rollout.
@@ -30,10 +28,9 @@ client.fetchFlags(fileName: "features.json", fetchCompletionHandler: { flags, er
     }
 
     client.setFlags(flags: flags!)
-    
+
 )}
 ```
-
 
 ### Generate Types (Optional)
 
@@ -73,7 +70,6 @@ Use the created client to check if a feature `Should` be on.
 shouldGradual = client.should(FEATURE_NAME)
 ```
 
-
 ### Full Example
 
 ```swift
@@ -87,13 +83,12 @@ client.fetchFlags(fileName: "features.json", fetchCompletionHandler: { flags, er
     }
 
     client.setFlags(flags: flags!)
-    
+
     if client.should(FEATURE_NAME) {
         // Do the thing
     }
 )}
 ```
-
 
 ## What are Feature Flags?
 
@@ -128,12 +123,6 @@ No sponsors yet. This could be a link and icon for **your** company here.
 
 ## LICENSE
 
-MIT
+Current Vexilla code is released under a combination of two licenses, the Business Source License (BSL) and the MIT License.
 
-Copyright 2023 Vexilla
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+Please see the [License file](../../../LICENSE) for more info.

@@ -2,7 +2,7 @@
   "name": "vexilla/client",
   "description": "A client for the Vexilla Feature Flag System",
   "type": "library",
-  "license": "MIT",
+  "license": "BUSL-1.1",
   "authors": [
     {
       "name": "Chris Griffing",

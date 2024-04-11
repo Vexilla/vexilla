@@ -6,7 +6,7 @@
     <authors>cmgriffing</authors>
     <owners>cmgriffing</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <license type="expression">MIT</license>
+    <license type="expression">BUSL-1.1</license>
     <projectUrl>https://vexilla.dev</projectUrl>
     <iconUrl>https://vexilla.github.io/logo-nuget.png</iconUrl>
     <icon>./images/logo-nuget.png</icon>

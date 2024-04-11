@@ -11,7 +11,7 @@ defmodule VexillaClient.MixProject do
       description: "An elixir client for the Vexilla feature flag system",
       package: %{
         licenses: [
-          "MIT"
+          "BUSL-1.1"
         ],
         links: %{
           Github: "https://github.com/Vexilla/vexilla/tree/main/clients/elixir"

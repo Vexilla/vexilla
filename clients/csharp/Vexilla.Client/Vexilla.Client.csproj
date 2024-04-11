@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <IsTestProject>false</IsTestProject>
     <Version>0.1.0</Version>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageLicenseExpression>BUSL-1.1</PackageLicenseExpression>
     <ReleaseVersion>0.1.0</ReleaseVersion>
   </PropertyGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
