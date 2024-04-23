@@ -193,6 +193,9 @@ importers:
       '@astrojs/react':
         specifier: ^3.0.8
         version: 3.0.8(@types/react-dom@18.2.3)(@types/react@18.2.8)(react-dom@18.2.0)(react@18.2.0)(vite@4.4.9)
+      '@astrojs/rss':
+        specifier: ^4.0.5
+        version: 4.0.5
       '@astrojs/tailwind':
         specifier: ^5.0.4
         version: 5.0.4(astro@4.0.7)(tailwindcss@3.4.3)(ts-node@10.9.1)
@@ -791,6 +794,13 @@ packages:
     transitivePeerDependencies:
       - supports-color
       - vite
+    dev: false
+
+  /@astrojs/rss@4.0.5:
+    resolution: {integrity: sha512-IyJVL6z09AQtxbgLaAwebT3T5YKe4oTHDesqydJv1KLHw+zEzzMCFuuNsEyxjiqu7df9+DDCpDXLj/WRiEUXvw==}
+    dependencies:
+      fast-xml-parser: 4.2.7
+      kleur: 4.1.5
     dev: false
 
   /@astrojs/tailwind@5.0.4(astro@4.0.7)(tailwindcss@3.4.3)(ts-node@10.9.1):
@@ -11364,19 +11374,11 @@ packages:
       strnum: 1.0.5
     dev: true
 
-  /fast-xml-parser@4.2.2:
-    resolution: {integrity: sha512-DLzIPtQqmvmdq3VUKR7T6omPK/VCRNqgFlGtbESfyhcH2R4I8EzK1/K6E8PkRCK2EabWrUHK32NjYRbEFnnz0Q==}
-    hasBin: true
-    dependencies:
-      strnum: 1.0.5
-    dev: true
-
   /fast-xml-parser@4.2.7:
     resolution: {integrity: sha512-J8r6BriSLO1uj2miOk1NW0YVm8AGOOu3Si2HQp/cSmo6EA4m3fcwu2WKjJ4RK9wMLBtg69y1kS8baDiQBR41Ig==}
     hasBin: true
     dependencies:
       strnum: 1.0.5
-    dev: true
 
   /fastest-levenshtein@1.0.16:
     resolution: {integrity: sha512-eRnCtTTtGZFpQCwhJiUOuxPQWRXVKYDn0b2PeHfXL6/Zi53SLAzAHfVhVWK2AryC/WH05kGfxhFIPvTF0SXQzg==}
@@ -13286,7 +13288,7 @@ packages:
     resolution: {integrity: sha512-v+AgVwiK5DsGtT9ng+m4mClp6zDAmwrW8nZi6Gg15qzvBnRWWdfWA1TGaXyCDnWq5g5asofIgMVl3PjKxvk1ug==}
     engines: {node: '>=6'}
     dependencies:
-      fast-xml-parser: 4.2.2
+      fast-xml-parser: 4.2.7
     dev: true
 
   /is-symbol@1.0.4:
@@ -19175,7 +19177,6 @@ packages:
 
   /strnum@1.0.5:
     resolution: {integrity: sha512-J8bbNyKKXl5qYcR36TIO8W3mVGVHrmmxsd5PAItGkmyzwJvybiw2IVq5nqd0i4LSNSkB/sx9VHllbfFdr9k1JA==}
-    dev: true
 
   /strtok3@6.3.0:
     resolution: {integrity: sha512-fZtbhtvI9I48xDSywd/somNqgUHl2L2cstmXCCif0itOf96jeW18MBSyrLuNicYQVkvpOxkZtkzujiTJ9LW5Jw==}
