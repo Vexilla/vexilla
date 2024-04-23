@@ -1,0 +1,31 @@
+---
+
+import type {Contributor} from "@/types/github";
+import SectionHr from "./home/common/section-hr.astro";
+import SectionTitle from "./home/common/section-title.astro";
+
+
+let contributors: Contributor[] = [];
+
+const contributorsResponse = await fetch("https://api.github.com/repos/Vexilla/vexilla/contributors");
+if (contributorsResponse.ok) {
+  contributors = await contributorsResponse.json()
+}
+
+---
+
+{Boolean(contributors.length) &&
+  <section class="text-emphasis body-font" id="contributors">
+    <div class="container px-5 py-24 mx-auto flex-col flex-wrap">
+      <SectionTitle> Contributors </SectionTitle>
+      <p class="max-w-[20rem] text-center mx-auto mt-4">Would you like to help contribute? Check out some of the open <a href="https://github.com/Vexilla/vexilla/issues" target="_blank" class="always-underline">Issues on GitHub</a>.</p>
+      <SectionHr />
+      <div class="flex items-center justify-center gap-2">
+        {contributors.map(contributor =>
+          <a href={contributor.html_url} target="_blank">
+            <img src={contributor.avatar_url} class="rounded-full w-16" />
+          </a>)}
+      </div>
+    </div>
+  </section>
+}
