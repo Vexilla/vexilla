@@ -1,17 +1,19 @@
 import { z, defineCollection } from "astro:content";
-import { tomlKey, tomlKeys } from "@/types/docs";
+import { type tomlKey, tomlKeys } from "@/types/docs";
 
-const blogPostSchema = z.object({
-  title: z.string(),
-  publishDate: z.coerce.date(),
-  description: z.string(),
-});
-
-export type BlogPost = z.infer<typeof blogPostSchema>;
+// export type BlogPost = z.infer<typeof blogPostSchema>;
 
 const blogCollection = defineCollection({
   type: "content",
-  schema: blogPostSchema,
+  schema: ({ image }) =>
+    z.object({
+      title: z.string(),
+      publishDate: z.coerce.date(),
+      description: z.string(),
+      coverImage: image().refine((img) => img.width >= 1080, {
+        message: "Cover image must be at least 1080 pixels wide!",
+      }),
+    }),
 });
 
 const documentationCollection = defineCollection({
@@ -25,12 +27,15 @@ const guidesCollection = defineCollection({
 const snippetCollection = defineCollection({
   type: "data",
   schema: z.object(
-    tomlKeys.reduce((acc, key) => {
-      return {
-        ...acc,
-        [key as tomlKey]: z.string().optional(),
-      };
-    }, {} as Record<tomlKey, z.ZodString>)
+    tomlKeys.reduce(
+      (acc, key) => {
+        return {
+          ...acc,
+          [key as tomlKey]: z.string().optional(),
+        };
+      },
+      {} as Record<tomlKey, z.ZodString>,
+    ),
   ),
 });
 

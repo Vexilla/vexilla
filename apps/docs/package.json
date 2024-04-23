@@ -14,6 +14,7 @@
   "dependencies": {
     "@astrojs/markdoc": "^0.8.1",
     "@astrojs/react": "^3.0.8",
+    "@astrojs/rss": "^4.0.5",
     "@astrojs/tailwind": "^5.0.4",
     "@fontsource/atkinson-hyperlegible": "^4.5.11",
     "@fontsource/fira-code": "^5.0.8",

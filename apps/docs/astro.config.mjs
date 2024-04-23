@@ -6,6 +6,7 @@ import toml from "astro-toml";
 
 // https://astro.build/config
 export default defineConfig({
+  site: "https://vexilla.dev",
   // CAN'T EXTERNALIZE THIS OR BUILDS FAIL
   // vite: {
   //   build: {
