@@ -15,7 +15,8 @@ a {
   padding: 2px;
 }
 
-a:hover {
+a:hover,
+a.always-underline {
   text-decoration: #257ddd underline;
 }
 

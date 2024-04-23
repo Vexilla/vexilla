@@ -4,6 +4,8 @@ import { getCollection } from "astro:content";
 import { ViewTransitions } from "astro:transitions";
 
 import ResponsiveContainer from "@/components/ResponsiveContainer.astro";
+import GetHelpWidget from "@/components/docs/GetHelpWidget.astro";
+import { GetHelpButton } from "@/components/GetHelpButton";
 import { ThemeSelector } from "@/components/ThemeSelector";
 import { Search } from "@/components/Search";
 import { DISCORD_INVITE_LINK } from "@/utils/constants";
@@ -333,6 +335,10 @@ guidePages.sort((a, b) => {
       <slot />
     </ResponsiveContainer>
 
+    <div class="sm:hidden p-4">
+      <GetHelpWidget></GetHelpWidget>
+    </div>
+
     <footer class="mt-auto bg-primary-50 dark:bg-primary-900">
       <ResponsiveContainer>
         <div
@@ -401,5 +407,6 @@ guidePages.sort((a, b) => {
         </div>
       </ResponsiveContainer>
     </footer>
+    <GetHelpButton client:only></GetHelpButton>
   </body>
 </html>
