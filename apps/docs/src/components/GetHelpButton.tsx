@@ -15,7 +15,7 @@ export function GetHelpButton() {
       <dialog
         ref={dialogRef}
         className={clsx(
-          "fixed top-[calc(100vh-18rem)] left-[calc(100vw-20rem)] m-0 bg-primary-100 text-black dark:bg-primary-900 dark:text-white dark:border p-0 z-[1000] w-60 backdrop:bg-black/75",
+          "fixed top-[calc(100vh-18rem)] left-[calc(100vw-20rem)] m-0 bg-primary-50 text-black dark:bg-primary-900 dark:text-white dark:border p-0 z-[1000] w-60 backdrop:bg-black/75",
         )}
       >
         <form method="dialog" className="w-full text-right">
