@@ -41,19 +41,19 @@ const blogPosts = await Promise.all(
     {
       blogPosts.map((blogPost) => (
         <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="!m-0">
-              <a href={`/blog/${blogPost.raw.slug}`}>
+          <CardHeader style={{"backgroundImage": `url(${blogPost.raw.data.coverImage.src}`}} className="h-40 bg-cover bg-center rounded-b-none">
+            <CardTitle className="!m-0 bg-white/85 dark:bg-black/75 rounded-b-none p-1 pl-2">
+              <a href={`/blog/${blogPost.raw.slug}`} class="!no-underline">
                 {blogPost.raw.data.title.trim()}
               </a>
               <span class="ml-4 text-base text-slate-500 font-light"></span>
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="bg-white/85 dark:bg-black/75 !m-0 rounded-t-none p-1 pl-4">
               {dayjs(blogPost.raw.data.publishDate).format("MMM D YYYY")}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p class="!m-0">{blogPost.raw.data.description}</p>
+            <p class="!m-0 pt-2">{blogPost.raw.data.description}</p>
             <a href={`/blog/${blogPost.raw.slug}`} aria-hidden="true">
               Read more...
             </a>
