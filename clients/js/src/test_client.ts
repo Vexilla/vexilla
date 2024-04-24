@@ -26,7 +26,7 @@ import { labelledAssert } from "./utils/testing";
     return response.data;
   });
 
-  client.setFlags(groupName, flags);
+  client.setFlags(flags);
 
   const shouldGradual = client.should(groupName, "testingWorkingGradual");
 

@@ -82,8 +82,8 @@ export class VexillaClient {
     return flagsResponse;
   }
 
-  setFlags(groupNameOrId: string, flags: PublishedGroup) {
-    let groupId = this.groupLookupTable[groupNameOrId];
+  setFlags(flags: PublishedGroup) {
+    let groupId = this.groupLookupTable[flags.groupId];
 
     this.featureLookupTable[groupId] = createFeatureLookupTable(flags.features);
     this.environmentLookupTable[groupId] = createEnvironmentLookupTable(
@@ -93,13 +93,13 @@ export class VexillaClient {
     this.flagGroups[groupId] = flags;
   }
 
-  async syncFlags(fileName: string, fetchHook: FetchHook<PublishedGroup>) {
+  async syncFlags(groupNameOrId: string, fetchHook: FetchHook<PublishedGroup>) {
     if (!this.manifest) {
       throw new Error("Manifest is not fetched");
     }
 
-    const flags = await this.getFlags(fileName, fetchHook);
-    this.setFlags(fileName, flags);
+    const flags = await this.getFlags(groupNameOrId, fetchHook);
+    this.setFlags(flags);
   }
 
   should(

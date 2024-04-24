@@ -39,7 +39,7 @@ final class VexillaClientTests: XCTestCase {
   func testGradual() async throws {
     let gradualGroup: Group = try await vexillaClient!.getFlags(groupNameOrId: "Gradual", fetch: callAPI)
 
-    try vexillaClient!.setFlags(groupNameOrId: "Gradual", group: gradualGroup)
+    try vexillaClient!.setFlags(group: gradualGroup)
 
     try await vexillaClient!.syncFlags(groupNameOrId: "Gradual", fetch: callAPI)
 
