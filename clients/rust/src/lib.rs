@@ -99,10 +99,10 @@ impl VexillaClient {
     }
 
     /// Sets a fetched flag group within the Client instance.
-    pub fn set_flags(&mut self, group_name_or_id: &str, flags: FlagGroup) -> VexillaResult<bool> {
+    pub fn set_flags(&mut self, flags: FlagGroup) -> VexillaResult<bool> {
         let coerced_group_name_or_id = &self
             .group_lookup_table
-            .get(group_name_or_id)
+            .get(&flags.group_id)
             .ok_or("group not found")
             .map_err(|_| VexillaError::Unknown)?;
         self.flag_groups
@@ -130,7 +130,7 @@ impl VexillaClient {
             .get(group_name_or_id)
             .ok_or(VexillaError::GroupLookupKeyNotFound)?;
         let flag_group = self.get_flags(coerced_group_id.as_str(), fetch)?;
-        let _ = self.set_flags(group_name_or_id, flag_group)?;
+        let _ = self.set_flags(flag_group)?;
         Ok(())
     }
 

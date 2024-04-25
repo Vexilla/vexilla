@@ -48,8 +48,8 @@ class Client(
         return group
     }
 
-    fun setFlags(groupNameOrId: String, group: Group) {
-        val groupId = this.groupLookupTable[groupNameOrId] ?: throw Error("Group (${groupNameOrId}) not found")
+    fun setFlags(group: Group) {
+        val groupId = this.groupLookupTable[group.groupId] ?: throw Error("Group (${group.groupId}) not found")
         this.flagGroups[groupId] = group
 
         if (this.environmentLookupTable[groupId] == null) {
@@ -74,7 +74,7 @@ class Client(
 
     suspend fun syncFlags(groupNameOrId: String, fetch: suspend (url: String) -> String) {
         val flags = this.getFlags(groupNameOrId, fetch)
-        this.setFlags(groupNameOrId, flags)
+        this.setFlags(flags)
     }
 
     fun should(groupNameOrId: String, featureNameOrId: String, instanceId: String = this.instanceId): Boolean {

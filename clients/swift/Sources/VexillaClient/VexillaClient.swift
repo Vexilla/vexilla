@@ -57,9 +57,9 @@ public struct VexillaClient {
         return try JSONDecoder().decode(Group.self, from: response)
     }
 
-    public mutating func setFlags(groupNameOrId: String, group: Group) throws {
-        guard let groupId = groupLookupTable[groupNameOrId] else {
-            throw "Group ID (\(groupNameOrId)) not found in lookup table. Did you fetch and set the manifest, yet?"
+    public mutating func setFlags(group: Group) throws {
+        guard let groupId = groupLookupTable[group.groupId] else {
+            throw "Group ID (\(group.groupId)) not found in lookup table. Did you fetch and set the manifest, yet?"
         }
 
         flagGroups[groupId] = group
@@ -83,7 +83,7 @@ public struct VexillaClient {
 
     public mutating func syncFlags(groupNameOrId: String, fetch: (URL) async throws -> Data) async throws {
         let group = try await getFlags(groupNameOrId: groupNameOrId, fetch: fetch)
-        try setFlags(groupNameOrId: groupNameOrId, group: group)
+        try setFlags(group: group)
     }
 
     public func should(groupNameOrId: String, featureNameOrId: String) throws -> Bool {
@@ -98,13 +98,13 @@ public struct VexillaClient {
         }
 
         switch feature {
-        case .toggle(let toggleFeature):
+        case let .toggle(toggleFeature):
             return toggleFeature.value
-        case .gradual(let gradualFeature):
+        case let .gradual(gradualFeature):
             return hashString(stringToHash: instanceId, seed: gradualFeature.seed) <= gradualFeature.value
-        case .selective(let selectiveFeature):
+        case let .selective(selectiveFeature):
             switch selectiveFeature.value {
-            case .string(let values):
+            case let .string(values):
                 return values.contains(instanceId)
             default:
                 throw "\(#function) must only be called for features with a valueType of 'number'. Try should or shouldCustomString"
@@ -126,13 +126,13 @@ public struct VexillaClient {
         }
 
         switch feature {
-        case .toggle(let toggleFeature):
+        case let .toggle(toggleFeature):
             return toggleFeature.value
-        case .gradual(let gradualFeature):
+        case let .gradual(gradualFeature):
             return hashInt64(intToHash: instanceId, seed: gradualFeature.seed) > gradualFeature.value
-        case .selective(let selectiveFeature):
+        case let .selective(selectiveFeature):
             switch selectiveFeature.value {
-            case .int(let values):
+            case let .int(values):
                 return values.contains(instanceId)
             default:
                 throw "\(#function) must only be called for features with an int value. Try should or shouldCustomString"
@@ -154,13 +154,13 @@ public struct VexillaClient {
         }
 
         switch feature {
-        case .toggle(let toggleFeature):
+        case let .toggle(toggleFeature):
             return toggleFeature.value
-        case .gradual(let gradualFeature):
+        case let .gradual(gradualFeature):
             return hashFloat64(floatToHash: instanceId, seed: gradualFeature.seed) > gradualFeature.value
-        case .selective(let selectiveFeature):
+        case let .selective(selectiveFeature):
             switch selectiveFeature.value {
-            case .float(let values):
+            case let .float(values):
                 return values.contains(instanceId)
             default:
                 throw "\(#function) must only be called for features with a valueType of 'number'. Try should or shouldCustomString"
@@ -177,11 +177,11 @@ public struct VexillaClient {
             return defaultString
         }
 
-        guard case .value(let valueFeature) = feature else {
+        guard case let .value(valueFeature) = feature else {
             throw "\(#function) can only be called on features with featureType of 'value'"
         }
 
-        guard case .string(let string) = valueFeature.value else {
+        guard case let .string(string) = valueFeature.value else {
             throw "\(#function) can only be called on features with a valueType of 'string'"
         }
 
@@ -199,11 +199,11 @@ public struct VexillaClient {
             return defaultInt64
         }
 
-        guard case .value(let valueFeature) = feature else {
+        guard case let .value(valueFeature) = feature else {
             throw "\(#function) can only be called on features with featureType of 'value'"
         }
-        
-        guard case .int(let int) = valueFeature.value else {
+
+        guard case let .int(int) = valueFeature.value else {
             throw "\(#function) can only be called on features with a valueType of 'int'"
         }
 
@@ -221,11 +221,11 @@ public struct VexillaClient {
             return defaultFloat64
         }
 
-        guard case .value(let valueFeature) = feature else {
+        guard case let .value(valueFeature) = feature else {
             throw "\(#function) can only be called on features with featureType of 'value'"
         }
 
-        guard case .float(let float) = valueFeature.value else {
+        guard case let .float(float) = valueFeature.value else {
             throw "\(#function) can only be called on features with a valueType of 'float'"
         }
 
@@ -236,11 +236,11 @@ public struct VexillaClient {
         guard let groupId = groupLookupTable[groupNameOrId] else {
             throw "Group ID (\(groupNameOrId)) not found in lookup table. Did you fetch and set the manifest, yet?"
         }
-        
+
         guard let groupEnvironmentLookupTable = environmentLookupTable[groupId] else {
             throw "Environment lookup table not found for group ID (\(groupId)). Did you fetch and set the manifest, yet?"
         }
-        
+
         guard let environmentId = groupEnvironmentLookupTable[environment] else {
             throw "Environment (\(environment)) not found in lookup table. Did you fetch and set the manifest, yet?"
         }
@@ -264,7 +264,7 @@ public struct VexillaClient {
         guard let feature = environment.features[featureId] else {
             throw "Feature ID (\(featureId)) not found in lookup table. Did you fetch and set the manifest, yet?"
         }
-        
+
         return feature
     }
 }

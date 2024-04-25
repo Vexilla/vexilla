@@ -30,12 +30,8 @@ let get ~(client : Client.t) ~(fetch_hook : Fetch.hook) group_id_or_name :
         (`Msg (Fmt.str "Error: failed to fetch flag group: %s\n%!" err))
 ;;
 
-let set ~(client : Client.t) ~group group_id_or_name =
-  let key =
-    match group_id_or_name with
-    | Types.Group.Id id -> `Id id
-    | Name name -> `Name (Filename.remove_extension name)
-  in
+let set ~(client : Client.t) ~(group : Types.Group.t) =
+  let key = `Id group.id in
   let| group_id =
     client.group_table
     |> Lookup.Group_table.find ~key
@@ -75,5 +71,5 @@ let set ~(client : Client.t) ~group group_id_or_name =
 
 let sync ~(client : Client.t) ~fetch_hook group_id_or_name =
   let+ group = get ~client ~fetch_hook group_id_or_name in
-  Lwt.return_ok @@ set ~client ~group group_id_or_name
+  Lwt.return_ok @@ set ~client ~group
 ;;

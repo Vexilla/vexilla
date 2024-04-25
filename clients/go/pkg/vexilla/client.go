@@ -124,11 +124,11 @@ func (client *Client) GetFlags(groupNameOrId string, fetch func(url string) (*ht
 }
 
 // Sets a fetched flag group within the Client instance.
-func (client *Client) SetFlags(groupNameOrId string, group Group) error {
-	groupId := client.groupLookupTable[groupNameOrId]
+func (client *Client) SetFlags(group Group) error {
+	groupId := client.groupLookupTable[string(group.GroupId)]
 
 	if groupId == "" {
-		return fmt.Errorf("no group found for: %s", groupNameOrId)
+		return fmt.Errorf("no group found for: %s", group.GroupId)
 	}
 
 	client.FlagGroups[groupId] = group
@@ -171,7 +171,7 @@ func (client *Client) SyncFlags(groupNameOrId string, fetch func(url string) (*h
 		return err
 	}
 
-	return client.SetFlags(groupNameOrId, fetchedFlags)
+	return client.SetFlags(fetchedFlags)
 
 }
 

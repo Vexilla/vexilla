@@ -59,31 +59,27 @@ class VexillaClient:
         raw_flag_group = fetch(url)
         return Group.parse_raw(raw_flag_group)
 
-    def set_flags(self, group_name_or_id: str, group: Group) -> None:
-        try:
-            group_id = self.__group_lookup_table[group_name_or_id]
-        except Exception as e:
-            raise LookupTableError("group", group_name_or_id, [e])
+    def set_flags(self, group: Group) -> None:
 
-        if group_id not in self.__environment_lookup_table:
-            self.__environment_lookup_table[group_id] = {}
+        if group.group_id not in self.__environment_lookup_table:
+            self.__environment_lookup_table[group.group_id] = {}
 
         for environment_id, environment in group.environments.items():
-            self.__environment_lookup_table[group_id][environment_id] = environment_id
-            self.__environment_lookup_table[group_id][environment.name] = environment_id
+            self.__environment_lookup_table[group.group_id][environment_id] = environment_id
+            self.__environment_lookup_table[group.group_id][environment.name] = environment_id
 
-        if group_id not in self.__feature_lookup_table:
-            self.__feature_lookup_table[group_id] = {}
+        if group.group_id not in self.__feature_lookup_table:
+            self.__feature_lookup_table[group.group_id] = {}
 
         for feature_id, feature in group.features.items():
-            self.__feature_lookup_table[group_id][feature_id] = feature_id
-            self.__feature_lookup_table[group_id][feature.name] = feature_id
+            self.__feature_lookup_table[group.group_id][feature_id] = feature_id
+            self.__feature_lookup_table[group.group_id][feature.name] = feature_id
 
-        self.__flag_groups[group_id] = group
+        self.__flag_groups[group.group_id] = group
 
     def sync_flags(self, group_name_or_id: str, fetch: Callable[[str], str]) -> None:
         flag_group = self.get_flags(group_name_or_id, fetch)
-        self.set_flags(group_name_or_id, flag_group)
+        self.set_flags(flag_group)
 
     def should(self, group_name_or_id: str, feature_name_or_id: str) -> bool:
         return self.should_custom(
