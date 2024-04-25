@@ -208,6 +208,17 @@ jobs:
   test-ocaml:
     runs-on: ubuntu-latest
 
+    services:
+      test-server:
+        credentials:
+          username: vexilla
+          password: ${{secrets.GITHUB_TOKEN}}
+        image: ghcr.io/vexilla/test-server:latest
+        ports:
+          - 3000:3000
+        options: |
+          --health-cmd "curl -f http://localhost:3000/manifest.json"
+
     steps:
       - uses: actions/checkout@v3
 
