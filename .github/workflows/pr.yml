@@ -118,8 +118,7 @@ jobs:
           TEST_SERVER_HOST: test-server:3000
 
   test-bazel:
-    # Must use 20.04 currently since Swift does not have 5.5.x support for 22.04
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     services:
       test-server:
