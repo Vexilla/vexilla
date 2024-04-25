@@ -61,21 +61,21 @@ class VexillaClient:
 
     def set_flags(self, group: Group) -> None:
 
-        if group.id not in self.__environment_lookup_table:
-            self.__environment_lookup_table[group.id] = {}
+        if group.group_id not in self.__environment_lookup_table:
+            self.__environment_lookup_table[group.group_id] = {}
 
         for environment_id, environment in group.environments.items():
-            self.__environment_lookup_table[group.id][environment_id] = environment_id
-            self.__environment_lookup_table[group.id][environment.name] = environment_id
+            self.__environment_lookup_table[group.group_id][environment_id] = environment_id
+            self.__environment_lookup_table[group.group_id][environment.name] = environment_id
 
-        if group.id not in self.__feature_lookup_table:
-            self.__feature_lookup_table[group.id] = {}
+        if group.group_id not in self.__feature_lookup_table:
+            self.__feature_lookup_table[group.group_id] = {}
 
         for feature_id, feature in group.features.items():
-            self.__feature_lookup_table[group.id][feature_id] = feature_id
-            self.__feature_lookup_table[group.id][feature.name] = feature_id
+            self.__feature_lookup_table[group.group_id][feature_id] = feature_id
+            self.__feature_lookup_table[group.group_id][feature.name] = feature_id
 
-        self.__flag_groups[group.id] = group
+        self.__flag_groups[group.group_id] = group
 
     def sync_flags(self, group_name_or_id: str, fetch: Callable[[str], str]) -> None:
         flag_group = self.get_flags(group_name_or_id, fetch)

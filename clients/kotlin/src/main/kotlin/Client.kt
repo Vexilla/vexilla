@@ -49,7 +49,7 @@ class Client(
     }
 
     fun setFlags(group: Group) {
-        val groupId = this.groupLookupTable[group.groupId] ?: throw Error("Group (${groupNameOrId}) not found")
+        val groupId = this.groupLookupTable[group.groupId] ?: throw Error("Group (${group.groupId}) not found")
         this.flagGroups[groupId] = group
 
         if (this.environmentLookupTable[groupId] == null) {
