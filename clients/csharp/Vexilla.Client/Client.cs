@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace Vexilla.Client
 {
@@ -33,14 +34,14 @@ namespace Vexilla.Client
         public VexillaClientBase(
             string baseUrl,
             string environment,
-            string instanceId
-            // bool showLogs = false
+            string instanceId,
+            bool showLogs = false
         )
         {
             _baseUrl = baseUrl;
             _environment = environment;
             _instanceId = instanceId;
-            // _showLogs = showLogs;
+            _showLogs = showLogs;
         }
 
         public async Task<Manifest> GetManifest(
@@ -130,6 +131,14 @@ namespace Vexilla.Client
                 featureNameOrId, _instanceId);
         }
 
+        public bool SafeShould(string groupNameOrId, string featureNameOrId) {
+            try {
+                return Should(groupNameOrId, featureNameOrId);
+            } catch(Exception e) {
+                return false;
+            }
+        }
+
         public bool ShouldCustomString(string groupNameOrId,
             string featureNameOrId, string customInstanceId)
         {
@@ -184,6 +193,16 @@ namespace Vexilla.Client
             return false;
         }
 
+        public bool SafeShouldCustomString(string groupNameOrId,
+            string featureNameOrId, string customInstanceId) {
+            try {
+                return ShouldCustomString(groupNameOrId,
+            featureNameOrId, customInstanceId);
+            } catch(Exception e) {
+                return false;
+            }
+        }
+
         public bool ShouldCustomLong(string groupNameOrId,
             string featureNameOrId, long customInstanceId)
         {
@@ -236,6 +255,16 @@ namespace Vexilla.Client
 
             // We should not have been able to get here but we should send false anyway.
             return false;
+        }
+
+        public bool SafeShouldCustomLong(string groupNameOrId,
+            string featureNameOrId, long customInstanceId) {
+            try {
+                return ShouldCustomLong(groupNameOrId,
+            featureNameOrId, customInstanceId);
+            } catch(Exception e) {
+                return false;
+            }
         }
 
         public bool ShouldCustomDouble(string groupNameOrId,
@@ -293,6 +322,17 @@ namespace Vexilla.Client
             return false;
         }
 
+
+        public bool SafeShouldCustomDouble(string groupNameOrId,
+            string featureNameOrId, double customInstanceId) {
+            try {
+                return ShouldCustomDouble(groupNameOrId,
+            featureNameOrId, customInstanceId);
+            } catch(Exception e) {
+                return false;
+            }
+        }
+
         public string ValueString(string groupNameOrId, string featureNameOrId,
             string defaultValue)
         {
@@ -326,6 +366,16 @@ namespace Vexilla.Client
             return valueStringFeature.Value;
         }
 
+
+        public string SafeValueString(string groupNameOrId,
+            string featureNameOrId, string defaultValue) {
+            try {
+                return ValueString(groupNameOrId,
+            featureNameOrId, defaultValue);
+            } catch(Exception e) {
+                return defaultValue;
+            }
+        }
         public long ValueLong(string groupNameOrId, string featureNameOrId,
             long defaultValue)
         {
@@ -359,6 +409,16 @@ namespace Vexilla.Client
             return valueIntFeature.Value;
         }
 
+
+        public long SafeValueLong(string groupNameOrId,
+            string featureNameOrId, long defaultValue) {
+            try {
+                return ValueLong(groupNameOrId,
+            featureNameOrId, defaultValue);
+            } catch(Exception e) {
+                return defaultValue;
+            }
+        }
         public double ValueDouble(string groupNameOrId, string featureNameOrId,
             double defaultValue)
         {
@@ -392,6 +452,16 @@ namespace Vexilla.Client
             return valueFloatFeature.Value;
         }
 
+
+        public double SafeValueDouble(string groupNameOrId,
+            string featureNameOrId, double defaultValue) {
+            try {
+                return ValueDouble(groupNameOrId,
+            featureNameOrId, defaultValue);
+            } catch(Exception e) {
+                return defaultValue;
+            }
+        }
         private RealIds GetRealIds(string groupNameOrId, string featureNameOrId)
         {
             if (!_groupLookupTable.TryGetValue(groupNameOrId, out var groupId))
