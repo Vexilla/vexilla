@@ -26,7 +26,7 @@ export class VexillaClient {
   protected showLogs;
   protected baseUrl: string;
   protected environment: string;
-  protected customInstanceHash = "";
+  protected customInstanceId = "";
 
   protected manifest: VexillaManifest;
   protected flagGroups: Record<string, PublishedGroup> = {};
@@ -38,7 +38,7 @@ export class VexillaClient {
     this.showLogs = showLogs;
     this.baseUrl = config.baseUrl;
     this.environment = config.environment || "prod";
-    this.customInstanceHash = config.customInstanceHash;
+    this.customInstanceId = config.customInstanceId;
   }
 
   async getManifest(
@@ -105,13 +105,9 @@ export class VexillaClient {
   should(
     groupNameOrId: string,
     featureName: string,
-    customInstanceHash?: string | number
+    customInstanceId?: string | number
   ): boolean {
     const actualItems = this.getActualItems(groupNameOrId, featureName);
-
-    if (!actualItems.success) {
-      return false;
-    }
 
     let { feature } = actualItems;
 
@@ -127,29 +123,27 @@ export class VexillaClient {
 
       case VexillaFeatureTypeGradual:
         if (feature.seed <= 0 || feature.seed > 1) {
-          console.error(
-            "seed must be a number value greater than 0 and less than or equal to 1"
+          throw new Error(
+            "feature.seed must be a number value greater than 0 and less than or equal to 1"
           );
-          return false;
         }
 
-        if (!customInstanceHash && !this.customInstanceHash) {
-          console.error(
-            "customInstanceHash config must be defined when using 'gradual' Feature Types"
+        if (!customInstanceId && !this.customInstanceId) {
+          throw new Error(
+            "customInstanceId config must be defined when using 'gradual' Feature Types"
           );
-          return false;
         }
         feature = feature as VexillaGradualFeature;
 
         _should =
           hashString(
-            `${customInstanceHash || this.customInstanceHash}`,
+            `${customInstanceId || this.customInstanceId}`,
             feature.seed
           ) <= feature.value;
         break;
 
       case VexillaFeatureTypeSelective:
-        const instanceHash = customInstanceHash || this.customInstanceHash;
+        const instanceHash = customInstanceId || this.customInstanceId;
         _should = (feature.value as (string | number)[]).includes(
           instanceHash || parseFloat(instanceHash as string)
         );
@@ -162,6 +156,19 @@ export class VexillaClient {
     return _should;
   }
 
+  safeShould(
+    groupNameOrId: string,
+    featureName: string,
+    customInstanceId?: string | number
+  ) {
+    try {
+      return this.should(groupNameOrId, featureName, customInstanceId);
+    } catch (e: unknown) {
+      console.warn(e);
+      return false;
+    }
+  }
+
   value(
     groupNameOrId: string,
     featureName: string,
@@ -169,13 +176,8 @@ export class VexillaClient {
   ): string | number | null {
     const actualItems = this.getActualItems(groupNameOrId, featureName);
 
-    if (!actualItems.success) {
-      return defaultValue;
-    }
-
     if (actualItems.feature.featureType !== "value") {
-      this.warn("Error: Tried calling value on non-value feature.");
-      return defaultValue;
+      throw new Error("Tried calling value on non-value feature.");
     }
 
     if (!isScheduledFeatureActive(actualItems.feature)) {
@@ -185,60 +187,63 @@ export class VexillaClient {
     return actualItems.feature.value;
   }
 
+  safeValue(
+    groupNameOrId: string,
+    featureName: string,
+    defaultValue: string | number | null = null
+  ) {
+    try {
+      return this.value(groupNameOrId, featureName, defaultValue);
+    } catch (e: unknown) {
+      console.warn(e);
+      return defaultValue;
+    }
+  }
+
   protected getActualItems(
     groupNameOrId: string,
-    featureName: string
-  ):
-    | {
-        success: true;
-        environment: PublishedEnvironment;
-        group: PublishedGroup;
-        feature: VexillaFeature;
-      }
-    | { success: false } {
+    featureNameOrId: string
+  ): {
+    environment: PublishedEnvironment;
+    group: PublishedGroup;
+    feature: VexillaFeature;
+  } {
     const groupId = this.groupLookupTable[groupNameOrId];
     const group = this.flagGroups[groupId];
 
     if (!group) {
-      this.warn("should() called before flags were fetched for this group");
-      return { success: false };
+      throw new Error(
+        "should() called before flags were fetched for this group"
+      );
     }
 
     const environmentId =
       this.environmentLookupTable[groupId][this.environment];
     if (!environmentId) {
-      this.warn("Environment could not be found", this.environment);
-      return { success: false };
+      throw new Error(`Environment(${this.environment}) could not be found`);
     }
 
     const environment = this.flagGroups[groupId].environments[environmentId];
     if (!environment) {
-      this.warn(
+      throw new Error(
         `Environment (${this.environment}) not found in group (${groupNameOrId}, ${groupId}).`
       );
-      return { success: false };
     }
 
-    const featureId = this.featureLookupTable[groupId][featureName];
+    const featureId = this.featureLookupTable[groupId][featureNameOrId];
     if (!featureId) {
-      this.warn("Feature could not be found", this.environment);
-      return { success: false };
+      throw new Error(`Feature(${featureNameOrId}) could not be found`);
     }
 
     let feature = environment.features[featureId];
 
     if (!feature) {
-      this.warn(
-        "feature is undefined for: ",
-        this.environment,
-        groupNameOrId,
-        featureName
+      throw new Error(
+        `feature is undefined for environment(${this.environment}), group(${groupNameOrId}), or feature (${featureNameOrId})`
       );
-      return { success: false };
     }
 
     return {
-      success: true,
       environment,
       feature,
       group,
