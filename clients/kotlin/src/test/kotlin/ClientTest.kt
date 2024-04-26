@@ -43,62 +43,82 @@ class ClientTest {
         }
 
         val shouldGradual = vexillaClient.should("Gradual", "testingWorkingGradual")
-        assertTrue(shouldGradual)
+        assertTrue(shouldGradual.isSuccess)
+        assertEquals(true, shouldGradual.getOrNull())
 
         val shouldNotGradual = vexillaClient.should("Gradual", "testingNonWorkingGradual")
-        assertFalse(shouldNotGradual)
+        assertTrue(shouldNotGradual.isSuccess)
+        assertEquals(false, shouldNotGradual.getOrNull())
 
         val shouldSelective = vexillaClient.should("Selective", "String")
-        assertTrue(shouldSelective)
+        assertTrue(shouldSelective.isSuccess)
+        assertEquals(true, shouldSelective.getOrNull())
 
         val shouldSelectiveCustomString = vexillaClient.should("Selective", "String", "shouldBeInList")
-        assertTrue(shouldSelectiveCustomString)
+        assertTrue(shouldSelectiveCustomString.isSuccess)
+        assertEquals(true, shouldSelectiveCustomString.getOrNull())
 
         val shouldNotSelectiveCustomString = vexillaClient.should("Selective", "String", "shouldNOTBeInList")
-        assertFalse(shouldNotSelectiveCustomString)
+        assertTrue(shouldNotSelectiveCustomString.isSuccess)
+        assertEquals(false, shouldNotSelectiveCustomString.getOrNull())
 
         val shouldSelectiveCustomInt = vexillaClient.shouldCustomInt("Selective", "Number", 42)
-        assertTrue(shouldSelectiveCustomInt)
+        assertTrue(shouldSelectiveCustomInt.isSuccess)
+        assertEquals(true, shouldSelectiveCustomInt.getOrNull())
 
         val shouldNotSelectiveCustomInt = vexillaClient.shouldCustomInt("Selective", "Number", 43)
-        assertFalse(shouldNotSelectiveCustomInt)
+        assertTrue(shouldNotSelectiveCustomInt.isSuccess)
+        assertEquals(false, shouldNotSelectiveCustomInt.getOrNull())
 
         val valueString = vexillaClient.valueString("Value", "String", "")
-        assertEquals("foo", valueString)
+        assertTrue(valueString.isSuccess)
+        assertEquals("foo", valueString.getOrNull())
 
         val valueInt = vexillaClient.valueInt("Value", "Integer", 0)
-        assertEquals(42, valueInt)
+        assertTrue(valueInt.isSuccess)
+        assertEquals(42, valueInt.getOrNull())
 
         val valueFloat = vexillaClient.valueFloat("Value", "Float", 0.0f)
-        assertEquals(42.42f, valueFloat)
+        assertTrue(valueFloat.isSuccess)
+        assertEquals(42.42f, valueFloat.getOrNull())
+        
 
         val beforeGlobal = vexillaClient.should("Scheduled", "beforeGlobal")
-        assertFalse(beforeGlobal)
+        assertTrue(beforeGlobal.isSuccess)
+        assertEquals(false, beforeGlobal.getOrNull())
 
         val duringGlobal = vexillaClient.should("Scheduled", "duringGlobal")
-        assertTrue(duringGlobal)
+        assertTrue(duringGlobal.isSuccess)
+        assertEquals(true, duringGlobal.getOrNull())
 
         val afterGlobal = vexillaClient.should("Scheduled", "afterGlobal")
-        assertFalse(afterGlobal)
+        assertTrue(afterGlobal.isSuccess)
+        assertEquals(false, afterGlobal.getOrNull())
 
 
         val beforeGlobalStartEnd = vexillaClient.should("Scheduled", "beforeGlobalStartEnd")
-        assertFalse(beforeGlobalStartEnd)
+        assertTrue(beforeGlobalStartEnd.isSuccess)
+        assertEquals(false, beforeGlobalStartEnd.getOrNull())
 
         val duringGlobalStartEnd = vexillaClient.should("Scheduled", "duringGlobalStartEnd")
-        assertTrue(duringGlobalStartEnd)
+        assertTrue(duringGlobalStartEnd.isSuccess)
+        assertEquals(true, duringGlobalStartEnd.getOrNull())
 
         val afterGlobalStartEnd = vexillaClient.should("Scheduled", "afterGlobalStartEnd")
-        assertFalse(afterGlobalStartEnd)
+        assertTrue(afterGlobalStartEnd.isSuccess)
+        assertEquals(false, afterGlobalStartEnd.getOrNull())
 
 
         val beforeGlobalDaily = vexillaClient.should("Scheduled", "beforeGlobalDaily")
-        assertFalse(beforeGlobalDaily)
+        assertTrue(beforeGlobalDaily.isSuccess)
+        assertEquals(false, beforeGlobalDaily.getOrNull())
 
         val duringGlobalDaily = vexillaClient.should("Scheduled", "duringGlobalDaily")
-        assertTrue(duringGlobalDaily)
+        assertTrue(duringGlobalDaily.isSuccess)
+        assertEquals(true, duringGlobalDaily.getOrNull())
 
         val afterGlobalDaily = vexillaClient.should("Scheduled", "afterGlobalDaily")
-        assertFalse(afterGlobalDaily)
+        assertTrue(afterGlobalDaily.isSuccess)
+        assertEquals(false, afterGlobalDaily.getOrNull())
     }
 }
