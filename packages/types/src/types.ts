@@ -172,7 +172,7 @@ export interface VexillaFlags {
 export interface VexillaClientConfig {
   baseUrl: string;
   environment: string;
-  customInstanceHash?: string;
+  customInstanceId?: string;
 }
 
 export interface ManifestGroup {
