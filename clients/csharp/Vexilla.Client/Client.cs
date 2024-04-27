@@ -170,13 +170,13 @@ namespace Vexilla.Client
                                 customInstanceId);
                         case ValueType.IntValueType:
                         case ValueType.FloatValueType:
-                            throw new Exception(
+                            throw new InvalidShouldFeatureValueTypeException(
                                 $"Selective Feature with id ({realIds.RealFeatureId}) is not 'string'.");
                     }
 
                     return false;
                 case FeatureType.Value:
-                    throw new Exception(
+                    throw new InvalidShouldFeatureTypeException(
                         "Value Features are not supported by Should functions. Try ValueString, ValueInt, or ValueFloat");
             }
 
@@ -224,13 +224,13 @@ namespace Vexilla.Client
                                 customInstanceId);
                         case ValueType.StringValueType:
                         case ValueType.FloatValueType:
-                            throw new Exception(
+                            throw new InvalidShouldFeatureValueTypeException(
                                 $"Selective Feature with id ({realIds.RealFeatureId}) is not 'int/long'.");
                     }
 
                     return false;
                 case FeatureType.Value:
-                    throw new Exception(
+                    throw new InvalidShouldFeatureTypeException(
                         "Value Features are not supported by Should functions. Try ValueString, ValueInt, or ValueFloat");
             }
 
@@ -278,13 +278,13 @@ namespace Vexilla.Client
                                 customInstanceId);
                         case ValueType.StringValueType:
                         case ValueType.IntValueType:
-                            throw new Exception(
+                            throw new InvalidShouldFeatureValueTypeException(
                                 $"Selective Feature with id ({realIds.RealFeatureId}) is not 'int/long'.");
                     }
 
                     return false;
                 case FeatureType.Value:
-                    throw new Exception(
+                    throw new InvalidShouldFeatureTypeException(
                         "Value Features are not supported by Should functions. Try ValueString, ValueInt, or ValueFloat");
             }
 
@@ -311,7 +311,7 @@ namespace Vexilla.Client
 
             if (rawFeature.FeatureType != FeatureType.Value)
             {
-                throw new Exception(
+                throw new InvalidValueFeatureTypeException(
                     $"feature ({featureNameOrId}) is not of type 'value'");
             }
 
@@ -319,7 +319,7 @@ namespace Vexilla.Client
                     realIds.RealFeatureId,
                     out var valueStringFeature))
             {
-                throw new Exception(
+                throw new InvalidValueFeatureValueTypeException(
                     $"valueFeature ({featureNameOrId}) is not of value type 'string'");
             }
 
@@ -344,7 +344,7 @@ namespace Vexilla.Client
 
             if (rawFeature.FeatureType != FeatureType.Value)
             {
-                throw new Exception(
+                throw new InvalidValueFeatureTypeException(
                     $"feature ({featureNameOrId}) is not of type 'value'");
             }
 
@@ -352,8 +352,8 @@ namespace Vexilla.Client
                     realIds.RealFeatureId,
                     out var valueIntFeature))
             {
-                throw new Exception(
-                    $"valueFeature ({featureNameOrId}) is not of value type 'string'");
+                throw new InvalidValueFeatureValueTypeException(
+                    $"valueFeature ({featureNameOrId}) is not of value type 'int'");
             }
 
             return valueIntFeature.Value;
@@ -377,7 +377,7 @@ namespace Vexilla.Client
 
             if (rawFeature.FeatureType != FeatureType.Value)
             {
-                throw new Exception(
+                throw new InvalidValueFeatureTypeException(
                     $"feature ({featureNameOrId}) is not of type 'value'");
             }
 
@@ -385,8 +385,8 @@ namespace Vexilla.Client
                     realIds.RealFeatureId,
                     out var valueFloatFeature))
             {
-                throw new Exception(
-                    $"valueFeature ({featureNameOrId}) is not of value type 'string'");
+                throw new InvalidValueFeatureValueTypeException(
+                    $"valueFeature ({featureNameOrId}) is not of value type 'float'");
             }
 
             return valueFloatFeature.Value;
@@ -396,34 +396,34 @@ namespace Vexilla.Client
         {
             if (!_groupLookupTable.TryGetValue(groupNameOrId, out var groupId))
             {
-                throw new Exception(
+                throw new GroupLookupKeyNotFoundException(
                     $"No group found in GroupLookupTable for name or id: {groupNameOrId}");
             }
 
             if (!_featureLookupTable.TryGetValue(groupId,
                     out var groupFeatures))
             {
-                throw new Exception(
+                throw new FeatureLookupKeyNotFoundException(
                     $"No group found in FeatureLookupTable for id: {groupId}");
             }
 
             if (!groupFeatures.TryGetValue(featureNameOrId, out var featureId))
             {
-                throw new Exception(
+                throw new FeatureLookupKeyNotFoundException(
                     $"No feature found in FeatureLookupTable for name or id: {featureNameOrId}");
             }
 
             if (!_environmentLookupTable.TryGetValue(groupId,
                     out var groupEnvironments))
             {
-                throw new Exception(
+                throw new EnvironmentLookupKeyNotFoundException(
                     $"No group found in EnvironmentLookupTable for id: {groupId}");
             }
 
             if (!groupEnvironments.TryGetValue(_environment,
                     out var environmentId))
             {
-                throw new Exception(
+                throw new EnvironmentLookupKeyNotFoundException(
                     $"No environment found in EnvironmentLookupTable for name or id: {_environment}");
             }
 
