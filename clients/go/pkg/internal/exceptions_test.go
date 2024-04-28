@@ -1,8 +1,6 @@
 package internal
 
-import (
-	"testing"
-)
+import "testing"
 
 func TestGroupLookupError(t *testing.T) {
 	groupNameOrId := "somegroup"
