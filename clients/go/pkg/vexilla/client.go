@@ -44,6 +44,7 @@ func NewClient(environment string, baseURL string, customInstanceHash string, sh
 func (client Client) GetManifest(fetch func(url string) (*http.Response, error)) (Manifest, error) {
 	url := fmt.Sprintf("%s/manifest.json", client.BaseURL)
 	response, fetchErr := fetch(url)
+
 	if fetchErr != nil {
 		return Manifest{}, fetchErr
 	}
@@ -76,7 +77,6 @@ func (client *Client) SetManifest(manifest Manifest) {
 		client.groupLookupTable[string(group.Name)] = group.GroupId
 		client.groupLookupTable[string(group.GroupId)] = group.GroupId
 	}
-
 }
 
 // Fetches and sets the manifest within the client to facilitate name->Id lookups.
@@ -98,11 +98,12 @@ func (client *Client) GetFlags(groupNameOrId string, fetch func(url string) (*ht
 	groupId := client.groupLookupTable[groupNameOrId]
 
 	if groupId == "" {
-		return Group{}, fmt.Errorf("group not found by Name or ID: %s", groupNameOrId)
+		return Group{}, NewGroupLookupError(groupNameOrId)
 	}
 
 	url := fmt.Sprintf("%s/%s.json", client.BaseURL, groupId)
 	response, fetchErr := fetch(url)
+
 	if fetchErr != nil {
 		return Group{}, fetchErr
 	}
@@ -125,10 +126,11 @@ func (client *Client) GetFlags(groupNameOrId string, fetch func(url string) (*ht
 
 // Sets a fetched flag group within the Client instance.
 func (client *Client) SetFlags(group Group) error {
+
 	groupId := client.groupLookupTable[string(group.GroupId)]
 
 	if groupId == "" {
-		return fmt.Errorf("no group found for: %s", group.GroupId)
+		return NewGroupLookupError("")
 	}
 
 	client.FlagGroups[groupId] = group
@@ -172,7 +174,6 @@ func (client *Client) SyncFlags(groupNameOrId string, fetch func(url string) (*h
 	}
 
 	return client.SetFlags(fetchedFlags)
-
 }
 
 // Checks if a toggle, gradual, or selective flag should be enabled. Other methods exist for other flag types, such as value.
@@ -198,7 +199,7 @@ func (client Client) ShouldCustomString(groupNameOrId string, featureNameOrId st
 	environment := client.FlagGroups[realIds.RealGroupId].Environments[realIds.RealEnvironmentId]
 
 	if environment.EnvironmentId == "" {
-		return false, fmt.Errorf("no environment found for environmentId: %s", realIds.RealEnvironmentId)
+		return false, NewEnvironmentLookupError(string(realIds.RealGroupId), string(realIds.RealEnvironmentId))
 	}
 
 	switch rawFeature.FeatureType {
@@ -218,7 +219,6 @@ func (client Client) ShouldCustomString(groupNameOrId string, featureNameOrId st
 		}
 
 		return HashStringInstanceID(customInstanceId, gradualFeature.Seed) < gradualFeature.Value, nil
-
 	case SelectiveFeatureType:
 
 		selectiveFeature := environment.SelectiveFeatures[realIds.RealFeatureId]
@@ -239,16 +239,14 @@ func (client Client) ShouldCustomString(groupNameOrId string, featureNameOrId st
 		case NumberValueType:
 			switch selectiveFeature.NumberType {
 			case IntNumberType:
-				return false, fmt.Errorf("selective feature, %s:%s, is not a StringValueType. Consider using ShouldCustomInt", selectiveFeature.Name, selectiveFeature.FeatureId)
-
+				return false, NewSelectiveFeatureValueTypeError(selectiveFeature.FeatureId, string(StringValueType), string(IntNumberType))
 			case FloatNumberType:
-				return false, fmt.Errorf("selectivefeature, %s:%s, is not a StringValueType. Consider using ShouldCustomFloat", selectiveFeature.Name, selectiveFeature.FeatureId)
+				return false, NewSelectiveFeatureValueTypeError(selectiveFeature.FeatureId, string(StringValueType), string(FloatNumberType))
 			}
 		}
 
 	case ValueFeatureType:
-		return false, fmt.Errorf("selectivefeature, %s:%s, is not a StringValueType. Consider using ValueString, ValueInt, or ValueFloat", rawFeature.Name, rawFeature.FeatureId)
-
+		return false, NewFeatureTypeError(featureNameOrId, []FeatureType{GradualFeatureType, ToggleFeatureType, SelectiveFeatureType}, ValueFeatureType)
 	}
 
 	return false, nil
@@ -272,7 +270,7 @@ func (client Client) ShouldCustomInt(groupNameOrId string, featureNameOrId strin
 	environment := client.FlagGroups[realIds.RealGroupId].Environments[realIds.RealEnvironmentId]
 
 	if environment.EnvironmentId == "" {
-		return false, fmt.Errorf("no environment found for environmentId: %s", realIds.RealEnvironmentId)
+		return false, NewEnvironmentLookupError(string(realIds.RealGroupId), string(realIds.RealEnvironmentId))
 	}
 
 	switch rawFeature.FeatureType {
@@ -300,9 +298,8 @@ func (client Client) ShouldCustomInt(groupNameOrId string, featureNameOrId strin
 
 		switch selectiveFeature.ValueType {
 		case StringValueType:
-			return false, fmt.Errorf("selective feature, %s:%s, is not an IntValueType. Consider using ShouldCustomInt", selectiveFeature.Name, selectiveFeature.FeatureId)
+			return false, NewSelectiveFeatureValueTypeError(selectiveFeature.FeatureId, string(IntNumberType), string(StringValueType))
 		case NumberValueType:
-
 			switch selectiveFeature.NumberType {
 			case IntNumberType:
 				selectiveIntFeature := environment.SelectiveIntFeatures[realIds.RealFeatureId]
@@ -314,13 +311,11 @@ func (client Client) ShouldCustomInt(groupNameOrId string, featureNameOrId strin
 				}
 
 			case FloatNumberType:
-				return false, fmt.Errorf("selectivefeature, %s:%s, is not an IntValueType. Consider using ShouldCustomFloat", selectiveFeature.Name, selectiveFeature.FeatureId)
+				return false, NewSelectiveFeatureValueTypeError(selectiveFeature.FeatureId, string(IntNumberType), string(FloatNumberType))
 			}
 		}
-
 	case ValueFeatureType:
-		return false, fmt.Errorf("selectivefeature, %s:%s, is not a StringValueType. Consider using ValueString, ValueInt, or ValueFloat", rawFeature.Name, rawFeature.FeatureId)
-
+		return false, NewFeatureTypeError(featureNameOrId, []FeatureType{GradualFeatureType, ToggleFeatureType, SelectiveFeatureType}, ValueFeatureType)
 	}
 
 	return false, nil
@@ -344,7 +339,7 @@ func (client Client) ShouldCustomFloat(groupNameOrId string, featureNameOrId str
 	environment := client.FlagGroups[realIds.RealGroupId].Environments[realIds.RealEnvironmentId]
 
 	if environment.EnvironmentId == "" {
-		return false, fmt.Errorf("no environment found for environmentId: %s", realIds.RealEnvironmentId)
+		return false, NewEnvironmentLookupError(string(realIds.RealGroupId), string(realIds.RealEnvironmentId))
 	}
 
 	switch rawFeature.FeatureType {
@@ -360,9 +355,7 @@ func (client Client) ShouldCustomFloat(groupNameOrId string, featureNameOrId str
 			return false, nil
 		}
 		return HashFloatInstanceID(customInstanceId, gradualFeature.Seed) < gradualFeature.Value, nil
-
 	case SelectiveFeatureType:
-
 		selectiveFeature := environment.SelectiveFeatures[realIds.RealFeatureId]
 
 		if !IsScheduleActive(selectiveFeature.Schedule, selectiveFeature.ScheduleType) {
@@ -371,12 +364,11 @@ func (client Client) ShouldCustomFloat(groupNameOrId string, featureNameOrId str
 
 		switch selectiveFeature.ValueType {
 		case StringValueType:
-			return false, fmt.Errorf("selective feature, %s:%s, is not an IntValueType. Consider using ShouldCustomInt", selectiveFeature.Name, selectiveFeature.FeatureId)
+			return false, NewSelectiveFeatureValueTypeError(selectiveFeature.FeatureId, string(FloatNumberType), string(StringValueType))
 		case NumberValueType:
 			switch selectiveFeature.NumberType {
 			case IntNumberType:
-				return false, fmt.Errorf("selectivefeature, %s:%s, is not a IntValueType. Consider using ShouldCustomInt", selectiveFeature.Name, selectiveFeature.FeatureId)
-
+				return false, NewSelectiveFeatureValueTypeError(selectiveFeature.FeatureId, string(FloatNumberType), string(IntNumberType))
 			case FloatNumberType:
 				selectiveFloatFeature := environment.SelectiveFloatFeatures[realIds.RealFeatureId]
 
@@ -388,8 +380,7 @@ func (client Client) ShouldCustomFloat(groupNameOrId string, featureNameOrId str
 			}
 		}
 	case ValueFeatureType:
-		return false, fmt.Errorf("selectivefeature, %s:%s, is not a ValueFeatureType. Consider using ValueString, ValueInt, or ValueFloat", rawFeature.Name, rawFeature.FeatureId)
-
+		return false, NewFeatureTypeError(featureNameOrId, []FeatureType{GradualFeatureType, ToggleFeatureType, SelectiveFeatureType}, ValueFeatureType)
 	}
 
 	return false, nil
@@ -404,8 +395,8 @@ func (client *Client) ValueString(groupNameOrId string, featureNameOrId string, 
 		return defaultValue, err
 	}
 
-	if rawFeature.FeatureType != "value" {
-		return defaultValue, fmt.Errorf("feature (%s) is not of type 'value'", featureNameOrId)
+	if rawFeature.FeatureType != ValueFeatureType {
+		return defaultValue, NewFeatureTypeError(featureNameOrId, []FeatureType{ValueFeatureType}, rawFeature.FeatureType)
 	}
 
 	realIds, err := client.getRealIds(groupNameOrId, featureNameOrId)
@@ -417,7 +408,7 @@ func (client *Client) ValueString(groupNameOrId string, featureNameOrId string, 
 	valueStringFeature := client.FlagGroups[realIds.RealGroupId].Environments[realIds.RealEnvironmentId].ValueStringFeatures[realIds.RealFeatureId]
 
 	if valueStringFeature.FeatureId == "" {
-		return defaultValue, fmt.Errorf("value feature not found for groupId (%s) and featureId (%s)", realIds.RealGroupId, realIds.RealFeatureId)
+		return defaultValue, NewFeatureLookUpError(string(realIds.RealGroupId), string(realIds.RealFeatureId), string(realIds.RealEnvironmentId))
 	}
 
 	if !IsScheduleActive(valueStringFeature.Schedule, valueStringFeature.ScheduleType) {
@@ -437,15 +428,7 @@ func (client *Client) ValueInt(groupNameOrId string, featureNameOrId string, def
 	}
 
 	if rawFeature.FeatureType != ValueFeatureType {
-		return defaultValue, fmt.Errorf("feature (%s) is not of type 'value'", featureNameOrId)
-	}
-
-	if err != nil {
-		return defaultValue, err
-	}
-
-	if rawFeature.FeatureType != ValueFeatureType {
-		return defaultValue, fmt.Errorf("feature (%s) is not of type 'value'", featureNameOrId)
+		return defaultValue, NewFeatureTypeError(featureNameOrId, []FeatureType{ValueFeatureType}, rawFeature.FeatureType)
 	}
 
 	realIds, err := client.getRealIds(groupNameOrId, featureNameOrId)
@@ -457,7 +440,7 @@ func (client *Client) ValueInt(groupNameOrId string, featureNameOrId string, def
 	valueIntFeature := client.FlagGroups[realIds.RealGroupId].Environments[realIds.RealEnvironmentId].ValueIntFeatures[realIds.RealFeatureId]
 
 	if valueIntFeature.FeatureId == "" {
-		return defaultValue, fmt.Errorf("value feature not found for groupId (%s) and featureId (%s)", realIds.RealGroupId, realIds.RealFeatureId)
+		return defaultValue, NewFeatureLookUpError(string(realIds.RealGroupId), string(realIds.RealFeatureId), string(realIds.RealEnvironmentId))
 	}
 
 	if !IsScheduleActive(valueIntFeature.Schedule, valueIntFeature.ScheduleType) {
@@ -476,7 +459,7 @@ func (client *Client) ValueFloat(groupNameOrId string, featureNameOrId string, d
 	}
 
 	if rawFeature.FeatureType != ValueFeatureType {
-		return defaultValue, fmt.Errorf("feature (%s) is not of type 'value'", featureNameOrId)
+		return defaultValue, NewFeatureTypeError(featureNameOrId, []FeatureType{ValueFeatureType}, rawFeature.FeatureType)
 	}
 
 	realIds, err := client.getRealIds(groupNameOrId, featureNameOrId)
@@ -488,7 +471,7 @@ func (client *Client) ValueFloat(groupNameOrId string, featureNameOrId string, d
 	valueFloatFeature := client.FlagGroups[realIds.RealGroupId].Environments[realIds.RealEnvironmentId].ValueFloatFeatures[realIds.RealFeatureId]
 
 	if valueFloatFeature.FeatureId == "" {
-		return defaultValue, fmt.Errorf("value feature not found for groupId (%s) and featureId (%s)", realIds.RealGroupId, realIds.RealFeatureId)
+		return defaultValue, NewFeatureLookUpError(string(realIds.RealGroupId), string(realIds.RealFeatureId), string(realIds.RealEnvironmentId))
 	}
 
 	if !IsScheduleActive(valueFloatFeature.Schedule, valueFloatFeature.ScheduleType) {
@@ -508,30 +491,29 @@ func (client *Client) getRawFeature(groupNameOrId string, featureNameOrId string
 	rawFeature := client.FlagGroups[realIds.RealGroupId].Features[realIds.RealFeatureId]
 
 	if rawFeature.FeatureId == "" {
-		return Feature{}, fmt.Errorf("feature (%s) could not be found for group (%s) or environment (%s). realIds: %s", featureNameOrId, groupNameOrId, client.Environment, realIds)
+		return Feature{}, NewFeatureLookUpError(string(realIds.RealGroupId), string(realIds.RealFeatureId), string(realIds.RealEnvironmentId))
 	}
 
 	return rawFeature, nil
-
 }
 
 func (client *Client) getRealIds(groupNameOrId string, featureNameOrId string) (RealIds, error) {
 	groupId := client.groupLookupTable[groupNameOrId]
 
 	if groupId == "" {
-		return RealIds{}, fmt.Errorf("no group found for: %s", groupNameOrId)
+		return RealIds{}, NewGroupLookupError(groupNameOrId)
+	}
+
+	environmentId := client.environmentLookupTable[groupId][client.Environment]
+
+	if environmentId == "" {
+		return RealIds{}, NewEnvironmentLookupError(groupNameOrId, client.Environment)
 	}
 
 	featureId := client.featureLookupTable[groupId][featureNameOrId]
 
 	if featureId == "" {
-		return RealIds{}, fmt.Errorf("no feature found for: %s", featureNameOrId)
-	}
-
-	environmentId := client.environmentLookupTable[groupId][client.Environment]
-
-	if featureId == "" {
-		return RealIds{}, fmt.Errorf("no environment found for: %s", client.Environment)
+		return RealIds{}, NewFeatureLookUpError(groupNameOrId, featureNameOrId, client.Environment)
 	}
 
 	return RealIds{
@@ -539,5 +521,4 @@ func (client *Client) getRealIds(groupNameOrId string, featureNameOrId string) (
 		RealFeatureId:     featureId,
 		RealEnvironmentId: environmentId,
 	}, nil
-
 }
