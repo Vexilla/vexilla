@@ -2,6 +2,8 @@
 
 namespace Vexilla\Types;
 
+use Vexilla\Exceptions\EnvironmentFeatureNotFound;
+
 class Environment
 {
     public string $name;
@@ -21,7 +23,7 @@ class Environment
         if ($feature) {
             return $feature;
         } else {
-            return null;
+            throw new EnvironmentFeatureNotFound("Feature ({$featureId}) not found in environment.");
         }
     }
 
@@ -31,7 +33,7 @@ class Environment
         if ($feature && $feature->featureType === FeatureType::TOGGLE) {
             return $feature;
         } else {
-            return null;
+            throw new EnvironmentFeatureNotFound("ToggleFeature ({$featureId}) not found in environment.");
         }
     }
 
@@ -41,7 +43,7 @@ class Environment
         if ($feature && $feature->featureType === FeatureType::GRADUAL) {
             return $feature;
         } else {
-            return null;
+            throw new EnvironmentFeatureNotFound("GradualFeature ({$featureId}) not found in environment.");
         }
     }
 
@@ -51,7 +53,23 @@ class Environment
         if ($feature && $feature->featureType === FeatureType::SELECTIVE) {
             return $feature;
         } else {
-            return null;
+            throw new EnvironmentFeatureNotFound("SelectiveFeature ({$featureId}) not found in environment.");
+        }
+    }
+
+    function getValueFeature(string $featureId): ?ValueFeature
+    {
+        $feature = $this->features[$featureId];
+
+        if (
+            $feature && $feature->featureType === FeatureType::VALUE &&
+            (
+                $feature->valueType === ValueType::STRING || $feature->valueType === ValueType::NUMBER
+            )
+        ) {
+            return $feature;
+        } else {
+            throw new EnvironmentFeatureNotFound("ValueFeature ({$featureId}) not found in environment.");
         }
     }
 
@@ -62,7 +80,7 @@ class Environment
         if ($feature && $feature->featureType === FeatureType::VALUE && $feature->valueType === ValueType::STRING) {
             return $feature;
         } else {
-            return null;
+            throw new EnvironmentFeatureNotFound("ValueStringFeature ({$featureId}) not found in environment.");
         }
     }
 
@@ -70,20 +88,24 @@ class Environment
     {
         $feature = $this->features[$featureId];
 
-        if ($feature && $feature->featureType === FeatureType::VALUE && $feature->numberType === NumberType::INT) {
+        if (
+            $feature && $feature->featureType === FeatureType::VALUE && $feature->valueType === ValueType::NUMBER && $feature->numberType === NumberType::INT
+        ) {
             return $feature;
         } else {
-            return null;
+            throw new EnvironmentFeatureNotFound("ValueIntFeature ({$featureId}) not found in environment.");
         }
     }
 
     function getValueFloatFeature(string $featureId): ?ValueFloatFeature
     {
         $feature = $this->features[$featureId];
-        if ($feature && $feature->featureType === FeatureType::VALUE && $feature->numberType === NumberType::FLOAT) {
+        if (
+            $feature && $feature->featureType === FeatureType::VALUE && $feature->valueType === ValueType::NUMBER && $feature->numberType === NumberType::FLOAT
+        ) {
             return $feature;
         } else {
-            return null;
+            throw new EnvironmentFeatureNotFound("ValueFloatFeature ({$featureId}) not found in environment.");
         }
     }
 

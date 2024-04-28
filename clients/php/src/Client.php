@@ -18,7 +18,14 @@ use Vexilla\Types\ValueFloatFeature;
 use Vexilla\Types\ValueIntFeature;
 use Vexilla\Types\ValueStringFeature;
 use Vexilla\Types\ValueType;
-use Vexilla\Exceptions\InvalidArgumentException;
+use Vexilla\Exceptions\InvalidShouldFeatureValueTypeException;
+use Vexilla\Exceptions\InvalidShouldFeatureTypeException;
+use Vexilla\Exceptions\InvalidValueFeatureTypeException;
+use Vexilla\Exceptions\GroupLookupKeyNotFoundException;
+use Vexilla\Exceptions\EnvironmentLookupKeyNotFoundException;
+use Vexilla\Exceptions\GroupFeatureKeyNotFoundException;
+use Vexilla\Exceptions\EnvironmentFeatureKeyNotFoundException;
+
 
 class Client
 {
@@ -209,13 +216,7 @@ class Client
 
     public function shouldCustomString(string $groupNameOrId, string $featureNameOrId, string $customInstanceId): bool
     {
-        $realObjects = null;
-        try {
-            $realObjects = $this->getRealObjects($groupNameOrId, $featureNameOrId);
-        } catch (\Exception $e) {
-            $this->log($e->getMessage());
-            return false;
-        }
+        $realObjects = $this->getRealObjects($groupNameOrId, $featureNameOrId);
 
         $environment = $realObjects->environment;
         $feature = $realObjects->feature;
@@ -240,28 +241,19 @@ class Client
                 if ($selectiveFeature->valueType === ValueType::STRING) {
                     return in_array($customInstanceId, $selectiveFeature->value);
                 } else {
-                    $this->log('shouldCustomString must be called with a string instanceId. Use shouldCustomInt or shouldCustomFloat, instead.');
-                    return false;
+                    throw new InvalidShouldFeatureValueTypeException('shouldCustomString must be called with a string instanceId. Use shouldCustomInt or shouldCustomFloat, instead.');
                 }
             case FeatureType::VALUE:
-                $this->log('should* functions are not compatible with ValueFeatures. Use the value* methods instead.');
-                return false;
+                throw new InvalidShouldFeatureTypeException('should* functions are not compatible with ValueFeatures. Use the value* methods instead.');
 
             default:
-                $this->log('Invalied FeatureType for should* methods. Must be toggle, gradual, or selective.');
-                return false;
+                throw new InvalidShouldFeatureTypeException('Invalid FeatureType for should* methods. Must be toggle, gradual, or selective.');
         }
     }
 
     public function shouldCustomInt(string $groupNameOrId, string $featureNameOrId, int $customInstanceId): bool
     {
-        $realObjects = null;
-        try {
-            $realObjects = $this->getRealObjects($groupNameOrId, $featureNameOrId);
-        } catch (\Exception $e) {
-            $this->log($e->getMessage());
-            return false;
-        }
+        $realObjects = $this->getRealObjects($groupNameOrId, $featureNameOrId);
 
         $environment = $realObjects->environment;
         $feature = $realObjects->feature;
@@ -285,28 +277,19 @@ class Client
                 if ($selectiveFeature->numberType === NumberType::INT) {
                     return in_array($customInstanceId, $selectiveFeature->value);
                 } else {
-                    $this->log('shouldCustomInt must be called with an int instanceId. Use shouldCustomString or shouldCustomFloat, instead.');
-                    return false;
+                    throw new InvalidShouldFeatureValueTypeException('shouldCustomInt must be called with an int instanceId. Use shouldCustomString or shouldCustomFloat, instead.');
                 }
             case FeatureType::VALUE:
-                $this->log('should* functions are not compatible with ValueFeatures. Use the value* methods instead.');
-                return false;
+                throw new InvalidShouldFeatureTypeException('should* functions are not compatible with ValueFeatures. Use the value* methods instead.');
 
             default:
-                $this->log('Invalied FeatureType for should* methods. Must be toggle, gradual, or selective.');
-                return false;
+                throw new InvalidShouldFeatureTypeException('Invalid FeatureType for should* methods. Must be toggle, gradual, or selective.');
         }
     }
 
     public function shouldCustomFloat(string $groupNameOrId, string $featureNameOrId, float $customInstanceId): bool
     {
-        $realObjects = null;
-        try {
-            $realObjects = $this->getRealObjects($groupNameOrId, $featureNameOrId);
-        } catch (\Exception $e) {
-            $this->log($e->getMessage());
-            return false;
-        }
+        $realObjects = $this->getRealObjects($groupNameOrId, $featureNameOrId);
 
         $environment = $realObjects->environment;
         $feature = $realObjects->feature;
@@ -330,35 +313,25 @@ class Client
                 if ($selectiveFeature->numberType === NumberType::FLOAT) {
                     return in_array($customInstanceId, $selectiveFeature->value);
                 } else {
-                    $this->log('shouldCustomFloat must be called with a float instanceId. Use shouldCustomInt or shouldCustomString, instead.');
-                    return false;
+                    throw new InvalidShouldFeatureValueTypeException('shouldCustomFloat must be called with a float instanceId. Use shouldCustomInt or shouldCustomString, instead.');
                 }
             case FeatureType::VALUE:
-                $this->log('should* functions are not compatible with ValueFeatures. Use the value* methods instead.');
-                return false;
+                throw new InvalidShouldFeatureTypeException('should* functions are not compatible with ValueFeatures. Use the value* methods instead.');
 
             default:
-                $this->log('Invalied FeatureType for should* methods. Must be toggle, gradual, or selective.');
-                return false;
+                throw new InvalidShouldFeatureTypeException('Invalid FeatureType for should* methods. Must be toggle, gradual, or selective.');
         }
     }
 
     public function valueString(string $groupNameOrId, string $featureNameOrId, string $default): string
     {
-        $realObjects = null;
-        try {
-            $realObjects = $this->getRealObjects($groupNameOrId, $featureNameOrId);
-        } catch (\Exception $e) {
-            $this->log($e->getMessage());
-            return $default;
-        }
+        $realObjects = $this->getRealObjects($groupNameOrId, $featureNameOrId);
 
         $environment = $realObjects->environment;
         $feature = $realObjects->feature;
 
         if ($feature->featureType !== FeatureType::VALUE) {
-            $this->log('valueString must be called for a ValueFeature. Use a should* method, instead.');
-            return $default;
+            throw new InvalidValueFeatureTypeException('valueString must be called for a ValueFeature. Use a should* method, instead.');
         }
 
         $withinSchedule = Scheduler::isScheduledFeatureActive($feature);
@@ -369,31 +342,18 @@ class Client
 
         $valueFeature = $environment->getValueStringFeature($feature->featureId);
 
-        if (!$valueFeature) {
-            $this->log('ValueFeature not found');
-            return $default;
-        }
-
         return $valueFeature->value;
     }
 
-
     public function valueInt(string $groupNameOrId, string $featureNameOrId, int $default): int
     {
-        $realObjects = null;
-        try {
-            $realObjects = $this->getRealObjects($groupNameOrId, $featureNameOrId);
-        } catch (\Exception $e) {
-            $this->log($e->getMessage());
-            return $default;
-        }
+        $realObjects = $this->getRealObjects($groupNameOrId, $featureNameOrId);
 
         $environment = $realObjects->environment;
         $feature = $realObjects->feature;
 
         if ($feature->featureType !== FeatureType::VALUE) {
-            $this->log('valueInt must be called for a ValueFeature. Use a should* method, instead.');
-            return $default;
+            throw new InvalidValueFeatureTypeException('valueInt must be called for a ValueFeature. Use a should* method, instead.');
         }
 
         $withinSchedule = Scheduler::isScheduledFeatureActive($feature);
@@ -404,30 +364,18 @@ class Client
 
         $valueFeature = $environment->getValueIntFeature($feature->featureId);
 
-        if (!$valueFeature) {
-            $this->log('ValueFeature not found');
-            return $default;
-        }
-
         return $valueFeature->value;
     }
 
     public function valueFloat(string $groupNameOrId, string $featureNameOrId, float $default): float
     {
-        $realObjects = null;
-        try {
-            $realObjects = $this->getRealObjects($groupNameOrId, $featureNameOrId);
-        } catch (\Exception $e) {
-            $this->log($e->getMessage());
-            return $default;
-        }
+        $realObjects = $this->getRealObjects($groupNameOrId, $featureNameOrId);
 
         $environment = $realObjects->environment;
         $feature = $realObjects->feature;
 
         if ($feature->featureType !== FeatureType::VALUE) {
-            $this->log('valueInt must be called for a ValueFeature. Use a should* method, instead.');
-            return $default;
+            throw new InvalidValueFeatureTypeException('valueInt must be called for a ValueFeature. Use a should* method, instead.');
         }
 
         $withinSchedule = Scheduler::isScheduledFeatureActive($feature);
@@ -437,11 +385,6 @@ class Client
         }
 
         $valueFeature = $environment->getValueFloatFeature($feature->featureId);
-
-        if (!$valueFeature) {
-            $this->log('ValueFeature not found');
-            return $default;
-        }
 
         return $valueFeature->value;
     }
@@ -458,19 +401,19 @@ class Client
         $group = $this->getGroup($realIds->groupId);
 
         if (!$group) {
-            throw new InvalidArgumentException("Group not found.");
+            throw new GroupLookupKeyNotFoundException("Group not found.");
         }
 
         $environment = $group->getEnvironment($realIds->environmentId);
 
         if (!$environment) {
-            throw new InvalidArgumentException("Environment not found.");
+            throw new EnvironmentLookupKeyNotFoundException("Environment not found.");
         }
 
         $feature = $environment->getFeature($realIds->featureId);
 
         if (!$feature) {
-            throw new InvalidArgumentException("Feature not found.");
+            throw new EnvironmentFeatureKeyNotFoundException("Feature not found.");
         }
 
         return new RealObjects($environment, $feature);
@@ -481,31 +424,31 @@ class Client
         $groupId = $this->groupLookupTable[$groupNameOrId];
 
         if (!$groupId) {
-            throw new InvalidArgumentException('GroupID does not exist in lookup table. Make sure to fetch the manifest before hand.');
+            throw new GroupLookupKeyNotFoundException('GroupID does not exist in lookup table. Make sure to fetch the manifest before hand.');
         }
 
         $groupEnvironmentLookupTable = $this->environmentLookupTable[$groupId];
 
         if (!$groupEnvironmentLookupTable) {
-            throw new InvalidArgumentException('Group EnvironmentLookupTable does not exist in lookup table. Make sure to fetch the manifest and group/flags before hand.');
+            throw new EnvironmentLookupKeyNotFoundException('Group EnvironmentLookupTable does not exist in lookup table. Make sure to fetch the manifest and group/flags before hand.');
         }
 
         $environmentId = $groupEnvironmentLookupTable[$this->environment];
 
         if (!$environmentId) {
-            throw new InvalidArgumentException('Environment does not exist in lookup table. Make sure to fetch the manifest and group/flags before hand.');
+            throw new EnvironmentLookupKeyNotFoundException('Environment does not exist in lookup table. Make sure to fetch the manifest and group/flags before hand.');
         }
 
         $groupFeatureLookupTable = $this->featureLookupTable[$groupId];
 
         if (!$groupFeatureLookupTable) {
-            throw new InvalidArgumentException('Group FeatureLookupTable does not exist in lookup table. Make sure to fetch the manifest and group/flags before hand.');
+            throw new GroupFeatureKeyNotFoundException('Group FeatureLookupTable does not exist in lookup table. Make sure to fetch the manifest and group/flags before hand.');
         }
 
         $featureId = $groupFeatureLookupTable[$featureNameOrId];
 
         if (!$featureId) {
-            throw new InvalidArgumentException('Feature does not exist in lookup table. Make sure to fetch the manifest and group/flags before hand.');
+            throw new EnvironmentFeatureKeyNotFoundException('Feature does not exist in lookup table. Make sure to fetch the manifest and group/flags before hand.');
         }
 
         return new RealIds($groupId, $environmentId, $featureId);
