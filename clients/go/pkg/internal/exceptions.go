@@ -1,207 +1,86 @@
 package internal
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
-type InvalidShouldFeatureType struct {
-	Detail string
+// Group lookup error.
+type GroupLookupError struct {
+	GroupKey string
 }
 
-func (e InvalidShouldFeatureType) Error() string {
-	return fmt.Sprintf("should only supports toggle, gradual, and selective feature types. Tried type: %s", e.Detail)
+func (e GroupLookupError) Error() string {
+	return fmt.Sprintf("could not get group by key: '%s'", e.GroupKey)
 }
 
-func NewInvalidShouldFeatureTypeError(detail string) error {
-	return &InvalidShouldFeatureType{Detail: detail}
+func NewGroupLookupError(groupNameOrId string) error {
+	return &GroupLookupError{GroupKey: groupNameOrId}
 }
 
-type InvalidShouldFeatureValueType struct {
-	Detail string
+// Feature lookup error.
+type FeatureLookUpError struct {
+	GroupKey       string
+	FeatureKey     string
+	EnvironmentKey string
 }
 
-func (e InvalidShouldFeatureValueType) Error() string {
-	return fmt.Sprintf("should selective features use the instance_id which is a &str. tried type: %s. consider using should_custom instead", e.Detail)
+func (e FeatureLookUpError) Error() string {
+	return fmt.Sprintf("could not get feature by key: '%s' in group: '%s' or environment: '%s'", e.FeatureKey, e.GroupKey, e.EnvironmentKey)
 }
 
-func NewInvalidShouldFeatureValueTypeError(detail string) error {
-	return &InvalidShouldFeatureValueType{Detail: detail}
+func NewFeatureLookUpError(groupKey string, featureKey string, environmentKey string) error {
+	return &FeatureLookUpError{GroupKey: groupKey, FeatureKey: featureKey, EnvironmentKey: environmentKey}
 }
 
-type InvalidShouldCustomGradualFeatureValueType struct {
-	Detail string
+// Environment lookup error.
+type EnvironmentLookupError struct {
+	GroupKey       string
+	EnvironmentKey string
 }
 
-func (e InvalidShouldCustomGradualFeatureValueType) Error() string {
-	return fmt.Sprintf("should_custom gradual features only allow &str. tried type: %s.", e.Detail)
+func (e EnvironmentLookupError) Error() string {
+	return fmt.Sprintf("could not get environment by key: '%s' in group: '%s'", e.EnvironmentKey, e.GroupKey)
 }
 
-func NewInvalidShouldCustomGradualFeatureValueTypeError(detail string) error {
-	return &InvalidShouldCustomGradualFeatureValueType{Detail: detail}
+func NewEnvironmentLookupError(groupKey string, environmentKey string) error {
+	return &EnvironmentLookupError{GroupKey: groupKey, EnvironmentKey: environmentKey}
 }
 
-type InvalidShouldCustomStr struct {
-	Detail string
+// Feature type error.
+type FeatureTypeError struct {
+	FeatureKey          string
+	AllowedFeatureTypes []FeatureType
+	GivenFeatureType    FeatureType
 }
 
-func (e InvalidShouldCustomStr) Error() string {
-	return fmt.Sprintf("should_custom_str only allows &str for the custom_id. the type passed in does not match the value type of the feature. tried type: %s", e.Detail)
+func (e FeatureTypeError) Error() string {
+	// Format the allowed feature types into a string to be better readable on the error message.
+	allowedFeaturesTypes := make([]string, len(e.AllowedFeatureTypes))
+	for i, featureType := range e.AllowedFeatureTypes {
+		allowedFeaturesTypes[i] = string(featureType)
+	}
+	acceptedTypes := "[" + strings.Join(allowedFeaturesTypes, ", ") + "]"
+
+	// Example: feature (featureKey) is not one of the accepted types '[gradual, selective, toggle]' but is type: 'value'
+	return fmt.Sprintf("feature (%s) is not one of the accepted types '%s' but is type: '%s'", e.FeatureKey, acceptedTypes, e.GivenFeatureType)
 }
 
-func NewInvalidShouldCustomStrError(detail string) error {
-	return &InvalidShouldCustomStr{Detail: detail}
+func NewFeatureTypeError(featureKey string, allowedFeatureTypes []FeatureType, givenFeatureType FeatureType) error {
+	return &FeatureTypeError{FeatureKey: featureKey, AllowedFeatureTypes: allowedFeatureTypes, GivenFeatureType: givenFeatureType}
 }
 
-type InvalidShouldCustomInt struct {
-	Detail string
+// Selective feature value type error.
+type SelectiveFeatureValueTypeError struct {
+	FeatureKey        FeatureId
+	ExpectedValueType string
+	GivenValueType    string
 }
 
-func (e InvalidShouldCustomInt) Error() string {
-	return fmt.Sprintf("should_custom_int only allows i64 for the custom_id. the type passed in does not match the value type of the feature. tried type: %s", e.Detail)
+func (e SelectiveFeatureValueTypeError) Error() string {
+	return fmt.Sprintf("selective feature '%s' expected value type: '%s' but got type: '%s'", string(e.FeatureKey), e.ExpectedValueType, e.GivenValueType)
 }
 
-func NewInvalidShouldCustomIntError(detail string) error {
-	return &InvalidShouldCustomInt{Detail: detail}
-}
-
-type InvalidShouldCustomFloat struct {
-	Detail string
-}
-
-func (e InvalidShouldCustomFloat) Error() string {
-	return fmt.Sprintf("should_custom_float only allows f64 for the custom_id. the type passed in does not match the value type of the feature. tried type: %s", e.Detail)
-}
-
-func NewInvalidShouldCustomFloatError(detail string) error {
-	return &InvalidShouldCustomFloat{Detail: detail}
-}
-
-type InvalidValueFeatureType struct {
-	Detail string
-}
-
-func (e InvalidValueFeatureType) Error() string {
-	return fmt.Sprintf("value only supports the value feature type. tried type: %s", e.Detail)
-}
-
-func NewInvalidValueFeatureTypeError(detail string) error {
-	return &InvalidValueFeatureType{Detail: detail}
-}
-
-type InvalidValueStringType struct {
-	Detail string
-}
-
-func (e InvalidValueStringType) Error() string {
-	return fmt.Sprintf("value_str only supports a string value. tried type: %s", e.Detail)
-}
-
-func NewInvalidValueStringTypeError(detail string) error {
-	return &InvalidValueStringType{Detail: detail}
-}
-
-type InvalidValueI64Type struct {
-	Detail string
-}
-
-func (e InvalidValueI64Type) Error() string {
-	return fmt.Sprintf("value_i64 only supports an i64 value. tried type: %s", e.Detail)
-}
-
-func NewInvalidValueI64TypeError(detail string) error {
-	return &InvalidValueI64Type{Detail: detail}
-}
-
-type InvalidValueF64Type struct {
-	Detail string
-}
-
-func (e InvalidValueF64Type) Error() string {
-	return fmt.Sprintf("value_f64 only supports an f64 value. tried type: %s", e.Detail)
-}
-
-func NewInvalidValueF64TypeError(detail string) error {
-	return &InvalidValueF64Type{Detail: detail}
-}
-
-type InvalidSchedule struct {
-	Detail string
-}
-
-func (e InvalidSchedule) Error() string {
-	return fmt.Sprintf("error parsing schedule: %s", e.Detail)
-}
-
-func NewInvalidScheduleError(detail string) error {
-	return &InvalidSchedule{Detail: detail}
-}
-
-type GroupLookupKeyNotFound struct {
-	Detail string
-}
-
-func (e GroupLookupKeyNotFound) Error() string {
-	return fmt.Sprintf("could not get key on group_lookup_table")
-}
-
-func NewGroupLookupKeyNotFoundError(detail string) error {
-	return &GroupLookupKeyNotFound{Detail: detail}
-}
-
-type FlagLookupKeyNotFound struct {
-	Detail string
-}
-
-func (e FlagLookupKeyNotFound) Error() string {
-	return fmt.Sprintf("could not get key on group_lookup_table")
-}
-
-func NewFlagLookupKeyNotFoundError(detail string) error {
-	return &FlagLookupKeyNotFound{Detail: detail}
-}
-
-type FlagGroupKeyNotFound struct {
-	Detail string
-}
-
-func (e FlagGroupKeyNotFound) Error() string {
-	return fmt.Sprintf("could not get key on group_lookup_table")
-}
-
-func NewFlagGroupKeyNotFoundError(detail string) error {
-	return &FlagGroupKeyNotFound{Detail: detail}
-}
-
-type EnvironmentLookupKeyNotFound struct {
-	Detail string
-}
-
-func (e EnvironmentLookupKeyNotFound) Error() string {
-	return fmt.Sprintf("could not get key on group_lookup_table")
-}
-
-func NewEnvironmentLookupKeyNotFoundError(detail string) error {
-	return &EnvironmentLookupKeyNotFound{Detail: detail}
-}
-
-type EnvironmentFeatureKeyNotFound struct {
-	Detail string
-}
-
-func (e EnvironmentFeatureKeyNotFound) Error() string {
-	return fmt.Sprintf("could not get key on group_lookup_table")
-}
-
-func NewEnvironmentFeatureKeyNotFoundError(detail string) error {
-	return &EnvironmentFeatureKeyNotFound{Detail: detail}
-}
-
-type UnknownVexillaError struct {
-	Detail string
-}
-
-func (e UnknownVexillaError) Error() string {
-	return fmt.Sprintf("unknown vexilla error")
-}
-
-func NewUnknownVexillaError(detail string) error {
-	return &UnknownVexillaError{Detail: detail}
+func NewSelectiveFeatureValueTypeError(featureKey FeatureId, expectedValueType string, givenValueType string) error {
+	return &SelectiveFeatureValueTypeError{FeatureKey: featureKey, ExpectedValueType: expectedValueType, GivenValueType: givenValueType}
 }
