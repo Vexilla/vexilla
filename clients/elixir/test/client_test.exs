@@ -42,20 +42,24 @@ defmodule VexillaClientTest do
     value_string = VexillaClient.value!(config, "Value", "String", "bar")
     assert value_string == "foo"
 
-    value_string_bad = VexillaClient.value!(config, "Value", "String_Bad", "bar")
-    assert value_string_bad == "bar"
+
+    assert_raise InvalidValueFeatureTypeError, fn  ->
+      value_string_bad = VexillaClient.value!(config, "Value", "String_Bad", "bar")
+    end
 
     value_int = VexillaClient.value!(config, "Value", "Integer", 0)
     assert value_int == 42
 
-    value_int_bad = VexillaClient.value!(config, "Value", "Integer_Bad", 0)
-    assert value_int_bad == 0
+    assert_raise InvalidValueFeatureTypeError, fn  ->
+      value_int_bad = VexillaClient.value!(config, "Value", "Integer_Bad", 0)
+    end
 
     value_float = VexillaClient.value!(config, "Value", "Float", 0)
     assert value_float == 42.42
 
-    value_float_bad = VexillaClient.value!(config, "Value", "Float_Bad", 0)
-    assert value_float_bad == 0
+    assert_raise InvalidValueFeatureTypeError, fn  ->
+      value_float_bad = VexillaClient.value!(config, "Value", "Float_Bad", 0)
+    end
 
     config = VexillaClient.sync_flags!(config, "Scheduled", &generic_fetch!/1)
 
