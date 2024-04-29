@@ -18,23 +18,23 @@ defmodule VexillaClientTest do
       |> VexillaClient.sync_manifest!(&generic_fetch!/1)
       |> VexillaClient.sync_flags!("Gradual", &generic_fetch!/1)
 
-    should_gradual = VexillaClient.should?(config, "Gradual", "testingWorkingGradual")
+    should_gradual = VexillaClient.should!(config, "Gradual", "testingWorkingGradual")
     assert should_gradual == true
 
-    should_not_gradual = VexillaClient.should?(config, "Gradual", "testingNonWorkingGradual")
+    should_not_gradual = VexillaClient.should!(config, "Gradual", "testingNonWorkingGradual")
     assert should_not_gradual == false
 
     config = VexillaClient.sync_flags!(config, "Selective", &generic_fetch!/1)
 
-    should_selective_string = VexillaClient.should?(config, "Selective", "String")
+    should_selective_string = VexillaClient.should!(config, "Selective", "String")
     assert should_selective_string == true
 
     should_selective_custom_string =
-      VexillaClient.should_custom?(config, "Selective", "String", "shouldBeInList")
+      VexillaClient.should_custom!(config, "Selective", "String", "shouldBeInList")
 
     assert should_selective_custom_string == true
 
-    should_selective_number = VexillaClient.should_custom?(config, "Selective", "Number", 42)
+    should_selective_number = VexillaClient.should_custom!(config, "Selective", "Number", 42)
     assert should_selective_number == true
 
     config = VexillaClient.sync_flags!(config, "Value", &generic_fetch!/1)
@@ -59,33 +59,33 @@ defmodule VexillaClientTest do
 
     config = VexillaClient.sync_flags!(config, "Scheduled", &generic_fetch!/1)
 
-    should_before_global = VexillaClient.should?(config, "Scheduled", "beforeGlobal")
+    should_before_global = VexillaClient.should!(config, "Scheduled", "beforeGlobal")
     assert should_before_global == false
-    should_during_global = VexillaClient.should?(config, "Scheduled", "duringGlobal")
+    should_during_global = VexillaClient.should!(config, "Scheduled", "duringGlobal")
     assert should_during_global == true
-    should_after_global = VexillaClient.should?(config, "Scheduled", "afterGlobal")
+    should_after_global = VexillaClient.should!(config, "Scheduled", "afterGlobal")
     assert should_after_global == false
 
     should_before_global_start_end =
-      VexillaClient.should?(config, "Scheduled", "beforeGlobalStartEnd")
+      VexillaClient.should!(config, "Scheduled", "beforeGlobalStartEnd")
 
     assert should_before_global_start_end == false
 
     should_during_global_start_end =
-      VexillaClient.should?(config, "Scheduled", "duringGlobalStartEnd")
+      VexillaClient.should!(config, "Scheduled", "duringGlobalStartEnd")
 
     assert should_during_global_start_end == true
 
     should_after_global_start_end =
-      VexillaClient.should?(config, "Scheduled", "afterGlobalStartEnd")
+      VexillaClient.should!(config, "Scheduled", "afterGlobalStartEnd")
 
     assert should_after_global_start_end == false
 
-    should_before_global_daily = VexillaClient.should?(config, "Scheduled", "beforeGlobalDaily")
+    should_before_global_daily = VexillaClient.should!(config, "Scheduled", "beforeGlobalDaily")
     assert should_before_global_daily == false
-    should_during_global_daily = VexillaClient.should?(config, "Scheduled", "duringGlobalDaily")
+    should_during_global_daily = VexillaClient.should!(config, "Scheduled", "duringGlobalDaily")
     assert should_during_global_daily == true
-    should_after_global_daily = VexillaClient.should?(config, "Scheduled", "afterGlobalDaily")
+    should_after_global_daily = VexillaClient.should!(config, "Scheduled", "afterGlobalDaily")
     assert should_after_global_daily == false
   end
 
