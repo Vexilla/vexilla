@@ -74,7 +74,7 @@ namespace Vexilla.Client
 
                         case ScheduleTimeType.StartEnd:
 
-                            var startOfEndDate =  new DateTimeOffset(
+                            var startOfEndDate = new DateTimeOffset(
                                 endDateTimeOffset.Year,
                                 endDateTimeOffset.Month,
                                 endDateTimeOffset.Day,
@@ -87,8 +87,6 @@ namespace Vexilla.Client
                             var startDateTimestampWithStartTime = startOfStartDate.ToUnixTimeMilliseconds() + schedule.StartTime;
 
                             var endDateTimestampWithEndTime = startOfEndDate.ToUnixTimeMilliseconds() + schedule.EndTime;
-
-                            Console.WriteLine(string.Format("start: {0} - now: {1} - end: {2}", startDateTimestampWithStartTime, nowTimestamp, endDateTimestampWithEndTime));
 
                             return startDateTimestampWithStartTime <= nowTimestamp && nowTimestamp <= endDateTimestampWithEndTime;
 
@@ -140,7 +138,9 @@ namespace Vexilla.Client
                             {
                                 return nowTimestamp >= startTimestamp ||
                                     nowTimestamp <= endTimestamp;
-                            } else {
+                            }
+                            else
+                            {
                                 return nowTimestamp >= startTimestamp &&
                                    nowTimestamp <= endTimestamp;
                             }

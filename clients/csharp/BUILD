@@ -9,6 +9,7 @@ csharp_library(
     srcs = [
         "Vexilla.Client/Client.cs",
         "Vexilla.Client/EnvironmentJsonConverter.cs",
+        "Vexilla.Client/Exception.cs",
         "Vexilla.Client/Group.cs",
         "Vexilla.Client/Hasher.cs",
         "Vexilla.Client/Scheduler.cs",

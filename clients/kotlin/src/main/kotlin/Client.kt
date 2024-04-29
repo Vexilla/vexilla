@@ -77,133 +77,135 @@ class Client(
         this.setFlags(flags)
     }
 
-    fun should(groupNameOrId: String, featureNameOrId: String, instanceId: String = this.instanceId): Boolean {
+    fun should(groupNameOrId: String, featureNameOrId: String, instanceId: String = this.instanceId): Result<Boolean> {
         val feature = this.getFeature(groupNameOrId, featureNameOrId)
         if (!Scheduler.isScheduledFeatureActive(feature)) {
-            return false
+            return Result.success(false)
         }
 
         return when (feature) {
-            is ToggleFeature -> feature.value
-            is GradualFeature -> Hasher.hashString(instanceId, feature.seed) < feature.value
+            is ToggleFeature -> Result.success(feature.value)
+            is GradualFeature -> Result.success(Hasher.hashString(instanceId, feature.seed) < feature.value)
             is SelectiveFeature -> {
                 when (feature) {
-                    is SelectiveStringFeature -> feature.value.contains(instanceId)
-                    else -> throw Error("should function must only be called for features with a valueType of 'string'. Try shouldCustomInt, shouldCustomLong, shouldCustomFloat, or shouldCustomDouble")
+                    is SelectiveStringFeature -> Result.success(feature.value.contains(instanceId))
+                    else -> Result.failure(Error("should function must only be called for features with a valueType of 'string'. Try shouldCustomInt, shouldCustomLong, shouldCustomFloat, or shouldCustomDouble"))
                 }
             }
 
-            is ValueFeature -> throw Error("should cannot be called on features with featureType of 'value'")
+            is ValueFeature -> Result.failure(Error("should cannot be called on features with featureType of 'value'"))
         }
     }
 
-    fun shouldCustomInt(groupNameOrId: String, featureNameOrId: String, instanceId: Int): Boolean {
+    fun shouldCustomInt(groupNameOrId: String, featureNameOrId: String, instanceId: Int): Result<Boolean> {
         return this.shouldCustomLong(groupNameOrId, featureNameOrId, instanceId.toLong())
     }
 
-    fun shouldCustomLong(groupNameOrId: String, featureNameOrId: String, instanceId: Long): Boolean {
+    fun shouldCustomLong(groupNameOrId: String, featureNameOrId: String, instanceId: Long): Result<Boolean> {
         val feature = this.getFeature(groupNameOrId, featureNameOrId)
         if (!Scheduler.isScheduledFeatureActive(feature)) {
-            return false
+            return Result.success(false)
         }
 
         return when (feature) {
-            is ToggleFeature -> feature.value
-            is GradualFeature -> Hasher.hashLong(instanceId, feature.seed) < feature.value
+            is ToggleFeature -> Result.success(feature.value)
+            is GradualFeature -> Result.success(Hasher.hashLong(instanceId, feature.seed) < feature.value)
             is SelectiveFeature -> {
                 when (feature) {
-                    is SelectiveIntFeature -> feature.value.contains(instanceId)
-                    else -> throw Error("shouldCustomInt/shouldCustomLong function must only be called for features with a valueType of 'int'. Try should, shouldFloat, or shouldDouble")
+                    is SelectiveIntFeature -> Result.success(feature.value.contains(instanceId))
+                    else -> Result.failure(Error("shouldCustomInt/shouldCustomLong function must only be called for features with a valueType of 'int'. Try should, shouldFloat, or shouldDouble"))
                 }
             }
 
-            is ValueFeature -> throw Error("shouldCustomInt/shouldCustomLong cannot be called on features with featureType of 'value'")
+            is ValueFeature -> Result.failure(Error("shouldCustomInt/shouldCustomLong cannot be called on features with featureType of 'value'"))
         }
     }
 
-    fun shouldCustomFloat(groupNameOrId: String, featureNameOrId: String, instanceId: Float): Boolean {
+    fun shouldCustomFloat(groupNameOrId: String, featureNameOrId: String, instanceId: Float): Result<Boolean> {
         return this.shouldCustomDouble(groupNameOrId, featureNameOrId, instanceId.toDouble())
     }
 
-    fun shouldCustomDouble(groupNameOrId: String, featureNameOrId: String, instanceId: Double): Boolean {
+    fun shouldCustomDouble(groupNameOrId: String, featureNameOrId: String, instanceId: Double): Result<Boolean> {
         val feature = this.getFeature(groupNameOrId, featureNameOrId)
         if (!Scheduler.isScheduledFeatureActive(feature)) {
-            return false
+            return Result.success(false)
         }
 
         return when (feature) {
-            is ToggleFeature -> feature.value
-            is GradualFeature -> Hasher.hashDouble(instanceId, feature.seed) < feature.value
+            is ToggleFeature -> Result.success(feature.value)
+            is GradualFeature -> Result.success(Hasher.hashDouble(instanceId, feature.seed) < feature.value)
             is SelectiveFeature -> {
                 when (feature) {
-                    is SelectiveFloatFeature -> feature.value.contains(instanceId)
-                    else -> throw Error("shouldCustomFloat/shouldCustomDouble function must only be called for features with a valueType of 'int'. Try should, shouldFloat, or shouldDouble")
+                    is SelectiveFloatFeature -> Result.success(feature.value.contains(instanceId))
+                    else -> Result.failure(Error("shouldCustomFloat/shouldCustomDouble function must only be called for features with a valueType of 'int'. Try should, shouldFloat, or shouldDouble"))
                 }
             }
 
-            is ValueFeature -> throw Error("shouldCustomFloat/shouldCustomDouble cannot be called on features with featureType of 'value'")
+            is ValueFeature -> Result.failure(Error("shouldCustomFloat/shouldCustomDouble cannot be called on features with featureType of 'value'"))
         }
     }
 
-    fun valueString(groupNameOrId: String, featureNameOrId: String, default: String): String {
+    fun valueString(groupNameOrId: String, featureNameOrId: String, default: String): Result<String> {
         val feature = this.getFeature(groupNameOrId, featureNameOrId)
         if (!Scheduler.isScheduledFeatureActive(feature)) {
-            return default
+            return Result.success(default)
         }
 
-        when (feature) {
+        return when (feature) {
             is ValueFeature -> {
                 when (feature) {
-                    is ValueStringFeature -> return feature.value
-                    else -> throw Error("valueString function must only be called for features with a valueType of 'string'. Try valueInt, valueLong, valueFloat, or valueDouble")
+                    is ValueStringFeature -> return Result.success(feature.value)
+                    else -> Result.failure(Error("valueString function must only be called for features with a valueType of 'string'. Try valueInt, valueLong, valueFloat, or valueDouble"))
                 }
             }
 
-            else -> throw Error("valueString can only be called on features with featureType of 'value'")
+            else -> Result.failure(Error("valueString can only be called on features with featureType of 'value'"))
         }
     }
 
-    fun valueInt(groupNameOrId: String, featureNameOrId: String, default: Int): Int {
-        return this.valueLong(groupNameOrId, featureNameOrId, default.toLong()).toInt()
+    fun valueInt(groupNameOrId: String, featureNameOrId: String, default: Int): Result<Int> {
+        val resultLong = this.valueLong(groupNameOrId, featureNameOrId, default.toLong())
+        return resultLong.map { it.toInt() }
     }
 
-    fun valueLong(groupNameOrId: String, featureNameOrId: String, default: Long): Long {
+    fun valueLong(groupNameOrId: String, featureNameOrId: String, default: Long): Result<Long> {
         val feature = this.getFeature(groupNameOrId, featureNameOrId)
         if (!Scheduler.isScheduledFeatureActive(feature)) {
-            return default
+            return Result.success(default)
         }
 
-        when (feature) {
+        return when (feature) {
             is ValueFeature -> {
                 when (feature) {
-                    is ValueIntFeature -> return feature.value
-                    else -> throw Error("valueInt/valueLong functions must only be called for features with a valueType of 'int'. Try valueString, valueFloat, or valueDouble")
+                    is ValueIntFeature -> Result.success(feature.value)
+                    else -> Result.failure(Error("valueInt/valueLong functions must only be called for features with a valueType of 'int'. Try valueString, valueFloat, or valueDouble"))
                 }
             }
 
-            else -> throw Error("valueString can only be called on features with featureType of 'value'")
+            else -> Result.failure(Error("valueString can only be called on features with featureType of 'value'"))
         }
     }
 
-    fun valueFloat(groupNameOrId: String, featureNameOrId: String, default: Float): Float {
-        return this.valueDouble(groupNameOrId, featureNameOrId, default.toDouble()).toFloat()
+    fun valueFloat(groupNameOrId: String, featureNameOrId: String, default: Float): Result<Float> {
+        val resultDouble = this.valueDouble(groupNameOrId, featureNameOrId, default.toDouble())
+        return resultDouble.map { it.toFloat() }
     }
 
-    fun valueDouble(groupNameOrId: String, featureNameOrId: String, default: Double): Double {
+    fun valueDouble(groupNameOrId: String, featureNameOrId: String, default: Double): Result<Double> {
         val feature = this.getFeature(groupNameOrId, featureNameOrId)
         if (!Scheduler.isScheduledFeatureActive(feature)) {
-            return default
+            return Result.success(default)
         }
 
-        when (feature) {
+        return when (feature) {
             is ValueFeature -> {
                 when (feature) {
-                    is ValueFloatFeature -> return feature.value
-                    else -> throw Error("valueFloat/valueDouble function must only be called for features with a valueType of 'float'. Try valueString, valueInt, or valueLong")
+                    is ValueFloatFeature -> Result.success(feature.value)
+                    else -> Result.failure(Error("valueFloat/valueDouble function must only be called for features with a valueType of 'float'. Try valueString, valueInt, or valueLong"))
                 }
             }
 
-            else -> throw Error("valueString can only be called on features with featureType of 'value'")
+            else -> Result.failure(Error("valueString can only be called on features with featureType of 'value'"))
         }
     }
 

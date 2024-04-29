@@ -56,7 +56,7 @@ defmodule VexillaClient do
   @doc """
   Fetches the flags for a specific flag group. Can use the ID or the name of the group for the lookup.
   """
-  def get_flags(config, group_name_or_id, http_callback) when is_function(http_callback) do
+  def get_flags!(config, group_name_or_id, http_callback) when is_function(http_callback) do
     group_id = config.group_lookup_table[group_name_or_id]
     http_callback.("#{config.base_url}/#{group_id}.json")
   end
@@ -101,21 +101,21 @@ defmodule VexillaClient do
   Sets a fetched flag group within the Client instance.
   """
   def sync_flags!(config, group_name_or_id, http_callback) do
-    group = get_flags(config, group_name_or_id, http_callback)
+    group = get_flags!(config, group_name_or_id, http_callback)
     set_flags(config, group)
   end
 
   @doc """
   Checks if a toggle, gradual, or selective flag should be enabled. Other methods exist for other flag types, such as value.
   """
-  def should?(config, group_name_or_id, feature_name_or_id) do
-    should_custom?(config, group_name_or_id, feature_name_or_id, config.instance_id)
+  def should!(config, group_name_or_id, feature_name_or_id) do
+    should_custom!(config, group_name_or_id, feature_name_or_id, config.instance_id)
   end
 
   @doc """
   Checks if a toggle, gradual, or selective flag should be enabled. Uses a custom instance ID rather than the one set in the Client. Other methods exist for other flag types, such as value.
   """
-  def should_custom?(config, group_name_or_id, feature_name_or_id, custom_instance_id) do
+  def should_custom!(config, group_name_or_id, feature_name_or_id, custom_instance_id) do
     group_id = config.group_lookup_table[group_name_or_id]
     group = config.groups[group_id]
 
@@ -146,7 +146,7 @@ defmodule VexillaClient do
         Enum.find_index(feature["value"], fn value -> value == custom_instance_id end) != nil
 
       {^feature_type_value, _} ->
-        false
+        raise InvalidShouldFeatureTypeError, message: "Value Features are not supported by `should`. Try `value!` instead."
     end
   end
 
@@ -164,7 +164,7 @@ defmodule VexillaClient do
     feature = environment["features"][feature_id]
 
     if feature["featureType"] != FeatureType.value() do
-      # Maybe throw error/panic
+      raise InvalidValueFeatureTypeError, message: "feature (#{feature_id}) is not of type 'value'"
     end
 
     within_schedule = Scheduler.is_scheduled_feature_active(feature)
