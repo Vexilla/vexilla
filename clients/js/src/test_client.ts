@@ -11,7 +11,7 @@ import { labelledAssert } from "./utils/testing";
     {
       baseUrl: "http://localhost:3000",
       environment: "dev",
-      customInstanceHash: uuid,
+      customInstanceId: uuid,
     },
     false
   );
