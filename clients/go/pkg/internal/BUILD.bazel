@@ -7,6 +7,7 @@ go_library(
         "json.go",
         "scheduling.go",
         "types.go",
+        "exceptions.go",
     ],
     importpath = "github.com/vexilla/vexilla/clients/go/pkg/internal",
     visibility = ["//clients/go/pkg:__subpackages__"],
@@ -17,6 +18,7 @@ go_test(
     srcs = [
         "hashing_test.go",
         "scheduling_test.go",
+        "exceptions_test.go",
     ],
     embed = [":internal"],
 )
