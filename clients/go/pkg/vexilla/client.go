@@ -130,7 +130,7 @@ func (client *Client) SetFlags(group Group) error {
 	groupId := client.groupLookupTable[string(group.GroupId)]
 
 	if groupId == "" {
-		return NewGroupLookupError("")
+		return NewGroupLookupError(string(group.GroupId))
 	}
 
 	client.FlagGroups[groupId] = group
