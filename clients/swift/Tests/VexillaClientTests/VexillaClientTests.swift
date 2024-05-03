@@ -15,7 +15,7 @@ final class VexillaClientTests: XCTestCase {
     return try await withCheckedThrowingContinuation { continuation in
       URLSession.shared.dataTask(with: request) { data, _, error in
         if error != nil {
-          return continuation.resume(throwing: "could not fetch manifest")
+          return continuation.resume(throwing: VexillaClientError.couldNotConstructUrl)
         }
         return continuation.resume(returning: data ?? Data())
       }.resume()
