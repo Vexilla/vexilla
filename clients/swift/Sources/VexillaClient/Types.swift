@@ -1,7 +1,62 @@
 import Foundation
 
-// TODO: Make a proper Error enum for VexillaClient
-extension String: Error {}
+enum VexillaClientError: Error {
+  case couldNotConstructUrl
+  case couldNotFindKeyInLookupTable(tableName: String, nameOrId: String)
+  case couldNotFindKeyInNestedLookupTable(tableName: String, groupId: String, nameOrId: String)
+  case invalidFeatureTypeError(functionName: String, featureType: String)
+  case invalidFeatureValueTypeError(functionName: String, valueType: String, otherFunctionsString: String)
+  case invalidFeatureNumberTypeError(functionName: String, numberType: String, otherFunctionsString: String)
+}
+
+extension VexillaClientError: LocalizedError {
+  var errorDescription: String? {
+    switch self {
+    case .couldNotConstructUrl:
+      return NSLocalizedString(
+        "The url could not be constructed with the arguments passed to it.",
+        comment: ""
+      )
+    case let .couldNotFindKeyInLookupTable(tableName: tableName, nameOrId: nameOrId):
+      let format = NSLocalizedString(
+        "%@ ID (%@) not found in lookup table. Did you fetch and set the manifest, yet?",
+        comment: ""
+      )
+      return String(format: format, String(tableName), String(nameOrId))
+
+    case let .couldNotFindKeyInNestedLookupTable(tableName: tableName, groupId: groupId, nameOrId: nameOrId):
+
+      let format = NSLocalizedString(
+        "%@ ID (%@) not found in lookup table. Did you fetch and set the manifest, yet?",
+        comment: ""
+      )
+      return String(format: format, String(tableName), String(groupId), String(nameOrId))
+
+    case let .invalidFeatureTypeError(
+      functionName: functionName,
+      featureType: featureType
+    ):
+      let format = NSLocalizedString(
+        "%@ must only be called on features with featureType of '%@'",
+        comment: ""
+      )
+      return String(format: format, String(functionName), String(featureType))
+
+    case let .invalidFeatureValueTypeError(functionName: functionName, valueType: valueType, otherFunctionsString: otherFunctionsString):
+      let format = NSLocalizedString(
+        "%@ must only be called for features with a valueType of '%@'. Try %@",
+        comment: ""
+      )
+      return String(format: format, String(functionName), String(valueType), String(otherFunctionsString))
+    case let .invalidFeatureNumberTypeError(functionName: functionName, numberType: numberType, otherFunctionsString: otherFunctionsString):
+      let format = NSLocalizedString(
+        "%@ must only be called for features with a numberType of '%@'. Try %@",
+        comment: ""
+      )
+      return String(format: format, String(functionName), String(numberType), String(otherFunctionsString))
+    }
+  }
+}
 
 enum VexillaSchedulingError: Error {
   case couldNotCreateUTCTimezone
