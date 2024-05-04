@@ -1,6 +1,6 @@
 import _React, { useEffect, useMemo } from "react";
 import { Outlet, useSearchParams } from "react-router-dom";
-import { AppShell, Navbar, Header, Flex, Modal, Box } from "@mantine/core";
+import { AppShell, Flex, Modal, Box } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useSnapshot } from "valtio";
 import { cloneDeep, omit, set as lodashSet } from "lodash-es";
@@ -147,174 +147,176 @@ function App() {
       </Modal>
       <AppShell
         padding="md"
-        navbar={
-          <Navbar width={{ base: 300 }} mih={500} p="xs">
-            <Flex direction="column" gap={"1rem"}>
-              <Status
-                config={config}
-                showConfig={() => {
-                  openHostingConfigModal();
-                }}
-                updateLocal={() => {}}
-                mergeRemoteConfig={async (changes, approvals) => {
-                  mergeRemoteChanges(config, changes, approvals);
+        navbar={{
+          width: 300,
+          breakpoint: "sm",
+        }}
+        header={{
+          height: 60,
+        }}
+      >
+        <AppShell.Header p="xs">
+          <Flex direction="row" align="center" justify="space-between">
+            <Flex direction="row" align="center">
+              <img
+                className="h-[36px] w-[36px] mr-2"
+                src="/img/vexilla-logo.png"
+              />
+              <h1 className="m-0 font-display text-4xl">Vexilla</h1>
+            </Flex>
+          </Flex>
+        </AppShell.Header>
 
-                  remoteMetadata.remoteMergedAt = Date.now();
-                }}
-                publish={async (changes, approvals) => {
-                  const newConfig = mergeLocalChanges(
-                    config,
-                    changes,
-                    approvals
-                  );
+        <AppShell.Navbar mih={500} p="xs" className="appshell-navbar">
+          <Flex direction="column" gap={"1rem"}>
+            <Status
+              config={config}
+              showConfig={() => {
+                openHostingConfigModal();
+              }}
+              updateLocal={() => {}}
+              mergeRemoteConfig={async (changes, approvals) => {
+                mergeRemoteChanges(config, changes, approvals);
 
-                  if (newConfig.hosting.provider === "github") {
-                    const groupFiles = newConfig.groups.map((group) => {
-                      const scrubbedGroup: PublishedGroup = {
-                        ...group,
-                        meta: {
-                          version: "v1",
-                        },
-                        features: convertFeatureValuesBasedOnTypes(
-                          group.features
-                        ),
-                        environments: Object.values(group.environments).reduce(
-                          (scrubbedEnvironments, environment) => {
-                            const scrubbedEnvironment = omit(
-                              environment,
-                              "defaultEnvironmentFeatureValues"
+                remoteMetadata.remoteMergedAt = Date.now();
+              }}
+              publish={async (changes, approvals) => {
+                const newConfig = mergeLocalChanges(config, changes, approvals);
+
+                if (newConfig.hosting.provider === "github") {
+                  const groupFiles = newConfig.groups.map((group) => {
+                    const scrubbedGroup: PublishedGroup = {
+                      ...group,
+                      meta: {
+                        version: "v1",
+                      },
+                      features: convertFeatureValuesBasedOnTypes(
+                        group.features
+                      ),
+                      environments: Object.values(group.environments).reduce(
+                        (scrubbedEnvironments, environment) => {
+                          const scrubbedEnvironment = omit(
+                            environment,
+                            "defaultEnvironmentFeatureValues"
+                          );
+
+                          scrubbedEnvironment.features =
+                            convertFeatureValuesBasedOnTypes(
+                              scrubbedEnvironment.features
                             );
 
-                            scrubbedEnvironment.features =
-                              convertFeatureValuesBasedOnTypes(
-                                scrubbedEnvironment.features
-                              );
+                          scrubbedEnvironments[environment.environmentId] =
+                            scrubbedEnvironment;
 
-                            scrubbedEnvironments[environment.environmentId] =
-                              scrubbedEnvironment;
-
-                            return scrubbedEnvironments;
-                          },
-                          {} as Record<string, PublishedEnvironment>
-                        ),
-                      };
-
-                      return {
-                        filePath: `${group.groupId}.json`,
-                        content: JSON.stringify(scrubbedGroup, null, 2),
-                      };
-                    });
-
-                    const manifestFile = {
-                      filePath: "manifest.json",
-                      content: JSON.stringify(
-                        {
-                          version: "v1",
-                          groups: newConfig.groups.map((group) => {
-                            return {
-                              name: group.name,
-                              groupId: group.groupId,
-                            };
-                          }),
+                          return scrubbedEnvironments;
                         },
-                        null,
-                        2
+                        {} as Record<string, PublishedEnvironment>
                       ),
                     };
 
-                    const cleanConfig = cloneDeep(newConfig);
-                    if (cleanConfig.hosting.providerType === "git") {
-                      cleanConfig.hosting.accessToken = "";
-                    } else if (cleanConfig.hosting.providerType === "direct") {
-                      // cleanConfig.hosting.accessKeyId = "";
-                      // cleanConfig.hosting.secretAccessKey = "";
-                    }
-
-                    cleanConfig.groups = cleanConfig.groups.map((group) => {
-                      group.features = convertFeatureValuesBasedOnTypes(
-                        group.features
-                      );
-
-                      group.environments = Object.entries(
-                        group.environments
-                      ).reduce(
-                        (newEnvironments, [environmentId, environment]) => {
-                          environment.features =
-                            convertFeatureValuesBasedOnTypes(
-                              environment.features
-                            );
-                          newEnvironments[environmentId] = environment;
-                          return newEnvironments;
-                        },
-                        {} as Record<string, VexillaEnvironment>
-                      );
-                      return group;
-                    });
-
-                    await githubMethods.publish(targetBranch, [
-                      manifestFile,
-                      ...groupFiles,
-                      {
-                        filePath: "config.json",
-                        content: JSON.stringify(cleanConfig, null, 2),
-                      },
-                    ]);
-
-                    notifications.show({
-                      message: "PR Created",
-                    });
-                  }
-                }}
-              />
-              <CustomList<Group>
-                title="Feature Groups"
-                itemType="Group"
-                items={groups}
-                getKey={(group) => group.groupId}
-                showCount={true}
-                onAdd={() => {
-                  groups.push({
-                    name: `Group ${groups.length + 1}`,
-                    groupId: nanoid(),
-                    features: {},
-                    environments: {},
+                    return {
+                      filePath: `${group.groupId}.json`,
+                      content: JSON.stringify(scrubbedGroup, null, 2),
+                    };
                   });
-                }}
-                listItem={(group) => (
-                  <CustomListItem
-                    name={group.name}
-                    itemType="Group"
-                    linkPath={`/groups/${group.groupId}`}
-                    onDelete={() => {
-                      const newGroups = groups.filter(
-                        (_group) => _group.groupId !== group.groupId
-                      );
-                      config.groups = newGroups;
-                    }}
-                  />
-                )}
-                tooltipText={
-                  "Groups are shipped as individual JSON files. This allows you to only fetch what you need on specific pages/routes/apps."
+
+                  const manifestFile = {
+                    filePath: "manifest.json",
+                    content: JSON.stringify(
+                      {
+                        version: "v1",
+                        groups: newConfig.groups.map((group) => {
+                          return {
+                            name: group.name,
+                            groupId: group.groupId,
+                          };
+                        }),
+                      },
+                      null,
+                      2
+                    ),
+                  };
+
+                  const cleanConfig = cloneDeep(newConfig);
+                  if (cleanConfig.hosting.providerType === "git") {
+                    cleanConfig.hosting.accessToken = "";
+                  } else if (cleanConfig.hosting.providerType === "direct") {
+                    // cleanConfig.hosting.accessKeyId = "";
+                    // cleanConfig.hosting.secretAccessKey = "";
+                  }
+
+                  cleanConfig.groups = cleanConfig.groups.map((group) => {
+                    group.features = convertFeatureValuesBasedOnTypes(
+                      group.features
+                    );
+
+                    group.environments = Object.entries(
+                      group.environments
+                    ).reduce(
+                      (newEnvironments, [environmentId, environment]) => {
+                        environment.features = convertFeatureValuesBasedOnTypes(
+                          environment.features
+                        );
+                        newEnvironments[environmentId] = environment;
+                        return newEnvironments;
+                      },
+                      {} as Record<string, VexillaEnvironment>
+                    );
+                    return group;
+                  });
+
+                  await githubMethods.publish(targetBranch, [
+                    manifestFile,
+                    ...groupFiles,
+                    {
+                      filePath: "config.json",
+                      content: JSON.stringify(cleanConfig, null, 2),
+                    },
+                  ]);
+
+                  notifications.show({
+                    message: "PR Created",
+                  });
                 }
-              />
-            </Flex>
-          </Navbar>
-        }
-        header={
-          <Header height={60} p="xs">
-            <Flex direction="row" align="center" justify="space-between">
-              <Flex direction="row" align="center">
-                <img
-                  className="h-[36px] w-[36px] mr-2"
-                  src="/img/vexilla-logo.png"
+              }}
+            />
+            <CustomList<Group>
+              title="Feature Groups"
+              itemType="Group"
+              items={groups}
+              getKey={(group) => group.groupId}
+              showCount={true}
+              onAdd={() => {
+                groups.push({
+                  name: `Group ${groups.length + 1}`,
+                  groupId: nanoid(),
+                  features: {},
+                  environments: {},
+                });
+              }}
+              listItem={(group) => (
+                <CustomListItem
+                  name={group.name}
+                  itemType="Group"
+                  linkPath={`/groups/${group.groupId}`}
+                  onDelete={() => {
+                    const newGroups = groups.filter(
+                      (_group) => _group.groupId !== group.groupId
+                    );
+                    config.groups = newGroups;
+                  }}
                 />
-                <h1 className="m-0 font-display text-4xl">Vexilla</h1>
-              </Flex>
-            </Flex>
-          </Header>
-        }
-      >
-        <Outlet />
+              )}
+              tooltipText={
+                "Groups are shipped as individual JSON files. This allows you to only fetch what you need on specific pages/routes/apps."
+              }
+            />
+          </Flex>
+        </AppShell.Navbar>
+
+        <AppShell.Main>
+          <Outlet />
+        </AppShell.Main>
       </AppShell>
     </>
   );

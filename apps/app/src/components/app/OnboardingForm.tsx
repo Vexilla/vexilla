@@ -80,7 +80,9 @@ export function OnboardingForm({
         label="Select a Provider"
         data={selectableProviders}
         value={configSnapshot.hosting?.provider || ""}
-        onChange={(newProvider: HostingProvider) => {
+        onChange={(newProviderValue) => {
+          const newProvider = (newProviderValue || "") as HostingProvider;
+
           const newProviderType =
             providers.find((provider) => {
               if (provider.value === newProvider) {

@@ -130,7 +130,7 @@ export function Status({
         <>
           <Button
             onClick={showConfig}
-            leftIcon={<Icon icon={settingsBroken} />}
+            leftSection={<Icon icon={settingsBroken} />}
           >
             Config
           </Button>
@@ -194,7 +194,7 @@ export function Status({
 
       {!isPublishable && (
         <Flex align="center" justify="center">
-          <Text color="red" p={"0.5rem"} align="center">
+          <Text c="red" p={"0.5rem"} ta="center">
             {publishErrorText}
           </Text>
         </Flex>
@@ -284,7 +284,7 @@ function StatusItem({
           <span className="m-0">{title}</span>
         </Flex>
         {!actionButtonDisabled && (
-          <Button variant="outline" color="dark" onClick={onActionButtonClick}>
+          <Button variant="outline" color="black" onClick={onActionButtonClick}>
             {actionButtonLabel}
           </Button>
         )}
@@ -413,7 +413,7 @@ function DiffModal({
       <Flex direction="column">
         <Flex direction="row" justify={"space-between"} align={"center"}>
           <Flex direction="column" align="center" w={"40%"}>
-            <Text color="gray" size="sm">
+            <Text c="gray" size="sm">
               Local Timestamp
             </Text>
             <Text className="text-center">
@@ -421,7 +421,7 @@ function DiffModal({
             </Text>
           </Flex>
 
-          <Text color="blue">
+          <Text c="blue">
             {direction === "outgoing" && (
               <Icon width={"2rem"} icon={arrowRightBroken} />
             )}
@@ -431,7 +431,7 @@ function DiffModal({
           </Text>
 
           <Flex direction="column" align="center" w={"40%"}>
-            <Text color="gray" size="sm">
+            <Text c="gray" size="sm">
               Remote Timestamp
             </Text>
             <Text className="text-center">
@@ -446,7 +446,7 @@ function DiffModal({
               size={72}
               thickness={8}
               label={
-                <Text size="xs" align="center" className="whitespace-nowrap">
+                <Text size="xs" className="text-center whitespace-nowrap">
                   {approvalCount}/{changes.length}
                 </Text>
               }
@@ -478,7 +478,7 @@ function DiffModal({
           </Button>
           <Button
             variant="filled"
-            color="red"
+            c="red"
             onClick={rejectAll}
             disabled={approvalCount === changes.length}
           >
@@ -513,7 +513,7 @@ function DiffModal({
                     >
                       <ActionIcon
                         variant="subtle"
-                        color="gray"
+                        c="gray"
                         title={
                           collapsedDiffs[changePath] ? "Expand" : "Collapse"
                         }
@@ -547,7 +547,7 @@ function DiffModal({
                       <ActionIcon
                         size={"sm"}
                         variant="filled"
-                        color="blue"
+                        c="blue"
                         title="Accept Change"
                         onClick={() => {
                           acceptOne(change);
@@ -558,7 +558,7 @@ function DiffModal({
                       <ActionIcon
                         size={"sm"}
                         variant="filled"
-                        color="red"
+                        c="red"
                         title="Reject Change"
                         onClick={() => {
                           rejectOne(change);
@@ -584,7 +584,7 @@ function DiffModal({
         <Flex direction="column">
           {approvalCount !== changes.length && (
             <Flex direction="row" justify={"flex-end"} pb="0.5rem">
-              <Text color="red" align="right">
+              <Text c="red" className="text-right">
                 You must accept or reject each change before merging.
               </Text>
             </Flex>
@@ -592,7 +592,7 @@ function DiffModal({
           <Flex direction="row" justify={"flex-end"} align="center" gap="1rem">
             <Button
               variant="subtle"
-              color="gray"
+              c="gray"
               onClick={() => {
                 closeModal();
                 clearApprovals();

@@ -11,7 +11,7 @@ import perspectiveDiceSixFacesRandom from "@iconify/icons-game-icons/perspective
 interface SliderProps {
   value: number;
   label: string;
-  onChange: (value: number) => void;
+  onChange: (value: number | string) => void;
   min?: number;
   max?: number;
   step?: number;
@@ -42,7 +42,7 @@ export function CustomSlider({
         {showRandomButton && (
           <Button
             size="xs"
-            compact
+            p={0}
             mb={4}
             w="80px"
             onClick={() => {
@@ -53,9 +53,11 @@ export function CustomSlider({
             }}
             style={{ fontSize: "10px" }}
             variant="light"
+            leftSection={
+              <Icon width={"16px"} icon={perspectiveDiceSixFacesRandom} />
+            }
           >
-            <Icon width={"16px"} icon={perspectiveDiceSixFacesRandom} />
-            <Text ml="6px">Random</Text>
+            Random
           </Button>
         )}
       </Flex>
@@ -80,7 +82,7 @@ export function CustomSlider({
           min={min}
           max={max}
           step={step}
-          precision={precision || 0}
+          decimalScale={precision || 0}
         />
       </Flex>
     </>

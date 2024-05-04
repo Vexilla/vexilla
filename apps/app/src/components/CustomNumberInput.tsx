@@ -35,15 +35,17 @@ export function CustomNumberInput({
     <>
       <Input.Label>{label}</Input.Label>
       <NumberInput
-        noClampOnBlur
-        removeTrailingZeros
-        precision={numberType === "int" ? 0 : 9}
+        clampBehavior="none"
+        decimalScale={numberType === "int" ? 0 : 9}
         defaultValue={value}
         onChange={(newValue) => {
           if (newValue === "") {
             onChange(0);
           } else {
-            onChange(newValue);
+            const numberValue = Number(newValue);
+            if (!isNaN(numberValue)) {
+              onChange(numberValue);
+            }
           }
         }}
       />

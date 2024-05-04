@@ -11,7 +11,7 @@ export function Home() {
           bullet={1}
           title="First, enter your hosting configuration"
         >
-          <Text color="dimmed" size="sm">
+          <Text c="dimmed" size="sm">
             (S3, Azure, GCP, etc.)
           </Text>
         </Timeline.Item>
@@ -20,13 +20,13 @@ export function Home() {
           bullet={2}
           title="Next, start creating your environments."
         >
-          <Text color="dimmed" size="sm">
+          <Text c="dimmed" size="sm">
             (dev, staging, prod, etc.)
           </Text>
         </Timeline.Item>
 
         <Timeline.Item bullet={3} title="Then, create your feature flags.">
-          <Text color="dimmed" size="sm">
+          <Text c="dimmed" size="sm">
             (Toggle, Gradual, Selective, etc.)
           </Text>
         </Timeline.Item>

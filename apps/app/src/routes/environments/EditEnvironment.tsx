@@ -43,7 +43,7 @@ export function EditEnvironment() {
           onClick={() => {
             navigate(`/groups/${group?.groupId}`);
           }}
-          leftIcon={<Icon icon={rewindBackBroken} />}
+          leftSection={<Icon icon={rewindBackBroken} />}
           fullWidth={false}
         >
           Back to {group?.name || "Group"}
@@ -71,7 +71,7 @@ export function EditEnvironment() {
       <Alert
         icon={<Icon icon={shieldWarningBroken} width={"2rem"} />}
         title="Warning"
-        color="yellow"
+        c="yellow"
       >
         These settings only take effect when creating new Features or changing a
         Feature's type. Updating these settings here will not modify existing
@@ -97,8 +97,11 @@ export function EditEnvironment() {
         label={"Seed"}
         tooltipText="This value is passed to the PRNG to get a specific subset of users."
         onChange={(newSeed) => {
-          if (environment) {
-            environment.defaultEnvironmentFeatureValues.gradual.seed = newSeed;
+          const newSeedNumber = Number(newSeed);
+
+          if (environment && !isNaN(newSeedNumber)) {
+            environment.defaultEnvironmentFeatureValues.gradual.seed =
+              newSeedNumber;
           }
         }}
         showRandomButton
@@ -108,9 +111,11 @@ export function EditEnvironment() {
         label={"Threshold"}
         tooltipText="This value determines what percentage of users should see this feature."
         onChange={(newValue) => {
+          const newValueNumber = Number(newValue);
+
           if (environment) {
             environment.defaultEnvironmentFeatureValues.gradual.value =
-              newValue;
+              newValueNumber;
           }
         }}
       />
@@ -128,7 +133,7 @@ export function EditEnvironment() {
             event as "string" | "number";
         }}
       >
-        <Group mt="sm" mb="lg" align="center" position="center">
+        <Group mt="sm" mb="lg" align="center">
           <Radio value="string" label="String" mr="3rem" />
           <Radio value="number" label="Number" />
         </Group>

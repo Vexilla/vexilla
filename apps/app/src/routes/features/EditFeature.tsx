@@ -1,14 +1,15 @@
-import _React, { forwardRef } from "react";
+import _React from "react";
 import {
-  Group,
-  Select,
-  TextInput,
-  Text,
   Box,
   Button,
-  Switch,
-  Radio,
   Flex,
+  Group,
+  Radio,
+  Select,
+  SelectProps,
+  Switch,
+  TextInput,
+  Text,
 } from "@mantine/core";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSnapshot } from "valtio";
@@ -27,33 +28,35 @@ import {
 import { config } from "../../stores/config-valtio";
 
 import { PageLayout } from "../../components/PageLayout";
-
-import { Icon } from "@iconify/react";
-import rewindBackBroken from "@iconify/icons-solar/rewind-back-broken";
 import { CustomSlider } from "../../components/CustomSlider";
 import { SelectiveList } from "../../components/features/SelectiveList";
 import { ScheduledForm } from "../../components/features/ScheduledForm";
 import { CustomNumberInput } from "../../components/CustomNumberInput";
 
-interface ItemProps extends React.ComponentPropsWithoutRef<"div"> {
-  label: string;
-  description: string;
-}
+import { Icon } from "@iconify/react";
+import rewindBackBroken from "@iconify/icons-solar/rewind-back-broken";
+import checkCircleBroken from "@iconify/icons-solar/check-circle-broken";
 
-const SelectItem = forwardRef<HTMLDivElement, ItemProps>(
-  ({ label, description, ...others }: ItemProps, ref) => (
-    <div ref={ref} {...others}>
-      <Group noWrap>
-        <div>
-          <Text size="sm">{label}</Text>
-          <Text size="xs" opacity={0.65}>
-            {description}
-          </Text>
-        </div>
-      </Group>
+const SelectItem: SelectProps["renderOption"] = ({
+  option,
+  checked,
+  ...others
+}) => (
+  <Group wrap="nowrap" {...others} align="center" justify="center">
+    {checked && (
+      <Box c="var(--mantine-primary-color-filled)" pt="4">
+        <Icon icon={checkCircleBroken} width={32} />
+      </Box>
+    )}
+    <div>
+      <Text size="sm">{option.label}</Text>
+      <Text size="xs" opacity={0.65}>
+        {(option as any).description}
+      </Text>
     </div>
-  )
+  </Group>
 );
+
 const featureTypeOptions: {
   label: string;
   value: VexillaFeatureTypeString;
@@ -78,7 +81,7 @@ const featureTypeOptions: {
   {
     label: "Value",
     value: "value",
-    description: "Release to a specific subset of users",
+    description: "Release with a specific value",
   },
 ];
 
@@ -134,7 +137,7 @@ export function EditFeature() {
           onClick={() => {
             navigate(`/groups/${group?.groupId}`);
           }}
-          leftIcon={<Icon icon={rewindBackBroken} />}
+          leftSection={<Icon icon={rewindBackBroken} />}
           fullWidth={false}
         >
           Back to {group?.name || "Group"}
@@ -169,7 +172,8 @@ export function EditFeature() {
         className="mb-8"
         label="Feature Type"
         placeholder="Pick one"
-        itemComponent={SelectItem}
+        renderOption={SelectItem}
+        withCheckIcon
         data={featureTypeOptions}
         maxDropdownHeight={400}
         value={feature?.featureType}
@@ -314,7 +318,7 @@ export function EditFeature() {
               });
             }}
           >
-            <Group mt="sm" mb="lg" align="center" position="center">
+            <Group mt="sm" mb="lg" align="center" justify="center">
               <Radio value="string" label="String" mr="3rem" />
               <Radio value="number" label="Number" />
             </Group>
@@ -357,7 +361,7 @@ export function EditFeature() {
                 });
               }}
             >
-              <Group mt="sm" mb="lg" align="center" position="center">
+              <Group mt="sm" mb="lg" align="center" justify="center">
                 <Radio value="int" label="Integer" mr="3rem" />
                 <Radio value="float" label="Float" />
               </Group>
@@ -423,7 +427,10 @@ export function EditFeature() {
                   label={"Seed"}
                   tooltipText="This value is passed to the PRNG to get a specific subset of users."
                   onChange={(newSeed) => {
-                    safelySetDetails({ seed: newSeed });
+                    const newSeedNumber = Number(newSeed);
+                    if (!isNaN(newSeedNumber)) {
+                      safelySetDetails({ seed: newSeedNumber });
+                    }
                   }}
                   showRandomButton
                 />

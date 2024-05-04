@@ -43,7 +43,7 @@
 //           variant="outline"
 //           style={disabledButtonStyling}
 //           leftIcon={<GithubLogo />}
-//           rightIcon={<Icon width={20} icon={verifiedCheckBold} color="green" />}
+//           rightIcon={<Icon width={20} icon={verifiedCheckBold} c="green" />}
 //           disabled
 //         >
 //           Installed
@@ -75,7 +75,7 @@
 //           style={disabledButtonStyling}
 //           variant="outline"
 //           leftIcon={<GithubLogo />}
-//           rightIcon={<Icon width={20} icon={verifiedCheckBold} color="green" />}
+//           rightIcon={<Icon width={20} icon={verifiedCheckBold} c="green" />}
 //           disabled
 //         >
 //           Logged in

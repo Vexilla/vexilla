@@ -12,12 +12,11 @@ export function CustomTooltip({ tooltipText }: CustomTooltipProps) {
   return (
     <Tooltip
       multiline
-      width={220}
       withArrow
       label={tooltipText}
       events={{ hover: true, focus: true, touch: false }}
     >
-      <ActionIcon>
+      <ActionIcon variant="subtle" aria-label="Info">
         <Icon icon={infoCircleBroken} />
       </ActionIcon>
     </Tooltip>

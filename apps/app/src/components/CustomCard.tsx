@@ -34,7 +34,7 @@ export function CustomCard({
               className="mr-2"
             />
           )}
-          <Text className="font-bold">{title}</Text>
+          <Text className="font-bold mr-1">{title}</Text>
           {!!tooltipText && <CustomTooltip tooltipText={tooltipText} />}
         </Flex>
         <Flex direction={"row"} align={"center"} gap={2}>

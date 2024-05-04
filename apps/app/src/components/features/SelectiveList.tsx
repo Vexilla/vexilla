@@ -52,7 +52,7 @@ export function SelectiveList({
         >
           <TextInput {...form.getInputProps("newValue")} label="Value" />
 
-          <Group position="right" mt={"1rem"}>
+          <Group justify="right" mt={"1rem"}>
             <Button
               type="button"
               variant="outline"

@@ -8,6 +8,13 @@ export default {
         body: ['"Atkinson Hyperlegible"'],
         default: ['"Atkinson Hyperlegible"'],
       },
+      colors: {
+        primary: {
+          DEFAULT: "var(--mantine-primary-color-filled)",
+          dark: "#000000",
+          light: "#000000",
+        },
+      },
     },
   },
   plugins: [],

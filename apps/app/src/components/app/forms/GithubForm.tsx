@@ -242,7 +242,7 @@ export function GithubForm({ config }: GithubFormProps) {
                   variant="outline"
                   leftIcon={<GithubLogo />}
                   rightIcon={
-                    <Icon width={20} icon={verifiedCheckBold} color="green" />
+                    <Icon width={20} icon={verifiedCheckBold} c="green" />
                   }
                   disabled
                 >
@@ -285,7 +285,7 @@ export function GithubForm({ config }: GithubFormProps) {
                 style={disabledButtonStyling}
                 leftIcon={<GithubLogo />}
                 rightIcon={
-                  <Icon width={20} icon={verifiedCheckBold} color="green" />
+                  <Icon width={20} icon={verifiedCheckBold} c="green" />
                 }
                 disabled
               >

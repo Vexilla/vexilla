@@ -140,7 +140,7 @@ export function EditGroup() {
           onClick={() => {
             navigate(`/`);
           }}
-          leftIcon={<Icon icon={rewindBackBroken} />}
+          leftSection={<Icon icon={rewindBackBroken} />}
           fullWidth={false}
         >
           Back to Home

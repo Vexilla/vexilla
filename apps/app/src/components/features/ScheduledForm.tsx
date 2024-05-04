@@ -93,10 +93,15 @@ export function ScheduledForm({
             label: Case.capital(value).replace(" ", "/"),
             value,
           }))}
-          onChange={(event: "none" | "start/end" | "daily") => {
+          onChange={(event) => {
+            const timeType = (event || "none") as
+              | "none"
+              | "start/end"
+              | "daily";
+
             onChange({
               ...featureSchedule,
-              timeType: event,
+              timeType,
             });
           }}
         />

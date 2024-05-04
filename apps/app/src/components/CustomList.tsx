@@ -45,7 +45,7 @@ export function CustomList<T>({
       count={showCount ? items.length : undefined}
       titleButtonSection={
         <>
-          <Button px={6} color="primary" onClick={onAdd}>
+          <Button px={6} c="primary" onClick={onAdd}>
             <Icon icon={addCircleBroken} width={24} />
             <Box ml={2} className="sr-only">
               New
@@ -96,7 +96,7 @@ export function CustomListItem({
           Are you sure you want to delete this {itemType || "item"} named {name}
           ? This cannot be undone.
         </p>
-        <Group position="right">
+        <Group align="right">
           <Button onClick={closeDeleteModal} variant="outline">
             Cancel
           </Button>
@@ -107,7 +107,7 @@ export function CustomListItem({
               }
               closeDeleteModal();
             }}
-            color="red"
+            c="red"
           >
             Delete
           </Button>
@@ -125,14 +125,14 @@ export function CustomListItem({
         </Box>
         <Group align="center">
           {!!onEdit && (
-            <ActionIcon variant={"outline"} color="primary" onClick={onEdit}>
+            <ActionIcon variant={"outline"} c="primary" onClick={onEdit}>
               <Icon icon={penBroken} />
             </ActionIcon>
           )}
 
           {!!linkPath && (
             <Link to={linkPath} className="flex">
-              <ActionIcon variant={"outline"} color="primary">
+              <ActionIcon variant={"outline"} c="primary">
                 <Icon icon={penBroken} />
               </ActionIcon>
             </Link>

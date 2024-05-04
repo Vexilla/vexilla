@@ -40,3 +40,12 @@
 .read-the-docs {
   color: #888;
 }
+
+.appshell-navbar {
+  max-height: calc(100vh - 4rem);
+  overflow: scroll;
+}
+
+.mantine-Tooltip-tooltip {
+  max-width: 16rem;
+}
