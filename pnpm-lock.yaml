@@ -54,6 +54,9 @@ importers:
       '@fontsource/racing-sans-one':
         specifier: ^4.5.10
         version: 4.5.10
+      '@highlight-run/react':
+        specifier: ^3.2.2
+        version: 3.2.2(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@iconify/icons-game-icons':
         specifier: ^1.2.1
         version: 1.2.1
@@ -102,6 +105,9 @@ importers:
       dayjs:
         specifier: ^1.11.7
         version: 1.11.7
+      highlight.run:
+        specifier: ^8.12.2
+        version: 8.12.2
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -2465,6 +2471,12 @@ packages:
 
   '@hapi/topo@5.1.0':
     resolution: {integrity: sha512-foQZKJig7Ob0BMAYBfcJk8d77QtOe7Wo4ox7ff1lQYoNNAb6jwcY1ncdoy2e9wQZzvNy7ODZCYJkK8kzmcAnAg==}
+
+  '@highlight-run/react@3.2.2':
+    resolution: {integrity: sha512-5iFvVk+5Gcihp/F7l6Kgr6NYpZHdbtRC2J+OQkUeBr5TU3RuoiHUXYyoL1CCnsg8supaQOiM28LX675CPVcoJw==}
+    peerDependencies:
+      react: '>=16'
+      react-dom: '>=16'
 
   '@hookform/resolvers@3.3.4':
     resolution: {integrity: sha512-o5cgpGOuJYrd+iMKvkttOclgwRW86EsWJZZRC23prf0uU2i48Htq4PuT73AVb9ionFyZrwYEITuOFGF+BydEtQ==}
@@ -6472,6 +6484,9 @@ packages:
 
   hex-color-regex@1.1.0:
     resolution: {integrity: sha512-l9sfDFsuqtOqKDsQdqrMRk0U85RZc0RtOR9yPI7mRVOa4FsR/BVnZ0shmQRM96Ji99kYZP/7hn1cedc1+ApsTQ==}
+
+  highlight.run@8.12.2:
+    resolution: {integrity: sha512-SRaM/IlcCatjO0zDCRqdrv9FUh1DPNdfs0qlbOug19IRr+0kUJ3HRVBtaNsPeUoCnHnVa5mdhaJ+KJvmKlanhg==}
 
   hmac-drbg@1.0.1:
     resolution: {integrity: sha512-Tti3gMqLdZfhOQY1Mzf/AanLiqh1WTiJgEj26ZuYQ9fbkLomzGchCws4FyrSd4VkpBfiNhaE1On+lOz894jvXg==}
@@ -14114,6 +14129,11 @@ snapshots:
     dependencies:
       '@hapi/hoek': 9.3.0
 
+  '@highlight-run/react@3.2.2(react-dom@18.2.0(react@18.2.0))(react@18.2.0)':
+    dependencies:
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+
   '@hookform/resolvers@3.3.4(react-hook-form@7.50.0(react@18.2.0))':
     dependencies:
       react-hook-form: 7.50.0(react@18.2.0)
@@ -19395,6 +19415,8 @@ snapshots:
       source-map: 0.7.4
 
   hex-color-regex@1.1.0: {}
+
+  highlight.run@8.12.2: {}
 
   hmac-drbg@1.0.1:
     dependencies:

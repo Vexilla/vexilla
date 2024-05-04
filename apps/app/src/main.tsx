@@ -1,10 +1,11 @@
 import _React from "react";
 import ReactDOM from "react-dom/client";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
-import "@mantine/core/styles.css";
 
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { H } from "highlight.run";
+import { ErrorBoundary } from "@highlight-run/react";
 
 import App from "./App.tsx";
 
@@ -16,9 +17,20 @@ import { EditEnvironment } from "./routes/environments/EditEnvironment.tsx";
 import { EditFeature } from "./routes/features/EditFeature.tsx";
 import { EditGroup } from "./routes/groups/EditGroup.tsx";
 
+import "@mantine/core/styles.css";
 import "./index.css";
 
 import "@fontsource/atkinson-hyperlegible";
+
+H.init("kgryv6nd", {
+  serviceName: "vexilla-app",
+  tracingOrigins: true,
+  networkRecording: {
+    enabled: true,
+    recordHeadersAndBody: true,
+    urlBlocklist: [],
+  },
+});
 
 const router = createBrowserRouter([
   {
@@ -58,8 +70,10 @@ const router = createBrowserRouter([
 ]);
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <MantineProvider>
-    <Notifications />
-    <RouterProvider router={router} />
-  </MantineProvider>
+  <ErrorBoundary>
+    <MantineProvider>
+      <Notifications />
+      <RouterProvider router={router} />
+    </MantineProvider>
+  </ErrorBoundary>
 );
