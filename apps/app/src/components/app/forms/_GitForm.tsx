@@ -21,8 +21,7 @@ import { Branch, Repository } from "./_GitForm.types";
 import { HostingConfigGitBase } from "@vexilla/hosts";
 import { HostingConfigGithub } from "@vexilla/hosts";
 
-const githubAppName = `vexilla-dev`;
-// const githubAppName = `vexilla`;
+const GITHUB_APP_NAME = import.meta.env.VITE_GITHUB_APP_NAME;
 
 export function GitForm({
   config,
@@ -104,7 +103,7 @@ export function GitForm({
               onClick={() => {
                 window
                   ?.open(
-                    `https://github.com/apps/${githubAppName}/installations/new`,
+                    `https://github.com/apps/${GITHUB_APP_NAME}/installations/new`,
                     "_blank"
                   )
                   ?.focus();
