@@ -1,7 +1,6 @@
 {
 	"name": "git-auth",
 	"version": "0.0.1",
-	"packageManager": "pnpm@8.5.0",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
