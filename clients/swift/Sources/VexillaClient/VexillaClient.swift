@@ -21,7 +21,7 @@ public struct VexillaClient {
 
     public func getManifest(fetch: (URL) async throws -> Data) async throws -> Manifest {
         guard let url = URL(string: "\(baseUrl)/manifest.json") else {
-            throw "Internal VexillaClient Error: Invalid URL"
+            throw VexillaClientError.couldNotConstructUrl
         }
         let response = try await fetch(url)
 
@@ -47,11 +47,11 @@ public struct VexillaClient {
 
     public func getFlags(groupNameOrId: String, fetch: (URL) async throws -> Data) async throws -> Group {
         guard let groupId = groupLookupTable[groupNameOrId] else {
-            throw "Group ID (\(groupNameOrId)) not found in lookup table. Did you fetch and set the manifest, yet?"
+            throw VexillaClientError.couldNotFindKeyInLookupTable(tableName: "Group", nameOrId: groupNameOrId)
         }
         let url = "\(baseUrl)/\(groupId).json"
         guard let url = URL(string: url) else {
-            throw "Internal VexillaClient Error: Invalid URL"
+            throw VexillaClientError.couldNotConstructUrl
         }
         let response = try await fetch(url)
         return try JSONDecoder().decode(Group.self, from: response)
@@ -59,7 +59,7 @@ public struct VexillaClient {
 
     public mutating func setFlags(group: Group) throws {
         guard let groupId = groupLookupTable[group.groupId] else {
-            throw "Group ID (\(group.groupId)) not found in lookup table. Did you fetch and set the manifest, yet?"
+            throw VexillaClientError.couldNotFindKeyInLookupTable(tableName: "Group", nameOrId: group.groupId)
         }
 
         flagGroups[groupId] = group
@@ -107,10 +107,10 @@ public struct VexillaClient {
             case let .string(values):
                 return values.contains(instanceId)
             default:
-                throw "\(#function) must only be called for features with a valueType of 'number'. Try should or shouldCustomString"
+                throw VexillaClientError.invalidFeatureValueTypeError(functionName: #function, valueType: "string", otherFunctionsString: "should or shouldCustomString")
             }
         case .value:
-            throw "\(#function) should cannot be called on features with featureType of 'value'"
+            throw VexillaClientError.invalidFeatureTypeError(functionName: #function, featureType: "toggle, gradual, or selective")
         }
     }
 
@@ -135,10 +135,10 @@ public struct VexillaClient {
             case let .int(values):
                 return values.contains(instanceId)
             default:
-                throw "\(#function) must only be called for features with an int value. Try should or shouldCustomString"
+                throw VexillaClientError.invalidFeatureNumberTypeError(functionName: #function, numberType: "int", otherFunctionsString: "should, shouldCustomString, shouldCustomFloat or shouldCustomFloat64")
             }
         case .value:
-            throw "\(#function) should cannot be called on features with featureType of 'value'"
+            throw VexillaClientError.invalidFeatureTypeError(functionName: #function, featureType: "toggle, gradual, or selective")
         }
     }
 
@@ -163,10 +163,10 @@ public struct VexillaClient {
             case let .float(values):
                 return values.contains(instanceId)
             default:
-                throw "\(#function) must only be called for features with a valueType of 'number'. Try should or shouldCustomString"
+                throw VexillaClientError.invalidFeatureNumberTypeError(functionName: #function, numberType: "float", otherFunctionsString: "should, shouldCustomString, shouldCustomInt or shouldCustomInt64")
             }
         case .value:
-            throw "\(#function) should cannot be called on features with featureType of 'value'"
+            throw VexillaClientError.invalidFeatureTypeError(functionName: #function, featureType: "toggle, gradual, or selective")
         }
     }
 
@@ -178,11 +178,11 @@ public struct VexillaClient {
         }
 
         guard case let .value(valueFeature) = feature else {
-            throw "\(#function) can only be called on features with featureType of 'value'"
+            throw VexillaClientError.invalidFeatureTypeError(functionName: #function, featureType: "value")
         }
 
         guard case let .string(string) = valueFeature.value else {
-            throw "\(#function) can only be called on features with a valueType of 'string'"
+            throw VexillaClientError.invalidFeatureValueTypeError(functionName: #function, valueType: "string", otherFunctionsString: "valueInt, valueInt64, valueFloat, or valueFloat64")
         }
 
         return string
@@ -200,11 +200,11 @@ public struct VexillaClient {
         }
 
         guard case let .value(valueFeature) = feature else {
-            throw "\(#function) can only be called on features with featureType of 'value'"
+            throw VexillaClientError.invalidFeatureTypeError(functionName: #function, featureType: "value")
         }
 
         guard case let .int(int) = valueFeature.value else {
-            throw "\(#function) can only be called on features with a valueType of 'int'"
+            throw VexillaClientError.invalidFeatureValueTypeError(functionName: #function, valueType: "int", otherFunctionsString: "valueString, valueFloat, or valueFloat64")
         }
 
         return int
@@ -222,11 +222,11 @@ public struct VexillaClient {
         }
 
         guard case let .value(valueFeature) = feature else {
-            throw "\(#function) can only be called on features with featureType of 'value'"
+            throw VexillaClientError.invalidFeatureTypeError(functionName: #function, featureType: "value")
         }
 
         guard case let .float(float) = valueFeature.value else {
-            throw "\(#function) can only be called on features with a valueType of 'float'"
+            throw VexillaClientError.invalidFeatureValueTypeError(functionName: #function, valueType: "float", otherFunctionsString: "valueString, valueInt, or valueInt64")
         }
 
         return float
@@ -234,35 +234,35 @@ public struct VexillaClient {
 
     private func getFeature(groupNameOrId: String, featureNameOrId: String) throws -> Feature {
         guard let groupId = groupLookupTable[groupNameOrId] else {
-            throw "Group ID (\(groupNameOrId)) not found in lookup table. Did you fetch and set the manifest, yet?"
+            throw VexillaClientError.couldNotFindKeyInLookupTable(tableName: "Group", nameOrId: groupNameOrId)
         }
 
         guard let groupEnvironmentLookupTable = environmentLookupTable[groupId] else {
-            throw "Environment lookup table not found for group ID (\(groupId)). Did you fetch and set the manifest, yet?"
+            throw VexillaClientError.couldNotFindKeyInLookupTable(tableName: "Environment", nameOrId: groupId)
         }
 
         guard let environmentId = groupEnvironmentLookupTable[environment] else {
-            throw "Environment (\(environment)) not found in lookup table. Did you fetch and set the manifest, yet?"
+            throw VexillaClientError.couldNotFindKeyInLookupTable(tableName: "Environment", nameOrId: environment)
         }
 
         guard let featureLookupTable = featureLookupTable[groupId] else {
-            throw "Feature lookup table not found for group ID (\(groupId)). Did you fetch and set the manifest, yet?"
+            throw VexillaClientError.couldNotFindKeyInNestedLookupTable(tableName: "Feature", groupId: groupId, nameOrId: featureNameOrId)
         }
 
         guard let featureId = featureLookupTable[featureNameOrId] else {
-            throw "Feature ID (\(featureNameOrId)) not found in lookup table. Did you fetch and set the manifest, yet?"
+            throw VexillaClientError.couldNotFindKeyInLookupTable(tableName: "Feature", nameOrId: featureNameOrId)
         }
 
         guard let group = flagGroups[groupId] else {
-            throw "Group ID (\(groupId)) not found in lookup table. Did you fetch and set the manifest, yet?"
+            throw VexillaClientError.couldNotFindKeyInLookupTable(tableName: "Group", nameOrId: groupId)
         }
 
         guard let environment = group.environments[environmentId] else {
-            throw "Environment (\(environment)) not found in lookup table. Did you fetch and set the manifest, yet?"
+            throw VexillaClientError.couldNotFindKeyInNestedLookupTable(tableName: "Environment", groupId: groupId, nameOrId: environment)
         }
 
         guard let feature = environment.features[featureId] else {
-            throw "Feature ID (\(featureId)) not found in lookup table. Did you fetch and set the manifest, yet?"
+            throw VexillaClientError.couldNotFindKeyInNestedLookupTable(tableName: "Environment", groupId: groupId, nameOrId: featureId)
         }
 
         return feature
