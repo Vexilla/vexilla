@@ -224,7 +224,7 @@ export function GithubForm({ config }: GithubFormProps) {
             {!accessToken && (
               <Button
                 style={buttonStyling}
-                leftIcon={<GithubLogo />}
+                leftSection={<GithubLogo />}
                 onClick={() => {
                   window.location.href = `https://github.com/login/oauth/authorize?client_id=${githubClientId}&redirect_uri=${encodeURIComponent(
                     `${baseAuthCallbackUrl}/github?logged_in=true`
@@ -240,9 +240,9 @@ export function GithubForm({ config }: GithubFormProps) {
                 <Button
                   style={disabledButtonStyling}
                   variant="outline"
-                  leftIcon={<GithubLogo />}
-                  rightIcon={
-                    <Icon width={20} icon={verifiedCheckBold} c="green" />
+                  leftSection={<GithubLogo />}
+                  rightSection={
+                    <Icon width={20} icon={verifiedCheckBold} color="green" />
                   }
                   disabled
                 >
@@ -270,7 +270,7 @@ export function GithubForm({ config }: GithubFormProps) {
             {(!installationId || installations.length === 0) && (
               <Button
                 style={buttonStyling}
-                leftIcon={<GithubLogo />}
+                leftSection={<GithubLogo />}
                 onClick={() => {
                   window.location.href = `https://github.com/apps/${githubAppName}/installations/new`;
                 }}
@@ -283,9 +283,9 @@ export function GithubForm({ config }: GithubFormProps) {
               <Button
                 variant="outline"
                 style={disabledButtonStyling}
-                leftIcon={<GithubLogo />}
-                rightIcon={
-                  <Icon width={20} icon={verifiedCheckBold} c="green" />
+                leftSection={<GithubLogo />}
+                rightSection={
+                  <Icon width={20} icon={verifiedCheckBold} color="green" />
                 }
                 disabled
               >

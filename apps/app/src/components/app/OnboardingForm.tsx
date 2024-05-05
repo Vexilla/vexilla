@@ -33,35 +33,44 @@ const providerLabels = {
   direct: "Direct Upload",
 };
 
-const providers: {
-  value: string;
-  label: string;
-  group?: string;
-  providerType: HostingProviderType;
+const selectableProviders: {
+  group: string;
+  items: {
+    value: string;
+    label: string;
+    providerType: HostingProviderType;
+  }[];
 }[] = [
-  { value: "", label: "No Provider Selected", group: " ", providerType: "" },
   {
-    value: "github",
-    label: "GitHub",
+    group: "",
+    items: [{ value: "", label: "No Provider Selected", providerType: "" }],
+  },
+  {
     group: providerLabels.git,
-    providerType: "git",
-  },
+    items: [
+      {
+        value: "github",
+        label: "GitHub",
+        providerType: "git",
+      },
 
-  // { value: "bitbucket", label: "BitBucket", group: providerLabels.git },
+      // { value: "bitbucket", label: "BitBucket", providerType: "git" },
+    ],
+  },
 
   {
-    value: "s3",
-    label: "AWS S3",
     group: providerLabels.direct,
-    providerType: "direct",
+    items: [
+      {
+        value: "s3",
+        label: "AWS S3",
+        providerType: "direct",
+      },
+      // { value: "gcloud", label: "Google Cloud",       providerType: "direct", },
+      // { value: "azure", label: "MS Azure", providerType: "direct",},
+    ],
   },
-  // { value: "gcloud", label: "Google Cloud", group: providerLabels.direct },
-  // { value: "azure", label: "MS Azure", group: providerLabels.direct },
 ];
-
-const selectableProviders = providers.map((provider) =>
-  omit(provider, "providerType")
-);
 
 export function OnboardingForm({
   config,
@@ -83,8 +92,19 @@ export function OnboardingForm({
         onChange={(newProviderValue) => {
           const newProvider = (newProviderValue || "") as HostingProvider;
 
+          const newProviderGroup = selectableProviders.find((providerGroup) => {
+            return Boolean(
+              providerGroup.items.find((provider) => {
+                if (provider.value === newProvider) {
+                  return true;
+                }
+                return false;
+              })
+            );
+          });
+
           const newProviderType =
-            providers.find((provider) => {
+            newProviderGroup?.items.find((provider) => {
               if (provider.value === newProvider) {
                 return true;
               }
