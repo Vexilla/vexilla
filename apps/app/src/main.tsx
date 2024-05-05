@@ -28,7 +28,7 @@ H.init("kgryv6nd", {
   networkRecording: {
     enabled: true,
     recordHeadersAndBody: true,
-    urlBlocklist: [],
+    urlBlocklist: ["http://localhost:5173"],
   },
 });
 
