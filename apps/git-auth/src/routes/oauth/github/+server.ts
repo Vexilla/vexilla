@@ -58,4 +58,9 @@ export async function POST({ request }: { request: Request }) {
 
 // If `OPTIONS` is not defined, Next.js will automatically implement `OPTIONS` and  set the appropriate Response `Allow` header depending on the other methods defined in the route handler.
 // What about Sveltekit?
-// export async function OPTIONS(request: Request) {}
+export async function OPTIONS(request: Request) {
+	return new Response(JSON.stringify({}), {
+		status: 200,
+		headers: commonHeaders
+	});
+}

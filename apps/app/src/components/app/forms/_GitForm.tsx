@@ -99,6 +99,7 @@ export function GitForm({
             />
 
             <ActionIcon
+              variant="subtle"
               title="Edit your installation's repository access"
               onClick={() => {
                 window
@@ -144,6 +145,7 @@ export function GitForm({
             />
 
             <ActionIcon
+              variant="subtle"
               onClick={() => {
                 refresh();
               }}

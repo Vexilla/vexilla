@@ -250,6 +250,7 @@ export function GithubForm({ config }: GithubFormProps) {
                 </Button>
 
                 <ActionIcon
+                  variant="subtle"
                   onClick={() => {
                     clearHosting();
                   }}
@@ -303,6 +304,7 @@ export function GithubForm({ config }: GithubFormProps) {
             )}
 
             <ActionIcon
+              variant="subtle"
               onClick={() => {
                 refresh();
               }}

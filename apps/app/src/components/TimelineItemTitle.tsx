@@ -11,7 +11,7 @@ export function TimelineItemTitle({
   tooltipText?: string;
 }) {
   return (
-    <Flex direction="row" gap="0.25rem" className="mb-2">
+    <Flex direction="row" gap="0.25rem" align={"flex-start"} className="mb-2">
       <h4 className="m-0 p-0">{title}</h4>
       {!!tooltipText && <CustomTooltip tooltipText={tooltipText} />}
     </Flex>

@@ -478,7 +478,7 @@ function DiffModal({
           </Button>
           <Button
             variant="filled"
-            c="red"
+            color="red"
             onClick={rejectAll}
             disabled={approvalCount === changes.length}
           >
@@ -513,7 +513,7 @@ function DiffModal({
                     >
                       <ActionIcon
                         variant="subtle"
-                        c="gray"
+                        color="gray"
                         title={
                           collapsedDiffs[changePath] ? "Expand" : "Collapse"
                         }
@@ -547,7 +547,7 @@ function DiffModal({
                       <ActionIcon
                         size={"sm"}
                         variant="filled"
-                        c="blue"
+                        color="blue"
                         title="Accept Change"
                         onClick={() => {
                           acceptOne(change);
@@ -558,7 +558,7 @@ function DiffModal({
                       <ActionIcon
                         size={"sm"}
                         variant="filled"
-                        c="red"
+                        color="red"
                         title="Reject Change"
                         onClick={() => {
                           rejectOne(change);
