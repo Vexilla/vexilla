@@ -18,6 +18,7 @@ import { EditFeature } from "./routes/features/EditFeature.tsx";
 import { EditGroup } from "./routes/groups/EditGroup.tsx";
 
 import "@mantine/core/styles.css";
+import "@mantine/dates/styles.css";
 import "./index.css";
 
 import "@fontsource/atkinson-hyperlegible";

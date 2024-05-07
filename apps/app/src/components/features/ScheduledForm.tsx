@@ -33,7 +33,9 @@ import { VexillaSchedule } from "@vexilla/types";
 import { Icon } from "@iconify/react";
 import clockCircleBroken from "@iconify/icons-solar/clock-circle-broken";
 
-const timezones = Intl.supportedValuesOf("timeZone");
+const timezones = Intl.supportedValuesOf("timeZone").filter((timeZone) => {
+  return timeZone != "UTC";
+});
 timezones.unshift("UTC");
 
 interface ScheduledFormProps {
