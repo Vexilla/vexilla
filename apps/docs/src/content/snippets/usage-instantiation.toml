@@ -15,30 +15,30 @@ await client.syncFlags("FLAG_GROUP_NAME_OR_ID", (url) => {
 });
 """
 
-rust = """
-// Warning: unwraps are just for example code brevity
-// create client
-let mut client = VexillaClient::new(
-    "dev",
-    "http://localhost:3000",
-    "YOUR_USERS_ID",
-);
+# rust = """
+# // Warning: unwraps are just for example code brevity
+# // create client
+# let mut client = VexillaClient::new(
+#     "dev",
+#     "http://localhost:3000",
+#     "YOUR_USERS_ID",
+# );
 
-// sync manifest
-client.sync_manifest(|url| {
-    reqwest::blocking::get(url)
-        .unwrap()
-        .text()
-        .unwrap()
-});
+# // sync manifest
+# client.sync_manifest(|url| {
+#     reqwest::blocking::get(url)
+#         .unwrap()
+#         .text()
+#         .unwrap()
+# });
 
-// sync flags
-client.sync_flags(
-  "FLAG_GROUP_NAME_OR_ID",
-  |url| {
-    reqwest::blocking::get(url)
-      .unwrap()
-      .text()
-      .unwrap()
-}).unwrap();
-"""
+# // sync flags
+# client.sync_flags(
+#   "FLAG_GROUP_NAME_OR_ID",
+#   |url| {
+#     reqwest::blocking::get(url)
+#       .unwrap()
+#       .text()
+#       .unwrap()
+# }).unwrap();
+# """

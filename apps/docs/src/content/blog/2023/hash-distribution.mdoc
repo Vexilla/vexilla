@@ -1,0 +1,49 @@
+---
+title: Hashing With the Best of Them
+slug: hashing-with-the-best-of-them
+publishDate: 5/8/2024
+description: Hashing algorithms have several use cases. Sometimes you want them to be cryptographically secure with the least amount of collisions. Sometimes you want them to collide for a use-case like a hashmap. This is about the latter. Basically, we need to hash users, teams, or organizations into specific "buckets" that will have a feature turned on or off based upon the configuration of a gradual release flag.
+coverImage: "./sdk-language-versions/markus-spiske-vrbZVyX2k4I-unsplash.jpg"
+---
+
+We use a hashing algorithm within our SDKs that is meant to be used for gradual releases. The alrogithm we came up with is very simple, but does exactly what we need. It is not a cryptographically secure algorithm and is never intended to be because we expect there to be collisions. This is for releasing a feature out to a specific percentage of your users, not password hashing.
+
+## Why Custom?
+
+There are a few reasons we went with a custom algorithm. The most important reason is that we wanted to have it be easy to port to various languages that might not ship with a standard library that contains some of the more well known algorithms. Writing md5 or some other well known algorithm into something like lua didn't sound fun. Another reason that was purely a hypothesis until testing is that we wanted it to be fast. Speed is important because you *might* want to put a gradual release flag somewhere in the hot path of your application.
+
+## The Custom Algorithms
+
+Originally we had a fairly simple algorithm that did what we need and seemed to perform and distribute well between a varying number of inputs. One of our friends, [GrahamTheDev](https://twitter.com/grahamthedev), also had a variation that uses a few fairly famous magic numbers. At this time of this writing, we still use original function we created, but Graham's is quite compelling for speed reasons as well as seeming like it handles small numbers better for distribution. But, only testing will tell.
+
+## One More Algorithm
+
+After a discussion with a security focused engineer that we respect, they informed us of [FNV-1a](https://ummmmm.com). This algorithm seems fairly simple, but the node.js implementation has a lot of extra stuff to it that seems like much more effort to implement across many different programming languages. Regardless, we still need to test it out, just to be sure.
+
+## Speed Test Time
+
+The first thing we should do is some speed testing. For the sake of what we are doing here, we will just test against the algorithms available to node.js at the time of this writing. Don't be fooled, the `crypto` library for node has over 50 hashing algorithms. So, we have a good variety of algorithms to choose from and evaluate against.
+
+From this basic test, you can see that our custom algorithms (Graham's and ours) perform quite well.
+
+![SPEED GRAPH HERE]()
+
+## What About Distribution?
+
+This is where things get fun. We need to know that the algorithm we choose has a decently spread of values across various sample sizes. It will be hard to make anything completely even for a sample size of 100, but once we hit 1000 it should start to even out a bit. Let's see what that looks like.
+
+![10 Distribution]()
+
+![100 Distribution]()
+
+![500 Distribution]()
+
+![1000 Distribution]()
+
+![10000 Distribution]()
+
+## Understanding the Results
+
+........
+
+## Wrapping Up

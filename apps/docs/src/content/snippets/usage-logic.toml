@@ -4,9 +4,9 @@ if (client.should("GROUP_NAME_OR_ID", "FLAG_NAME_OR_ID")) {
 }
 """
 
-rust = """
-match client.should("GROUP_NAME_OR_ID", "FLAG_NAME_OR_ID") {
-  Ok() => println!("Do the thing for the flag"),
-  _ => println!("DON'T do the thing for the flag"),
-};
-"""
+# rust = """
+# match client.should("GROUP_NAME_OR_ID", "FLAG_NAME_OR_ID") {
+#   Ok() => println!("Do the thing for the flag"),
+#   _ => println!("DON'T do the thing for the flag"),
+# };
+# """

@@ -2,6 +2,6 @@ typescript = """
 vexilla generate typescript -o ./types
 """
 
-rust = """
-vexilla generate rust -o ./types
-"""
+# rust = """
+# vexilla generate rust -o ./types
+# """

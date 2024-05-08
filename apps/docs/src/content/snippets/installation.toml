@@ -6,6 +6,6 @@ yarn add @vexilla/client
 pnpm add @vexilla/client
 """
 
-rust = """
-cargo add vexilla_client
-"""
+# rust = """
+# cargo add vexilla_client
+# """
