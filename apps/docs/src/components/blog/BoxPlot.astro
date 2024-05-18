@@ -1,0 +1,22 @@
+---
+// import { getEntry } from "astro:content";
+
+import { BoxPlotComponent } from "@/components/blog/boxplot";
+// import type { CodeSnippetContent, tomlKey } from "@/types/docs";
+
+const { title, dataPath, count, iterations, lowerBound, upperBound, valueKey } =
+  Astro.props;
+
+console.log({ upperBound, lowerBound });
+---
+
+<BoxPlotComponent
+  client:load
+  title={title}
+  dataPath={dataPath}
+  count={count}
+  valueKey={valueKey}
+  iterations={iterations}
+  lowerBound={lowerBound}
+  upperBound={upperBound}
+/>
