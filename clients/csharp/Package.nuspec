@@ -2,13 +2,13 @@
 <package >
   <metadata>
     <id>Package</id>
-    <version>0.1.0</version>
+    <version>1.0.0</version>
     <authors>cmgriffing</authors>
     <owners>cmgriffing</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <license type="expression">BUSL-1.1</license>
     <projectUrl>https://vexilla.dev</projectUrl>
-    <iconUrl>https://vexilla.github.io/logo-nuget.png</iconUrl>
+    <iconUrl>https://vexilla.dev/logo-nuget.png</iconUrl>
     <icon>./images/logo-nuget.png</icon>
     <description>A client for the Vexilla feature flag system</description>
     <releaseNotes>Initial release</releaseNotes>

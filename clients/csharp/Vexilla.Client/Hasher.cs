@@ -1,19 +1,29 @@
 ﻿using System;
 using System.Globalization;
-using System.Linq;
 
 namespace Vexilla.Client
 {
     public class VexillaHasher
     {
+
+        public const uint FNV32_OFFSET_BASIS = 2166136261;
+        public const uint FNV32_PRIME = 16777619;
+
         public static double HashString(string stringToHash, double seed)
         {
-            var sum = stringToHash
-                .ToCharArray()
-                .Select(character => (int)character)
-                .Aggregate((x, y) => x + y);
+            var total = FNV32_OFFSET_BASIS;
+            var byteArray = System.Text.Encoding.UTF8.GetBytes(stringToHash);
 
-            return Math.Floor(sum * seed * 42) % 100 / 100;
+            var length = byteArray.Length;
+
+            for (var i = 0; i < length; i++)
+            {
+                var byteChar = byteArray[i];
+                total = total ^ byteChar;
+                total = total * FNV32_PRIME;
+            }
+
+            return Math.Abs(total * seed % 100 / 100);
         }
 
         public static double HashInt(long intToHash, double seed)
