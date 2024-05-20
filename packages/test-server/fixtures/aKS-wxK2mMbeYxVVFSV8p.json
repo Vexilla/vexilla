@@ -44,7 +44,7 @@
           "name": "testingWorkingGradual",
           "featureId": "oIVHzosp0ao3HN0fmFwwr",
           "featureType": "gradual",
-          "seed": 0.11,
+          "seed": 0.32,
           "value": 0.4,
           "scheduleType": "",
           "schedule": {
