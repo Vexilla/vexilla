@@ -6,8 +6,8 @@ namespace Vexilla.Client
     public class VexillaHasher
     {
 
-        public const uint FNV32_OFFSET_BASIS = 2166136261;
-        public const uint FNV32_PRIME = 16777619;
+        private const uint FNV32_OFFSET_BASIS = 2166136261;
+        private const uint FNV32_PRIME = 16777619;
 
         public static double HashString(string stringToHash, double seed)
         {
