@@ -23,7 +23,7 @@ namespace Vexilla.Client
                 total = total * FNV32_PRIME;
             }
 
-            return Math.Abs(total * seed % 100 / 100);
+            return total * seed % 1000 / 1000;
         }
 
         public static double HashInt(long intToHash, double seed)
