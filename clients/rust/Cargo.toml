@@ -1,6 +1,6 @@
 [package]
 name = "vexilla_client"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Chris Griffing <cmgriffing@gmail.com>"]
 edition = "2018"
 description = "A Rust client for the Vexilla Feature Flag System"

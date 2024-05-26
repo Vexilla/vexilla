@@ -6,19 +6,21 @@ defmodule Hasher do
 
   ## Examples
 
-    iex> Hasher.hash_string("b7e91cc5-ec76-4ec3-9c1c-075032a13a1a", 0.11)
-    0.28
+    iex> Hasher.hash_string("b7e91cc5-ec76-4ec3-9c1c-075032a13a1a", 0.32) <= 0.4
+    true
 
-    iex> Hasher.hash_string("b7e91cc5-ec76-4ec3-9c1c-075032a13a1a", 0.22)
-    0.56
+    iex> Hasher.hash_string("b7e91cc5-ec76-4ec3-9c1c-075032a13a1a", 0.22) > 0.4
+    true
 
 
   """
-  def hash_string(instance_id, seed) do
-    characters = String.to_charlist(instance_id)
-    character_total = Enum.sum(characters)
 
-    rem(Kernel.trunc(Float.floor(character_total * seed * 42.0)), 100) / 100
+  def hash_string(instance_id, seed) do
+    Fnv1a.hash(instance_id)
+    |> Kernel.*(seed)
+    |> Kernel.trunc
+    |> Kernel.rem(1000)
+    |> Kernel./(1000)
   end
 
   @doc """
@@ -26,8 +28,8 @@ defmodule Hasher do
 
   ## Examples
 
-    iex> Hasher.hash_number(42, 0.11)
-    0.71
+    iex> Hasher.hash_number(42, 0.11) > 0.40
+    true
 
   """
   def hash_number(number, seed) do

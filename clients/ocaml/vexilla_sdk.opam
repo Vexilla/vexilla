@@ -4,7 +4,7 @@ synopsis: "Vexilla SDK"
 description: "Vexilla SDK"
 maintainer: ["Dillon Mulroy" "Chris Griffing"]
 authors: ["Dillon Mulroy" "Chris Griffing"]
-license: "BSL"
+license: "BUSL-1.1"
 tags: ["feature-flags"]
 homepage: "https://github.com/vexilla/vexilla"
 doc: "https://github.com/vexilla/vexilla/clients/ocaml"
@@ -22,6 +22,7 @@ depends: [
   "yojson"
   "alcotest" {with-test}
   "alcotest_lwt" {with-test}
+  "stdint"
   "odoc" {with-doc}
 ]
 build: [

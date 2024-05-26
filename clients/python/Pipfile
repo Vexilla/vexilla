@@ -1,5 +1,6 @@
 [[source]]
 name = "vexilla_client"
+version = "1.0.1"
 url = "https://pypi.org/simple"
 verify_ssl = true
 
