@@ -11,7 +11,7 @@
 
 (maintainers "Dillon Mulroy" "Chris Griffing")
 
-(license BSL)
+(license BUSL-1.1)
 
 (documentation https://github.com/vexilla/vexilla/clients/ocaml)
 
@@ -31,7 +31,8 @@
   uri
   yojson
   (alcotest :with-test)
-  (alcotest_lwt :with-test))
+  (alcotest_lwt :with-test)
+  stdint)
  (tags (feature-flags)))
 
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/dune-files.html#dune-project

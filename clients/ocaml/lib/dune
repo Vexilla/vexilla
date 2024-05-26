@@ -7,6 +7,7 @@
   fmt
   ppx_deriving_yojson.runtime
   ptime
+  stdint
   ptime.clock.os)
  (preprocess
   (pps ppx_deriving.show ppx_deriving.make ppx_deriving_yojson)))
