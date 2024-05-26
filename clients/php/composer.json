@@ -41,6 +41,9 @@
     "test": [
       "./vendor/bin/phpunit --verbose --bootstrap vendor/autoload.php tests/*.php"
     ],
+    "test:hasher": [
+      "./vendor/bin/phpunit --verbose --bootstrap vendor/autoload.php tests/HasherTest.php"
+    ],
     "coverage": [
       "composer exec phpunit -- --coverage-text --coverage-filter src/**/*.php --verbose --bootstrap vendor/autoload.php tests/*.php"
     ]
