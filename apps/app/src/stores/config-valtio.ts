@@ -1,9 +1,9 @@
-import { AppState } from "@vexilla/types";
 import { proxy, subscribe } from "valtio";
 import { derive } from "valtio/utils";
 import { z } from "zod";
 import microdiff from "microdiff";
 import { HostingConfigValidators } from "../utils/validators";
+import { AppState } from "../types";
 
 const CONFIG_KEY = "config";
 const REMOTE_CONFIG_KEY = "remoteConfig";

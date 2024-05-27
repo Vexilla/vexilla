@@ -1,4 +1,4 @@
-import { AppState } from "@vexilla/types";
+import { AppState } from "../types";
 
 export class Fetcher {
   protected config: AppState;

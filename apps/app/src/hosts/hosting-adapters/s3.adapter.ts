@@ -1,8 +1,8 @@
 // import { S3Client, S3ClientConfig, PutObjectCommand } from "@aws-sdk/client-s3";
-import { HostingConfigBase } from "../types";
 
 import { S3 } from "aws-sdk";
 import axios from "axios";
+import { HostingConfigBase } from "../../types";
 
 export interface HostingConfigS3 extends HostingConfigBase {
   provider: "s3";
@@ -17,7 +17,7 @@ export class S3Adapter {
   static fetchFeatures(config: HostingConfigS3) {
     const fileUrl = `https://${config.bucketName}.s3.amazonaws.com/features.json`;
 
-    return axios.get(fileUrl).catch((error) => {
+    return axios.get(fileUrl).catch((_error) => {
       console.log("Error fetching Features");
       return "foo";
     });

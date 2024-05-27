@@ -15,8 +15,6 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import dayjs from "dayjs";
 
-import { AppState } from "@vexilla/types";
-
 import {
   validation,
   localDifferences,
@@ -35,6 +33,7 @@ import arrowRightBroken from "@iconify/icons-solar/arrow-right-broken";
 import chevronRight from "@iconify/icons-octicon/chevron-right-12";
 import chevronDown from "@iconify/icons-octicon/chevron-down-12";
 import { ItemCountBadge } from "./ItemCountBadge";
+import { AppState } from "../types";
 
 const IGNORED_CHANGE_PATHS = [
   "modifiedAt",

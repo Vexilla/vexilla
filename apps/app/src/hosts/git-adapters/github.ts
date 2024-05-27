@@ -1,4 +1,4 @@
-import { HostingConfigGitBase } from "../types";
+import { HostingConfigGitBase } from "../../types";
 
 export interface HostingConfigGithub extends HostingConfigGitBase {
   provider: "github";
@@ -9,7 +9,7 @@ export interface HostingConfigGithub extends HostingConfigGitBase {
 }
 
 export const GitHubAdapter = {
-  async fetchFeatures(config: HostingConfigGithub) {
+  async fetchFeatures(_config: HostingConfigGithub) {
     // const fileUrl = `https://${config.bucketName}.s3.amazonaws.com/features.json`;
     // return axios.get(fileUrl).catch((error) => {
     //   console.log("Error fetching Features");
@@ -22,9 +22,9 @@ export const GitHubAdapter = {
     return !(!config.installationId || !config.accessToken);
   },
 
-  async publish(config: HostingConfigGithub, payload: any) {},
+  async publish(_config: HostingConfigGithub, _payload: any) {},
 
-  async getRepos(config: HostingConfigGithub) {
+  async getRepos(_config: HostingConfigGithub) {
     return false;
   },
 } as const;

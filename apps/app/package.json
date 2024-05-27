@@ -12,6 +12,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@azure/storage-blob": "^12.18.0",
     "@emotion/react": "^11.11.0",
     "@fontsource/atkinson-hyperlegible": "^4.5.11",
     "@fontsource/racing-sans-one": "^4.5.10",
@@ -28,7 +29,8 @@
     "@mantine/notifications": "^7.9.0",
     "@tanstack/react-form": "^0.0.10",
     "@vexilla/client": "workspace:^",
-    "@vexilla/hosts": "workspace:*",
+    "aws-sdk": "^2.804.0",
+    "axios": "^1.7.2",
     "case": "^1.6.3",
     "clsx": "^2.0.0",
     "dayjs": "^1.11.7",

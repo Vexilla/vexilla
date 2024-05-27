@@ -1,4 +1,4 @@
-import { HostingConfigGitBase } from "@vexilla/hosts";
+import { HostingConfigGitBase } from "../../../types";
 import { GitFetcher } from "../../../utils/fetcher";
 import {
   GetBlobResponse,

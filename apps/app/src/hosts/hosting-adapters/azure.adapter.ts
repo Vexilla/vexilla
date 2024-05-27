@@ -1,6 +1,6 @@
 import { BlobServiceClient } from "@azure/storage-blob";
 import axios from "axios";
-import { HostingConfigBase } from "../types";
+import { HostingConfigBase } from "../../types";
 
 export interface HostingConfigAzure extends HostingConfigBase {
   provider: "azure";
@@ -15,7 +15,7 @@ export class AzureAdapter {
   static fetchFeatures(config: HostingConfigAzure) {
     const fileUrl = `${config.remoteUrl}features.json`;
 
-    return axios.get(fileUrl).catch((error) => {
+    return axios.get(fileUrl).catch((_error) => {
       console.log("Error fetching Features");
       return "foo";
     });

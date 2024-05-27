@@ -2,7 +2,7 @@ import _React, { useEffect, useState, useMemo } from "react";
 import { Button, Timeline, Select, ActionIcon, Flex } from "@mantine/core";
 import { cloneDeep } from "lodash-es";
 
-import { AppState } from "@vexilla/types";
+import { AppState, HostingProvider } from "../../../types";
 
 import { Branch, Repository } from "./_GitForm.types";
 import { GitHubFetcher } from "./GithubForm.fetchers";
@@ -17,7 +17,6 @@ import verifiedCheckBold from "@iconify/icons-solar/verified-check-bold";
 import closeCircleBroken from "@iconify/icons-solar/close-circle-broken";
 import refreshBroken from "@iconify/icons-solar/refresh-broken";
 import { fetchersMap } from "../../../utils/fetchers.map";
-import { HostingProvider } from "@vexilla/hosts";
 import { useSnapshot } from "valtio";
 
 const githubAppName = import.meta.env.VITE_GITHUB_APP_NAME;

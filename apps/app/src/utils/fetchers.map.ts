@@ -1,7 +1,6 @@
-import { HostingProvider } from "@vexilla/hosts";
 import { GitHubFetcher } from "../components/app/forms/GithubForm.fetchers";
+import { HostingProvider, AppState } from "../types";
 import { Fetcher } from "./fetcher";
-import { AppState } from "@vexilla/types";
 
 export const fetchersMap: Record<
   HostingProvider,
