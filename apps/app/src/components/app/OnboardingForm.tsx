@@ -5,7 +5,6 @@ import { useSnapshot } from "valtio";
 import { EmptyForm } from "./forms/_EmptyForm";
 import { GithubForm } from "./forms/GithubForm";
 import { HostingProvider, HostingProviderType } from "@vexilla/hosts";
-import { omit } from "lodash-es";
 
 const formMap = {
   "": EmptyForm,
