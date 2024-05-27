@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { hashString } from "./hasher";
+import { hashString } from "../hasher";
 
 let uuid = "8f458330-32f6-486e-8642-f5978a361ed7";
 

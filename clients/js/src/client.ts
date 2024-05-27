@@ -1,14 +1,9 @@
-import {
+import type {
   VexillaClientConfig,
-  VexillaFeatureTypeToggle,
-  VexillaFeatureTypeGradual,
-  VexillaFeatureTypeSelective,
-  VexillaFlags,
   VexillaGradualFeature,
   VexillaManifest,
   PublishedGroup,
   VexillaFeature,
-  VexillaEnvironment,
   PublishedEnvironment,
 } from "@vexilla/types";
 
@@ -38,7 +33,7 @@ export class VexillaClient {
     this.showLogs = showLogs;
     this.baseUrl = config.baseUrl;
     this.environment = config.environment || "prod";
-    this.customInstanceHash = config.customInstanceHash;
+    this.customInstanceHash = config.customInstanceId;
   }
 
   async getManifest(
@@ -117,11 +112,11 @@ export class VexillaClient {
 
     let _should = false;
     switch (feature.featureType) {
-      case VexillaFeatureTypeToggle:
+      case "toggle":
         _should = feature.value;
         break;
 
-      case VexillaFeatureTypeGradual:
+      case "gradual":
         if (feature.seed <= 0 || feature.seed > 1) {
           throw new Error(
             "feature.seed must be a number value greater than 0 and less than or equal to 1"
@@ -142,7 +137,7 @@ export class VexillaClient {
           ) <= feature.value;
         break;
 
-      case VexillaFeatureTypeSelective:
+      case "selective":
         const instanceHash = customInstanceHash || this.customInstanceHash;
         _should = (feature.value as (string | number)[]).includes(
           instanceHash || parseFloat(instanceHash as string)
