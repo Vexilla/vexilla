@@ -320,7 +320,7 @@ guidePages.sort((a, b) => {
           </nav>
         </div>
         <div class="hidden md:flex items-center gap-8">
-          <Search client:only />
+          <Search client:only="react"/>
           <ThemeSelector client:only="react" />
         </div>
         <div class="md:hidden">
@@ -407,6 +407,6 @@ guidePages.sort((a, b) => {
         </div>
       </ResponsiveContainer>
     </footer>
-    <GetHelpButton client:only />
+    <GetHelpButton client:only="react"/>
   </body>
 </html>

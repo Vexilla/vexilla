@@ -111,3 +111,7 @@ code * {
     @apply text-primary-500 dark:text-primary-300;
   }
 }
+
+html:has(dialog[open]:modal) {
+  overflow: hidden;
+}

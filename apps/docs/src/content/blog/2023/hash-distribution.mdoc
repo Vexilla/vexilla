@@ -1,0 +1,187 @@
+---
+title: "What's in a Hash: Gradual Release Hashing"
+slug: whats-in-a-hash-gradual-release-hashing
+publishDate: 5/21/2024
+description: Hashing algorithms have several use cases. Sometimes you want them to be cryptographically secure with the least amount of collisions. Sometimes you want them to collide for a use-case like a hashmap. This is about the latter. Basically, we need to hash users, teams, or organizations into specific "buckets" that will have a feature turned on or off based upon the configuration of a gradual release flag.
+coverImage: "./hash-distribution/jan-antonin-kolar-lRoX0shwjUQ-unsplash.jpg"
+---
+
+We use a hashing algorithm within our SDKs that is used for gradual releases. The original algorithm we came up with for Vexilla 0.x is very simple, but does exactly what we needed at the time. It is not a cryptographically secure algorithm and is never intended to be so because we expect there to be collisions. This is for releasing a feature out to a specific percentage of your users, not password hashing.
+
+## Why Custom?
+
+There are a few reasons we originally went with a custom algorithm. The most important reason is that we wanted to have it be easy to port to various languages that might not ship with a standard library that contains some of the more well known algorithms. Writing md5 or some other well known algorithm into something like lua didn't sound fun. Another reason that was purely a hypothesis until testing is that we wanted it to be fast. Speed is important because you *might* want to put a gradual release flag somewhere in the hot path of your application.
+
+## The Custom Algorithms
+
+Originally, we had a fairly simple algorithm that did what we needed and seemed to perform and distribute well between a varying number of inputs. One of our friends, [GrahamTheDev](https://twitter.com/grahamthedev), also had a variation that uses a few fairly famous magic numbers. Let's take a look at both.
+
+First, here is our original custom hashing algorithm in JS:
+
+```ts
+function hashString(stringToHash: string, seed: number) {
+  const characters = stringToHash.split("") as any[];
+
+  let hashValue = 0;
+  const length = characters.length;
+
+  for (let i = 0; i < length; i++) {
+    hashValue += characters[i].charCodeAt(0);
+  }
+
+  return (Math.floor(hashValue * seed * 42) % 100) / 100;
+}
+```
+
+Next, let's take a look at Graham's implementation:
+
+```ts
+function grahamHash(stringToHash: string, seed: number) {
+  const characters = stringToHash.split("") as any[];
+
+  let hashValue = 0;
+  const length = characters.length;
+
+  for (let i = 0; i < length; i++) {
+    hashValue += characters[i].charCodeAt(0);
+  }
+
+  const magicResult = ((hashValue * 9301 + 49297) * seed) % 233280;
+  return magicResult / 233280;
+}
+```
+
+
+What you might notice is that there is a striking similarity between the two hashing algorithms. The main difference is the choice of magic numbers we use. Ours uses 42 because it is the ["answer to the question about life the universe and everything"](https://en.wikipedia.org/wiki/Phrases_from_The_Hitchhiker%27s_Guide_to_the_Galaxy#The_Answer_to_the_Ultimate_Question_of_Life,_the_Universe,_and_Everything_is_42). Graham's hash is very similar to a hashing algorithm from Minecraft. It is not copyrightable since the magic numbers they use [date back decades from other real world use cases](https://softwareengineering.stackexchange.com/a/261070).
+
+## Another Algorithm
+
+After a discussion with a security focused engineer that we respect, they informed us of [FNV-1a](https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function). This algorithm seems fairly simple, but the node.js implementation has a lot of extra stuff to it that seems like much more effort to implement across many different programming languages. So we wrote our own using the examples from Wikipedia. Interestingly enough, GrowthBook uses a variation of FNV-1a, so we wanted to include their algorithm in this comparison as well. Theirs can be identified as `gb32` and `gb64` in the graphs in this article. They are the 32-bit and 64-bit variants respectively.
+
+Our FNV-1a looks like this:
+
+```ts
+const FNV32_OFFSET_BASIS = 2166136261;
+const FNV32_PRIME = 16777619;
+export function fnv1a(stringToHash: string, seed: number) {
+  const byteArray = utf8EncodeText.encode(stringToHash);
+
+  let total = FNV32_OFFSET_BASIS;
+  const length = byteArray.length;
+
+  for (let i = 0; i < length; i++) {
+    const byte = byteArray[i];
+    total = total ^ byte;
+    total = total * FNV32_PRIME;
+  }
+
+  const result = ((total * seed) % 100) / 100;
+  return Math.abs(result);
+}
+```
+
+GrowthBooks's hashing algorithm can be found in their [open source repository](https://github.com/growthbook/growthbook/blob/main/packages/sdk-js/src/util.ts#L19). The big difference we noticed is that they don't use the `FNV32_PRIME` value. They just use the `FNV32_OFFSET_BASIS` value. Another difference is that they use a string based seed value that can be thought of more like a "salt" that you would see in password hashing.
+
+Last but not least, it seems they do a double hash in their latest version so that they avoid "bias" in the hashing results. This could end up making things slower, but we won't know until we test it. So, we added the single hash version of `gb32` as `gb32_old` in the graphs.
+
+A keen-eyed reader may also notice the presence of `gb32_hybrid` in the graphs below. Without revealing too much, we added this to accommodate our own specific way of seeding the hash results. We'll talk more about that later in the article.
+
+## One More Algorithm
+
+While creating this article, someone recommended yet another algorithm to check out. The algorithm is called [djb2](http://www.cse.yorku.ca/~oz/hash.html). There is a bit less known about this one from our perspective since we could only find technical references to it in articles from universities rather than a canonical Wikipedia page. The gist is that it uses some different magic numbers depending on which variation is chosen: `5381` and `33`. Both of these numbers seem to lack explanations for why they were chosen.
+
+But, for the sake of completeness, we should add it to the list:
+
+```ts
+export function djb2(stringToHash: string, seed: number) {
+  const characters = stringToHash.split("") as any[];
+  let hashValue = 5381;
+  const length = characters.length;
+
+  for (let i = 0; i < length; i++) {
+    hashValue = (hashValue << 5) + hashValue + characters[i].charCodeAt(0);
+  }
+
+  return Math.abs((Math.floor(hashValue * seed) % 100) / 100);
+}
+```
+
+## Speed Test Time
+
+The first thing we should do is some speed testing. For the sake of what we're doing here, we will just test against the algorithms available to node.js at the time of this writing. Don't be fooled, the `crypto` library for node has over 50 hashing algorithms. So, we have a good variety of algorithms to choose from and evaluate against.
+
+From this basic test, you can see that our custom algorithms (Graham's and ours) perform quite well as well as the FNV-1a based algorithms. We will only be showing the fastest 10 algorithms for most of our graphs, but you can see ALL of the algorithms but clicking "See full results" below each graph.
+
+{% boxplot title="Speed Distributions Over 1000 Iterations" dataPath="/blog-data/hashing-distribution/raw-results-1000.json" count=10 iterations=1000 valueKey="time" lowerBound=0.05 upperBound=0.95 /%}
+
+An important thing to note is that we are only graphing the 5% to 95% distribution. The outliers ended making the graphs less useful. It's worth mentioning that the fastest algorithms also had some of the slowest outliers. The main thing we can discern from this graph is that the non-cryptographic algorithms are generally faster. That should come as no surprise, but it seemed worth calling out.
+
+## What About Distribution?
+
+This is where things get fun. We need to know that the algorithm we choose has a decent spread of values across various sample sizes. It will be hard to make anything perfectly distributed and even harder for a sample size of 100, but once we hit 1000 it should start to even out a bit. Let's see what that looks like. These first couple graphs are hashing randomly generated [nanoid](https://github.com/ai/nanoid) values.
+
+First we look at the 100 iteration spread:
+
+{% boxplot title="Hash Distribution (Strings) Over 100 Iterations" dataPath="/blog-data/hashing-distribution/raw-results-100.json" count=10 iterations=100  /%}
+
+Next we look at the 1000 iteration spread:
+
+{% boxplot title="Hash Distribution (Strings) Over 1000 Iterations" dataPath="/blog-data/hashing-distribution/raw-results-1000.json" count=10 iterations=1000  /%}
+
+The biggest thing to recognize is that our assumption was correct about hashing over a small sample set being less evenly distributed for almost all algorithms. Once we get to 1000 iterations, they all start to perform similarly.
+
+One major thing to consider is that not every system will be using strings that are similar to nanoid or UUID. Many systems might use incrementing numeric IDs for their users, instead. So, we should take a look at that, too.
+
+Let's see the 100 iterations again:
+
+{% boxplot title="Hash Distribution (Integers) Over 100 Iterations" dataPath="/blog-data/hashing-distribution/raw-results-int-100.json" count=10 iterations=100  /%}
+
+And then, it's time for the 1000 iterations:
+
+{% boxplot title="Hash Distribution (Integers) Over 1000 Iterations" dataPath="/blog-data/hashing-distribution/raw-results-int-1000.json" count=10 iterations=1000  /%}
+
+This shows some glaring defects in how our original custom implementation, Graham's hash implementation, and djb2 handle incrementing integers.
+
+## Understanding the Results
+
+Despite the much faster runtime of the custom, djb2, and Graham algorithms, their distributions leave much to be desired, especially for integers.
+
+At this point, it might be obvious why GrowthBook chose fnv-1a. Our implementation of fnv-1a more closely resembles the textbook definition on Wikipedia. So, we almost decided to use that instead even though the GrowthBook implementation is MIT licensed. One odd thing we noticed is that the 64-bit version of GrowthBook's algorithm has a worse mean and distribution than the 32-bit version. We aren't sure why that is but it is interesting nonetheless.
+
+## But There's a Problem in JS land
+
+It turns out that our FNV-1a implementation does not output the same numbers as the Go version that ships with Go's standard library. An explanation for this can be found on [StackOverflow](https://stackoverflow.com/questions/56626783/whats-the-difference-between-go-and-javascript-about-0xffffffff-97). The gist is that JS does some shenanigans with the numbers when doing bitwise operations. In JS, the number is converted into a signed 32-bit integer instead of leaving it as an appropriate unsigned 64-bit integer before running the bitwise XOR operation.
+
+```sql
+number -> 32-bit signed integer -> bitwise operation -> IEEE-754 double-precision binary number
+```
+
+We put a little bit of time into trying to get Go to hash the same way as the JS, but it just didn't work the way we expected. The StackOverflow we linked earlier hints that it's not easily possible as well.
+
+Because the goal is to have something that hashes the same way consistently across languages, we just can't use our own FNV-1a algorithm. The GrowthBook algorithm manages to produce the same output in JS as Go by doing some bitwise magic that many of us will find hard to understand. But, sometimes perfect can be the enemy of good.
+
+So we ended up creating a fork of the GrowthBook algorithm that allows us to pass a seed value that is a a number between 0 and 1 instead of a string. Our guess is that they generate the seed using something like nanoid in their UI. We just use a number slider, instead. The end result looks like this:
+
+```js
+export function hashFnv32a(str: string): number {
+  let hval = GB_FNV32_OFFSET_BASIS;
+  const l = str.length;
+
+  for (let i = 0; i < l; i++) {
+    hval ^= str.charCodeAt(i);
+    hval +=
+      (hval << 1) + (hval << 4) + (hval << 7) + (hval << 8) + (hval << 24);
+  }
+  return hval >>> 0;
+}
+
+export function hashGB_hybrid(value: string, seed: number): number {
+  return ((hashFnv32a(value) * seed) % 1000) / 1000;
+}
+```
+
+The benefit is that our runtime is faster because we only need to hash once, but we still get a really good distribution of hashing string values and number values. Keep in mind that the speed difference is so small that it probably won't be anybody's bottleneck, but it is still nice to have something that performs well and correctly.
+
+## Wrapping Up
+
+This might not be something you would think that much about, but once we dug into it more, it became fascinating to us. The separate goals of cryptographic hash algorithms and "hashmap" algorithms are also something you might not think about at first. We hope you enjoyed this case study and research. If you want to get into feature flagging at the absolute smallest cost possible, Vexilla might be something worth trying out for your side projects, proof-of-concepts, startups, indie-hacker projects, and internal tools wherever you work. Thanks for reading.

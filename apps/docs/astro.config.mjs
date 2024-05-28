@@ -27,4 +27,9 @@ export default defineConfig({
     markdoc(),
     toml(),
   ],
+  vite: {
+    ssr: {
+      noExternal: [/^d3.*$/, /^@nivo.*$/],
+    },
+  },
 });
