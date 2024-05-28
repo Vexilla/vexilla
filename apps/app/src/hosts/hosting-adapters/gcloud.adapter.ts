@@ -1,4 +1,4 @@
-import { HostingConfigBase } from "../types";
+import { HostingConfigBase } from "../../types";
 
 export interface HostingConfigGcloud extends HostingConfigBase {
   provider: "gcloud";
@@ -9,13 +9,13 @@ export interface HostingConfigGcloud extends HostingConfigBase {
 }
 
 export class GcloudAdapter {
-  static fetchFeatures(config: HostingConfigGcloud) {
+  static fetchFeatures(_config: HostingConfigGcloud) {
     throw new Error("fetchFeatures not implemented");
   }
-  static isConfigValid(config: HostingConfigGcloud) {
+  static isConfigValid(_config: HostingConfigGcloud) {
     throw new Error("isConfigValid is not implemented.");
   }
-  static async upload(payload: any, config: HostingConfigGcloud) {
+  static async upload(_payload: any, _config: HostingConfigGcloud) {
     throw new Error("Gcloud upload not implemented");
   }
 }

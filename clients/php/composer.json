@@ -1,6 +1,7 @@
 {
   "name": "vexilla/client",
   "description": "A client for the Vexilla Feature Flag System",
+  "version": "1.0.1",
   "type": "library",
   "license": "BUSL-1.1",
   "authors": [
@@ -40,6 +41,9 @@
   "scripts": {
     "test": [
       "./vendor/bin/phpunit --verbose --bootstrap vendor/autoload.php tests/*.php"
+    ],
+    "test:hasher": [
+      "./vendor/bin/phpunit --verbose --bootstrap vendor/autoload.php tests/HasherTest.php"
     ],
     "coverage": [
       "composer exec phpunit -- --coverage-text --coverage-filter src/**/*.php --verbose --bootstrap vendor/autoload.php tests/*.php"

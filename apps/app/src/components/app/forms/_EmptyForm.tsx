@@ -1,5 +1,5 @@
 import _React from "react";
-import { AppState } from "@vexilla/types";
+import { AppState } from "../../../types";
 
 interface EmptyFormProps {
   config: AppState;

@@ -1,6 +1,6 @@
 // import { Storage } from "@google-cloud/storage";
 import axios from "axios";
-import { HostingConfigBase } from "../types";
+import { HostingConfigBase } from "../../types";
 
 export interface HostingConfigFirebase extends HostingConfigBase {
   provider: "firebase";
@@ -11,15 +11,15 @@ export interface HostingConfigFirebase extends HostingConfigBase {
 }
 
 export class FirebaseAdapter {
-  static fetchFeatures(config: HostingConfigFirebase) {
+  static fetchFeatures(_config: HostingConfigFirebase) {
     // throw new Error("fetchFeatures not implemented");
   }
-  static isConfigValid(config: HostingConfigFirebase) {
+  static isConfigValid(_config: HostingConfigFirebase) {
     // throw new Error("isConfigValid is not implemented.");
     return true;
   }
   static async upload(payload: any, config: HostingConfigFirebase) {
-    const response = await axios
+    await axios
       .post(
         `https://storage.googleapis.com/upload/storage/v1/b/${config.bucketName}/o?name=features.json&uploadType=media&key=${config.apiKey}`,
         payload

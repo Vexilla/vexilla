@@ -3,7 +3,6 @@
     "outDir": "dist",
     "target": "ES2022",
     "module": "Node16",
-    "moduleResolution": "node",
     "useDefineForClassFields": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,

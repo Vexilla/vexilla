@@ -1,16 +1,23 @@
 import Foundation
 
+struct FNVConstants {
+  static let FNV32_OFFSET_BASIS: UInt32 = 2166136261;
+  static let FNV32_PRIME: UInt32 = 16777619;
+}
+
+
 func hashString(stringToHash: String, seed: Float64) -> Float64 {
-  var total = 0
+  var hashResult = FNVConstants.FNV32_OFFSET_BASIS
   for char in stringToHash.utf8 {
-    total += Int(char)
+    hashResult ^= UInt32(char)
+    hashResult &*= FNVConstants.FNV32_PRIME
   }
 
-  var calculated = Float64(total) * seed * 42.0
-  calculated.round(.down)
-  let modded = calculated.truncatingRemainder(dividingBy: 100.0)
+  let seeded = Float64(hashResult) * seed
+  // seeded.round(.down)
+  let modded = seeded.truncatingRemainder(dividingBy: 1000.0)
 
-  return modded / 100.0
+  return modded / 1000.0
 }
 
 func hashInt(intToHash: Int, seed: Float64) -> Float64 {

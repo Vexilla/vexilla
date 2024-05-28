@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
   spec.name = "VexillaClient"
-  spec.version = "0.0.1"
+  spec.version = "1.0.1"
   spec.summary = "Vexilla client for cocoa"
   spec.homepage = "https://github.com/vexilla/vexilla"
   spec.license = "BUSL-1.1"

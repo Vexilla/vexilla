@@ -1,14 +1,9 @@
-import {
+import type {
   VexillaClientConfig,
-  VexillaFeatureTypeToggle,
-  VexillaFeatureTypeGradual,
-  VexillaFeatureTypeSelective,
-  VexillaFlags,
   VexillaGradualFeature,
   VexillaManifest,
   PublishedGroup,
   VexillaFeature,
-  VexillaEnvironment,
   PublishedEnvironment,
 } from "@vexilla/types";
 
@@ -26,7 +21,7 @@ export class VexillaClient {
   protected showLogs;
   protected baseUrl: string;
   protected environment: string;
-  protected customInstanceId = "";
+  protected customInstanceHash = "";
 
   protected manifest: VexillaManifest;
   protected flagGroups: Record<string, PublishedGroup> = {};
@@ -38,7 +33,7 @@ export class VexillaClient {
     this.showLogs = showLogs;
     this.baseUrl = config.baseUrl;
     this.environment = config.environment || "prod";
-    this.customInstanceId = config.customInstanceId;
+    this.customInstanceHash = config.customInstanceId;
   }
 
   async getManifest(
@@ -105,7 +100,7 @@ export class VexillaClient {
   should(
     groupNameOrId: string,
     featureName: string,
-    customInstanceId?: string | number
+    customInstanceHash?: string | number
   ): boolean {
     const actualItems = this.getActualItems(groupNameOrId, featureName);
 
@@ -117,33 +112,33 @@ export class VexillaClient {
 
     let _should = false;
     switch (feature.featureType) {
-      case VexillaFeatureTypeToggle:
+      case "toggle":
         _should = feature.value;
         break;
 
-      case VexillaFeatureTypeGradual:
+      case "gradual":
         if (feature.seed <= 0 || feature.seed > 1) {
           throw new Error(
             "feature.seed must be a number value greater than 0 and less than or equal to 1"
           );
         }
 
-        if (!customInstanceId && !this.customInstanceId) {
+        if (!customInstanceHash && !this.customInstanceHash) {
           throw new Error(
-            "customInstanceId config must be defined when using 'gradual' Feature Types"
+            "customInstanceHash config must be defined when using 'gradual' Feature Types"
           );
         }
         feature = feature as VexillaGradualFeature;
 
         _should =
           hashString(
-            `${customInstanceId || this.customInstanceId}`,
+            `${customInstanceHash || this.customInstanceHash}`,
             feature.seed
           ) <= feature.value;
         break;
 
-      case VexillaFeatureTypeSelective:
-        const instanceHash = customInstanceId || this.customInstanceId;
+      case "selective":
+        const instanceHash = customInstanceHash || this.customInstanceHash;
         _should = (feature.value as (string | number)[]).includes(
           instanceHash || parseFloat(instanceHash as string)
         );
@@ -159,10 +154,10 @@ export class VexillaClient {
   safeShould(
     groupNameOrId: string,
     featureName: string,
-    customInstanceId?: string | number
+    customInstanceHash?: string | number
   ) {
     try {
-      return this.should(groupNameOrId, featureName, customInstanceId);
+      return this.should(groupNameOrId, featureName, customInstanceHash);
     } catch (e: unknown) {
       console.warn(e);
       return false;

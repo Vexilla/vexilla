@@ -9,7 +9,7 @@ import {
   TextInput,
 } from "@mantine/core";
 
-import { AppState } from "@vexilla/types";
+import { AppState, HostingConfigGitBase } from "../../../types";
 
 import { DEFAULT_BRANCH_PREFIX } from "../../../utils/constants";
 import { TimelineItemTitle } from "../../TimelineItemTitle";
@@ -17,9 +17,8 @@ import { TimelineItemTitle } from "../../TimelineItemTitle";
 import { Icon } from "@iconify/react";
 import refreshBroken from "@iconify/icons-solar/refresh-broken";
 import squareArrowRightUpBroken from "@iconify/icons-solar/square-arrow-right-up-broken";
-import { Branch, Repository } from "./_GitForm.types";
-import { HostingConfigGitBase } from "@vexilla/hosts";
-import { HostingConfigGithub } from "@vexilla/hosts";
+import type { Branch, Repository } from "./_GitForm.types";
+import { HostingConfigGithub } from "../../../hosts/git-adapters/github";
 
 const GITHUB_APP_NAME = import.meta.env.VITE_GITHUB_APP_NAME;
 
@@ -83,7 +82,8 @@ export function GitForm({
               value={repositoryId}
               onChange={(selectedRepositoryId) => {
                 if (hosting.provider === "github") {
-                  const githubHosting = hosting as HostingConfigGithub;
+                  const githubHosting =
+                    hosting as unknown as HostingConfigGithub;
                   hosting.repositoryId = `${selectedRepositoryId}`;
                   const repository = repositories.find(
                     (repository) => `${repository.id}` === selectedRepositoryId

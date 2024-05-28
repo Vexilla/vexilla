@@ -1,13 +1,20 @@
 import { z } from "zod";
 
-import { HostingStatusType } from "./enums";
-import { HostingConfigS3 } from "./hosting-adapters/s3.adapter";
-import { HostingConfigAzure } from "./hosting-adapters/azure.adapter";
-import { HostingConfigGcloud } from "./hosting-adapters/gcloud.adapter";
-import { HostingConfigFirebase } from "./hosting-adapters/firebase.adapter";
-import { HostingConfigGithub } from "./git-adapters/github";
+import type { HostingStatusType } from "./hosts/enums";
+import type { HostingConfigS3 } from "./hosts/hosting-adapters/s3.adapter";
+import type { HostingConfigAzure } from "./hosts/hosting-adapters/azure.adapter";
+import type { HostingConfigGcloud } from "./hosts/hosting-adapters/gcloud.adapter";
+import type { HostingConfigFirebase } from "./hosts/hosting-adapters/firebase.adapter";
+import type { HostingConfigGithub } from "./hosts/git-adapters/github";
+import type { Group } from "@vexilla/types";
 
-const HostingProviderValidator = z.enum([
+export interface AppState {
+  modifiedAt: number;
+  groups: Group[];
+  hosting: HostingConfig;
+}
+
+export const HostingProviderValidator = z.enum([
   // git providers
   "github",
   // | "bitbucket",
@@ -18,7 +25,7 @@ const HostingProviderValidator = z.enum([
   "s3",
 ]);
 
-const HostingProviderTypeValidator = z.enum(["git", "direct"]);
+export const HostingProviderTypeValidator = z.enum(["git", "direct"]);
 
 export type HostingProvider = z.infer<typeof HostingProviderValidator> | "";
 

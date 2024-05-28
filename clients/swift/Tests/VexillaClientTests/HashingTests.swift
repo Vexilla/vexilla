@@ -4,7 +4,7 @@ import XCTest
 final class VexillaHashingTests: XCTestCase {
   private let uuid = "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a"
 
-  private let seedA = 0.11
+  private let seedA = 0.32
   private let seedB = 0.22
 
   func testStringWorking() {

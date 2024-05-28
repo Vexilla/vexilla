@@ -3,7 +3,7 @@ import { PageLayout } from "../../components/PageLayout";
 import { config } from "../../stores/config-valtio";
 
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { HostingConfig, HostingProvider } from "@vexilla/hosts";
+import type { HostingProvider, HostingConfig } from "../../types";
 
 const BASE_URL = import.meta.env.VITE_AUTH_BASE_URL;
 

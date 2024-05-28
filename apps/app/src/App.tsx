@@ -7,14 +7,12 @@ import { cloneDeep, omit, set as lodashSet } from "lodash-es";
 import { Difference } from "microdiff";
 
 import {
-  AppState,
   Group,
   PublishedEnvironment,
   PublishedGroup,
   VexillaEnvironment,
   VexillaFeature,
 } from "@vexilla/types";
-import { HostingProvider } from "@vexilla/hosts";
 
 import { nanoid } from "./utils/nanoid";
 import { fetchersMap } from "./utils/fetchers.map";
@@ -28,6 +26,7 @@ import { Status } from "./components/Status";
 
 import "./App.css";
 import { notifications } from "@mantine/notifications";
+import { HostingProvider, AppState } from "./types";
 
 function App() {
   const configSnapshot = useSnapshot(config);
