@@ -9,7 +9,7 @@
     "test:scheduling": "ts-node src/test_scheduling.ts",
     "test:client": "ts-node src/test_client.ts",
     "test": "pnpm run \"/^test:.*/\"",
-    "compile": "tsup"
+    "compile": "tsup && ts-node scripts/hack-dist-types.ts"
   },
   "author": {
     "name": "Chris Griffing",
