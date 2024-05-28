@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEventHandler } from "react";
-import { ResponsiveBoxPlot, type BoxPlotDatum } from "@nivo/boxplot";
+import { ResponsiveBoxPlot, type BoxPlotDatum, BoxPlot } from "@nivo/boxplot";
+import { Tooltip } from "@nivo/tooltip";
 import { Button } from "../ui/button";
 
 interface RawRow {
@@ -59,11 +60,11 @@ export function BoxPlotComponent({
   return (
     <>
       <dialog open={false} ref={dialogRef}>
-        <div className="relative">
+        <div className="relative dark:bg-black">
           <div className="flex flex-row w-full items-center justify-between p-2">
             <h3 className="!m-0">{title}</h3>
             <button
-              className=""
+              className="dark:text-white p-2"
               onClick={() => {
                 showingDialog.current = false;
                 dialogRef.current?.close();
@@ -73,7 +74,10 @@ export function BoxPlotComponent({
             </button>
           </div>
           <div className="overflow-y-scroll w-full h-[80vh]">
-            <div style={{ height: 1500, width: 1000 }}>
+            <div
+              className="box-plot-wrapper not-prose text-black"
+              style={{ height: 1500, width: 1000 }}
+            >
               <ResponsiveBoxPlot
                 data={[...data].reverse()}
                 layout="horizontal"
@@ -128,7 +132,10 @@ export function BoxPlotComponent({
           </div>
         </div>
       </dialog>
-      <div style={{ height: 400, width: "100%" }}>
+      <div
+        className="box-plot-wrapper not-prose text-black"
+        style={{ height: 400, width: "100%" }}
+      >
         <ResponsiveBoxPlot
           data={data.slice(0, count * iterations).reverse()}
           layout="horizontal"
@@ -186,6 +193,28 @@ export function BoxPlotComponent({
           whiskerColor={"#c92a2a"}
           whiskerWidth={4}
           motionConfig="stiff"
+          // tooltip={{
+          //   color: "#FFF",
+          // }}
+          // tooltip={(props) => (
+          //   <div className="p-2 rounded bg-white">
+          //     <div className="flex items-center gap-2">
+          //       <div
+          //         className="h-4 w-4 rounded-sm"
+          //         style={{ background: props.color }}
+          //       ></div>
+          //       {props.label}
+          //     </div>
+          //     <div className="flex gap-2">
+          //       <ul className="w-1/2 flex flex-col p-0 m-0">
+          //         <li className="flex gap-2 p-0 m-0">
+          //           <span>label</span>
+          //           <span>value</span>
+          //         </li>
+          //       </ul>
+          //     </div>
+          //   </div>
+          // )}
         />
       </div>
       <div className="flex flex-row items-center justify-center">

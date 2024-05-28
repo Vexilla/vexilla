@@ -112,6 +112,15 @@ code * {
   }
 }
 
+dialog::backdrop {
+  /* background: rgba(0, 0, 0, 0.8); */
+  backdrop-filter: blur(6px);
+}
+
 html:has(dialog[open]:modal) {
   overflow: hidden;
+}
+
+html.dark .box-plot-wrapper svg > g > g > g > text {
+  fill: white !important;
 }
