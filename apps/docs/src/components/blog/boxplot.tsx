@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEventHandler } from "react";
 import { ResponsiveBoxPlot, type BoxPlotDatum, BoxPlot } from "@nivo/boxplot";
-import { Tooltip } from "@nivo/tooltip";
 import { Button } from "../ui/button";
 
 interface RawRow {
@@ -193,28 +192,6 @@ export function BoxPlotComponent({
           whiskerColor={"#c92a2a"}
           whiskerWidth={4}
           motionConfig="stiff"
-          // tooltip={{
-          //   color: "#FFF",
-          // }}
-          // tooltip={(props) => (
-          //   <div className="p-2 rounded bg-white">
-          //     <div className="flex items-center gap-2">
-          //       <div
-          //         className="h-4 w-4 rounded-sm"
-          //         style={{ background: props.color }}
-          //       ></div>
-          //       {props.label}
-          //     </div>
-          //     <div className="flex gap-2">
-          //       <ul className="w-1/2 flex flex-col p-0 m-0">
-          //         <li className="flex gap-2 p-0 m-0">
-          //           <span>label</span>
-          //           <span>value</span>
-          //         </li>
-          //       </ul>
-          //     </div>
-          //   </div>
-          // )}
         />
       </div>
       <div className="flex flex-row items-center justify-center">
