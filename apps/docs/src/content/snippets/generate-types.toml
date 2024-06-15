@@ -1,7 +1,11 @@
-typescript = """
-vexilla generate typescript -o ./types
+elixir = """
+vexilla generate elixir -o ./lib/types
 """
 
 rust = """
-vexilla generate rust -o ./types
+vexilla generate rust -o ./src/types
+"""
+
+typescript = """
+vexilla generate typescript -o ./src/types
 """

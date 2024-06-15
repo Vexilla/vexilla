@@ -1,29 +1,52 @@
+elixir = """
+HTTPoison.start()
+
+config =
+  VexillaClient.create_config(
+    // The base URL can be anywhere you host the JSON files, even an internal network
+    "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com",
+    "YOUR_ENVIRONMENT",
+    "YOUR_USERS_ID"
+  )
+  // Sync manifest so the client can fetch flags
+  |> VexillaClient.sync_manifest!(&generic_fetch!/1)
+  // Sync flags into the client's cache
+  |> VexillaClient.sync_flags!("Gradual", &generic_fetch!/1)
+"""
+
+rust = """
+// Warning: unwraps are just for example code brevity
+// The base URL can be anywhere you host the JSON files, even an internal network
+let mut client = VexillaClient::new("YOUR_ENVIRONMENT", "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com", "YOUR_USERS_ID");
+
+// Sync the manifest so the client can fetch flags
+client.sync_manifest(|url| reqwest::blocking::get(url).unwrap().text().unwrap());
+
+// Sync the flags into the client's cache
+client
+  .sync_flags("FLAG_GROUP_NAME_OR_ID", |url| {
+      // Use any http client you want
+      reqwest::blocking::get(url).unwrap().text().unwrap()
+  })
+  .unwrap();
+"""
+
 typescript = """
-// create client
 const client = new VexillaClient({
-  baseUrl: "http://localhost:3000",
-  environment: "dev",
+  // The base URL can be anywhere you host the JSON files, even an internal network
+  baseUrl: "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com",
+  environment: "YOUR_ENVIRONMENT",
   customInstanceHash: "YOUR_USERS_ID",
 });
 
-//sync manifest
-await client.syncManifest();
+// Sync the manifest so the client can fetch flags
+await client.syncManifest((url) => {
+  return fetch(url).then((response) => response.json());
+});
 
-//sync flags
+// Sync the flags into the client's cache
 await client.syncFlags("FLAG_GROUP_NAME_OR_ID", (url) => {
   return fetch(url).then((response) => response.json());
 });
 """
 
-rust = """
-// Warning: unwraps are just for example code brevity
-let mut client = VexillaClient::new("dev", "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com", user_id);
-
-client.sync_manifest(|url| reqwest::blocking::get(url).unwrap().text().unwrap());
-
-client
-  .sync_flags("Scheduled", |url| {
-      reqwest::blocking::get(url).unwrap().text().unwrap()
-  })
-  .unwrap();
-"""

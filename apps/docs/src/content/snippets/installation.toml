@@ -1,11 +1,18 @@
+elixir = """
+# Add the following line to your mix.exs file's deps block (without the #):
+# {:vexilla_client, "~> 1.0"}
+# Then run:
+mix deps.get
+"""
+
+rust = """
+cargo add vexilla_client
+"""
+
 typescript = """
 npm install @vexilla/client
 // or
 yarn add @vexilla/client
 // or
 pnpm add @vexilla/client
-"""
-
-rust = """
-cargo add vexilla_client
 """
