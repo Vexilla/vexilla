@@ -3,7 +3,7 @@ defmodule VexillaClient.MixProject do
 
   def project do
     [
-      app: :vexilla_client_elixir,
+      app: :vexilla_client,
       version: "1.0.1",
       elixir: "~> 1.15",
       start_permanent: Mix.env() == :prod,
