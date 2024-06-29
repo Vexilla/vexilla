@@ -8,12 +8,13 @@ import type {
 import { useSnapshot } from "valtio";
 import { EmptyForm } from "./forms/_EmptyForm";
 import { GithubForm } from "./forms/GithubForm";
+import { GitLabForm } from "./forms/GitlabForm";
 
 const formMap = {
   "": EmptyForm,
   github: GithubForm,
   bitbucket: EmptyForm,
-  gitlab: EmptyForm,
+  gitlab: GitLabForm,
   gitea: EmptyForm,
   s3: EmptyForm,
   gcloud: EmptyForm,
@@ -55,6 +56,7 @@ const selectableProviders: {
         label: "GitHub",
         providerType: "git",
       },
+      { value: "gitlab", label: "GitLab", providerType: "git" },
 
       // { value: "bitbucket", label: "BitBucket", providerType: "git" },
     ],

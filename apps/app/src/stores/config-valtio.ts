@@ -63,7 +63,8 @@ export const validation = derive({
 
     if (provider !== "") {
       const validator = HostingConfigValidators[provider];
-      const result = validator.safeParse(currentConfig.hosting);
+      const result = validator.safeParse({ ...currentConfig.hosting });
+      console.log({ result }, result.error);
       return result;
     } else {
       return {
@@ -83,7 +84,17 @@ export const validation = derive({
 export const remoteDifferences = derive({
   result: (get) => {
     const currentConfig = get(config);
-    const currentRemoteConfig = get(remoteConfig);
+    let currentRemoteConfig = get(remoteConfig);
+    const currentRemoteMetadata = get(remoteMetadata);
+
+    if (
+      currentRemoteConfig.modifiedAt === 0 ||
+      currentRemoteMetadata.remoteModifiedAt === 0
+    ) {
+      currentRemoteConfig = currentConfig;
+    }
+
+    console.log({ currentConfig, currentRemoteConfig });
 
     return microdiff(currentConfig, currentRemoteConfig).filter((diff) => {
       return diff.path.join(".") !== "hosting.accessToken";
@@ -94,7 +105,17 @@ export const remoteDifferences = derive({
 export const localDifferences = derive({
   result: (get) => {
     const currentConfig = get(config);
-    const currentRemoteConfig = get(remoteConfig);
+    let currentRemoteConfig = get(remoteConfig);
+    // const currentRemoteMetadata = get(remoteMetadata);
+
+    // if (
+    //   currentRemoteConfig.modifiedAt === 0 ||
+    //   currentRemoteMetadata.remoteModifiedAt === 0
+    // ) {
+    //   currentRemoteConfig = currentConfig;
+    // }
+
+    console.log({ currentConfig, currentRemoteConfig });
 
     return microdiff(currentRemoteConfig, currentConfig).filter((diff) => {
       return diff.path.join(".") !== "hosting.accessToken";

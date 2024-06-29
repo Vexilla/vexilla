@@ -4,7 +4,8 @@ export interface Branch {
 }
 
 export interface Repository {
-  owner: string;
+  owner?: string;
   name: string;
   id: string;
+  defaultBranch?: string;
 }

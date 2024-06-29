@@ -1,6 +1,7 @@
 {
   "private": true,
   "scripts": {
+    "preinstall": "npx only-allow pnpm",
     "build:clients:docs:readmes": "ts-node ./scripts/build-client-readmes.ts",
     "build:clients:docs:rust": "(cd clients/rust && cargo doc --no-deps --open)",
     "TODObuild:clients:docs:elixir": "ts-node ./scripts/build-client-readmes.ts",

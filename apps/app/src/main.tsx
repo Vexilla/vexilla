@@ -23,15 +23,15 @@ import "./index.css";
 
 import "@fontsource/atkinson-hyperlegible";
 
-H.init("kgryv6nd", {
-  serviceName: "vexilla-app",
-  tracingOrigins: true,
-  networkRecording: {
-    enabled: true,
-    recordHeadersAndBody: true,
-    urlBlocklist: ["http://localhost:5173"],
-  },
-});
+// H.init("kgryv6nd", {
+//   serviceName: "vexilla-app",
+//   tracingOrigins: true,
+//   networkRecording: {
+//     enabled: true,
+//     recordHeadersAndBody: true,
+//     urlBlocklist: ["http://localhost:5173"],
+//   },
+// });
 
 const router = createBrowserRouter([
   {

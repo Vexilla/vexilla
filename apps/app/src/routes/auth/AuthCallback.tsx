@@ -52,6 +52,11 @@ export function AuthCallback() {
           if (installationId) {
             config.hosting.installationId = installationId;
           }
+        } else if (config.hosting.provider === "gitlab") {
+          config.hosting.accessToken = accessToken;
+          // if (installationId) {
+          //   config.hosting.installationId = installationId;
+          // }
         }
         navigate("/?logged_in");
       } catch (e: any) {

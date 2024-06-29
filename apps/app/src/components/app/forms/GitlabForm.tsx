@@ -5,12 +5,12 @@ import { cloneDeep } from "lodash-es";
 import { AppState, HostingProvider } from "../../../types";
 
 import { Branch, Repository } from "./_GitForm.types";
-import { GitHubFetcher } from "./GithubForm.fetchers";
-import { GitHubInstallation } from "./GithubForm.types";
+import { GitLabFetcher } from "./GitlabForm.fetchers";
+// import { GitHubInstallation } from "./GitLabForm.types";
 
 import { GitForm } from "./_GitForm";
 import { TimelineItemTitle } from "../../TimelineItemTitle";
-import { GithubLogo } from "../../logos/GithubLogo";
+import { GitLabLogo } from "../../logos/GitLabLogo";
 
 import { Icon } from "@iconify/react";
 import verifiedCheckBold from "@iconify/icons-solar/verified-check-bold";
@@ -19,13 +19,13 @@ import refreshBroken from "@iconify/icons-solar/refresh-broken";
 import { fetchersMap } from "../../../utils/fetchers.map";
 import { useSnapshot } from "valtio";
 
-const githubAppName = import.meta.env.VITE_GITHUB_APP_NAME;
+const gitlabAppName = import.meta.env.VITE_GITLAB_APP_NAME;
 
 const baseAuthCallbackUrl = `${window.location.protocol}//${window.location.host}/auth/callback`;
 
-const githubClientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
+const gitlabClientId = import.meta.env.VITE_GITLAB_CLIENT_ID;
 
-interface GithubFormProps {
+interface GitLabFormProps {
   config: AppState;
   updateConfig: (newConfig: AppState) => void;
 }
@@ -44,7 +44,7 @@ const disabledButtonStyling = {
   maxWidth: "calc(100% - 28px - 0.25rem)",
 };
 
-export function GithubForm({ config }: GithubFormProps) {
+export function GitLabForm({ config }: GitLabFormProps) {
   const configSnapshot = useSnapshot(config);
   const {
     accessToken,
@@ -55,8 +55,9 @@ export function GithubForm({ config }: GithubFormProps) {
     targetBranch,
     provider,
     providerType,
+    branchIsValid,
   } =
-    configSnapshot.hosting.provider === "github"
+    configSnapshot.hosting.provider === "gitlab"
       ? configSnapshot.hosting
       : {
           accessToken: "",
@@ -67,14 +68,14 @@ export function GithubForm({ config }: GithubFormProps) {
           targetBranch: "",
           provider: "",
           providerType: "",
+          branchIsValid: false,
         };
-  const [installations, setInstallations] = useState<GitHubInstallation[]>([]);
   const [repositories, setRepositories] = useState<Repository[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now());
 
-  const githubMethods = useMemo(() => {
-    return new GitHubFetcher(cloneDeep(config));
+  const gitlabMethods = useMemo(() => {
+    return new GitLabFetcher();
   }, [accessToken, owner, repositoryName]);
 
   function refresh() {
@@ -82,13 +83,13 @@ export function GithubForm({ config }: GithubFormProps) {
   }
 
   function clearHosting() {
-    if (config.hosting.provider === "github") {
+    if (config.hosting.provider === "gitlab") {
       config.hosting.accessToken = "";
       config.hosting.installationId = "";
       config.hosting.repositoryId = "";
     } else {
       console.error(
-        `Wrong hosting provider in github form: ${configSnapshot.hosting.provider}`
+        `Wrong hosting provider in gitlab form: ${configSnapshot.hosting.provider}`
       );
     }
 
@@ -100,9 +101,11 @@ export function GithubForm({ config }: GithubFormProps) {
   let activeElement = 0;
   if (!accessToken) {
     activeElement = 0;
-  } else if (!installationId) {
-    activeElement = 1;
   } else if (!repositoryId) {
+    activeElement = 1;
+  } else if (!targetBranch) {
+    activeElement = 2;
+  } else if (!branchIsValid) {
     activeElement = 2;
   } else {
     activeElement = 3;
@@ -111,34 +114,31 @@ export function GithubForm({ config }: GithubFormProps) {
   useEffect(() => {
     async function fetchData() {
       try {
-        if (accessToken && config.hosting.provider === "github") {
-          const installationsResponse =
-            await githubMethods.fetchInstallations();
-          setInstallations(installationsResponse.installations);
-          if (installationsResponse.installations.length === 1) {
-            config.hosting.installationId = `${installationsResponse.installations[0].id}`;
+        if (accessToken && config.hosting.provider === "gitlab") {
+          // const installationsResponse =
+          //   await gitlabMethods.fetchInstallations();
+          // setInstallations(installationsResponse.installations);
+          // if (installationsResponse.installations.length === 1) {
+          //   config.hosting.installationId = `${installationsResponse.installations[0].id}`;
+          // }
+          // if (config.hosting.installationId) {
+          const repositoriesResponse = await gitlabMethods.fetchRepositories();
+
+          setRepositories(
+            repositoriesResponse.map((_repository) => ({
+              name: _repository.name,
+              id: `${_repository.id}`,
+              owner: `${_repository.namespace.path}`,
+              defaultBranch: `${_repository.default_branch}`,
+            }))
+          );
+          if (repositoriesResponse.length === 1) {
+            config.hosting.repositoryId = `${repositoriesResponse[0].id}`;
+            config.hosting.owner = `${repositoriesResponse[0].namespace.path}`;
+            config.hosting.repositoryName = `${repositoriesResponse[0].name}`;
+            config.hosting.targetBranch = `${repositoriesResponse[0].default_branch}`;
           }
-          if (config.hosting.installationId) {
-            const repositoriesResponse = await githubMethods.fetchRepositories(
-              config.hosting.installationId
-            );
-            config.hosting.targetBranch =
-              repositoriesResponse.repositories[0].default_branch || "main";
-            setRepositories(
-              repositoriesResponse.repositories.map((_repository) => ({
-                name: _repository.name,
-                id: `${_repository.id}`,
-                owner: _repository.owner.login,
-                defaultBranch: _repository.default_branch,
-              }))
-            );
-            if (repositoriesResponse.repositories.length === 1) {
-              config.hosting.repositoryId = `${repositoriesResponse.repositories[0].id}`;
-              config.hosting.owner = `${repositoriesResponse.repositories[0].owner.login}`;
-              config.hosting.repositoryName = `${repositoriesResponse.repositories[0].name}`;
-              config.hosting.targetBranch = `${repositoriesResponse.repositories[0].default_branch}`;
-            }
-          }
+          // }
         }
       } catch (e: any) {
         // this should probably only be modifying the snapshot, not the full state
@@ -151,20 +151,31 @@ export function GithubForm({ config }: GithubFormProps) {
   useEffect(() => {
     async function getBranches() {
       if (accessToken && repositoryName && owner) {
-        const fetchedBranches = await githubMethods.fetchBranches();
+        const fetchedBranches = await gitlabMethods
+          .fetchBranches()
+          .catch(() => []);
+
+        // if (
+        //   fetchedBranches.length === 0 &&
+        //   config.hosting.provider === "gitlab"
+        // ) {
+        //   fetchedBranches[0] = {
+        //     name:
+        //   };
+        // }
+        if (
+          fetchedBranches.length === 1 &&
+          config.hosting.provider === "gitlab"
+        ) {
+          config.hosting.targetBranch = fetchedBranches[0].name;
+        }
 
         setBranches(
           fetchedBranches.map((_branch) => ({
             name: _branch.name,
-            id: `${_branch.id}`,
+            id: `${_branch.name}`,
           }))
         );
-        if (
-          fetchedBranches.length === 1 &&
-          config.hosting.provider === "github"
-        ) {
-          config.hosting.targetBranch = fetchedBranches[0].name;
-        }
       } else {
         console.log("One of these isn't what it should be", {
           accessToken,
@@ -181,9 +192,7 @@ export function GithubForm({ config }: GithubFormProps) {
       async function fetchCurrentConfig() {
         if (configSnapshot.hosting?.providerType === "git") {
           const fetcher =
-            fetchersMap[configSnapshot.hosting.provider as HostingProvider]?.(
-              config
-            );
+            fetchersMap[configSnapshot.hosting.provider as HostingProvider]?.();
 
           if (fetcher) {
             const result = await fetcher.getCurrentConfig();
@@ -215,13 +224,16 @@ export function GithubForm({ config }: GithubFormProps) {
         repositoryId={repositoryId}
         refresh={refresh}
         isTargetBranchValid={async (branchName) => {
-          return githubMethods.isBranchValid(branchName);
+          return gitlabMethods.isBranchValid(branchName);
+        }}
+        initializeBranch={async (branchName: string) => {
+          await gitlabMethods.initializeBranch(branchName);
         }}
       >
         <Timeline.Item>
           <TimelineItemTitle
             title="Login"
-            tooltipText="You need to login via Github so that the app can make PRs on your
+            tooltipText="You need to login via GitLab so that the app can make PRs on your
           behalf."
           />
 
@@ -229,10 +241,10 @@ export function GithubForm({ config }: GithubFormProps) {
             {!accessToken && (
               <Button
                 style={buttonStyling}
-                leftSection={<GithubLogo />}
+                leftSection={<GitLabLogo />}
                 onClick={() => {
-                  window.location.href = `https://github.com/login/oauth/authorize?client_id=${githubClientId}&redirect_uri=${encodeURIComponent(
-                    `${baseAuthCallbackUrl}/github?logged_in=true`
+                  window.location.href = `https://gitlab.com/oauth/authorize?client_id=${gitlabClientId}&response_type=code&redirect_uri=${encodeURIComponent(
+                    `${baseAuthCallbackUrl}/gitlab?logged_in=true`
                   )}`;
                 }}
               >
@@ -245,7 +257,7 @@ export function GithubForm({ config }: GithubFormProps) {
                 <Button
                   style={disabledButtonStyling}
                   variant="outline"
-                  leftSection={<GithubLogo />}
+                  leftSection={<GitLabLogo />}
                   rightSection={
                     <Icon width={20} icon={verifiedCheckBold} color="green" />
                   }
@@ -264,58 +276,6 @@ export function GithubForm({ config }: GithubFormProps) {
                 </ActionIcon>
               </>
             )}
-          </Flex>
-        </Timeline.Item>
-
-        <Timeline.Item>
-          <TimelineItemTitle
-            title="Installation"
-            tooltipText="The app must be installed into a repo via the Github marketplace."
-          />
-          <Flex direction="row" align="center" gap="0.5rem">
-            {(!installationId || installations.length === 0) && (
-              <Button
-                style={buttonStyling}
-                leftSection={<GithubLogo />}
-                onClick={() => {
-                  window.location.href = `https://github.com/apps/${githubAppName}/installations/new`;
-                }}
-              >
-                Install
-              </Button>
-            )}
-
-            {!!installationId && installations.length === 1 && (
-              <Button
-                variant="outline"
-                style={disabledButtonStyling}
-                leftSection={<GithubLogo />}
-                rightSection={
-                  <Icon width={20} icon={verifiedCheckBold} color="green" />
-                }
-                disabled
-              >
-                Installed
-              </Button>
-            )}
-            {!!installationId && installations.length > 1 && (
-              <Select
-                value={installationId}
-                data={installations.map((installation) => ({
-                  label: installation.html_url,
-                  value: `${installation.id}`,
-                }))}
-              />
-            )}
-
-            <ActionIcon
-              variant="subtle"
-              onClick={() => {
-                refresh();
-              }}
-            >
-              <Icon icon={refreshBroken} width={24} />
-            </ActionIcon>
           </Flex>
         </Timeline.Item>
       </GitForm>

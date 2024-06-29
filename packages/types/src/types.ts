@@ -160,6 +160,14 @@ export interface VexillaClientConfig {
   baseUrl: string;
   environment: string;
   customInstanceId?: string;
+
+  experimental: {
+    // find better name?
+    telemetryHook: (
+      featureFlag: VexillaFeature,
+      flagResult: string | number
+    ) => void | Promise<void>;
+  };
 }
 
 export interface ManifestGroup {

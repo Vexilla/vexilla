@@ -113,8 +113,6 @@ export function EditGroup() {
     }
   }, []);
 
-  console.log({ features });
-
   // const form = useForm({
   //   initialValues: {
   //     [FormFields.name]: group?.name || "",

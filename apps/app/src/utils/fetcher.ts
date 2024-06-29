@@ -1,12 +1,6 @@
 import { AppState } from "../types";
 
 export class Fetcher {
-  protected config: AppState;
-
-  constructor(config: AppState) {
-    this.config = config;
-  }
-
   async publish(
     _branchName: string,
     _files: {
@@ -29,5 +23,13 @@ export class GitFetcher extends Fetcher {
 
   async getBranches(_branch: string) {
     throw new Error("getBranches() not implemented");
+  }
+
+  async isBranchValid(_branch: string): Promise<boolean> {
+    throw new Error("isBranchValid() not implemented");
+  }
+
+  async initializeBranch(_branch: string) {
+    throw new Error("initializeBranch() not implemented");
   }
 }
