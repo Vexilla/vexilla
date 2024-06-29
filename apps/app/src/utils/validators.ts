@@ -3,6 +3,7 @@ import { z } from "zod";
 export const HostingProviderValidator = z.enum([
   // git providers
   "github",
+  "gitlab",
   // | "bitbucket",
   // direct providers
   "azure",
@@ -24,13 +25,23 @@ export const HostingConfigGitBaseValidator = HostingConfigBaseValidator.extend({
   targetBranch: z.string().min(1),
   shouldCreatePullRequest: z.boolean(),
   branchNamePrefix: z.string(),
+  branchIsValid: z.literal<boolean>(true),
 });
 
-export const HostingConfigGithubValidator =
+export const HostingConfigGitHubValidator =
   HostingConfigGitBaseValidator.extend({
     provider: z.literal("github"),
     providerType: z.literal("git"),
     installationId: z.string().min(1),
+    repositoryName: z.string().min(1),
+    owner: z.string().min(1),
+  });
+
+export const HostingConfigGitLabValidator =
+  HostingConfigGitBaseValidator.extend({
+    provider: z.literal("gitlab"),
+    providerType: z.literal("git"),
+    // installationId: z.string().min(1),
     repositoryName: z.string().min(1),
     owner: z.string().min(1),
   });
@@ -75,7 +86,8 @@ export const HostingConfigValidators: Record<
   z.infer<typeof HostingProviderValidator>,
   z.AnyZodObject
 > = {
-  github: HostingConfigGithubValidator,
+  github: HostingConfigGitHubValidator,
+  gitlab: HostingConfigGitLabValidator,
   s3: HostingConfigS3Validator,
   azure: HostingConfigAzureValidator,
   gcloud: HostingConfigGcloudValidator,

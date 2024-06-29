@@ -18,8 +18,6 @@ import { nanoid } from "./utils/nanoid";
 import { fetchersMap } from "./utils/fetchers.map";
 import { config, remoteConfig, remoteMetadata } from "./stores/config-valtio";
 
-import { GitHubFetcher } from "./components/app/forms/GithubForm.fetchers";
-
 import { CustomList, CustomListItem } from "./components/CustomList";
 import { OnboardingForm } from "./components/app/OnboardingForm";
 import { Status } from "./components/Status";
@@ -47,7 +45,7 @@ function App() {
   }, []);
 
   const { accessToken, repositoryName, owner, targetBranch } =
-    config.hosting.provider === "github"
+    config.hosting.providerType === "git"
       ? config.hosting
       : {
           accessToken: "",
@@ -58,9 +56,12 @@ function App() {
 
   const groups = config.groups;
 
-  const githubMethods = useMemo(() => {
-    return new GitHubFetcher(cloneDeep(config));
-  }, [accessToken, owner, repositoryName]);
+  const gitMethods = useMemo(() => {
+    if (config.hosting.provider) {
+      const fetchers = fetchersMap[config.hosting.provider]();
+      return fetchers;
+    }
+  }, [accessToken, owner, repositoryName, configSnapshot]);
 
   useEffect(() => {
     if (!config.hosting?.provider) {
@@ -83,7 +84,7 @@ function App() {
     async function fetchCurrentConfig() {
       if (config.hosting?.providerType === "git" && accessToken) {
         const fetcher =
-          fetchersMap[config.hosting.provider as HostingProvider]?.(config);
+          fetchersMap[config.hosting.provider as HostingProvider]?.();
 
         if (fetcher) {
           try {
@@ -182,7 +183,7 @@ function App() {
               publish={async (changes, approvals) => {
                 const newConfig = mergeLocalChanges(config, changes, approvals);
 
-                if (newConfig.hosting.provider === "github") {
+                if (newConfig.hosting.providerType === "git") {
                   const groupFiles = newConfig.groups.map((group) => {
                     const scrubbedGroup: PublishedGroup = {
                       ...group,
@@ -264,18 +265,20 @@ function App() {
                     return group;
                   });
 
-                  await githubMethods.publish(targetBranch, [
-                    manifestFile,
-                    ...groupFiles,
-                    {
-                      filePath: "config.json",
-                      content: JSON.stringify(cleanConfig, null, 2),
-                    },
-                  ]);
+                  if (gitMethods) {
+                    await gitMethods.publish(targetBranch || "", [
+                      manifestFile,
+                      ...groupFiles,
+                      {
+                        filePath: "config.json",
+                        content: JSON.stringify(cleanConfig, null, 2),
+                      },
+                    ]);
 
-                  notifications.show({
-                    message: "PR Created",
-                  });
+                    notifications.show({
+                      message: "PR Created",
+                    });
+                  }
                 }
               }}
             />

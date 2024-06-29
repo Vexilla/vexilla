@@ -1,11 +1,10 @@
 import { z } from "zod";
 
 import type { HostingStatusType } from "./hosts/enums";
-import type { HostingConfigS3 } from "./hosts/hosting-adapters/s3.adapter";
-import type { HostingConfigAzure } from "./hosts/hosting-adapters/azure.adapter";
-import type { HostingConfigGcloud } from "./hosts/hosting-adapters/gcloud.adapter";
-import type { HostingConfigFirebase } from "./hosts/hosting-adapters/firebase.adapter";
-import type { HostingConfigGithub } from "./hosts/git-adapters/github";
+// import type { HostingConfigS3 } from "./hosts/hosting-adapters/s3.adapter";
+// import type { HostingConfigAzure } from "./hosts/hosting-adapters/azure.adapter";
+// import type { HostingConfigGcloud } from "./hosts/hosting-adapters/gcloud.adapter";
+// import type { HostingConfigFirebase } from "./hosts/hosting-adapters/firebase.adapter";
 import type { Group } from "@vexilla/types";
 
 export interface AppState {
@@ -18,6 +17,7 @@ export const HostingProviderValidator = z.enum([
   // git providers
   "github",
   // | "bitbucket",
+  "gitlab",
   // direct providers
   "azure",
   "gcloud",
@@ -41,9 +41,27 @@ export interface HostingConfigBase {
 export interface HostingConfigGitBase extends HostingConfigBase {
   accessToken: string;
   repositoryId: string;
-  targetBranch: string;
   shouldCreatePullRequest: boolean;
   branchNamePrefix: string;
+  targetBranch?: string;
+  branchIsValid: boolean;
+}
+
+export interface HostingConfigGithub extends HostingConfigGitBase {
+  provider: "github";
+  providerType: "git";
+  installationId: string;
+  repositoryName: string;
+  owner: string;
+}
+
+export interface HostingConfigGitLab extends HostingConfigGitBase {
+  provider: "gitlab";
+  providerType: "git";
+  installationId: string;
+  repositoryName: string;
+  owner: string;
+  baseUrl?: string;
 }
 
 export interface HostingConfigEmpty extends HostingConfigBase {
@@ -53,10 +71,11 @@ export interface HostingConfigEmpty extends HostingConfigBase {
 
 export type HostingConfig =
   | HostingConfigEmpty
-  | HostingConfigS3
-  | HostingConfigAzure
-  | HostingConfigGcloud
-  | HostingConfigFirebase
+  // | HostingConfigS3
+  // | HostingConfigAzure
+  // | HostingConfigGcloud
+  // | HostingConfigFirebase
+  | HostingConfigGitLab
   | HostingConfigGithub;
 
 export interface HostingStatus {

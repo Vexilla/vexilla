@@ -1,7 +1,8 @@
+import { config } from "../../../stores/config-valtio";
 import { HostingConfigGitBase } from "../../../types";
 import { GitFetcher } from "../../../utils/fetcher";
 import {
-  GetBlobResponse,
+  GitHubBlobResponse,
   GitHubBranch,
   GitHubCreateBranchResponse,
   GitHubCreateCommitResponse,
@@ -20,7 +21,7 @@ const commonHeaders = {
 
 export class GitHubFetcher extends GitFetcher {
   async fetchInstallations() {
-    if (this.config.hosting.provider === "github") {
+    if (config.hosting.provider === "github") {
       return this.getRequest<GitHubGetInstallationsResponse>(
         `/user/installations`
       );
@@ -32,9 +33,9 @@ export class GitHubFetcher extends GitFetcher {
   }
 
   async fetchBranches() {
-    if (this.config.hosting.provider === "github") {
+    if (config.hosting.provider === "github") {
       return this.getRequest<GitHubBranch[]>(
-        `/repos/${this.config.hosting.owner}/${this.config.hosting.repositoryName}/branches`
+        `/repos/${config.hosting.owner}/${config.hosting.repositoryName}/branches`
       );
     } else {
       throw new Error(
@@ -49,10 +50,10 @@ export class GitHubFetcher extends GitFetcher {
     );
   }
 
-  async fetchBranch(branchName: string) {
-    if (this.config.hosting.provider === "github") {
+  private async fetchBranch(branchName: string) {
+    if (config.hosting.provider === "github") {
       return this.getRequest<GitHubBranch>(
-        `/repos/${this.config.hosting.owner}/${this.config.hosting.repositoryName}/branches/${branchName}`
+        `/repos/${config.hosting.owner}/${config.hosting.repositoryName}/branches/${branchName}`
       );
     } else {
       throw new Error(
@@ -61,26 +62,26 @@ export class GitHubFetcher extends GitFetcher {
     }
   }
 
-  async fetchTree(treeSha: string) {
-    if (this.config.hosting.provider === "github") {
+  private async fetchTree(treeSha: string) {
+    if (config.hosting.provider === "github") {
       return this.getRequest<GitHubCreateTreeResponse>(
-        `/repos/${this.config.hosting.owner}/${this.config.hosting.repositoryName}/git/trees/${treeSha}`
+        `/repos/${config.hosting.owner}/${config.hosting.repositoryName}/git/trees/${treeSha}`
       );
     } else {
       throw new Error("GithubFetcher.fetchTree() called on non-github config");
     }
   }
 
-  async createTree(
+  private async createTree(
     baseTreeSha: string,
     files: {
       content: string;
       filePath: string;
     }[]
   ) {
-    if (this.config.hosting.provider === "github") {
+    if (config.hosting.provider === "github") {
       return this.payloadRequest<GitHubCreateTreeResponse>(
-        `/repos/${this.config.hosting.owner}/${this.config.hosting.repositoryName}/git/trees`,
+        `/repos/${config.hosting.owner}/${config.hosting.repositoryName}/git/trees`,
         {
           tree: files.map(({ filePath, content }) => ({
             path: filePath,
@@ -96,10 +97,10 @@ export class GitHubFetcher extends GitFetcher {
     }
   }
 
-  async createBranch(newBranchName: string, head: string) {
-    if (this.config.hosting.provider === "github") {
+  private async createBranch(newBranchName: string, head: string) {
+    if (config.hosting.provider === "github") {
       return this.payloadRequest<GitHubCreateBranchResponse>(
-        `/repos/${this.config.hosting.owner}/${this.config.hosting.repositoryName}/git/refs`,
+        `/repos/${config.hosting.owner}/${config.hosting.repositoryName}/git/refs`,
         {
           ref: `refs/heads/${newBranchName}`,
           sha: head,
@@ -112,10 +113,10 @@ export class GitHubFetcher extends GitFetcher {
     }
   }
 
-  async createCommit(treeSha: string, parentSha: string) {
-    if (this.config.hosting.provider === "github") {
+  private async createCommit(treeSha: string, parentSha: string) {
+    if (config.hosting.provider === "github") {
       return this.payloadRequest<GitHubCreateCommitResponse>(
-        `/repos/${this.config.hosting.owner}/${this.config.hosting.repositoryName}/git/commits`,
+        `/repos/${config.hosting.owner}/${config.hosting.repositoryName}/git/commits`,
         {
           message: "chore: update Vexilla feature flags",
           tree: treeSha,
@@ -129,10 +130,10 @@ export class GitHubFetcher extends GitFetcher {
     }
   }
 
-  async updateBranch(branchName: string, commitSha: string) {
-    if (this.config.hosting.provider === "github") {
+  private async updateBranch(branchName: string, commitSha: string) {
+    if (config.hosting.provider === "github") {
       return this.payloadRequest<GitHubCreateBranchResponse>(
-        `/repos/${this.config.hosting.owner}/${this.config.hosting.repositoryName}/git/refs/heads/${branchName}`,
+        `/repos/${config.hosting.owner}/${config.hosting.repositoryName}/git/refs/heads/${branchName}`,
         {
           sha: commitSha,
         },
@@ -145,14 +146,14 @@ export class GitHubFetcher extends GitFetcher {
     }
   }
 
-  async createPullRequest(
+  private async createPullRequest(
     branchName: string,
     baseBranchName: string,
     description = ""
   ) {
-    if (this.config.hosting.provider === "github") {
+    if (config.hosting.provider === "github") {
       return this.payloadRequest<GitHubCreatePullRequestResponse>(
-        `/repos/${this.config.hosting.owner}/${this.config.hosting.repositoryName}/pulls`,
+        `/repos/${config.hosting.owner}/${config.hosting.repositoryName}/pulls`,
         {
           title: "Update Vexilla feature flags",
           head: branchName,
@@ -172,9 +173,9 @@ This PR was generated by Vexilla.
   }
 
   async getCurrentConfig() {
-    if (this.config.hosting.provider === "github") {
+    if (config.hosting.provider === "github") {
       // fetch target branch
-      const branch = await this.fetchBranch(this.config.hosting.targetBranch);
+      const branch = await this.fetchBranch(config.hosting.targetBranch || "");
 
       // get current tree for branch
       const tree = await this.fetchTree(branch?.commit?.sha);
@@ -186,12 +187,12 @@ This PR was generated by Vexilla.
 
       if (!blobId) {
         // this would be ideal
-        // return snapshot(this.config);
+        // return snapshot(config);
         // instead...
-        return cloneDeep(this.config);
+        return cloneDeep(config);
       } else {
-        const blobResult = await this.getRequest<GetBlobResponse>(
-          `/repos/${this.config.hosting.owner}/${this.config.hosting.repositoryName}/git/blobs/${blobId}`
+        const blobResult = await this.getRequest<GitHubBlobResponse>(
+          `/repos/${config.hosting.owner}/${config.hosting.repositoryName}/git/blobs/${blobId}`
         );
 
         const config = JSON.parse(atob(blobResult.content));
@@ -204,6 +205,20 @@ This PR was generated by Vexilla.
     }
   }
 
+  async isBranchValid(branchName: string) {
+    if (config.hosting.provider === "github") {
+      return this.fetchTree(branchName)
+        .then((response) => {
+          return response.tree.length > 0;
+        })
+        .catch(() => false);
+    } else {
+      throw new Error(
+        "GithubFetcher.isBranchValid() called on non-gitlab config"
+      );
+    }
+  }
+
   async publish(
     branchName: string,
     files: {
@@ -212,10 +227,10 @@ This PR was generated by Vexilla.
     }[]
   ) {
     if (
-      this.config.hosting.providerType === "git" &&
-      this.config.hosting.provider === "github"
+      config.hosting.providerType === "git" &&
+      config.hosting.provider === "github"
     ) {
-      if (this.config.hosting.shouldCreatePullRequest) {
+      if (config.hosting.shouldCreatePullRequest) {
         this.publishPullRequest(branchName, files);
       } else {
         this.publishDirectly(branchName, files);
@@ -275,7 +290,7 @@ This PR was generated by Vexilla.
       );
       const newCommitSha = newCommitResponse.sha;
 
-      const gitHosting = this.config.hosting as HostingConfigGitBase;
+      const gitHosting = config.hosting as HostingConfigGitBase;
 
       const newBranchName = `${gitHosting.branchNamePrefix}${Date.now()}`;
       await this.createBranch(newBranchName, newCommitSha);
@@ -288,8 +303,8 @@ This PR was generated by Vexilla.
   }
 
   private async getRequest<T>(path: string) {
-    if (this.config.hosting.provider === "github") {
-      const Authorization = `Bearer ${this.config.hosting.accessToken}`;
+    if (config.hosting.provider === "github") {
+      const Authorization = `Bearer ${config.hosting.accessToken}`;
 
       const url = `${GITHUB_BASE_URL}${path}`;
 
@@ -323,8 +338,8 @@ This PR was generated by Vexilla.
     payload: Record<string, any>,
     method: "POST" | "PUT" | "PATCH" | "QUERY" = "POST"
   ) {
-    if (this.config.hosting.provider === "github") {
-      const Authorization = `Bearer ${this.config.hosting.accessToken}`;
+    if (config.hosting.provider === "github") {
+      const Authorization = `Bearer ${config.hosting.accessToken}`;
 
       const url = `${GITHUB_BASE_URL}${path}`;
 

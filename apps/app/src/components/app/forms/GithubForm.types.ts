@@ -1323,7 +1323,7 @@ interface GitHubMergedBy {
   site_admin: boolean;
 }
 
-export interface GetBlobResponse {
+export interface GitHubBlobResponse {
   content: string;
   encoding: string;
   url: string;
