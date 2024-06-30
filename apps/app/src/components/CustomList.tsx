@@ -107,7 +107,8 @@ export function CustomListItem({
               }
               closeDeleteModal();
             }}
-            c="red"
+            variant="filled"
+            color="red"
           >
             Delete
           </Button>
