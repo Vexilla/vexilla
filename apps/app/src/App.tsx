@@ -30,7 +30,7 @@ function App() {
   const configSnapshot = useSnapshot(config);
   useSnapshot(remoteConfig);
   useSnapshot(remoteMetadata);
-  const [_searchParams, setSearchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [
     hostingConfigModalOpened,
@@ -42,7 +42,7 @@ function App() {
     if (searchParams.has("logged_in")) {
       openHostingConfigModal();
     }
-  }, []);
+  }, [searchParams]);
 
   const { accessToken, repositoryName, owner, targetBranch } =
     config.hosting.providerType === "git"
