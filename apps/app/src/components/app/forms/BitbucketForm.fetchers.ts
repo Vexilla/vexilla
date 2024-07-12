@@ -27,18 +27,6 @@ const commonHeaders = {
 };
 
 export class BitbucketFetcher extends GitFetcher {
-  // private async fetchInstallations() {
-  //   if (config.hosting.provider === "bitbucket") {
-  //     return this.getRequest<BitbucketGetInstallationsResponse>(
-  //       `/user/installations`
-  //     );
-  //   } else {
-  //     throw new Error(
-  //       "BitbucketFetcher.fetchBranches() called on non-bitbucket config"
-  //     );
-  //   }
-  // }
-
   async fetchWorkspaces() {
     if (config.hosting.provider === "bitbucket") {
       return this.getRequest<BitbucketGetWorkspacesResponse>(

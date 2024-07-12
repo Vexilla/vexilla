@@ -1,12 +1,10 @@
 import _React, { useEffect, useState, useMemo } from "react";
 import { Button, Timeline, Select, ActionIcon, Flex } from "@mantine/core";
-import { cloneDeep } from "lodash-es";
 
 import { AppState, HostingProvider } from "../../../types";
 
 import { Branch, Repository } from "./_GitForm.types";
 import { BitbucketFetcher } from "./BitbucketForm.fetchers";
-// import { GitHubInstallation } from "./BitbucketForm.types";
 
 import { GitForm } from "./_GitForm";
 import { TimelineItemTitle } from "../../TimelineItemTitle";
@@ -18,15 +16,10 @@ import closeCircleBroken from "@iconify/icons-solar/close-circle-broken";
 import refreshBroken from "@iconify/icons-solar/refresh-broken";
 import { fetchersMap } from "../../../utils/fetchers.map";
 import { useSnapshot } from "valtio";
-import {
-  BitbucketBranchValue,
-  BitbucketGetBranchesResponse,
-  WorkspaceValue,
-} from "./BitbucketForm.types";
+import { BitbucketBranchValue, WorkspaceValue } from "./BitbucketForm.types";
 import { defaultConfig } from "../../../stores/config-valtio";
 
 const bitbucketAppName = import.meta.env.VITE_BITBUCKET_APP_NAME;
-
 const baseAuthCallbackUrl = `${window.location.protocol}//${window.location.host}/auth/callback`;
 
 const bitbucketClientId = import.meta.env.VITE_BITBUCKET_CLIENT_ID;
@@ -161,24 +154,10 @@ export function BitbucketForm({ config }: BitbucketFormProps) {
         const fetchedBranches = await bitbucketMethods
           .fetchBranches()
           .catch(() => [] as BitbucketBranchValue[]);
-
-        console.log({ fetchedBranches });
-
-        // if (
-        //   fetchedBranches.length === 0 &&
-        //   config.hosting.provider === "bitbucket"
-        // ) {
-        //   fetchedBranches[0] = {
-        //     name:
-        //   };
-        // }
         if (
           fetchedBranches.length === 1 &&
           config.hosting.provider === "bitbucket"
         ) {
-          console.log(
-            "Setting targetBranch since we only have one to choose from"
-          );
           config.hosting.targetBranch = fetchedBranches[0].name;
         }
 
