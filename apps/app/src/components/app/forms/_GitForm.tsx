@@ -14,6 +14,7 @@ import { notifications } from "@mantine/notifications";
 
 import {
   AppState,
+  HostingConfigBitbucket,
   HostingConfigGitBase,
   HostingConfigGitLab,
   HostingConfigGithub,
@@ -70,10 +71,7 @@ export function GitForm({
       : branches
           .filter((branch) => {
             const prefix = hosting.branchNamePrefix || DEFAULT_BRANCH_PREFIX;
-            if (
-              prefix &&
-              (hosting.provider === "github" || hosting.provider === "gitlab")
-            ) {
+            if (prefix && hosting.providerType === "git") {
               return !branch.name.startsWith(prefix);
             } else {
               return false;
@@ -96,6 +94,8 @@ export function GitForm({
 
     getBranchValidity();
   }, [targetBranch, repositoryId]);
+
+  console.log("GitForm", { targetBranch, branches });
 
   return (
     <Box w="100%">
@@ -156,6 +156,21 @@ export function GitForm({
                   gitlabHosting.repositoryName = repository?.name || "";
 
                   gitlabHosting.targetBranch = repository?.defaultBranch;
+                } else if (hosting.provider === "bitbucket") {
+                  const bitbucketHosting =
+                    hosting as unknown as HostingConfigBitbucket;
+                  const repository = repositories.find(
+                    (repository) => `${repository.id}` === selectedRepositoryId
+                  );
+
+                  console.log("REPOSITORIES", { repositories });
+                  console.log({ branches });
+
+                  bitbucketHosting.repositoryId = `${selectedRepositoryId}`;
+                  bitbucketHosting.owner = repository?.owner || "";
+                  bitbucketHosting.repositoryName = repository?.name || "";
+
+                  bitbucketHosting.targetBranch = repository?.defaultBranch;
                 }
               }}
               data={repositories.map((repository) => ({

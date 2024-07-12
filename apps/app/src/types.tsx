@@ -16,7 +16,7 @@ export interface AppState {
 export const HostingProviderValidator = z.enum([
   // git providers
   "github",
-  // | "bitbucket",
+  "bitbucket",
   "gitlab",
   // direct providers
   "azure",
@@ -58,7 +58,15 @@ export interface HostingConfigGithub extends HostingConfigGitBase {
 export interface HostingConfigGitLab extends HostingConfigGitBase {
   provider: "gitlab";
   providerType: "git";
-  installationId: string;
+  repositoryName: string;
+  owner: string;
+  baseUrl?: string;
+}
+
+export interface HostingConfigBitbucket extends HostingConfigGitBase {
+  provider: "bitbucket";
+  providerType: "git";
+  workspaceId: string;
   repositoryName: string;
   owner: string;
   baseUrl?: string;
@@ -76,7 +84,8 @@ export type HostingConfig =
   // | HostingConfigGcloud
   // | HostingConfigFirebase
   | HostingConfigGitLab
-  | HostingConfigGithub;
+  | HostingConfigGithub
+  | HostingConfigBitbucket;
 
 export interface HostingStatus {
   message: string;

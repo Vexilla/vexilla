@@ -1,3 +1,4 @@
+import { BitbucketFetcher } from "../components/app/forms/BitbucketForm.fetchers";
 import { GitHubFetcher } from "../components/app/forms/GithubForm.fetchers";
 import { GitLabFetcher } from "../components/app/forms/GitlabForm.fetchers";
 import { HostingProvider, AppState } from "../types";
@@ -9,6 +10,7 @@ export const fetchersMap: Record<HostingProvider, () => Fetcher> = {
   },
   github: () => new GitHubFetcher(),
   gitlab: () => new GitLabFetcher(),
+  bitbucket: () => new BitbucketFetcher(),
   s3: () => {
     throw new Error("No fetcher found for S3 provider");
   },

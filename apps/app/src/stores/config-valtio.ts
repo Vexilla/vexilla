@@ -9,7 +9,7 @@ const CONFIG_KEY = "config";
 const REMOTE_CONFIG_KEY = "remoteConfig";
 const REMOTE_METADATA_KEY = "remoteMetadata";
 
-const defaultConfig: AppState = {
+export const defaultConfig: AppState = {
   modifiedAt: 0,
   groups: [],
   hosting: {
