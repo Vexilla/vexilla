@@ -4,7 +4,7 @@ export const HostingProviderValidator = z.enum([
   // git providers
   "github",
   "gitlab",
-  // | "bitbucket",
+  "bitbucket",
   // direct providers
   "azure",
   "gcloud",
@@ -42,6 +42,15 @@ export const HostingConfigGitLabValidator =
     provider: z.literal("gitlab"),
     providerType: z.literal("git"),
     // installationId: z.string().min(1),
+    repositoryName: z.string().min(1),
+    owner: z.string().min(1),
+  });
+
+export const HostingConfigBitbucketValidator =
+  HostingConfigGitBaseValidator.extend({
+    provider: z.literal("bitbucket"),
+    providerType: z.literal("git"),
+    workspaceId: z.string().min(1),
     repositoryName: z.string().min(1),
     owner: z.string().min(1),
   });
@@ -88,6 +97,7 @@ export const HostingConfigValidators: Record<
 > = {
   github: HostingConfigGitHubValidator,
   gitlab: HostingConfigGitLabValidator,
+  bitbucket: HostingConfigBitbucketValidator,
   s3: HostingConfigS3Validator,
   azure: HostingConfigAzureValidator,
   gcloud: HostingConfigGcloudValidator,

@@ -42,6 +42,8 @@ export function AuthCallback() {
           installationId,
         } as HostingConfig;
 
+        console.log({ newHostingConfig });
+
         if (!config.hosting) {
           config.hosting = newHostingConfig;
         } else if (config.hosting.provider !== provider) {
@@ -54,9 +56,8 @@ export function AuthCallback() {
           }
         } else if (config.hosting.provider === "gitlab") {
           config.hosting.accessToken = accessToken;
-          // if (installationId) {
-          //   config.hosting.installationId = installationId;
-          // }
+        } else if (config.hosting.provider === "bitbucket") {
+          config.hosting.accessToken = accessToken;
         }
         navigate("/?logged_in");
       } catch (e: any) {
