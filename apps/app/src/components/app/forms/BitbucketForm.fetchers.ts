@@ -122,10 +122,6 @@ export class BitbucketFetcher extends GitFetcher {
 
       formData.append("message", "chore: update Vexilla feature flags");
 
-      // const searchParams = new URLSearchParams({
-      //   message: "chore: update Vexilla feature flags",
-      // });
-
       if (newBranchName) {
         formData.append("branch", newBranchName);
       }
@@ -251,7 +247,6 @@ export class BitbucketFetcher extends GitFetcher {
         }
       );
 
-      // createCommit
       await this.createCommit(mappedFiles);
     } catch (e: any) {
       console.log({ e });
@@ -268,8 +263,6 @@ export class BitbucketFetcher extends GitFetcher {
     description = ""
   ) {
     try {
-      // check if files exist and determine createCommit actions
-
       const mappedFiles: BitbucketCreateCommitActionOptions[] = files.map(
         (file) => {
           return {
@@ -279,7 +272,6 @@ export class BitbucketFetcher extends GitFetcher {
         }
       );
 
-      // create branch
       const gitHosting = config.hosting as HostingConfigGitBase;
       const newBranchName = `${gitHosting.branchNamePrefix}${Date.now()}`;
 
