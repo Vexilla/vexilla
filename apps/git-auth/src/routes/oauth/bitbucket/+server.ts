@@ -19,24 +19,11 @@ export async function POST({ request }: { request: Request }) {
 		validator.parse(body);
 		const { code, baseUrl = 'https://bitbucket.org' } = body;
 
-		// const formData = new FormData();
-		// formData.set('client_id', env.GITLAB_CLIENT_ID);
-		// formData.set('client_secret', env.GITLAB_CLIENT_SECRET);
-		// formData.set('code', code);
-
 		const params = new URLSearchParams({
 			code,
 			client_id: env.BITBUCKET_CLIENT_ID,
 			client_secret: env.BITBUCKET_CLIENT_SECRET,
 			redirect_uri: `${env.APP_BASE_URL}/auth/callback/bitbucket?logged_in=true`,
-			grant_type: 'authorization_code'
-		});
-
-		console.log('Params:', {
-			code,
-			client_id: env.BITBUCKET_CLIENT_ID,
-			// client_secret: env.GITLAB_CLIENT_SECRET,
-			redirect_uri: `${env.APP_BASE_URL}/auth/callback/bitbucket`,
 			grant_type: 'authorization_code'
 		});
 
@@ -50,10 +37,6 @@ export async function POST({ request }: { request: Request }) {
 				Authorization: `Basic ${btoa(`${env.BITBUCKET_CLIENT_ID}:${env.BITBUCKET_CLIENT_SECRET}`)}`
 			},
 			body: formData
-			// body: JSON.stringify({
-			// 	code,
-			// 	grant_type: 'authorization_code'
-			// })
 		});
 
 		const responseBody = await response.json();
