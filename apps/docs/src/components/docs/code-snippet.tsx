@@ -30,7 +30,7 @@ export function CodeSnippetComponent({
   rawSnippet,
 }: CodeSnippetComponentProps) {
   const [selectedLanguage, setSelectedLanguage] = useState(
-    DEFAULT_LANGUAGE as tomlKey
+    DEFAULT_LANGUAGE as tomlKey,
   );
 
   const [loaded, setLoaded] = useState(false);
@@ -39,7 +39,7 @@ export function CodeSnippetComponent({
   useEffect(() => {
     setSelectedLanguage(
       (localStorage.getItem(SELECTED_LANGUAGE_KEY) ||
-        DEFAULT_LANGUAGE) as tomlKey
+        DEFAULT_LANGUAGE) as tomlKey,
     );
   }, []);
 
@@ -48,7 +48,7 @@ export function CodeSnippetComponent({
     window.dispatchEvent(
       new CustomEvent(customStorageEvent, {
         detail: { selectedLanguage },
-      })
+      }),
     );
   }, [selectedLanguage]);
 
@@ -64,7 +64,7 @@ export function CodeSnippetComponent({
     setLoaded(true);
 
     function storageListener(
-      event: CustomEvent<{ selectedLanguage: tomlKey }>
+      event: CustomEvent<{ selectedLanguage: tomlKey }>,
     ) {
       if (event.detail.selectedLanguage !== selectedLanguage) {
         setSelectedLanguage(event.detail.selectedLanguage);
@@ -81,7 +81,7 @@ export function CodeSnippetComponent({
   return (
     <div className="bg-[#24292e] rounded-lg not-prose">
       <div className="flex flex-row items-center justify-between p-2 px-4 bg-slate-600 rounded-t-md">
-        <div className="text-white flex flex-row items-center">
+        <div className="flex flex-row items-center text-white">
           <label className="mr-2 text-slate-200">Language: </label>
           <Select
             value={selectedLanguage}
@@ -104,14 +104,15 @@ export function CodeSnippetComponent({
         <div className="flex flex-row items-center">
           <Button
             title="Copy code"
+            className="text-white"
             onClick={() => {
               navigator.clipboard.writeText(
-                rawSnippet[selectedLanguage as tomlKey]
+                rawSnippet[selectedLanguage as tomlKey],
               );
               setCopied(true);
             }}
           >
-            {!copied && <Icon icon={copyOutline} />}
+            {!copied && <Icon icon={copyOutline} width="1.5rem" />}
             {copied && "Copied!"}
           </Button>
         </div>
