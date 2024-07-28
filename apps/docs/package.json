@@ -41,7 +41,7 @@
     "clsx": "^2.0.0",
     "cmdk": "^0.2.0",
     "dayjs": "^1.11.7",
-    "pagefind": "^1.0.3",
+    "pagefind": "^1.1.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-hook-form": "^7.50.0",
