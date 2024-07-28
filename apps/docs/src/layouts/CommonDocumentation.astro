@@ -47,8 +47,8 @@ const { documentationPages, currentPost, currentPageSlug, pathPrefix = "document
       </ul>
     </div>
   </nav>
-  <main id="main" class="flex-auto main-content pt-10 pb-10 px-4 w-screen md:w-full" data-pagefind-body>
-    <div class="prose lg:prose-xl dark:prose-invert mx-auto xl:w-auto">
+  <main id="main" class="flex-auto main-content pt-10 pb-10 px-4 w-screen md:w-[calc(100%-22rem)]" data-pagefind-body>
+    <div class="mx-auto prose lg:prose-xl dark:prose-invert xl:w-auto">
       {!!currentPost?.data.title && <h1>{currentPost?.data.title}</h1>}
       <slot />
       {

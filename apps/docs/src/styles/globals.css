@@ -124,3 +124,7 @@ html:has(dialog[open]:modal) {
 html.dark .box-plot-wrapper svg > g > g > g > text {
   fill: white !important;
 }
+
+table th {
+  text-align: left;
+}
