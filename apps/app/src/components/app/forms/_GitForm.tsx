@@ -57,7 +57,7 @@ export function GitForm({
   const hosting = config?.hosting as HostingConfigGitBase;
 
   const repository = repositories.find(
-    (repository) => `${repository.id}` === repositoryId
+    (repository) => `${repository.id}` === repositoryId,
   );
 
   const branchOptions =
@@ -140,7 +140,7 @@ export function GitForm({
                     hosting as unknown as HostingConfigGithub;
                   hosting.repositoryId = `${selectedRepositoryId}`;
                   const repository = repositories.find(
-                    (repository) => `${repository.id}` === selectedRepositoryId
+                    (repository) => `${repository.id}` === selectedRepositoryId,
                   );
                   githubHosting.owner = repository?.owner || "";
                   githubHosting.repositoryName = repository?.name || "";
@@ -148,7 +148,7 @@ export function GitForm({
                   const gitlabHosting =
                     hosting as unknown as HostingConfigGitLab;
                   const repository = repositories.find(
-                    (repository) => `${repository.id}` === selectedRepositoryId
+                    (repository) => `${repository.id}` === selectedRepositoryId,
                   );
 
                   gitlabHosting.repositoryId = `${selectedRepositoryId}`;
@@ -160,7 +160,7 @@ export function GitForm({
                   const bitbucketHosting =
                     hosting as unknown as HostingConfigBitbucket;
                   const repository = repositories.find(
-                    (repository) => `${repository.id}` === selectedRepositoryId
+                    (repository) => `${repository.id}` === selectedRepositoryId,
                   );
 
                   console.log("REPOSITORIES", { repositories });
@@ -174,7 +174,7 @@ export function GitForm({
                 }
               }}
               data={repositories.map((repository) => ({
-                label: repository.name,
+                label: `${repository.owner}/${repository.name}`,
                 value: `${repository.id}`,
               }))}
             />
@@ -186,7 +186,7 @@ export function GitForm({
                 window
                   ?.open(
                     `https://github.com/apps/${GITHUB_APP_NAME}/installations/new`,
-                    "_blank"
+                    "_blank",
                   )
                   ?.focus();
               }}
