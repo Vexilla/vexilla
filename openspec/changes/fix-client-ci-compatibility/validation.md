@@ -1,6 +1,6 @@
 ## Validation on 2026-10-19
 
-The workflow edits are implemented. Bazel and OCaml passed hosted validation. PHP provisioning exposed an existing scheduler overflow, which the user subsequently authorized fixing. The focused one-line correction and one case in the existing PHP test file pass locally on PHP 7.4.33; hosted PHP acceptance remains pending. No lockfile, existing assertion, or test target has changed, and no regression test files or workflow-testing harness were added.
+The workflow edits and authorized PHP scheduler correction are implemented. [PR Test run 39347199393](https://github.com/Vexilla/vexilla/actions/runs/39347199393) at source commit `3f7b68a` passed all 7 client jobs. The one-line scheduler correction and one case in the existing PHP test file passed locally and on hosted PHP 7.4.33. No lockfile, existing assertion, or test target has changed, and no regression test files or workflow-testing harness were added.
 
 ### Workflow review
 
@@ -58,7 +58,7 @@ The [PHP job](https://github.com/Vexilla/vexilla/actions/runs/39345385267/job/11
 
 Read-only investigation identified `clients/php/src/Scheduler.php` setting end-of-day microseconds to `999_999_999`. A PHP 7.4 reproduction confirms that `setTime(23, 59, 59, 999_999_999)` produces `2026-10-20 00:16:38.999999` for an end date of October 19. The valid `999_999` microsecond value produces `2026-10-19 23:59:59.999999`. Thus the existing scheduler can treat an expired previous-day schedule as active just after midnight, matching the hosted failure.
 
-The finding was reported before making client changes. The user then authorized the focused PHP fix. PHP acceptance task 4.4 remains open until hosted validation of that correction completes. Raw reproduction output is in `php-schedule-reproduction.log` alongside the hosted logs.
+The finding was reported before making client changes. The user then authorized the focused PHP fix, which passed hosted validation as recorded below. Raw reproduction output is in `php-schedule-reproduction.log` alongside the hosted logs.
 
 ### Authorized PHP scheduler correction: local verification
 
@@ -67,11 +67,25 @@ The scheduler now calls `endOfDay()` on the cloned UTC end date. One determinist
 - Before changing the scheduler, `composer test -- --filter testScheduleExpiresAtUtcMidnight` failed at the next-midnight assertion: `Tests: 1, Assertions: 2, Failures: 1`.
 - After the one-line correction, the same command passed: `OK (1 test, 2 assertions)`.
 - The unchanged `composer test` command passed against the existing test server at `localhost:3000`: `OK (2 tests, 19 assertions)`.
-- PHP 7.4.33 syntax checks passed for both edited PHP files. The local environment used native Linux ARM64 with the same setup-php version, extension, Composer, and PCOV inputs as the hosted jobs; hosted x86-64 validation remains pending.
+- PHP 7.4.33 syntax checks passed for both edited PHP files. The local environment used native Linux ARM64 with the same setup-php version, extension, Composer, and PCOV inputs as the hosted jobs; the hosted x86-64 result also passed.
 - No test file was added and no existing integration assertion was changed.
 
 Raw output: `php-scheduler-red.log`, `php-scheduler-green.log`, and `php-scheduler-suite.log` in the session evidence directory.
 
-Hosted validation used the workflows' existing events. Task 4.4 remains open for the PHP client failure; the change is not ready to archive.
+### Final hosted acceptance
+
+[Run 39347199393](https://github.com/Vexilla/vexilla/actions/runs/39347199393) tested source commit `3f7b68a` through the PR workflow's existing event and finished with conclusion `success`.
+
+| Job | Result |
+| --- | --- |
+| [Bazel](https://github.com/Vexilla/vexilla/actions/runs/39347199393/job/118382552474) | Build and LCOV coverage passed; 4 tests passed (1 executed, 3 cached in this run; the initial pin-validation run executed all 4). |
+| [PHP](https://github.com/Vexilla/vexilla/actions/runs/39347199393/job/118382552674) | PHP 7.4.33, Composer 2.10.3, and PCOV 1.0.12 provisioned; installation succeeded; 2 tests and 19 assertions passed against localhost:3000. |
+| [OCaml](https://github.com/Vexilla/vexilla/actions/runs/39347199393/job/118382553028) | Setup, locked installation, build, and all 8 tests passed. |
+| Elixir | Passed. |
+| Kotlin | Passed. |
+| Python | Passed. |
+| Swift | Passed. |
+
+Hosted validation used the workflows' existing events. The separate Test workflow path was reviewed but not exercised; its trigger filters were preserved. All 12 OpenSpec tasks are complete and the change is ready to archive.
 
 Raw local logs are in `/private/tmp/vexilla-ci-validation/` for this session.

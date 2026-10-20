@@ -29,4 +29,4 @@ None; the repository has no existing capability specifications.
 - Implementation affects `.bazelversion`, both workflows, `clients/php/src/Scheduler.php`, and `clients/php/tests/ClientTest.php`.
 - CI setup gains an explicit Bazel version, updated OCaml action, and a PHP setup action; PHP test-server networking changes from container DNS to the runner's published port.
 - Client APIs and supported PHP versions are preserved; PHP schedules now expire at the intended end of their UTC end date. No regression test files, full Bzlmod migration, workflow consolidation, or unrelated action upgrades are included. One focused case is added to the existing PHP test file for the demonstrated client bug.
-- Bazel and OCaml passed hosted validation. PHP provisioning is restored; validation of the authorized scheduler correction remains pending.
+- The final PR Test run passed all 7 client jobs: Bazel build and LCOV coverage (4/4 tests), OCaml setup/locked installation/build (8/8 tests), and PHP provisioning/installation/integration plus the deterministic boundary case (2 tests, 19 assertions).

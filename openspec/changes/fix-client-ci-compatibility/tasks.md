@@ -14,10 +14,10 @@
 
 ## 4. Validate the existing checks
 
-- [x] 4.1 Validate workflow syntax and action inputs; review both workflow definitions together to confirm equivalent repairs and unchanged triggers, job dependencies, unaffected jobs, test-server publishing, client source, dependency lockfiles, and test assertions.
+- [x] 4.1 Validate workflow syntax and action inputs; review equivalent repairs and unchanged triggers, job dependencies, unaffected jobs, test-server publishing, dependency lockfiles, and existing assertions. Confirm client changes are limited to the authorized PHP scheduler correction and its one boundary case.
 - [x] 4.2 Run `bazel build //...` and `bazel coverage --combined_report=lcov //...` in the affected CI environment. Adjust the exact Bazel 7 pin if necessary and record the final version and successful build/coverage evidence without excluding targets.
 - [x] 4.3 Verify OCaml setup succeeds without requiring unavailable `darcs`, selects compiler 4.14.2, and completes the existing locked dependency installation, build, and test commands.
-- [ ] 4.4 Verify PHP 7.4, Composer, extensions, and PCOV are provisioned; confirm the existing `composer install` and `composer test` commands succeed, including the client test against `localhost:3000`.
+- [x] 4.4 Verify PHP 7.4, Composer, extensions, and PCOV are provisioned; confirm the existing `composer install` and `composer test` commands succeed, including the client test against `localhost:3000`.
 - [x] 4.5 Record CI run links and affected-job outcomes for both workflow definitions exercised through existing events, explicitly identifying any workflow path not executed. Report any newly exposed client-code failure with its job, command, and error before expanding scope. Add no regression test files or workflow-testing harness for these provisioning failures.
 
 ## 5. Correct the authorized PHP scheduler bug
@@ -25,4 +25,4 @@
 - [x] 5.1 Add one deterministic case to the existing PHP test file for the final included UTC microsecond and the next midnight, and demonstrate it fails against the current scheduler.
 - [x] 5.2 Use Carbon's end-of-day boundary on the cloned end date, then verify the focused case and existing Composer suite before hosted validation.
 
-Validation details and remaining execution requirements are recorded in [validation.md](validation.md). Bazel and OCaml passed hosted validation. The user has authorized the reported PHP scheduler fix; task 4.4 remains open until PHP acceptance succeeds. The change is not ready to archive.
+All 12 tasks are complete. [PR Test run 39347199393](https://github.com/Vexilla/vexilla/actions/runs/39347199393) passed all 7 client jobs, including Bazel build/coverage, OCaml's 8 tests, and PHP's 2 tests/19 assertions. Validation details and the unexercised separate Test workflow path are recorded in [validation.md](validation.md). The change is ready to archive.

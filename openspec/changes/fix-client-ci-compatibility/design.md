@@ -89,4 +89,4 @@ No application release or data migration is required. Rollback consists of rever
 
 - Resolved: Bazel 7.6.1 passed the existing hosted build and coverage commands in PR Test run 39344712485.
 - Resolved: The official opam archive restored the locked dependency installation, and OCaml passed all 8 existing tests in PR Test run 39345385267.
-- Scope approved: The user authorized correcting the reported PHP scheduler overflow. The focused correction and deterministic boundary case are included; hosted PHP validation remains pending.
+- Resolved: The user authorized correcting the reported PHP scheduler overflow. The focused correction and deterministic boundary case passed in [PR Test run 39347199393](https://github.com/Vexilla/vexilla/actions/runs/39347199393), alongside all other client jobs.
