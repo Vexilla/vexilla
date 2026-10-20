@@ -5,13 +5,20 @@ import dev.vexilla.GradualFeature
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import java.io.File
 import java.net.URI
 import kotlin.test.*
 
 class ContractTest {
+  private fun contractRoot(): File {
+    val directory = System.getenv("VEXILLA_CONTRACT_DIR")
+    assumeTrue(!directory.isNullOrEmpty(), "Run through contract/scripts/run.cjs with generated contract artifacts")
+    return File(directory!!)
+  }
+
   @Test fun sharedSeedBounds() = runBlocking {
-    val root = File(System.getenv("VEXILLA_CONTRACT_DIR") ?: error("Generate contract artifacts first"))
+    val root = contractRoot()
     val expected = Json.parseToJsonElement(File(root, "expected.json").readText()).jsonObject
     val original = Json.parseToJsonElement(File(root, "contract-group.json").readText()).jsonObject
     val client = Client("https://contract", "dev", "member")
@@ -29,7 +36,7 @@ class ContractTest {
   }
 
   @Test fun sharedContract() = runBlocking {
-    val root=File(System.getenv("VEXILLA_CONTRACT_DIR") ?: error("Generate contract artifacts first"))
+    val root=contractRoot()
     val expected=Json.parseToJsonElement(File(root,"expected.json").readText()).jsonObject
     val fetch: suspend (String) -> String = { url -> File(root,URI(url).path.substringAfterLast('/')).readText() }
     for (raw in expected["environments"]!!.jsonArray) {

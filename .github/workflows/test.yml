@@ -40,21 +40,10 @@ jobs:
 
   test-bazel:
     runs-on: ubuntu-22.04
-    needs: ["publish-test-server"]
-
-    services:
-      test-server:
-        credentials:
-          username: vexilla
-          password: ${{secrets.GITHUB_TOKEN}}
-        image: ghcr.io/vexilla/test-server:latest
-        ports:
-          - 3000:3000
-        options: |
-          --health-cmd "curl -f http://localhost:3000/manifest.json"
 
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/test-server
 
       - name: Cache Bazel
         uses: actions/cache@v4
@@ -67,26 +56,15 @@ jobs:
       - run: bazel build //...
       - run: bazel coverage --combined_report=lcov //...
         env:
-          TEST_SERVER_HOST: test-server
+          TEST_SERVER_HOST: localhost:3000
 
   test-elixir:
     runs-on: ubuntu-latest
     container: elixir:1.15.7
-    needs: ["publish-test-server"]
-
-    services:
-      test-server:
-        credentials:
-          username: vexilla
-          password: ${{secrets.GITHUB_TOKEN}}
-        image: ghcr.io/vexilla/test-server:latest
-        ports:
-          - 3000:3000
-        options: |
-          --health-cmd "curl -f http://localhost:3000/manifest.json"
 
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/test-server
 
       - name: Cache Mix dependencies
         uses: actions/cache@v4
@@ -105,25 +83,14 @@ jobs:
           mix test --cover --export-coverage default
           mix test.coverage
         env:
-          TEST_SERVER_HOST: test-server:3000
+          TEST_SERVER_HOST: localhost:3000
 
   test-kotlin:
     runs-on: ubuntu-latest
-    needs: ["publish-test-server"]
-
-    services:
-      test-server:
-        credentials:
-          username: vexilla
-          password: ${{secrets.GITHUB_TOKEN}}
-        image: ghcr.io/vexilla/test-server:latest
-        ports:
-          - 3000:3000
-        options: |
-          --health-cmd "curl -f http://localhost:3000/manifest.json"
 
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/test-server
 
       - uses: actions/setup-java@v5
         with:
@@ -138,27 +105,15 @@ jobs:
           cd clients/kotlin
           ./gradlew build
           ./gradlew test
-        # test-server not available on local network
-        # env:
-        #   TEST_SERVER_HOST: test-server
+        env:
+          TEST_SERVER_HOST: http://localhost:3000
 
   test-ocaml:
     runs-on: ubuntu-latest
-    needs: ["publish-test-server"]
-
-    services:
-      test-server:
-        credentials:
-          username: vexilla
-          password: ${{secrets.GITHUB_TOKEN}}
-        image: ghcr.io/vexilla/test-server:latest
-        ports:
-          - 3000:3000
-        options: |
-          --health-cmd "curl -f http://localhost:3000/manifest.json"
 
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/test-server
 
       - name: Set-up OCaml 4.14.2
         uses: ocaml/setup-ocaml@v3
@@ -185,25 +140,14 @@ jobs:
           opam exec -- dune build
           opam exec -- dune test
         env:
-          TEST_SERVER_HOST: test-server:3000
+          TEST_SERVER_HOST: localhost:3000
 
   test-php:
     runs-on: ubuntu-latest
-    needs: ["publish-test-server"]
-
-    services:
-      test-server:
-        credentials:
-          username: vexilla
-          password: ${{secrets.GITHUB_TOKEN}}
-        image: ghcr.io/vexilla/test-server:latest
-        ports:
-          - 3000:3000
-        options: |
-          --health-cmd "curl -f http://localhost:3000/manifest.json"
 
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/test-server
 
       - name: Cache Composer dependencies
         uses: actions/cache@v4
@@ -231,21 +175,10 @@ jobs:
   test-python:
     runs-on: ubuntu-latest
     container: python:3.6.15
-    needs: ["publish-test-server"]
-
-    services:
-      test-server:
-        credentials:
-          username: vexilla
-          password: ${{secrets.GITHUB_TOKEN}}
-        image: ghcr.io/vexilla/test-server:latest
-        ports:
-          - 3000:3000
-        options: |
-          --health-cmd "curl -f http://localhost:3000/manifest.json"
 
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/test-server
 
       - name: Cache Dependencies
         uses: actions/cache@v4
@@ -263,28 +196,17 @@ jobs:
           pipenv install
           pipenv run pytest --cov=vexilla_client
         env:
-          TEST_SERVER_HOST: test-server:3000
+          TEST_SERVER_HOST: localhost:3000
 
   test-swift:
     runs-on: ubuntu-latest
     container: swift:5.5-focal
-    needs: ["publish-test-server"]
-
-    services:
-      test-server:
-        credentials:
-          username: vexilla
-          password: ${{secrets.GITHUB_TOKEN}}
-        image: ghcr.io/vexilla/test-server:latest
-        ports:
-          - 3000:3000
-        options: |
-          --health-cmd "curl -f http://localhost:3000/manifest.json"
 
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/test-server
       - run: |
           swift build
           swift test
         env:
-          TEST_SERVER_HOST: test-server:3000
+          TEST_SERVER_HOST: localhost:3000

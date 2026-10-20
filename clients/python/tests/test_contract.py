@@ -7,9 +7,14 @@ from pathlib import Path
 from vexilla_client.client import VexillaClient
 from vexilla_client.scheduler import Scheduler
 
+pytestmark = pytest.mark.skipif(
+    not os.environ.get('VEXILLA_CONTRACT_DIR'),
+    reason='Run through contract/scripts/run.cjs with generated contract artifacts',
+)
+
 
 def test_shared_seed_bounds():
-    root = Path(os.environ.get('VEXILLA_CONTRACT_DIR', '../../.contract-artifacts')).resolve()
+    root = Path(os.environ['VEXILLA_CONTRACT_DIR']).resolve()
     expected = json.loads((root / 'expected.json').read_text())
     original = json.loads((root / 'contract-group.json').read_text())
     client = VexillaClient('https://contract', 'dev', 'member')
@@ -26,7 +31,7 @@ def test_shared_seed_bounds():
 
 
 def test_shared_contract():
-    root = Path(os.environ.get('VEXILLA_CONTRACT_DIR', '../../.contract-artifacts')).resolve()
+    root = Path(os.environ['VEXILLA_CONTRACT_DIR']).resolve()
     expected = json.loads((root / 'expected.json').read_text())
     def fetch(url):
         return (root / url.rsplit('/', 1)[-1]).read_text()

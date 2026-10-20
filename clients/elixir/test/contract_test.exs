@@ -1,5 +1,9 @@
 defmodule SharedContractTest do
   use ExUnit.Case
+  if System.get_env("VEXILLA_CONTRACT_DIR") in [nil, ""] do
+    @moduletag skip: "Run through contract/scripts/run.cjs with generated contract artifacts"
+  end
+
   test "shared seed bounds" do
     root = System.fetch_env!("VEXILLA_CONTRACT_DIR")
     expected = root |> Path.join("expected.json") |> File.read!() |> Jason.decode!()
