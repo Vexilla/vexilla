@@ -47,7 +47,6 @@ export function AuthCallback() {
         if (!config.hosting) {
           config.hosting = newHostingConfig;
         } else if (config.hosting.provider !== provider) {
-          config.hosting.provider = provider;
           config.hosting = newHostingConfig;
         } else if (config.hosting.provider === "github") {
           config.hosting.accessToken = accessToken;

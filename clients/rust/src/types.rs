@@ -131,7 +131,18 @@ pub struct GradualFeature {
     pub schedule_type: ScheduleType,
     pub schedule: VexillaSchedule,
     pub value: f64,
+    #[serde(deserialize_with = "deserialize_seed")]
     pub seed: f64,
+}
+
+fn deserialize_seed<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<f64, D::Error> {
+    let seed = f64::deserialize(deserializer)?;
+    if !seed.is_finite() || seed <= 0.0 || seed > 1.0 {
+        return Err(serde::de::Error::custom(
+            "seed must be a finite number greater than 0 and less than or equal to 1",
+        ));
+    }
+    Ok(seed)
 }
 
 #[derive(Clone, Debug, EnumString, Deserialize)]

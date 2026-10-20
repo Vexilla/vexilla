@@ -10,7 +10,15 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "contract:generate": "pnpm --filter @vexilla/types build && pnpm --filter @vexilla/publishing build && node --import ./packages/publishing/node_modules/tsx/dist/loader.mjs contract/scripts/generate.ts",
+    "contract:test:producer": "pnpm contract:check:blocks && pnpm --filter @vexilla/types check:generated && node contract/scripts/python-requirements.cjs --check && pnpm --filter @vexilla/types test && pnpm --filter @vexilla/publishing test && pnpm --filter app test:publication",
+    "contract:check:blocks": "node contract/scripts/check-blocks.cjs",
+    "contract:serve": "node contract/scripts/serve.cjs",
+    "contract:run": "node contract/scripts/run.cjs",
+    "contract:test:gate": "node --test contract/scripts/*.test.cjs",
+    "contract:gate": "node contract/scripts/gate.cjs",
+    "contract:python:requirements": "node contract/scripts/python-requirements.cjs"
   },
   "devDependencies": {
     "@types/mustache": "^4.2.2",

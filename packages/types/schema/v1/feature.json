@@ -1,0 +1,462 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://vexilla.dev/schema/v1/feature.json",
+  "title": "PublishedFeature",
+  "type": "object",
+  "required": [
+    "featureType"
+  ],
+  "properties": {
+    "featureType": {
+      "type": "string"
+    }
+  },
+  "discriminator": {
+    "propertyName": "featureType"
+  },
+  "oneOf": [
+    {
+      "title": "PublishedToggle",
+      "type": "object",
+      "required": [
+        "name",
+        "featureId",
+        "featureType",
+        "scheduleType",
+        "schedule",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "featureId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "featureType": {
+          "const": "toggle"
+        },
+        "scheduleType": {
+          "enum": [
+            "",
+            "global",
+            "environment"
+          ]
+        },
+        "schedule": {
+          "$ref": "schedule.json"
+        },
+        "value": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "PublishedGradual",
+      "type": "object",
+      "required": [
+        "name",
+        "featureId",
+        "featureType",
+        "scheduleType",
+        "schedule",
+        "value",
+        "seed"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "featureId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "featureType": {
+          "const": "gradual"
+        },
+        "scheduleType": {
+          "enum": [
+            "",
+            "global",
+            "environment"
+          ]
+        },
+        "schedule": {
+          "$ref": "schedule.json"
+        },
+        "value": {
+          "type": "number"
+        },
+        "seed": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "PublishedSelective",
+      "type": "object",
+      "required": [
+        "valueType"
+      ],
+      "properties": {
+        "featureType": {
+          "const": "selective"
+        },
+        "valueType": {
+          "type": "string"
+        }
+      },
+      "discriminator": {
+        "propertyName": "valueType"
+      },
+      "oneOf": [
+        {
+          "title": "PublishedSelectiveString",
+          "type": "object",
+          "required": [
+            "name",
+            "featureId",
+            "featureType",
+            "scheduleType",
+            "schedule",
+            "valueType",
+            "value"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "featureId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "featureType": {
+              "const": "selective"
+            },
+            "scheduleType": {
+              "enum": [
+                "",
+                "global",
+                "environment"
+              ]
+            },
+            "schedule": {
+              "$ref": "schedule.json"
+            },
+            "valueType": {
+              "const": "string"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": true
+        },
+        {
+          "title": "PublishedSelectiveNumber",
+          "type": "object",
+          "required": [
+            "numberType"
+          ],
+          "properties": {
+            "numberType": {
+              "type": "string"
+            },
+            "valueType": {
+              "const": "number"
+            }
+          },
+          "discriminator": {
+            "propertyName": "numberType"
+          },
+          "oneOf": [
+            {
+              "title": "PublishedSelectiveInt",
+              "type": "object",
+              "required": [
+                "name",
+                "featureId",
+                "featureType",
+                "scheduleType",
+                "schedule",
+                "valueType",
+                "value",
+                "numberType"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "featureId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "featureType": {
+                  "const": "selective"
+                },
+                "scheduleType": {
+                  "enum": [
+                    "",
+                    "global",
+                    "environment"
+                  ]
+                },
+                "schedule": {
+                  "$ref": "schedule.json"
+                },
+                "valueType": {
+                  "const": "number"
+                },
+                "value": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "numberType": {
+                  "const": "int"
+                }
+              },
+              "additionalProperties": true
+            },
+            {
+              "title": "PublishedSelectiveFloat",
+              "type": "object",
+              "required": [
+                "name",
+                "featureId",
+                "featureType",
+                "scheduleType",
+                "schedule",
+                "valueType",
+                "value",
+                "numberType"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "featureId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "featureType": {
+                  "const": "selective"
+                },
+                "scheduleType": {
+                  "enum": [
+                    "",
+                    "global",
+                    "environment"
+                  ]
+                },
+                "schedule": {
+                  "$ref": "schedule.json"
+                },
+                "valueType": {
+                  "const": "number"
+                },
+                "value": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "numberType": {
+                  "const": "float"
+                }
+              },
+              "additionalProperties": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "PublishedValue",
+      "type": "object",
+      "required": [
+        "valueType"
+      ],
+      "properties": {
+        "featureType": {
+          "const": "value"
+        },
+        "valueType": {
+          "type": "string"
+        }
+      },
+      "discriminator": {
+        "propertyName": "valueType"
+      },
+      "oneOf": [
+        {
+          "title": "PublishedValueString",
+          "type": "object",
+          "required": [
+            "name",
+            "featureId",
+            "featureType",
+            "scheduleType",
+            "schedule",
+            "valueType",
+            "value"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "featureId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "featureType": {
+              "const": "value"
+            },
+            "scheduleType": {
+              "enum": [
+                "",
+                "global",
+                "environment"
+              ]
+            },
+            "schedule": {
+              "$ref": "schedule.json"
+            },
+            "valueType": {
+              "const": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": true
+        },
+        {
+          "title": "PublishedValueNumber",
+          "type": "object",
+          "required": [
+            "numberType"
+          ],
+          "properties": {
+            "numberType": {
+              "type": "string"
+            },
+            "valueType": {
+              "const": "number"
+            }
+          },
+          "discriminator": {
+            "propertyName": "numberType"
+          },
+          "oneOf": [
+            {
+              "title": "PublishedValueInt",
+              "type": "object",
+              "required": [
+                "name",
+                "featureId",
+                "featureType",
+                "scheduleType",
+                "schedule",
+                "valueType",
+                "value",
+                "numberType"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "featureId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "featureType": {
+                  "const": "value"
+                },
+                "scheduleType": {
+                  "enum": [
+                    "",
+                    "global",
+                    "environment"
+                  ]
+                },
+                "schedule": {
+                  "$ref": "schedule.json"
+                },
+                "valueType": {
+                  "const": "number"
+                },
+                "value": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "numberType": {
+                  "const": "int"
+                }
+              },
+              "additionalProperties": true
+            },
+            {
+              "title": "PublishedValueFloat",
+              "type": "object",
+              "required": [
+                "name",
+                "featureId",
+                "featureType",
+                "scheduleType",
+                "schedule",
+                "valueType",
+                "value",
+                "numberType"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "featureId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "featureType": {
+                  "const": "value"
+                },
+                "scheduleType": {
+                  "enum": [
+                    "",
+                    "global",
+                    "environment"
+                  ]
+                },
+                "schedule": {
+                  "$ref": "schedule.json"
+                },
+                "valueType": {
+                  "const": "number"
+                },
+                "value": {
+                  "type": "number"
+                },
+                "numberType": {
+                  "const": "float"
+                }
+              },
+              "additionalProperties": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

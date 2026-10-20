@@ -1,6 +1,5 @@
 import _React, { useEffect, useState, useMemo } from "react";
-import { Button, Timeline, Select, ActionIcon, Flex } from "@mantine/core";
-import { cloneDeep } from "lodash-es";
+import { Button, Timeline, ActionIcon, Flex } from "@mantine/core";
 
 import { AppState, HostingProvider } from "../../../types";
 
@@ -15,11 +14,9 @@ import { GitLabLogo } from "../../logos/GitLabLogo";
 import { Icon } from "@iconify/react";
 import verifiedCheckBold from "@iconify/icons-solar/verified-check-bold";
 import closeCircleBroken from "@iconify/icons-solar/close-circle-broken";
-import refreshBroken from "@iconify/icons-solar/refresh-broken";
 import { fetchersMap } from "../../../utils/fetchers.map";
 import { useSnapshot } from "valtio";
 
-const gitlabAppName = import.meta.env.VITE_GITLAB_APP_NAME;
 
 const baseAuthCallbackUrl = `${window.location.protocol}//${window.location.host}/auth/callback`;
 
@@ -48,7 +45,6 @@ export function GitLabForm({ config }: GitLabFormProps) {
   const configSnapshot = useSnapshot(config);
   const {
     accessToken,
-    installationId,
     repositoryId,
     repositoryName,
     owner,
@@ -61,7 +57,6 @@ export function GitLabForm({ config }: GitLabFormProps) {
       ? configSnapshot.hosting
       : {
           accessToken: "",
-          installationId: "",
           repositoryId: "",
           repositoryName: "",
           owner: "",
@@ -85,7 +80,6 @@ export function GitLabForm({ config }: GitLabFormProps) {
   function clearHosting() {
     if (config.hosting.provider === "gitlab") {
       config.hosting.accessToken = "";
-      config.hosting.installationId = "";
       config.hosting.repositoryId = "";
     } else {
       console.error(
@@ -146,7 +140,7 @@ export function GitLabForm({ config }: GitLabFormProps) {
       }
     }
     fetchData();
-  }, [accessToken, installationId, refreshTimestamp]);
+  }, [accessToken, refreshTimestamp]);
 
   useEffect(() => {
     async function getBranches() {
@@ -195,7 +189,7 @@ export function GitLabForm({ config }: GitLabFormProps) {
             fetchersMap[configSnapshot.hosting.provider as HostingProvider]?.();
 
           if (fetcher) {
-            const result = await fetcher.getCurrentConfig();
+            await fetcher.getCurrentConfig();
           } else {
             console.log("no fetcher");
           }

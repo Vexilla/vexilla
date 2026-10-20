@@ -238,6 +238,24 @@ public struct GradualFeature: BaseFeature {
   public let schedule: Schedule
   public let value: Float64
   public let seed: Float64
+
+  private enum CodingKeys: String, CodingKey {
+    case name, featureId, scheduleType, schedule, value, seed
+  }
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    name = try container.decode(String.self, forKey: .name)
+    featureId = try container.decode(String.self, forKey: .featureId)
+    scheduleType = try container.decode(ScheduleType.self, forKey: .scheduleType)
+    schedule = try container.decode(Schedule.self, forKey: .schedule)
+    value = try container.decode(Float64.self, forKey: .value)
+    seed = try container.decode(Float64.self, forKey: .seed)
+    guard seed.isFinite && seed > 0 && seed <= 1 else {
+      throw DecodingError.dataCorruptedError(forKey: .seed, in: container,
+        debugDescription: "seed must be a finite number greater than 0 and less than or equal to 1")
+    }
+  }
 }
 
 public struct SelectiveFeature: BaseFeature {

@@ -58,13 +58,16 @@ defmodule VexillaClient do
   """
   def get_flags!(config, group_name_or_id, http_callback) when is_function(http_callback) do
     group_id = config.group_lookup_table[group_name_or_id]
-    http_callback.("#{config.base_url}/#{group_id}.json")
+    group = http_callback.("#{config.base_url}/#{group_id}.json")
+    validate_seeds!(group)
+    group
   end
 
   @doc """
   Sets a fetched flag group within the Client instance.
   """
   def set_flags(config, group) do
+    validate_seeds!(group)
     group_environments =
       Enum.reduce(Map.values(group["environments"]), %{}, fn environment, group_environments ->
         group_environments
@@ -103,6 +106,16 @@ defmodule VexillaClient do
   def sync_flags!(config, group_name_or_id, http_callback) do
     group = get_flags!(config, group_name_or_id, http_callback)
     set_flags(config, group)
+  end
+
+  defp validate_seeds!(group) do
+    feature_maps = [group["features"] | Enum.map(Map.values(group["environments"]), & &1["features"])]
+    for features <- feature_maps, feature <- Map.values(features), feature["featureType"] == "gradual" do
+      seed = feature["seed"]
+      unless is_number(seed) and seed > 0 and seed <= 1 do
+        raise ArgumentError, "seed must be a number greater than 0 and less than or equal to 1"
+      end
+    end
   end
 
   @doc """

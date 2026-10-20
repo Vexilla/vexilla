@@ -76,6 +76,7 @@ rust_library(
 rust_test(
     name = "unit_test",
     srcs = [
+        "src/contract.rs",
         "src/hashing.rs",
         "src/lib.rs",
         "src/scheduling.rs",

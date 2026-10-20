@@ -1,0 +1,19 @@
+{
+  "name": "@vexilla/publishing",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "node --import tsx --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@vexilla/types": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2",
+    "tsx": "4.20.5",
+    "@types/node": "^20.5.8"
+  }
+}

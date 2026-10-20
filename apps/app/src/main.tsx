@@ -4,7 +4,6 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 
-import { H } from "highlight.run";
 import { ErrorBoundary } from "@highlight-run/react";
 
 import App from "./App.tsx";

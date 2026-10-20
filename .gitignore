@@ -39,5 +39,14 @@ yarn-error.log*
 bazel-*
 .build
 
+# Generated SDK contract artifacts
+.contract-artifacts/
+packages/types/dist/
+packages/publishing/dist/
+clients/csharp/Contract/bin/
+clients/csharp/Contract/obj/
+apps/app/test-results/
+apps/app/playwright-report/
+
 # openspec
 openspec

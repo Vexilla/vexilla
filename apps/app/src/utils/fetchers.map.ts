@@ -1,7 +1,7 @@
 import { BitbucketFetcher } from "../components/app/forms/BitbucketForm.fetchers";
 import { GitHubFetcher } from "../components/app/forms/GithubForm.fetchers";
 import { GitLabFetcher } from "../components/app/forms/GitlabForm.fetchers";
-import { HostingProvider, AppState } from "../types";
+import { HostingProvider } from "../types";
 import { Fetcher } from "./fetcher";
 
 export const fetchersMap: Record<HostingProvider, () => Fetcher> = {

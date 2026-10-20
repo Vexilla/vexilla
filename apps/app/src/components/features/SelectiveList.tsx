@@ -41,16 +41,13 @@ export function SelectiveList({
         <form
           onSubmit={form.onSubmit((values) => {
             let { newValue } = values;
-            if (valueType === "number" && typeof newValue === "string") {
-              newValue = parseFloat(newValue);
-            }
             const newItems = [...items, newValue];
             onListChange(newItems);
             closeModal();
             form.reset();
           })}
         >
-          <TextInput {...form.getInputProps("newValue")} label="Value" />
+          <TextInput inputMode={valueType === "number" ? "decimal" : "text"} {...form.getInputProps("newValue")} label="Value" />
 
           <Group justify="right" mt={"1rem"}>
             <Button

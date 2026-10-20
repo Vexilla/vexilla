@@ -256,7 +256,10 @@ class Client(
                 scheduleType = scheduleType,
                 schedule = schedule,
                 value = json.jsonObject["value"]!!.jsonPrimitive.content.toDouble(),
-                seed = json.jsonObject["seed"]!!.jsonPrimitive.content.toDouble()
+                seed = json.jsonObject["seed"]!!.jsonPrimitive.let { seed ->
+                    require(!seed.isString) { "seed must be a JSON number" }
+                    seed.content.toDouble()
+                }
             )
 
             FeatureType.SELECTIVE.typeName -> when (json.jsonObject["valueType"]?.jsonPrimitive?.content) {

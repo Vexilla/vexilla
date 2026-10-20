@@ -126,8 +126,8 @@ module Feature = struct
         let@ seed =
           List.assoc "seed" list
           |> function
-          | `Float value -> Ok value
-          | `Int value -> Ok (Float.of_int value)
+          | `Float value when value > 0. && value <= 1. -> Ok value
+          | `Int 1 -> Ok 1.
           | json ->
               Error
                 (Format.sprintf "Invalid value for Gradual Feature seed: %s"
@@ -155,7 +155,7 @@ module Feature = struct
       | `Int, elements ->
           Ok (Int_list (List.map Yojson.Safe.Util.to_int elements))
       | `Float, elements ->
-          Ok (Float_list (List.map Yojson.Safe.Util.to_float elements))
+          Ok (Float_list (List.map (function `Float f -> f | `Int i -> float_of_int i | _ -> failwith "Expected float") elements))
     with _ -> Error "Invalid value type"
   ;;
 
@@ -216,7 +216,15 @@ module Feature = struct
         let@ schedule_type =
           List.assoc "scheduleType" list |> Schedule.schedule_type_of_yojson
         in
-        let@ value = List.assoc "value" list |> scalar_value_of_yojson in
+        let raw_value = List.assoc "value" list in
+        let@ value = match List.assoc "valueType" list with
+          | `String "number" when List.assoc "numberType" list = `String "float" ->
+              (match raw_value with
+               | `Int i -> Ok (Float (float_of_int i))
+               | `Float f -> Ok (Float f)
+               | _ -> Error "Invalid float value")
+          | _ -> scalar_value_of_yojson raw_value
+        in
         Ok { attributes = { feature_id; name; schedule; schedule_type }; value }
     | _ -> Error "Invalid Value feature"
   ;;

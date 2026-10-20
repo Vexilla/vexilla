@@ -80,13 +80,19 @@ let should ~client ?instance_id group_id_or_name feature_name_or_id =
   let open Types.Feature in
   let@ feature = get_feature ~client group_id_or_name feature_name_or_id in
   let@ is_active = Schedule.is_schedule_feature_active feature in
-  if not is_active then Ok false
-  else
+  if not is_active then begin
+    Ok false
+  end else begin
     match feature with
     | Toggle toggle -> Ok toggle.value
     | Gradual gradual ->
+        let@ instance = match instance_id with
+          | None -> Ok client.instance_id
+          | Some (`String id) -> Ok id
+          | Some _ -> Error `Invalid_instance_id
+        in
         let hash =
-          Hash.hash_instance_id ~seed:gradual.seed client.instance_id
+          Hash.hash_instance_id ~seed:gradual.seed instance
         in
         Ok (hash <= gradual.value)
     | Selective selective -> (
@@ -108,6 +114,7 @@ let should ~client ?instance_id group_id_or_name feature_name_or_id =
             |> Option.is_some |> Result.ok
         | _ -> Result.error `Invalid_instance_id)
     | Value _ -> Result.error (`Unsupported_should_feature_type "feature")
+  end
 ;;
 
 let value ~client ~default ~group_key:group_id_or_name
@@ -115,9 +122,11 @@ let value ~client ~default ~group_key:group_id_or_name
   let open Types.Feature in
   let@ feature = get_feature ~client group_id_or_name feature_name_or_id in
   let@ is_active = Schedule.is_schedule_feature_active feature in
-  if not is_active then Ok default
-  else
+  if not is_active then begin
+    Ok default
+  end else begin
     match feature with
     | Value { value; _ } -> Result.ok value
     | _ -> Result.error `Unsupported_value_feature_type
+  end
 ;;

@@ -1,6 +1,5 @@
 import _React, { useEffect, useState, useMemo } from "react";
 import { Button, Timeline, Select, ActionIcon, Flex } from "@mantine/core";
-import { cloneDeep } from "lodash-es";
 
 import { AppState, HostingProvider } from "../../../types";
 
@@ -74,7 +73,7 @@ export function GithubForm({ config }: GithubFormProps) {
   const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now());
 
   const githubMethods = useMemo(() => {
-    return new GitHubFetcher(cloneDeep(config));
+    return new GitHubFetcher();
   }, [accessToken, owner, repositoryName]);
 
   function refresh() {
@@ -181,12 +180,10 @@ export function GithubForm({ config }: GithubFormProps) {
       async function fetchCurrentConfig() {
         if (configSnapshot.hosting?.providerType === "git") {
           const fetcher =
-            fetchersMap[configSnapshot.hosting.provider as HostingProvider]?.(
-              config
-            );
+            fetchersMap[configSnapshot.hosting.provider as HostingProvider]?.();
 
           if (fetcher) {
-            const result = await fetcher.getCurrentConfig();
+            await fetcher.getCurrentConfig();
           } else {
             console.log("no fetcher");
           }

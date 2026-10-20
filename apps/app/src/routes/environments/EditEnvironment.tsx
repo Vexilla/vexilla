@@ -60,6 +60,15 @@ export function EditEnvironment() {
           }
         }}
       />
+      {environment && environment.environmentId !== params.environmentId && (
+        <Button
+          onClick={() => {
+            environment.environmentId = params.environmentId!;
+          }}
+        >
+          Use environment ID {params.environmentId}
+        </Button>
+      )}
       <Flex direction="row" align="center">
         <h3>Defaults</h3>
         <CustomTooltip

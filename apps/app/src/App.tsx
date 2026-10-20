@@ -1,18 +1,12 @@
-import _React, { useEffect, useMemo } from "react";
-import { Outlet, useSearchParams } from "react-router-dom";
-import { AppShell, Flex, Modal, Box } from "@mantine/core";
+import _React, { useEffect, useMemo, useState } from "react";
+import { Link, Outlet, useSearchParams } from "react-router-dom";
+import { AppShell, Flex, Modal, Box, Text, Button } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useSnapshot } from "valtio";
-import { cloneDeep, omit, set as lodashSet } from "lodash-es";
+import { set as lodashSet } from "lodash-es";
 import { Difference } from "microdiff";
 
-import {
-  Group,
-  PublishedEnvironment,
-  PublishedGroup,
-  VexillaEnvironment,
-  VexillaFeature,
-} from "@vexilla/types";
+import { Group, ContractIssue } from "@vexilla/types";
 
 import { nanoid } from "./utils/nanoid";
 import { fetchersMap } from "./utils/fetchers.map";
@@ -26,7 +20,12 @@ import "./App.css";
 import { notifications } from "@mantine/notifications";
 import { HostingProvider, AppState } from "./types";
 
+import { publishApprovedChanges } from "./utils/publication";
+
 function App() {
+  const [publicationIssues, setPublicationIssues] = useState<ContractIssue[]>(
+    []
+  );
   const configSnapshot = useSnapshot(config);
   useSnapshot(remoteConfig);
   useSnapshot(remoteMetadata);
@@ -44,14 +43,13 @@ function App() {
     }
   }, [searchParams]);
 
-  const { accessToken, repositoryName, owner, targetBranch } =
+  const { accessToken, repositoryName, owner } =
     config.hosting.providerType === "git"
       ? config.hosting
       : {
           accessToken: "",
           repositoryName: "",
           owner: "",
-          targetBranch: "",
         };
 
   const groups = config.groups;
@@ -120,6 +118,57 @@ function App() {
   return (
     <>
       <Modal
+        opened={publicationIssues.length > 0}
+        onClose={() => setPublicationIssues([])}
+        title="Repair settings before publishing"
+        size="lg"
+      >
+        <Text mb="md">
+          No files were published. Edit the fields below and retry publication.
+        </Text>
+        {publicationIssues.map((issue, index) => {
+          const group = config.groups.find((g) => g.groupId === issue.groupId);
+          const feature = group?.features[issue.featureId || ""];
+          const environment = group?.environments[issue.environmentId || ""];
+          const route = feature
+            ? `/groups/${encodeURIComponent(
+                group!.groupId
+              )}/features/${encodeURIComponent(issue.featureId!)}#${
+                environment
+                  ? encodeURIComponent(`environment-${issue.environmentId}`)
+                  : "group-defaults"
+              }`
+            : group && environment
+            ? `/groups/${encodeURIComponent(
+                group.groupId
+              )}/environments/${encodeURIComponent(issue.environmentId!)}`
+            : group
+            ? `/groups/${encodeURIComponent(group.groupId)}`
+            : "/";
+          return (
+            <Box key={index} mb="lg">
+              <Text fw={600}>
+                {group?.name || issue.groupId || "Manifest"}
+                {feature ? ` / ${feature.name}` : ""}
+                {environment ? ` / ${environment.name}` : ""}
+              </Text>
+              <Text size="sm">{issue.path}</Text>
+              <Text>
+                Expected: {issue.expected}. {issue.repair}
+              </Text>
+              <Button
+                component={Link}
+                to={route}
+                onClick={() => setPublicationIssues([])}
+                mt="xs"
+              >
+                Edit affected settings
+              </Button>
+            </Box>
+          );
+        })}
+      </Modal>
+      <Modal
         opened={hostingConfigModalOpened}
         closeOnClickOutside={!!config.hosting?.provider}
         closeOnEscape={!!config.hosting?.provider}
@@ -133,14 +182,7 @@ function App() {
           <OnboardingForm
             config={config}
             updateProvider={({ provider, providerType }) => {
-              if (config.hosting) {
-                config.hosting.provider = provider;
-                config.hosting.providerType = providerType;
-
-                // this feels redundant
-                config.hosting.provider = provider as any;
-                config.hosting.providerType = providerType;
-              }
+              Object.assign(config.hosting, { provider, providerType });
             }}
           />
         </Box>
@@ -181,103 +223,18 @@ function App() {
                 remoteMetadata.remoteMergedAt = Date.now();
               }}
               publish={async (changes, approvals) => {
-                const newConfig = mergeLocalChanges(config, changes, approvals);
-
-                if (newConfig.hosting.providerType === "git") {
-                  const groupFiles = newConfig.groups.map((group) => {
-                    const scrubbedGroup: PublishedGroup = {
-                      ...group,
-                      meta: {
-                        version: "v1",
-                      },
-                      features: convertFeatureValuesBasedOnTypes(
-                        group.features
-                      ),
-                      environments: Object.values(group.environments).reduce(
-                        (scrubbedEnvironments, environment) => {
-                          const scrubbedEnvironment = omit(
-                            environment,
-                            "defaultEnvironmentFeatureValues"
-                          );
-
-                          scrubbedEnvironment.features =
-                            convertFeatureValuesBasedOnTypes(
-                              scrubbedEnvironment.features
-                            );
-
-                          scrubbedEnvironments[environment.environmentId] =
-                            scrubbedEnvironment;
-
-                          return scrubbedEnvironments;
-                        },
-                        {} as Record<string, PublishedEnvironment>
-                      ),
-                    };
-
-                    return {
-                      filePath: `${group.groupId}.json`,
-                      content: JSON.stringify(scrubbedGroup, null, 2),
-                    };
-                  });
-
-                  const manifestFile = {
-                    filePath: "manifest.json",
-                    content: JSON.stringify(
-                      {
-                        version: "v1",
-                        groups: newConfig.groups.map((group) => {
-                          return {
-                            name: group.name,
-                            groupId: group.groupId,
-                          };
-                        }),
-                      },
-                      null,
-                      2
-                    ),
-                  };
-
-                  const cleanConfig = cloneDeep(newConfig);
-                  if (cleanConfig.hosting.providerType === "git") {
-                    cleanConfig.hosting.accessToken = "";
-                  } else if (cleanConfig.hosting.providerType === "direct") {
-                    // cleanConfig.hosting.accessKeyId = "";
-                    // cleanConfig.hosting.secretAccessKey = "";
-                  }
-
-                  cleanConfig.groups = cleanConfig.groups.map((group) => {
-                    group.features = convertFeatureValuesBasedOnTypes(
-                      group.features
-                    );
-
-                    group.environments = Object.entries(
-                      group.environments
-                    ).reduce(
-                      (newEnvironments, [environmentId, environment]) => {
-                        environment.features = convertFeatureValuesBasedOnTypes(
-                          environment.features
-                        );
-                        newEnvironments[environmentId] = environment;
-                        return newEnvironments;
-                      },
-                      {} as Record<string, VexillaEnvironment>
-                    );
-                    return group;
-                  });
-
-                  if (gitMethods) {
-                    await gitMethods.publish(targetBranch || "", [
-                      manifestFile,
-                      ...groupFiles,
-                      {
-                        filePath: "config.json",
-                        content: JSON.stringify(cleanConfig, null, 2),
-                      },
-                    ]);
-
-                    notifications.show({
-                      message: "PR Created",
-                    });
+                if (config.hosting.providerType === "git" && gitMethods) {
+                  const result = await publishApprovedChanges(
+                    config,
+                    changes,
+                    approvals,
+                    (files, branch) => gitMethods.publish(branch || "", files)
+                  );
+                  if (!result.success) {
+                    setPublicationIssues(result.issues);
+                  } else {
+                    setPublicationIssues([]);
+                    notifications.show({ message: "PR Created" });
                   }
                 }
               }}
@@ -324,34 +281,6 @@ function App() {
   );
 }
 
-// assumes that the Remote is the old Value and Local is the new Value
-function mergeLocalChanges(
-  localConfig: AppState,
-  changes: Difference[],
-  approvals: Record<string, boolean>
-) {
-  changes.forEach((change) => {
-    const changePathString = change.path.join(".");
-    const approved = approvals[changePathString];
-
-    if (!approved) {
-      switch (change.type) {
-        case "CHANGE":
-          lodashSet(localConfig, change.path, change.oldValue);
-          break;
-        case "CREATE":
-          lodashSet(localConfig, change.path, undefined);
-          break;
-        case "REMOVE":
-          lodashSet(localConfig, change.path, change.oldValue);
-          break;
-      }
-    }
-  });
-
-  return localConfig;
-}
-
 function mergeRemoteChanges(
   localConfig: AppState,
   changes: Difference[],
@@ -377,41 +306,6 @@ function mergeRemoteChanges(
   });
 
   return localConfig;
-}
-
-function convertFeatureValuesBasedOnTypes(
-  features: Record<string, VexillaFeature>
-) {
-  return Object.entries(features).reduce(
-    (newFeatures, [featureId, feature]) => {
-      if (feature.featureType === "selective") {
-        if (!Array.isArray(feature.value)) {
-          feature.value = [];
-        } else if (feature.valueType === "string") {
-          feature.value = feature.value.map((value) => `${value}`);
-        } else if (feature.numberType === "int") {
-          feature.value = feature.value.map((value) => parseInt(`${value}`));
-        } else {
-          feature.value = feature.value.map((value) => parseFloat(`${value}`));
-        }
-      }
-
-      if (feature.featureType === "value") {
-        if (feature.valueType === "string") {
-          feature.value = `${feature.value}`;
-        } else if (feature.numberType === "int") {
-          feature.value = parseInt(`${feature.value}`);
-        } else {
-          feature.value = parseFloat(`${feature.value}`);
-        }
-      }
-
-      newFeatures[featureId] = feature;
-
-      return newFeatures;
-    },
-    {} as Record<string, VexillaFeature>
-  );
 }
 
 export default App;

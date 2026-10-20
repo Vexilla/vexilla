@@ -1,10 +1,10 @@
 import { z } from "zod";
 
 import type { HostingStatusType } from "./hosts/enums";
-// import type { HostingConfigS3 } from "./hosts/hosting-adapters/s3.adapter";
-// import type { HostingConfigAzure } from "./hosts/hosting-adapters/azure.adapter";
-// import type { HostingConfigGcloud } from "./hosts/hosting-adapters/gcloud.adapter";
-// import type { HostingConfigFirebase } from "./hosts/hosting-adapters/firebase.adapter";
+import type { HostingConfigS3 } from "./hosts/hosting-adapters/s3.adapter";
+import type { HostingConfigAzure } from "./hosts/hosting-adapters/azure.adapter";
+import type { HostingConfigGcloud } from "./hosts/hosting-adapters/gcloud.adapter";
+import type { HostingConfigFirebase } from "./hosts/hosting-adapters/firebase.adapter";
 import type { Group } from "@vexilla/types";
 
 export interface AppState {
@@ -79,10 +79,10 @@ export interface HostingConfigEmpty extends HostingConfigBase {
 
 export type HostingConfig =
   | HostingConfigEmpty
-  // | HostingConfigS3
-  // | HostingConfigAzure
-  // | HostingConfigGcloud
-  // | HostingConfigFirebase
+  | HostingConfigS3
+  | HostingConfigAzure
+  | HostingConfigGcloud
+  | HostingConfigFirebase
   | HostingConfigGitLab
   | HostingConfigGithub
   | HostingConfigBitbucket;

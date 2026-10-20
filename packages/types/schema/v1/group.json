@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://vexilla.dev/schema/v1/group.json",
+  "title": "PublishedGroup",
+  "type": "object",
+  "required": [
+    "name",
+    "groupId",
+    "meta",
+    "features",
+    "environments"
+  ],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "groupId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "meta": {
+      "type": "object",
+      "required": [
+        "version"
+      ],
+      "properties": {
+        "version": {
+          "const": "v1"
+        }
+      },
+      "additionalProperties": true
+    },
+    "features": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "feature.json"
+      }
+    },
+    "environments": {
+      "type": "object",
+      "additionalProperties": {
+        "title": "PublishedEnvironment",
+        "type": "object",
+        "required": [
+          "name",
+          "environmentId",
+          "features"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "environmentId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "features": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "feature.json"
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}
