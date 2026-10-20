@@ -93,14 +93,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/test-server
 
-      - name: Cache Bazel
+      # Output bases contain compiler paths specific to the runner image.
+      - name: Cache Bazel downloads
         uses: actions/cache@v4
         with:
           path: |
-            ~/.cache/bazel
-          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel') }}
+            ~/.cache/bazel/_bazel_*/cache/repos/v1
+          key: ${{ runner.os }}-${{ runner.arch }}-bazel-repos-v1-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel', 'MODULE.bazel.lock') }}
           restore-keys: |
-            ${{ runner.os }}-bazel-
+            ${{ runner.os }}-${{ runner.arch }}-bazel-repos-v1-
       - run: bazel build //...
       - run: bazel coverage --combined_report=lcov //...
         env:
