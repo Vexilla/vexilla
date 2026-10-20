@@ -1,6 +1,6 @@
 ## Validation on 2026-10-19
 
-The workflow edits are implemented. Bazel 7.6.1 is a candidate, pending successful hosted build and coverage. No client source, lockfile, test assertion, or test target has changed, and no regression test files or workflow-testing harness were added.
+The workflow edits are implemented. Bazel 7.6.1 passed hosted build and coverage in both PR Test runs. OCaml passed setup, locked installation, build, and all 8 existing tests after adding the official archive for locked packages. PHP provisioning and installation succeeded, but the existing suite exposed a scheduling failure in the second hosted run after passing the first. No client source, lockfile, test assertion, or test target has changed, and no regression test files or workflow-testing harness were added. Acceptance remains open for the PHP client failure.
 
 ### Workflow review
 
@@ -20,9 +20,9 @@ The actual `shivammathur/setup-php@v2` entry point ran in a disposable Ubuntu 24
 - `composer install` from `clients/php` completed against the committed lockfile.
 - `TEST_SERVER_HOST=localhost:3000 composer test` completed: `OK (1 test, 17 assertions)`.
 
-This validates the PHP provisioning and existing suite locally. Neither hosted workflow path has executed with these edits yet.
+This validates the PHP provisioning and existing suite locally. The hosted PR Test result is recorded below.
 
-### Bazel: candidate remains unverified
+### Local Bazel validation limitation
 
 In disposable Ubuntu 22.04 x86-64 with OpenJDK 17, Bazel 7.6.1 resolved the mixed repository graph and reached compilation across the existing targets. `bazel build //...` then failed in the .NET compiler with:
 
@@ -32,22 +32,34 @@ assertion failed [block != nullptr]: BasicBlock requested for unrecognized addre
 compiler_wrapper.sh: ... Trace/breakpoint trap
 ```
 
-The host is Apple Silicon and Docker runs these processes through Rosetta. The symptom matches a [reported .NET/Rosetta runtime issue](https://github.com/dotnet/runtime/issues/106819); this is evidence of a local validation limitation, not proof of a client-code defect. The subsequent unchanged `bazel coverage --combined_report=lcov //...` invocation stalled and was stopped (exit 137). Neither command has successful acceptance evidence. No targets were excluded.
+The host is Apple Silicon and Docker runs these processes through Rosetta. The symptom matches a [reported .NET/Rosetta runtime issue](https://github.com/dotnet/runtime/issues/106819); this is evidence of a local validation limitation, not proof of a client-code defect. The subsequent unchanged `bazel coverage --combined_report=lcov //...` invocation stalled and was stopped (exit 137). The successful hosted run below supplies acceptance evidence for both commands. No targets were excluded.
 
-### OCaml: runtime validation pending
+### Local OCaml validation limitation
 
-The `v3` action source filters optional packages such as `darcs` through the available apt package metadata. Both workflows explicitly select 4.14.2, matching the committed lockfile. A local attempt to execute the action stopped before setup because its GitHub API client requires the token normally supplied by Actions: `Error: Parameter token or opts.auth is required`. The locked dependency installation, build, and tests have not run under the proposed setup.
+The `v3` action source filters optional packages such as `darcs` through the available apt package metadata. Both workflows explicitly select 4.14.2, matching the committed lockfile. A local attempt to execute the action stopped before setup because its GitHub API client requires the token normally supplied by Actions: `Error: Parameter token or opts.auth is required`. Hosted setup subsequently succeeded, as recorded below.
 
-### Hosted workflow evidence pending
+### Hosted workflow evidence
 
 The [original failing Test run](https://github.com/Vexilla/vexilla/actions/runs/39336758899) predates these changes and is not acceptance evidence. [Draft PR #61](https://github.com/Vexilla/vexilla/pull/61) triggered [PR Test run 39344712485](https://github.com/Vexilla/vexilla/actions/runs/39344712485) at commit `0a21dc8`.
 
 - PHP passed on the hosted runner with PHP 7.4.33, Composer 2.10.3, and PCOV 1.0.12: `OK (1 test, 17 assertions)`, reaching `localhost:3000`.
-- OCaml setup succeeded without requiring `darcs` and installed compiler 4.14.2. The existing locked installation then failed with exit 20: `deps-of-vexilla_sdk -> conduit-lwt-unix = 6.2.2`, `no matching version`. That version exists in the official opam archive with reason `maintenance-intent`. Both workflows now include the archive after the default repository; hosted validation of this follow-on provisioning repair is pending. The lockfile is unchanged.
-- Bazel build and coverage results are still being collected.
+- OCaml setup succeeded without requiring `darcs` and installed compiler 4.14.2. The existing locked installation then failed with exit 20: `deps-of-vexilla_sdk -> conduit-lwt-unix = 6.2.2`, `no matching version`. That version exists in the official opam archive with reason `maintenance-intent`. Both workflows now include the archive after the default repository; the follow-on hosted result below verifies the repair. The lockfile is unchanged.
+- [Bazel passed](https://github.com/Vexilla/vexilla/actions/runs/39344712485/job/118374425584). Bazelisk downloaded 7.6.1 from the committed repository pin. `bazel build //...` completed successfully with 1108 actions. `bazel coverage --combined_report=lcov //...` generated `_coverage_report.dat` and reported `Executed 4 out of 4 tests: 4 tests pass.` The C#, Go internal, Go client, and Rust targets all passed.
 
 The separate `.github/workflows/test.yml` path has not executed with this patch; its push filter does not match the slash-containing task branch. No triggers have been changed.
 
-Hosted validation will use the workflows' existing events. The validation tasks remain open until the affected jobs execute successfully; the change is not ready to archive.
+### Follow-on hosted run and exposed PHP scheduler bug
+
+[PR Test run 39345385267](https://github.com/Vexilla/vexilla/actions/runs/39345385267) tests archive repair commit `2a97c01`. Bazel passed again. The [OCaml job](https://github.com/Vexilla/vexilla/actions/runs/39345385267/job/118376609349) also passed: setup installed compiler 4.14.2, the unchanged locked dependency installation installed `conduit-lwt-unix.6.2.2`, and the existing `dune build` and `dune test` commands completed successfully. Alcotest reported 2 hash tests, 5 schedule tests, and 1 client integration test successful (8 total).
+
+All unaffected client jobs (Elixir, Kotlin, Python, and Swift) passed. The overall run failed solely because of the PHP scheduling assertion below.
+
+The [PHP job](https://github.com/Vexilla/vexilla/actions/runs/39345385267/job/118376609326) successfully provisioned PHP and installed the committed dependencies. Its unchanged `composer test` command then failed at `clients/php/tests/ClientTest.php:67`: `Failed asserting that true is false` for `afterGlobal` (1 test, 11 assertions, 1 failure). The failure occurred at 2026-10-20 00:04:54 UTC; the same command had passed at 2026-10-19 23:58:43 UTC in the first hosted run.
+
+Read-only investigation identified `clients/php/src/Scheduler.php` setting end-of-day microseconds to `999_999_999`. A PHP 7.4 reproduction confirms that `setTime(23, 59, 59, 999_999_999)` produces `2026-10-20 00:16:38.999999` for an end date of October 19. The valid `999_999` microsecond value produces `2026-10-19 23:59:59.999999`. Thus the existing scheduler can treat an expired previous-day schedule as active just after midnight, matching the hosted failure.
+
+The finding was reported before making client changes. A scope decision has been requested; client code and assertions remain unchanged. PHP acceptance task 4.4 is reopened rather than treating the first green run as proof that the suite is reliable. Raw reproduction output is in `php-schedule-reproduction.log` alongside the hosted logs.
+
+Hosted validation used the workflows' existing events. Task 4.4 remains open for the PHP client failure; the change is not ready to archive.
 
 Raw local logs are in `/private/tmp/vexilla-ci-validation/` for this session.

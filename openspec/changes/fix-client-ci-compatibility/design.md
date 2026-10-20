@@ -32,7 +32,7 @@ OCaml setup also resolves the floating `4.14` selector to 4.14.4, while `clients
 
 ### Pin an exact compatible Bazel 7 release
 
-Use `.bazelversion` as the version source for Bazelisk in both workflows. Select an exact 7.x release during implementation by running `bazel build //...` and `bazel coverage --combined_report=lcov //...` with the current mixed dependency configuration. Record the selected version and the resulting CI evidence. Do not claim that a candidate is compatible merely because it resolves `@rules_rust`.
+Use `.bazelversion` as the version source for Bazelisk in both workflows. Pin 7.6.1: [PR Test run 39344712485](https://github.com/Vexilla/vexilla/actions/runs/39344712485/job/118374425584) passed `bazel build //...` and `bazel coverage --combined_report=lcov //...` with the current mixed dependency configuration, generated LCOV output, and passed all 4 existing tests without excluding targets. Repository loading alone is not acceptance evidence.
 
 [Bazel 9 removed `WORKSPACE` support](https://blog.bazel.build/2026/01/20/bazel-9.html), so adjusting a single missing repository is insufficient. A complete Bzlmod migration would involve several language toolchains and exceeds this repair's scope. An exact Bazel 7 pin preserves the current dependency model. The existing cache keys already include `.bazelversion`, so the new pin participates in cache invalidation without a separate cache redesign.
 
@@ -64,7 +64,7 @@ The spec scenarios describe observations to make in the existing CI runs. They d
 
 ## Risks / Trade-offs
 
-- **The exact compatible Bazel 7 release is not established.** → Treat selection as an implementation task and require both existing Bazel commands to pass. No retained successful run was available during investigation to recover a known-good version.
+- **The separate Test workflow path has not executed with this patch.** → Bazel 7.6.1 passed the PR Test runner's existing build and coverage commands. Record that evidence alongside the unexecuted Test path instead of claiming both runner configurations have been exercised.
 - **Other old toolchains or dependency downloads may fail after the first blocker is removed.** → Inspect the next failing command and distinguish CI provisioning failures from client-code failures before expanding scope.
 - **Removing the PHP container changes service addressing and the installed extension set.** → Explicitly provision the required extensions and use `localhost:3000`; verify the existing HTTP integration test completes.
 - **Duplicate workflow configuration can drift.** → Apply and review equivalent changes in both files and validate both affected job definitions.
@@ -80,5 +80,6 @@ No application release or data migration is required. Rollback consists of rever
 
 ## Open Questions
 
-- Which exact Bazel 7 release passes the existing build and coverage commands? Resolve through implementation-time validation; no additional user preference is needed.
-- Do further setup or client failures become visible after recovery? The investigated run cannot answer this because those checks did not execute.
+- Resolved: Bazel 7.6.1 passed the existing hosted build and coverage commands in PR Test run 39344712485.
+- Resolved: The official opam archive restored the locked dependency installation, and OCaml passed all 8 existing tests in PR Test run 39345385267.
+- Scope decision pending: The second hosted run exposed a PHP scheduler overflow at `clients/php/src/Scheduler.php` (`setMicroseconds(999_999_999)`). It extends end-of-day into the next day, causing the existing `afterGlobal` assertion to fail just after UTC midnight. PHP provisioning and Composer installation succeeded. The failure, command, and read-only reproduction are recorded in `validation.md`; client changes require agreement on expanded scope.

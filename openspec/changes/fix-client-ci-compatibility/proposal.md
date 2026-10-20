@@ -4,7 +4,7 @@
 
 ## What Changes
 
-- Validate an exact Bazel 7 release against the existing build and coverage commands, then pin it in `.bazelversion` while retaining the current `WORKSPACE` and Bzlmod dependency structure.
+- Pin Bazel 7.6.1 in `.bazelversion`, validated against the existing hosted build and coverage commands, while retaining the current `WORKSPACE` and Bzlmod dependency structure.
 - Upgrade OCaml setup to `ocaml/setup-ocaml@v3`, select compiler 4.14.2, and include the official opam archive as a lower-priority source so the existing lockfile remains installable.
 - Replace the PHP container and manual installation commands with `shivammathur/setup-php@v2`, retaining PHP 7.4 and explicitly configuring Composer, required extensions, and PCOV.
 - Point the PHP tests at `localhost:3000` after moving execution onto the runner, retaining the existing test-server service.
@@ -26,4 +26,4 @@ None; the repository has no existing capability specifications.
 - Implementation is expected to affect `.bazelversion`, `.github/workflows/test.yml`, and `.github/workflows/pr.yml`.
 - CI setup gains an explicit Bazel version, updated OCaml action, and a PHP setup action; PHP test-server networking changes from container DNS to the runner's published port.
 - Client APIs, supported PHP version, and client behavior remain unchanged. No new regression tests, full Bzlmod migration, workflow consolidation, or unrelated action upgrades are included.
-- A green build has not yet been demonstrated with the proposed setup. The exact Bazel 7 pin will be selected during implementation through validation of the existing commands.
+- Bazel 7.6.1 passed hosted build and coverage (4/4 tests), and OCaml passed setup, locked installation, build, and all 8 existing tests with the official archive enabled. PHP provisioning is restored, but a second hosted run exposed an existing scheduler overflow after the suite passed initially. That client-code fix remains outside the agreed CI scope.
