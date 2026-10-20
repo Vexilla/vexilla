@@ -3,12 +3,35 @@ declare(strict_types=1);
 
 namespace Vexilla\Tests;
 
+use Carbon\Carbon;
 use PHPUnit\Framework\TestCase;
 use Vexilla\Client;
+use Vexilla\Scheduler;
+use Vexilla\Types\Schedule;
+use Vexilla\Types\ScheduleType;
 
 final class ClientTest extends TestCase
 {
   private $uuid = 'b7e91cc5-ec76-4ec3-9c1c-075032a13a1a';
+
+  public function testScheduleExpiresAtUtcMidnight()
+  {
+    $schedule = new Schedule(
+      Carbon::parse('2026-10-18 00:00:00', 'UTC')->timestamp * 1000,
+      Carbon::parse('2026-10-19 00:00:00', 'UTC')->timestamp * 1000
+    );
+
+    $this->assertTrue(Scheduler::isScheduleActiveWithNow(
+      $schedule,
+      ScheduleType::GLOBAL,
+      Carbon::parse('2026-10-19 23:59:59.999999', 'UTC')
+    ));
+    $this->assertFalse(Scheduler::isScheduleActiveWithNow(
+      $schedule,
+      ScheduleType::GLOBAL,
+      Carbon::parse('2026-10-20 00:00:00', 'UTC')
+    ));
+  }
 
   public function testClient()
   {

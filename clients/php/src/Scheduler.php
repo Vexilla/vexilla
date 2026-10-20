@@ -41,7 +41,7 @@ class Scheduler
                 $startOfStartDate->setMicroseconds(0);
 
                 $endDate = Carbon::createFromTimestampMsUTC($schedule->end);
-                $endOfEndDate = $endDate->clone()->setHours(23)->setMinutes(59)->setSeconds(59)->setMicroseconds(999_999_999);
+                $endOfEndDate = $endDate->clone()->endOfDay();
 
                 if (!$now->betweenIncluded($startOfStartDate, $endOfEndDate)) {
                     return false;

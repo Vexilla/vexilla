@@ -1,6 +1,6 @@
 ## Validation on 2026-10-19
 
-The workflow edits are implemented. Bazel 7.6.1 passed hosted build and coverage in both PR Test runs. OCaml passed setup, locked installation, build, and all 8 existing tests after adding the official archive for locked packages. PHP provisioning and installation succeeded, but the existing suite exposed a scheduling failure in the second hosted run after passing the first. No client source, lockfile, test assertion, or test target has changed, and no regression test files or workflow-testing harness were added. Acceptance remains open for the PHP client failure.
+The workflow edits are implemented. Bazel and OCaml passed hosted validation. PHP provisioning exposed an existing scheduler overflow, which the user subsequently authorized fixing. The focused one-line correction and one case in the existing PHP test file pass locally on PHP 7.4.33; hosted PHP acceptance remains pending. No lockfile, existing assertion, or test target has changed, and no regression test files or workflow-testing harness were added.
 
 ### Workflow review
 
@@ -58,7 +58,19 @@ The [PHP job](https://github.com/Vexilla/vexilla/actions/runs/39345385267/job/11
 
 Read-only investigation identified `clients/php/src/Scheduler.php` setting end-of-day microseconds to `999_999_999`. A PHP 7.4 reproduction confirms that `setTime(23, 59, 59, 999_999_999)` produces `2026-10-20 00:16:38.999999` for an end date of October 19. The valid `999_999` microsecond value produces `2026-10-19 23:59:59.999999`. Thus the existing scheduler can treat an expired previous-day schedule as active just after midnight, matching the hosted failure.
 
-The finding was reported before making client changes. A scope decision has been requested; client code and assertions remain unchanged. PHP acceptance task 4.4 is reopened rather than treating the first green run as proof that the suite is reliable. Raw reproduction output is in `php-schedule-reproduction.log` alongside the hosted logs.
+The finding was reported before making client changes. The user then authorized the focused PHP fix. PHP acceptance task 4.4 remains open until hosted validation of that correction completes. Raw reproduction output is in `php-schedule-reproduction.log` alongside the hosted logs.
+
+### Authorized PHP scheduler correction: local verification
+
+The scheduler now calls `endOfDay()` on the cloned UTC end date. One deterministic case in the existing `ClientTest.php` exercises the real scheduler with explicit current times: the final microsecond of the end date remains included, and the next midnight is excluded.
+
+- Before changing the scheduler, `composer test -- --filter testScheduleExpiresAtUtcMidnight` failed at the next-midnight assertion: `Tests: 1, Assertions: 2, Failures: 1`.
+- After the one-line correction, the same command passed: `OK (1 test, 2 assertions)`.
+- The unchanged `composer test` command passed against the existing test server at `localhost:3000`: `OK (2 tests, 19 assertions)`.
+- PHP 7.4.33 syntax checks passed for both edited PHP files. The local environment used native Linux ARM64 with the same setup-php version, extension, Composer, and PCOV inputs as the hosted jobs; hosted x86-64 validation remains pending.
+- No test file was added and no existing integration assertion was changed.
+
+Raw output: `php-scheduler-red.log`, `php-scheduler-green.log`, and `php-scheduler-suite.log` in the session evidence directory.
 
 Hosted validation used the workflows' existing events. Task 4.4 remains open for the PHP client failure; the change is not ready to archive.
 

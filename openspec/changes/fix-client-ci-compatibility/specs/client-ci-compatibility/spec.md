@@ -75,3 +75,18 @@ Validation SHALL use the existing build, test, and coverage commands and preserv
 - **WHEN** an existing test or compilation step reveals a client-code failure after provisioning succeeds
 - **THEN** the failure is recorded with its job, command, and error
 - **AND** client changes and additional tests are scoped separately before implementation proceeds into that expanded work
+
+### Requirement: PHP schedules expire at the end of their UTC end date
+
+The PHP scheduler SHALL keep an otherwise active global schedule active through 23:59:59.999999 UTC on its configured end date and SHALL consider it expired from 00:00:00 UTC on the next day. Computing the inclusive end-of-day boundary MUST NOT overflow into the following date.
+
+#### Scenario: The final microsecond is included
+
+- **WHEN** a global schedule ends on October 19 and the supplied current UTC time is October 19 at 23:59:59.999999
+- **THEN** the schedule is active
+
+#### Scenario: The following midnight is excluded
+
+- **WHEN** the same schedule is evaluated at October 20 at 00:00:00 UTC
+- **THEN** the schedule is expired
+- **AND** this boundary is covered by one deterministic case in the existing PHP test file without changing the existing integration assertions

@@ -20,4 +20,9 @@
 - [ ] 4.4 Verify PHP 7.4, Composer, extensions, and PCOV are provisioned; confirm the existing `composer install` and `composer test` commands succeed, including the client test against `localhost:3000`.
 - [x] 4.5 Record CI run links and affected-job outcomes for both workflow definitions exercised through existing events, explicitly identifying any workflow path not executed. Report any newly exposed client-code failure with its job, command, and error before expanding scope. Add no regression test files or workflow-testing harness for these provisioning failures.
 
-Validation details and remaining execution requirements are recorded in [validation.md](validation.md). Bazel 7.6.1 passed hosted build and coverage; OCaml passed setup, locked installation, build, and all 8 tests with the archive enabled. PHP provisioning and installation succeeded, but its existing suite failed a scheduling assertion on the second hosted run after passing the first; task 4.4 is reopened until that result is resolved. The PHP source fix requires a separate scope decision. The change is not ready to archive.
+## 5. Correct the authorized PHP scheduler bug
+
+- [x] 5.1 Add one deterministic case to the existing PHP test file for the final included UTC microsecond and the next midnight, and demonstrate it fails against the current scheduler.
+- [x] 5.2 Use Carbon's end-of-day boundary on the cloned end date, then verify the focused case and existing Composer suite before hosted validation.
+
+Validation details and remaining execution requirements are recorded in [validation.md](validation.md). Bazel and OCaml passed hosted validation. The user has authorized the reported PHP scheduler fix; task 4.4 remains open until PHP acceptance succeeds. The change is not ready to archive.

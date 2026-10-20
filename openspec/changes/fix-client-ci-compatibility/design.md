@@ -20,13 +20,14 @@ OCaml setup also resolves the floating `4.14` selector to 4.14.4, while `clients
 - Make the Bazel and OCaml compiler selections explicit and compatible with the current project configuration.
 - Keep testing PHP 7.4 while provisioning Composer and required extensions through a setup action.
 - Validate the repair with the existing build, test, and coverage commands, preserving their targets and assertions.
+- Correct the demonstrated PHP end-of-day overflow, as authorized after the hosted failure was reported, with one deterministic regression case in the existing test file.
 
 **Non-Goals:**
 
-- Adding regression tests for setup failures or changing client behavior, APIs, or runtime support policy.
+- Adding regression tests for setup failures, changing client APIs or runtime support policy, or making client changes beyond the authorized PHP expiry correction.
 - Migrating all Bazel dependencies to Bzlmod, refreshing client dependency lockfiles, or upgrading unrelated actions.
 - Consolidating the workflows, changing their triggers, or modifying the test-server image or publishing process.
-- Fixing newly exposed client-code failures without first reporting the finding and agreeing on expanded scope.
+- Fixing any further newly exposed client-code failures without first reporting the finding and agreeing on expanded scope.
 
 ## Decisions
 
@@ -62,6 +63,12 @@ Run the existing checks through GitHub Actions in the environments that previous
 
 The spec scenarios describe observations to make in the existing CI runs. They do not request new test files or a workflow-testing harness. If setup recovery exposes an application failure, record its job, failing command, and error before proposing additional client changes.
 
+### Correct the PHP expiry overflow with a deterministic boundary check
+
+The user approved this focused client fix after the PHP scheduling failure was reported. The scheduler currently supplies `999_999_999` microseconds when computing end-of-day. PHP normalizes that value into the following day at 00:16:38.999999, causing the existing `afterGlobal` assertion to fail just after midnight. Use Carbon's `endOfDay()` on the cloned UTC end date to express 23:59:59.999999 without a manually specified fractional-second value.
+
+Add one case to the existing `ClientTest.php`, calling `isScheduleActiveWithNow` with fixed UTC times. Verify the schedule is active at the end date's final microsecond and inactive at the next day's midnight. Run that case before changing the scheduler to prove it reaches the actual failure, then run it and the existing Composer suite after the correction. Existing assertions and commands remain intact; no new regression test files are needed.
+
 ## Risks / Trade-offs
 
 - **The separate Test workflow path has not executed with this patch.** → Bazel 7.6.1 passed the PR Test runner's existing build and coverage commands. Record that evidence alongside the unexecuted Test path instead of claiming both runner configurations have been exercised.
@@ -82,4 +89,4 @@ No application release or data migration is required. Rollback consists of rever
 
 - Resolved: Bazel 7.6.1 passed the existing hosted build and coverage commands in PR Test run 39344712485.
 - Resolved: The official opam archive restored the locked dependency installation, and OCaml passed all 8 existing tests in PR Test run 39345385267.
-- Scope decision pending: The second hosted run exposed a PHP scheduler overflow at `clients/php/src/Scheduler.php` (`setMicroseconds(999_999_999)`). It extends end-of-day into the next day, causing the existing `afterGlobal` assertion to fail just after UTC midnight. PHP provisioning and Composer installation succeeded. The failure, command, and read-only reproduction are recorded in `validation.md`; client changes require agreement on expanded scope.
+- Scope approved: The user authorized correcting the reported PHP scheduler overflow. The focused correction and deterministic boundary case are included; hosted PHP validation remains pending.
