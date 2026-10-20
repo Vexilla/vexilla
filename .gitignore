@@ -38,3 +38,6 @@ yarn-error.log*
 # bazel
 bazel-*
 .build
+
+# openspec
+openspec
