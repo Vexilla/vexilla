@@ -160,10 +160,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set-up OCaml 4.14
-        uses: ocaml/setup-ocaml@v2
+      - name: Set-up OCaml 4.14.2
+        uses: ocaml/setup-ocaml@v3
         with:
-          ocaml-compiler: "4.14"
+          ocaml-compiler: "4.14.2"
+          opam-repositories: |
+            default: https://opam.ocaml.org
+            archive: git+https://github.com/ocaml/opam-repository-archive
 
       - name: Cache Dependencies
         uses: actions/cache@v4
@@ -186,7 +189,6 @@ jobs:
 
   test-php:
     runs-on: ubuntu-latest
-    container: php:7.4.33-fpm
     needs: ["publish-test-server"]
 
     services:
@@ -211,24 +213,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-php-
 
-      - name: Install Composer
-        run: |
-          apt-get update
-          apt-get install git unzip -y
-          pecl install pcov
-          cp /usr/local/etc/php/php.ini-development /usr/local/etc/php/php.ini
-          printf '%s\n' 'extension=pcov.so' >> /usr/local/etc/php/php.ini
-          php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-          # php -r "if (hash_file('sha384', 'composer-setup.php') === 'e21205b207c3ff031906575712edab6f13eb0b361f2085f1f1237b7126d785e826a450292b6cfd1d64d92e6563bbde02') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
-          php composer-setup.php  --install-dir=/usr/local/bin --filename=composer
-          php -r "unlink('composer-setup.php');"
+      - name: Set-up PHP 7.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "7.4"
+          tools: composer:v2
+          extensions: dom, json, libxml, mbstring, pdo, phar, tokenizer, xml, xmlwriter
+          coverage: pcov
 
       - run: |
           cd ./clients/php
           composer install
           composer test
         env:
-          TEST_SERVER_HOST: test-server:3000
+          TEST_SERVER_HOST: localhost:3000
 
   test-python:
     runs-on: ubuntu-latest

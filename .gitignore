@@ -47,3 +47,6 @@ clients/csharp/Contract/bin/
 clients/csharp/Contract/obj/
 apps/app/test-results/
 apps/app/playwright-report/
+
+# openspec
+openspec
