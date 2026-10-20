@@ -5,6 +5,7 @@
 ## 2. Repair OCaml setup
 
 - [x] 2.1 Update OCaml setup to `ocaml/setup-ocaml@v3` in both workflows and select compiler `4.14.2` to match the committed lockfile, preserving the existing dependency, build, and test commands.
+- [x] 2.2 Configure the default opam repository followed by the official archive in both setup actions so archived locked dependencies remain available without changing the lockfile or installation commands.
 
 ## 3. Move PHP provisioning onto the runner
 

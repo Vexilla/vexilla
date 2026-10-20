@@ -42,6 +42,8 @@ Use `ocaml/setup-ocaml@v3` and compiler `4.14.2` in both workflows. Keep the exi
 
 Pinning an older runner would preserve the old action's assumptions. Updating the setup action addresses package availability while the explicit compiler version aligns the switch with the committed lockfile. A package-index refresh alone did not resolve the observed `darcs` failure.
 
+Hosted validation in [PR Test run 39344712485](https://github.com/Vexilla/vexilla/actions/runs/39344712485) confirms setup succeeds with compiler 4.14.2 but exposes a missing locked package: `conduit-lwt-unix = 6.2.2`. That version moved out of the main repository into the [official opam archive](https://github.com/ocaml/opam-repository-archive/tree/main/packages/conduit-lwt-unix/conduit-lwt-unix.6.2.2). Configure `opam-repositories` with the default repository first and the archive second. The action documents that earlier entries take priority, so current package metadata remains preferred while archived locked versions become available. Preserve the lockfile and existing installation commands.
+
 ### Provision PHP directly on the runner
 
 Remove the PHP job container and replace its manual apt, PECL, php.ini, and Composer installation commands with `shivammathur/setup-php@v2`. Request PHP `7.4`, compatible Composer 2, `mbstring`, the extensions required by the locked dependencies and PHPUnit, and PCOV. Retain `composer install` against `clients/php/composer.lock` and the existing `composer test` command from `clients/php`.

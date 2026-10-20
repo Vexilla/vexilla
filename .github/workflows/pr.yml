@@ -221,6 +221,9 @@ jobs:
         uses: ocaml/setup-ocaml@v3
         with:
           ocaml-compiler: "4.14.2"
+          opam-repositories: |
+            default: https://opam.ocaml.org
+            archive: git+https://github.com/ocaml/opam-repository-archive
 
       - name: Cache Dependencies
         uses: actions/cache@v3

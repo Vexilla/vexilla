@@ -40,7 +40,13 @@ The `v3` action source filters optional packages such as `darcs` through the ava
 
 ### Hosted workflow evidence pending
 
-The [original failing Test run](https://github.com/Vexilla/vexilla/actions/runs/39336758899) predates these changes and is not acceptance evidence. Neither `.github/workflows/test.yml` nor `.github/workflows/pr.yml` has been exercised with this patch. No new CI run links are available.
+The [original failing Test run](https://github.com/Vexilla/vexilla/actions/runs/39336758899) predates these changes and is not acceptance evidence. [Draft PR #61](https://github.com/Vexilla/vexilla/pull/61) triggered [PR Test run 39344712485](https://github.com/Vexilla/vexilla/actions/runs/39344712485) at commit `0a21dc8`.
+
+- PHP passed on the hosted runner with PHP 7.4.33, Composer 2.10.3, and PCOV 1.0.12: `OK (1 test, 17 assertions)`, reaching `localhost:3000`.
+- OCaml setup succeeded without requiring `darcs` and installed compiler 4.14.2. The existing locked installation then failed with exit 20: `deps-of-vexilla_sdk -> conduit-lwt-unix = 6.2.2`, `no matching version`. That version exists in the official opam archive with reason `maintenance-intent`. Both workflows now include the archive after the default repository; hosted validation of this follow-on provisioning repair is pending. The lockfile is unchanged.
+- Bazel build and coverage results are still being collected.
+
+The separate `.github/workflows/test.yml` path has not executed with this patch; its push filter does not match the slash-containing task branch. No triggers have been changed.
 
 Hosted validation will use the workflows' existing events. The validation tasks remain open until the affected jobs execute successfully; the change is not ready to archive.
 

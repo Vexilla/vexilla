@@ -13,7 +13,7 @@ Both client test workflows SHALL use the same exact Bazel 7 release selected thr
 
 ### Requirement: OCaml setup matches the committed dependency lock
 
-Both workflows SHALL use `ocaml/setup-ocaml@v3` with compiler `4.14.2`. Setup MUST tolerate unavailable optional system packages such as `darcs`. The jobs SHALL retain the existing locked dependency installation, build, and test commands.
+Both workflows SHALL use `ocaml/setup-ocaml@v3` with compiler `4.14.2`. Setup MUST tolerate unavailable optional system packages such as `darcs`. Both workflows SHALL include the official opam archive as a lower-priority source after the default repository, making archived versions in the committed lockfile available. The jobs SHALL retain the existing locked dependency installation, build, and test commands.
 
 #### Scenario: OCaml runs on an Ubuntu runner without darcs
 
@@ -21,6 +21,13 @@ Both workflows SHALL use `ocaml/setup-ocaml@v3` with compiler `4.14.2`. Setup MU
 - **THEN** setup completes without requiring that unavailable optional package
 - **AND** the selected compiler is 4.14.2, matching `clients/ocaml/vexilla_sdk.opam.locked`
 - **AND** the existing dependency installation, `opam exec -- dune build`, and `opam exec -- dune test` commands complete successfully
+
+#### Scenario: A locked dependency has moved to the official archive
+
+- **WHEN** a version required by the committed lockfile, such as `conduit-lwt-unix = 6.2.2`, is absent from the main opam repository
+- **THEN** the dependency solver can find that version in the official opam archive
+- **AND** default repository metadata takes priority when both sources provide a version
+- **AND** the existing lockfile and installation commands are preserved
 
 ### Requirement: PHP setup preserves the tested runtime and dependencies
 

@@ -5,7 +5,7 @@
 ## What Changes
 
 - Validate an exact Bazel 7 release against the existing build and coverage commands, then pin it in `.bazelversion` while retaining the current `WORKSPACE` and Bzlmod dependency structure.
-- Upgrade OCaml setup to `ocaml/setup-ocaml@v3` and select compiler 4.14.2 to match the existing lockfile.
+- Upgrade OCaml setup to `ocaml/setup-ocaml@v3`, select compiler 4.14.2, and include the official opam archive as a lower-priority source so the existing lockfile remains installable.
 - Replace the PHP container and manual installation commands with `shivammathur/setup-php@v2`, retaining PHP 7.4 and explicitly configuring Composer, required extensions, and PCOV.
 - Point the PHP tests at `localhost:3000` after moving execution onto the runner, retaining the existing test-server service.
 - Apply equivalent fixes to `.github/workflows/test.yml` and `.github/workflows/pr.yml`.
