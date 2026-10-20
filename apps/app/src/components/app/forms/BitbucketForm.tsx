@@ -19,8 +19,6 @@ import { useSnapshot } from "valtio";
 import { BitbucketBranchValue, WorkspaceValue } from "./BitbucketForm.types";
 import { defaultConfig } from "../../../stores/config-valtio";
 
-const bitbucketAppName = import.meta.env.VITE_BITBUCKET_APP_NAME;
-const baseAuthCallbackUrl = `${window.location.protocol}//${window.location.host}/auth/callback`;
 
 const bitbucketClientId = import.meta.env.VITE_BITBUCKET_CLIENT_ID;
 
@@ -186,7 +184,7 @@ export function BitbucketForm({ config }: BitbucketFormProps) {
             fetchersMap[configSnapshot.hosting.provider as HostingProvider]?.();
 
           if (fetcher) {
-            const result = await fetcher
+            await fetcher
               .getCurrentConfig()
               .catch(() => defaultConfig);
           } else {

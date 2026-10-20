@@ -17,6 +17,19 @@ import { isScheduledFeatureActive } from "./scheduling";
 
 type FetchHook<T> = (url: string) => Promise<T>;
 
+function validateSeed(seed: unknown): void {
+  if (
+    typeof seed !== "number" ||
+    !Number.isFinite(seed) ||
+    seed <= 0 ||
+    seed > 1
+  ) {
+    throw new Error(
+      "feature.seed must be a finite number greater than 0 and less than or equal to 1"
+    );
+  }
+}
+
 export class VexillaClient {
   protected showLogs;
   protected baseUrl: string;
@@ -44,7 +57,7 @@ export class VexillaClient {
       return result;
     } catch (e: any) {
       this.warn("Error: failed to fetch manifest", e);
-      return { version: "v0", groups: [] };
+      return { version: "v1", groups: [] };
     }
   }
 
@@ -78,6 +91,16 @@ export class VexillaClient {
   }
 
   setFlags(flags: PublishedGroup) {
+    for (const features of [
+      flags.features,
+      ...Object.values(flags.environments).map((env) => env.features),
+    ]) {
+      for (const feature of Object.values(features)) {
+        if (feature.featureType === "gradual") {
+          validateSeed(feature.seed);
+        }
+      }
+    }
     let groupId = this.groupLookupTable[flags.groupId];
 
     this.featureLookupTable[groupId] = createFeatureLookupTable(flags.features);
@@ -117,13 +140,9 @@ export class VexillaClient {
         break;
 
       case "gradual":
-        if (feature.seed <= 0 || feature.seed > 1) {
-          throw new Error(
-            "feature.seed must be a number value greater than 0 and less than or equal to 1"
-          );
-        }
+        validateSeed(feature.seed);
 
-        if (!customInstanceHash && !this.customInstanceHash) {
+        if (customInstanceHash == null && this.customInstanceHash == null) {
           throw new Error(
             "customInstanceHash config must be defined when using 'gradual' Feature Types"
           );
@@ -132,16 +151,14 @@ export class VexillaClient {
 
         _should =
           hashString(
-            `${customInstanceHash || this.customInstanceHash}`,
+            `${customInstanceHash ?? this.customInstanceHash}`,
             feature.seed
           ) <= feature.value;
         break;
 
       case "selective":
-        const instanceHash = customInstanceHash || this.customInstanceHash;
-        _should = (feature.value as (string | number)[]).includes(
-          instanceHash || parseFloat(instanceHash as string)
-        );
+        const instanceHash = customInstanceHash ?? this.customInstanceHash;
+        _should = (feature.value as (string | number)[]).includes(instanceHash);
         break;
 
       default:

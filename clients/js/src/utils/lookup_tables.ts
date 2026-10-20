@@ -6,7 +6,7 @@ import {
 import Case from "case";
 
 export function createGroupLookupTable(groups: ManifestGroup[]) {
-  const lookupTable: Record<string, string> = {};
+  const lookupTable: Record<string, string> = Object.create(null);
 
   groups.forEach(({ name, groupId }) => {
     lookupTable[groupId] = groupId;
@@ -20,7 +20,7 @@ export function createGroupLookupTable(groups: ManifestGroup[]) {
 export function createEnvironmentLookupTable(
   environments: Record<string, PublishedEnvironment>
 ) {
-  const lookupTable: Record<string, string> = {};
+  const lookupTable: Record<string, string> = Object.create(null);
 
   Object.values(environments).forEach(({ name, environmentId }) => {
     lookupTable[environmentId] = environmentId;
@@ -34,7 +34,7 @@ export function createEnvironmentLookupTable(
 export function createFeatureLookupTable(
   features: Record<string, VexillaFeature>
 ) {
-  const lookupTable: Record<string, string> = {};
+  const lookupTable: Record<string, string> = Object.create(null);
 
   Object.values(features).forEach(({ name, featureId }) => {
     lookupTable[featureId] = featureId;

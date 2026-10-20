@@ -31,7 +31,7 @@
   uri
   yojson
   (alcotest :with-test)
-  (alcotest_lwt :with-test)
+  (alcotest-lwt :with-test)
   stdint)
  (tags (feature-flags)))
 

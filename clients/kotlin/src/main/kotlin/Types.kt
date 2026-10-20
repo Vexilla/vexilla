@@ -73,7 +73,13 @@ class GradualFeature(
     schedule: Schedule,
     val value: Double,
     val seed: Double
-) : Feature(name, featureId, featureType, scheduleType, schedule)
+) : Feature(name, featureId, featureType, scheduleType, schedule) {
+    init {
+        require(seed.isFinite() && seed > 0.0 && seed <= 1.0) {
+            "seed must be a finite number greater than 0 and less than or equal to 1"
+        }
+    }
+}
 
 sealed class SelectiveFeature(
     name: String,

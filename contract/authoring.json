@@ -1,0 +1,687 @@
+{
+  "groups": [
+    {
+      "groupId": "contract-group",
+      "name": "Contract",
+      "features": {
+        "toggle": {
+          "featureId": "toggle",
+          "name": "Toggle",
+          "featureType": "toggle",
+          "scheduleType": "",
+          "schedule": {
+            "start": 0,
+            "end": 0,
+            "timezone": "UTC",
+            "timeType": "none",
+            "startTime": 0,
+            "endTime": 0
+          },
+          "value": false
+        },
+        "gradual": {
+          "featureId": "gradual",
+          "name": "Gradual",
+          "featureType": "gradual",
+          "scheduleType": "",
+          "schedule": {
+            "start": 0,
+            "end": 0,
+            "timezone": "UTC",
+            "timeType": "none",
+            "startTime": 0,
+            "endTime": 0
+          },
+          "value": 0,
+          "seed": 0.5
+        },
+        "selective-string": {
+          "featureId": "selective-string",
+          "name": "Selective String",
+          "featureType": "selective",
+          "scheduleType": "",
+          "schedule": {
+            "start": 0,
+            "end": 0,
+            "timezone": "UTC",
+            "timeType": "none",
+            "startTime": 0,
+            "endTime": 0
+          },
+          "value": [],
+          "valueType": "string"
+        },
+        "selective-int": {
+          "featureId": "selective-int",
+          "name": "Selective Int",
+          "featureType": "selective",
+          "scheduleType": "",
+          "schedule": {
+            "start": 0,
+            "end": 0,
+            "timezone": "UTC",
+            "timeType": "none",
+            "startTime": 0,
+            "endTime": 0
+          },
+          "value": [],
+          "valueType": "number",
+          "numberType": "int"
+        },
+        "selective-float": {
+          "featureId": "selective-float",
+          "name": "Selective Float",
+          "featureType": "selective",
+          "scheduleType": "",
+          "schedule": {
+            "start": 0,
+            "end": 0,
+            "timezone": "UTC",
+            "timeType": "none",
+            "startTime": 0,
+            "endTime": 0
+          },
+          "value": [],
+          "valueType": "number",
+          "numberType": "float"
+        },
+        "value-string": {
+          "featureId": "value-string",
+          "name": "Value String",
+          "featureType": "value",
+          "scheduleType": "",
+          "schedule": {
+            "start": 0,
+            "end": 0,
+            "timezone": "UTC",
+            "timeType": "none",
+            "startTime": 0,
+            "endTime": 0
+          },
+          "value": "",
+          "valueType": "string"
+        },
+        "value-int": {
+          "featureId": "value-int",
+          "name": "Value Int",
+          "featureType": "value",
+          "scheduleType": "",
+          "schedule": {
+            "start": 0,
+            "end": 0,
+            "timezone": "UTC",
+            "timeType": "none",
+            "startTime": 0,
+            "endTime": 0
+          },
+          "value": 0,
+          "valueType": "number",
+          "numberType": "int"
+        },
+        "value-float": {
+          "featureId": "value-float",
+          "name": "Value Float",
+          "featureType": "value",
+          "scheduleType": "",
+          "schedule": {
+            "start": 0,
+            "end": 0,
+            "timezone": "UTC",
+            "timeType": "none",
+            "startTime": 0,
+            "endTime": 0
+          },
+          "value": 0,
+          "valueType": "number",
+          "numberType": "float"
+        },
+        "scheduled-global": {
+          "featureId": "scheduled-global",
+          "name": "Scheduled Global",
+          "featureType": "toggle",
+          "scheduleType": "global",
+          "schedule": {
+            "start": 1,
+            "end": 2,
+            "timezone": "UTC",
+            "timeType": "start/end",
+            "startTime": 0,
+            "endTime": 86399999
+          },
+          "value": true
+        },
+        "scheduled-environment": {
+          "featureId": "scheduled-environment",
+          "name": "Scheduled Environment",
+          "featureType": "toggle",
+          "scheduleType": "environment",
+          "schedule": {
+            "start": 1,
+            "end": 2,
+            "timezone": "UTC",
+            "timeType": "none",
+            "startTime": 0,
+            "endTime": 0
+          },
+          "value": true
+        },
+        "scheduled-daily": {
+          "featureId": "scheduled-daily",
+          "name": "Scheduled Daily",
+          "featureType": "toggle",
+          "scheduleType": "global",
+          "schedule": {
+            "start": 1,
+            "end": 2,
+            "timezone": "America/Los_Angeles",
+            "timeType": "daily",
+            "startTime": 0,
+            "endTime": 86399999
+          },
+          "value": true
+        },
+        "regression": {
+          "featureId": "regression",
+          "name": "Type Change Regression",
+          "featureType": "toggle",
+          "scheduleType": "",
+          "schedule": {
+            "start": 0,
+            "end": 0,
+            "timezone": "UTC",
+            "timeType": "none",
+            "startTime": 0,
+            "endTime": 0
+          },
+          "value": false
+        },
+        "scheduled-active": {
+          "featureId": "scheduled-active",
+          "name": "Scheduled Active",
+          "featureType": "toggle",
+          "scheduleType": "global",
+          "schedule": {
+            "start": 1577836800000,
+            "end": 4102444800000,
+            "timezone": "UTC",
+            "timeType": "none",
+            "startTime": 0,
+            "endTime": 0
+          },
+          "value": true
+        }
+      },
+      "environments": {
+        "dev": {
+          "environmentId": "dev",
+          "name": "Development",
+          "features": {
+            "toggle": {
+              "featureId": "toggle",
+              "name": "Toggle",
+              "featureType": "toggle",
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              },
+              "value": false
+            },
+            "gradual": {
+              "featureId": "gradual",
+              "name": "Gradual",
+              "featureType": "gradual",
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              },
+              "value": 0.4,
+              "seed": 0.22
+            },
+            "selective-string": {
+              "featureId": "selective-string",
+              "name": "Selective String",
+              "featureType": "selective",
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              },
+              "value": [],
+              "valueType": "string"
+            },
+            "selective-int": {
+              "featureId": "selective-int",
+              "name": "Selective Int",
+              "featureType": "selective",
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              },
+              "value": [],
+              "valueType": "number",
+              "numberType": "int"
+            },
+            "selective-float": {
+              "featureId": "selective-float",
+              "name": "Selective Float",
+              "featureType": "selective",
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              },
+              "value": [],
+              "valueType": "number",
+              "numberType": "float"
+            },
+            "value-string": {
+              "featureId": "value-string",
+              "name": "Value String",
+              "featureType": "value",
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              },
+              "value": "",
+              "valueType": "string"
+            },
+            "value-int": {
+              "featureId": "value-int",
+              "name": "Value Int",
+              "featureType": "value",
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              },
+              "value": 0,
+              "valueType": "number",
+              "numberType": "int"
+            },
+            "value-float": {
+              "featureId": "value-float",
+              "name": "Value Float",
+              "featureType": "value",
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              },
+              "value": 0,
+              "valueType": "number",
+              "numberType": "float"
+            },
+            "scheduled-global": {
+              "featureId": "scheduled-global",
+              "name": "Scheduled Global",
+              "featureType": "toggle",
+              "scheduleType": "global",
+              "schedule": {
+                "start": 1,
+                "end": 2,
+                "timezone": "UTC",
+                "timeType": "start/end",
+                "startTime": 0,
+                "endTime": 86399999
+              },
+              "value": true
+            },
+            "scheduled-environment": {
+              "featureId": "scheduled-environment",
+              "name": "Scheduled Environment",
+              "featureType": "toggle",
+              "scheduleType": "environment",
+              "schedule": {
+                "start": 1,
+                "end": 2,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              },
+              "value": true
+            },
+            "scheduled-daily": {
+              "featureId": "scheduled-daily",
+              "name": "Scheduled Daily",
+              "featureType": "toggle",
+              "scheduleType": "global",
+              "schedule": {
+                "start": 1,
+                "end": 2,
+                "timezone": "America/Los_Angeles",
+                "timeType": "daily",
+                "startTime": 0,
+                "endTime": 86399999
+              },
+              "value": true
+            },
+            "regression": {
+              "featureId": "regression",
+              "name": "Type Change Regression",
+              "featureType": "toggle",
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              },
+              "value": false
+            },
+            "scheduled-active": {
+              "featureId": "scheduled-active",
+              "name": "Scheduled Active",
+              "featureType": "toggle",
+              "scheduleType": "global",
+              "schedule": {
+                "start": 1577836800000,
+                "end": 4102444800000,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              },
+              "value": true
+            }
+          },
+          "defaultEnvironmentFeatureValues": {
+            "gradual": {
+              "featureId": "default",
+              "name": "",
+              "featureType": "gradual",
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              },
+              "value": 0,
+              "seed": 0.5
+            }
+          }
+        },
+        "prod": {
+          "environmentId": "prod",
+          "name": "Production",
+          "features": {
+            "toggle": {
+              "featureId": "toggle",
+              "name": "Toggle",
+              "featureType": "toggle",
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              },
+              "value": true
+            },
+            "gradual": {
+              "featureId": "gradual",
+              "name": "Gradual",
+              "featureType": "gradual",
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              },
+              "value": 0.4,
+              "seed": 0.32
+            },
+            "selective-string": {
+              "featureId": "selective-string",
+              "name": "Selective String",
+              "featureType": "selective",
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              },
+              "value": [
+                "member",
+                ""
+              ],
+              "valueType": "string"
+            },
+            "selective-int": {
+              "featureId": "selective-int",
+              "name": "Selective Int",
+              "featureType": "selective",
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              },
+              "value": [
+                0,
+                42
+              ],
+              "valueType": "number",
+              "numberType": "int"
+            },
+            "selective-float": {
+              "featureId": "selective-float",
+              "name": "Selective Float",
+              "featureType": "selective",
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              },
+              "value": [
+                0,
+                4.25
+              ],
+              "valueType": "number",
+              "numberType": "float"
+            },
+            "value-string": {
+              "featureId": "value-string",
+              "name": "Value String",
+              "featureType": "value",
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              },
+              "value": "hello",
+              "valueType": "string"
+            },
+            "value-int": {
+              "featureId": "value-int",
+              "name": "Value Int",
+              "featureType": "value",
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              },
+              "value": 42,
+              "valueType": "number",
+              "numberType": "int"
+            },
+            "value-float": {
+              "featureId": "value-float",
+              "name": "Value Float",
+              "featureType": "value",
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              },
+              "value": 4.25,
+              "valueType": "number",
+              "numberType": "float"
+            },
+            "scheduled-global": {
+              "featureId": "scheduled-global",
+              "name": "Scheduled Global",
+              "featureType": "toggle",
+              "scheduleType": "global",
+              "schedule": {
+                "start": 1,
+                "end": 2,
+                "timezone": "UTC",
+                "timeType": "start/end",
+                "startTime": 0,
+                "endTime": 86399999
+              },
+              "value": true
+            },
+            "scheduled-environment": {
+              "featureId": "scheduled-environment",
+              "name": "Scheduled Environment",
+              "featureType": "toggle",
+              "scheduleType": "environment",
+              "schedule": {
+                "start": 1,
+                "end": 2,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              },
+              "value": true
+            },
+            "scheduled-daily": {
+              "featureId": "scheduled-daily",
+              "name": "Scheduled Daily",
+              "featureType": "toggle",
+              "scheduleType": "global",
+              "schedule": {
+                "start": 1,
+                "end": 2,
+                "timezone": "America/Los_Angeles",
+                "timeType": "daily",
+                "startTime": 0,
+                "endTime": 86399999
+              },
+              "value": true
+            },
+            "regression": {
+              "featureId": "regression",
+              "name": "Type Change Regression",
+              "featureType": "toggle",
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              },
+              "value": false
+            },
+            "scheduled-active": {
+              "featureId": "scheduled-active",
+              "name": "Scheduled Active",
+              "featureType": "toggle",
+              "scheduleType": "global",
+              "schedule": {
+                "start": 1577836800000,
+                "end": 4102444800000,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              },
+              "value": true
+            }
+          },
+          "defaultEnvironmentFeatureValues": {
+            "gradual": {
+              "featureId": "default",
+              "name": "",
+              "featureType": "gradual",
+              "scheduleType": "",
+              "schedule": {
+                "start": 0,
+                "end": 0,
+                "timezone": "UTC",
+                "timeType": "none",
+                "startTime": 0,
+                "endTime": 0
+              },
+              "value": 0,
+              "seed": 0.5
+            }
+          }
+        }
+      }
+    }
+  ]
+}

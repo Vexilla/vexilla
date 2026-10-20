@@ -7,7 +7,7 @@
       "featureId": "oIVHzosp0ao3HN0fmFwwr",
       "featureType": "gradual",
       "value": 0,
-      "seed": 0,
+      "seed": 0.32,
       "scheduleType": "",
       "schedule": {
         "start": 0,
@@ -23,7 +23,7 @@
       "featureId": "-T2se1u9jyj1HNkbJ9Cdr",
       "featureType": "gradual",
       "value": 0,
-      "seed": 0,
+      "seed": 0.22,
       "scheduleType": "",
       "schedule": {
         "start": 0,

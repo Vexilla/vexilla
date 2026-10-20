@@ -21,7 +21,7 @@ depends: [
   "uri"
   "yojson"
   "alcotest" {with-test}
-  "alcotest_lwt" {with-test}
+  "alcotest-lwt" {with-test}
   "stdint"
   "odoc" {with-doc}
 ]

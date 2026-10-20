@@ -9,7 +9,8 @@
     "test:scheduling": "ts-node src/test_scheduling.ts",
     "test:client": "ts-node src/test_client.ts",
     "test": "pnpm run \"/^test:.*/\"",
-    "compile": "tsup && ts-node scripts/hack-dist-types.ts"
+    "compile": "tsup && node --import tsx scripts/hack-dist-types.ts",
+    "test:contract": "node --import tsx --test test/contract.test.ts"
   },
   "author": {
     "name": "Chris Griffing",
@@ -28,7 +29,8 @@
     "tsup": "^8.0.2",
     "typescript": "^5.0.4",
     "uuid": "^8.3.2",
-    "xxhashjs": "^0.2.2"
+    "xxhashjs": "^0.2.2",
+    "tsx": "4.20.5"
   },
   "dependencies": {
     "case": "^1.6.3",

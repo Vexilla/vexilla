@@ -1,3 +1,9 @@
 (tests
  (names hash schedule client)
+ (modules hash schedule client)
  (libraries alcotest alcotest-lwt vexilla fmt lwt))
+
+(executable
+ (name contract)
+ (modules contract)
+ (libraries vexilla yojson lwt.unix))

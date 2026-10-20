@@ -15,6 +15,12 @@
     "declarationMap": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["node"]
-  }
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src",
+    "schema"
+  ]
 }

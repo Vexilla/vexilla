@@ -1,0 +1,165 @@
+{
+  "referenceClock": 1735689600000,
+  "groupId": "contract-group",
+  "groupName": "Contract",
+  "environments": [
+    {
+      "id": "dev",
+      "name": "Development",
+      "toggle": false,
+      "gradual": false,
+      "seed": 0.22,
+      "threshold": 0.4,
+      "selectiveString": false,
+      "selectiveInt": false,
+      "selectiveFloat": false,
+      "string": "",
+      "int": 0,
+      "float": 0,
+      "regression": false,
+      "scheduledActive": true
+    },
+    {
+      "id": "prod",
+      "name": "Production",
+      "toggle": true,
+      "gradual": true,
+      "seed": 0.32,
+      "threshold": 0.4,
+      "selectiveString": true,
+      "selectiveInt": true,
+      "selectiveFloat": true,
+      "string": "hello",
+      "int": 42,
+      "float": 4.25,
+      "regression": false,
+      "scheduledActive": true
+    }
+  ],
+  "cases": [
+    {
+      "id": "toggle",
+      "name": "Toggle",
+      "kind": "should",
+      "expectedKey": "toggle",
+      "instance": "member"
+    },
+    {
+      "id": "gradual",
+      "name": "Gradual",
+      "kind": "should",
+      "expectedKey": "gradual",
+      "instance": "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a"
+    },
+    {
+      "id": "selective-string",
+      "name": "Selective String",
+      "kind": "should",
+      "expectedKey": "selectiveString",
+      "instance": "member"
+    },
+    {
+      "id": "selective-int",
+      "name": "Selective Int",
+      "kind": "should",
+      "expectedKey": "selectiveInt",
+      "instance": 42
+    },
+    {
+      "id": "selective-float",
+      "name": "Selective Float",
+      "kind": "should",
+      "expectedKey": "selectiveFloat",
+      "instance": 4.25
+    },
+    {
+      "id": "value-string",
+      "name": "Value String",
+      "kind": "value",
+      "expectedKey": "string"
+    },
+    {
+      "id": "value-int",
+      "name": "Value Int",
+      "kind": "value",
+      "expectedKey": "int"
+    },
+    {
+      "id": "value-float",
+      "name": "Value Float",
+      "kind": "value",
+      "expectedKey": "float"
+    },
+    {
+      "id": "selective-int",
+      "name": "Selective Int",
+      "kind": "should",
+      "expectedKey": "selectiveInt",
+      "instance": 0
+    },
+    {
+      "id": "selective-float",
+      "name": "Selective Float",
+      "kind": "should",
+      "expectedKey": "selectiveFloat",
+      "instance": 0
+    },
+    {
+      "id": "regression",
+      "name": "Type Change Regression",
+      "kind": "should",
+      "expectedKey": "regression",
+      "instance": "member"
+    },
+    {
+      "id": "scheduled-active",
+      "name": "Scheduled Active",
+      "kind": "should",
+      "expectedKey": "scheduledActive",
+      "instance": "member"
+    }
+  ],
+  "scheduled": [
+    "scheduled-global",
+    "scheduled-environment",
+    "scheduled-daily"
+  ],
+  "seedCases": [
+    {
+      "value": 0.5,
+      "valid": true
+    },
+    {
+      "value": 1,
+      "valid": true
+    },
+    {
+      "value": -0.1,
+      "valid": false
+    },
+    {
+      "value": 0,
+      "valid": false
+    },
+    {
+      "value": 1.000001,
+      "valid": false
+    },
+    {
+      "value": 42,
+      "valid": false
+    },
+    {
+      "value": null,
+      "valid": false
+    },
+    {
+      "value": "0.5",
+      "valid": false
+    },
+    {
+      "value": true,
+      "valid": false
+    }
+  ]
+}

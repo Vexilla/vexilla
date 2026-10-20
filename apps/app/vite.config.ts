@@ -16,6 +16,10 @@ const alias = Object.entries(tsConfig.paths).reduce(
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  optimizeDeps: { include: ["@vexilla/publishing", "@vexilla/types"] },
+  build: {
+    commonjsOptions: { include: [/node_modules/, /packages\/(types|publishing)\/dist/] },
+  },
   resolve: {
     alias,
   },

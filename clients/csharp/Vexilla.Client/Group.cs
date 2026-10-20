@@ -157,6 +157,10 @@ namespace Vexilla.Client
 
         private static Feature _deserializeFeature(JsonElement jsonElement)
         {
+            if (jsonElement.GetProperty("featureType").GetString() == FeatureType.Gradual)
+            {
+                _deserializeSeed(jsonElement);
+            }
             var feature = new Feature
             {
                 Name = jsonElement.GetProperty("name").GetString(),
@@ -208,9 +212,35 @@ namespace Vexilla.Client
                 Schedule =
                     _deserializeSchedule(jsonElement.GetProperty("schedule")),
                 Value = jsonElement.GetProperty("value").GetDouble(),
-                Seed = jsonElement.GetProperty("seed").GetDouble()
+                Seed = _deserializeSeed(jsonElement)
             };
             return feature;
+        }
+
+        private static double _deserializeSeed(JsonElement jsonElement)
+        {
+            var seed = jsonElement.GetProperty("seed").GetDouble();
+            if (double.IsNaN(seed) || double.IsInfinity(seed) || seed <= 0 || seed > 1)
+            {
+                throw new JsonException("seed must be a finite number greater than 0 and less than or equal to 1");
+            }
+            return seed;
+        }
+
+        // Keep the existing internal int/double tags while consuming v1 discriminators.
+        private static string _deserializeValueType(JsonElement jsonElement)
+        {
+            var valueType = jsonElement.GetProperty("valueType").GetString();
+            if (valueType != "number")
+            {
+                return valueType;
+            }
+            switch (jsonElement.GetProperty("numberType").GetString())
+            {
+                case "int": return ValueType.IntValueType;
+                case "float": return ValueType.FloatValueType;
+                default: throw new JsonException("Unsupported numberType");
+            }
         }
 
         private static SelectiveFeature _deserializeSelectiveFeature(
@@ -226,7 +256,7 @@ namespace Vexilla.Client
                     jsonElement.GetProperty("scheduleType").GetString(),
                 Schedule =
                     _deserializeSchedule(jsonElement.GetProperty("schedule")),
-                ValueType = jsonElement.GetProperty("valueType").GetString()
+                ValueType = _deserializeValueType(jsonElement)
             };
             return feature;
         }
@@ -246,9 +276,9 @@ namespace Vexilla.Client
                     jsonElement.GetProperty("scheduleType").GetString(),
                 Schedule =
                     _deserializeSchedule(jsonElement.GetProperty("schedule")),
-                ValueType = jsonElement.GetProperty("valueType").GetString(),
+                ValueType = _deserializeValueType(jsonElement),
                 Value = jsonElement.GetProperty("value").EnumerateArray()
-                    .Cast<string>().ToArray()
+                    .Select(value => value.GetString()).ToArray()
             };
 
             return feature;
@@ -267,9 +297,9 @@ namespace Vexilla.Client
                     jsonElement.GetProperty("scheduleType").GetString(),
                 Schedule =
                     _deserializeSchedule(jsonElement.GetProperty("schedule")),
-                ValueType = jsonElement.GetProperty("valueType").GetString(),
+                ValueType = _deserializeValueType(jsonElement),
                 Value = jsonElement.GetProperty("value").EnumerateArray()
-                    .Cast<long>().ToArray()
+                    .Select(value => value.GetInt64()).ToArray()
             };
 
             return feature;
@@ -288,9 +318,9 @@ namespace Vexilla.Client
                     jsonElement.GetProperty("scheduleType").GetString(),
                 Schedule =
                     _deserializeSchedule(jsonElement.GetProperty("schedule")),
-                ValueType = jsonElement.GetProperty("valueType").GetString(),
+                ValueType = _deserializeValueType(jsonElement),
                 Value = jsonElement.GetProperty("value").EnumerateArray()
-                    .Cast<double>().ToArray()
+                    .Select(value => value.GetDouble()).ToArray()
             };
             return feature;
         }
@@ -308,7 +338,7 @@ namespace Vexilla.Client
                     jsonElement.GetProperty("scheduleType").GetString(),
                 Schedule =
                     _deserializeSchedule(jsonElement.GetProperty("schedule")),
-                ValueType = jsonElement.GetProperty("valueType").GetString()
+                ValueType = _deserializeValueType(jsonElement)
             };
             return feature;
         }
@@ -327,7 +357,7 @@ namespace Vexilla.Client
                     jsonElement.GetProperty("scheduleType").GetString(),
                 Schedule =
                     _deserializeSchedule(jsonElement.GetProperty("schedule")),
-                ValueType = jsonElement.GetProperty("valueType").GetString(),
+                ValueType = _deserializeValueType(jsonElement),
                 Value = jsonElement.GetProperty("value").GetString()
             };
             return feature;
@@ -346,7 +376,7 @@ namespace Vexilla.Client
                     jsonElement.GetProperty("scheduleType").GetString(),
                 Schedule =
                     _deserializeSchedule(jsonElement.GetProperty("schedule")),
-                ValueType = jsonElement.GetProperty("valueType").GetString(),
+                ValueType = _deserializeValueType(jsonElement),
                 Value = jsonElement.GetProperty("value").GetInt64()
             };
             return feature;
@@ -365,7 +395,7 @@ namespace Vexilla.Client
                     jsonElement.GetProperty("scheduleType").GetString(),
                 Schedule =
                     _deserializeSchedule(jsonElement.GetProperty("schedule")),
-                ValueType = jsonElement.GetProperty("valueType").GetString(),
+                ValueType = _deserializeValueType(jsonElement),
                 Value = jsonElement.GetProperty("value").GetDouble()
             };
             return feature;

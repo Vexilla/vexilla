@@ -1,514 +1,185 @@
-import _React from "react";
 import {
   Box,
   Button,
-  Flex,
-  Group,
-  Radio,
   Select,
-  SelectProps,
-  Switch,
+  Radio,
+  Group,
   TextInput,
   Text,
 } from "@mantine/core";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useSnapshot } from "valtio";
-
-import {
-  VexillaFeature,
-  VexillaFeatureTypeString,
-  VexillaInputType,
-  VexillaNumberType,
-  VexillaSelectiveFeature,
-  VexillaSelectiveFeatureNumbers,
-  VexillaValueFeature,
-  VexillaValueFeatureNumber,
-} from "@vexilla/types";
-
+import { changeFeatureType, FeatureShape } from "@vexilla/publishing";
+import type { VexillaScheduleType } from "@vexilla/types";
 import { config } from "../../stores/config-valtio";
-
 import { PageLayout } from "../../components/PageLayout";
-import { CustomSlider } from "../../components/CustomSlider";
-import { SelectiveList } from "../../components/features/SelectiveList";
-import { ScheduledForm } from "../../components/features/ScheduledForm";
-import { CustomNumberInput } from "../../components/CustomNumberInput";
-
-import { Icon } from "@iconify/react";
-import rewindBackBroken from "@iconify/icons-solar/rewind-back-broken";
-import checkCircleBroken from "@iconify/icons-solar/check-circle-broken";
-
-const SelectItem: SelectProps["renderOption"] = ({
-  option,
-  checked,
-  ...others
-}) => (
-  <Group wrap="nowrap" {...others} align="center" justify="center">
-    {checked && (
-      <Box c="var(--mantine-primary-color-filled)" pt="4">
-        <Icon icon={checkCircleBroken} width={32} />
-      </Box>
-    )}
-    <div>
-      <Text size="sm">{option.label}</Text>
-      <Text size="xs" opacity={0.65}>
-        {(option as any).description}
-      </Text>
-    </div>
-  </Group>
-);
-
-const featureTypeOptions: {
-  label: string;
-  value: VexillaFeatureTypeString;
-  description: string;
-}[] = [
-  {
-    label: "Toggle",
-    value: "toggle",
-    description: "A simple on/off switch",
-  },
-
-  {
-    label: "Gradual",
-    value: "gradual",
-    description: "Release to a random subset of users",
-  },
-  {
-    label: "Selective",
-    value: "selective",
-    description: "Release to a specific subset of users",
-  },
-  {
-    label: "Value",
-    value: "value",
-    description: "Release with a specific value",
-  },
-];
+import { FeatureFields } from "../../components/features/FeatureFields";
 
 export function EditFeature() {
   const params = useParams();
+  const location = useLocation();
+  useEffect(() => {
+    try {
+      document
+        .getElementById(decodeURIComponent(location.hash.slice(1)))
+        ?.scrollIntoView();
+    } catch {
+      /* An invalid URL fragment has no repair target. */
+    }
+  }, [location.hash]);
   useSnapshot(config);
-
   const navigate = useNavigate();
-
-  const groups = config.groups;
-  const group = groups.find((_group) => _group.groupId === params.groupId);
-
-  const rawEnvironments = group?.environments || {};
-  const environments = Object.values(rawEnvironments);
-
-  const features = group?.features || {};
-  const feature = features[params.featureId || ""];
-
-  const hasEnvironments = environments?.length > 0;
-  const featureForFirstEnv =
-    environments[0]?.features?.[feature?.featureId || ""];
-  const hasValueType =
-    hasEnvironments &&
-    (featureForFirstEnv?.featureType === "selective" ||
-      featureForFirstEnv?.featureType === "value");
-
-  let valueType: VexillaInputType = "string";
-  const featureWithValueType = feature as
-    | VexillaSelectiveFeature
-    | VexillaValueFeature;
-  if (hasValueType && featureWithValueType.valueType) {
-    valueType = featureWithValueType.valueType;
+  const group = config.groups.find((g) => g.groupId === params.groupId);
+  const featureId = params.featureId || "";
+  const feature = group?.features[featureId];
+  if (!group || !feature) {
+    return (
+      <PageLayout>
+        <h2>Feature not found</h2>
+      </PageLayout>
+    );
   }
-
-  const hasNumberType =
-    hasValueType &&
-    (featureForFirstEnv as VexillaSelectiveFeatureNumbers)?.valueType ===
-      "number";
-  const featureWithNumberType = feature as
-    | VexillaSelectiveFeatureNumbers
-    | VexillaValueFeatureNumber;
-
-  let numberType: VexillaNumberType = "int";
-  if (hasNumberType && featureWithNumberType.numberType) {
-    numberType = featureWithNumberType.numberType;
-  }
-
+  const environmentEntries = Object.entries(group.environments);
+  const environments = environmentEntries.map(([, env]) => env);
+  const shape = feature as FeatureShape;
+  const change = (next: FeatureShape) =>
+    changeFeatureType(group, featureId, next);
   return (
     <PageLayout>
       <Box>
         <Button
           variant="light"
-          onClick={() => {
-            navigate(`/groups/${group?.groupId}`);
-          }}
-          leftSection={<Icon icon={rewindBackBroken} />}
-          fullWidth={false}
+          onClick={() => navigate(`/groups/${group.groupId}`)}
         >
-          Back to {group?.name || "Group"}
+          Back to {group.name}
         </Button>
       </Box>
       <h2>Edit Feature</h2>
       <TextInput
-        label={"Name"}
-        defaultValue={feature?.name}
-        onChange={(event) => {
-          if (feature) {
-            feature.name = event.target.value;
-
-            environments.forEach((environment) => {
-              environment.features = Object.values(environment.features).reduce(
-                (newFeatures, envFeature) => {
-                  if (feature.featureId === envFeature.featureId) {
-                    envFeature.name = event.target.value;
-                  }
-                  newFeatures[envFeature.featureId] = envFeature;
-
-                  return newFeatures;
-                },
-                {} as Record<string, VexillaFeature>
-              );
-            });
-          }
+        label="Name"
+        value={feature.name}
+        onChange={(e) => {
+          feature.name = e.currentTarget.value;
+          environments.forEach((env) => {
+            if (env.features[featureId]) {
+              env.features[featureId].name = feature.name;
+            }
+          });
         }}
       />
-
       <Select
-        className="mb-8"
         label="Feature Type"
-        placeholder="Pick one"
-        renderOption={SelectItem}
-        withCheckIcon
-        data={featureTypeOptions}
-        maxDropdownHeight={400}
-        value={feature?.featureType}
+        value={feature.featureType}
+        data={["toggle", "gradual", "selective", "value"]}
         onChange={(value) => {
-          if (
-            (value === "toggle" ||
-              value === "selective" ||
-              value === "gradual" ||
-              value === "value") &&
-            feature
-          ) {
-            feature.featureType = value;
-
-            if (
-              feature.featureType === "selective" ||
-              feature.featureType === "value"
-            ) {
-              feature.valueType = "string";
-              delete (feature as any).numberType;
-            }
-
-            environments.forEach((environment) => {
-              if (!environment.features) {
-                environment.features = {};
-              }
-              if (!environment?.features?.[feature.featureId]) {
-                environment.features[feature.featureId] = {
-                  ...(environment.defaultEnvironmentFeatureValues[
-                    feature.featureType
-                  ] as any),
-                  featureId: feature.featureId,
-                  name: feature.name,
-                };
-              } else {
-                environment.features[feature.featureId] = {
-                  ...(environment.defaultEnvironmentFeatureValues[
-                    feature.featureType
-                  ] as any),
-                  featureType: value,
-                  featureId: feature.featureId,
-                };
-              }
-            });
+          if (value) {
+            change({ featureType: value as FeatureShape["featureType"] });
           }
         }}
       />
-      <Radio.Group
-        name="scheduled"
-        label="Schedule Type"
-        value={feature?.scheduleType || ""}
-        onChange={(event) => {
-          if (
-            (event === "" || event === "global" || event === "environment") &&
-            feature
-          ) {
-            feature.scheduleType = event;
-
-            environments.forEach((environment) => {
-              environment.features = Object.values(environment.features).reduce(
-                (newFeatures, envFeature) => {
-                  if (feature.featureId === envFeature.featureId) {
-                    envFeature.scheduleType = event;
-                  }
-                  newFeatures[envFeature.featureId] = envFeature;
-
-                  return newFeatures;
-                },
-                {} as Record<string, VexillaFeature>
-              );
-            });
-          }
-        }}
-      >
-        <Flex mt="sm" mb="lg" align="center" justify="center" gap="3rem">
-          <Radio value="" label="None" />
-          <Radio value="global" label="Global" />
-          <Radio value="environment" label="Per Environment" />
-        </Flex>
-      </Radio.Group>
-      {!!feature?.scheduleType && feature?.scheduleType === "global" && (
-        <ScheduledForm
-          featureSchedule={
-            environments[0]?.features?.[feature?.featureId || ""]?.schedule || {
-              start: Date.now(),
-              end: Date.now(),
-              timezone: "UTC",
-              timeType: "none",
-              startTime: 0,
-              endTime: 0,
-            }
-          }
-          onChange={(newSchedule) => {
-            environments.forEach((environment) => {
-              const environmentFeature =
-                environment.features?.[feature?.featureId || ""];
-              if (environmentFeature) {
-                environmentFeature.schedule = newSchedule;
-              }
-            });
-          }}
-        />
-      )}
-
       {(feature.featureType === "selective" ||
         feature.featureType === "value") && (
         <>
           <Radio.Group
-            name="valueType"
             label="Value Type"
-            value={valueType}
-            onChange={(event) => {
-              (feature as VexillaSelectiveFeature).valueType =
-                event as VexillaInputType;
-
-              if (feature.featureType === "selective") {
-                feature.value = [];
-              } else if (event === "string") {
-                feature.value = "";
-                delete (feature as any).numberType;
-              } else {
-                feature.value = 0;
-                (feature as any).numberType = "int";
-              }
-
-              environments.forEach((environment) => {
-                const environmentFeature =
-                  environment.features?.[feature?.featureId || ""];
-                if (environmentFeature) {
-                  (environmentFeature as VexillaSelectiveFeature).valueType =
-                    event as VexillaInputType;
-
-                  if (feature.featureType === "selective") {
-                    environmentFeature.value = [];
-                  } else if (event === "string") {
-                    environmentFeature.value = "";
-                    delete (environmentFeature as any).numberType;
-                  } else {
-                    environmentFeature.value = 0;
-                    (environmentFeature as any).numberType = "int";
-                  }
-                }
-              });
-            }}
+            value={shape.valueType}
+            onChange={(value) =>
+              change({
+                featureType: feature.featureType,
+                valueType: value as "string" | "number",
+                ...(value === "number" ? { numberType: "int" } : {}),
+              })
+            }
           >
-            <Group mt="sm" mb="lg" align="center" justify="center">
-              <Radio value="string" label="String" mr="3rem" />
+            <Group my="sm">
+              <Radio value="string" label="String" />
               <Radio value="number" label="Number" />
             </Group>
           </Radio.Group>
-          {(
-            environments[0].features?.[feature?.featureId || ""] as
-              | VexillaSelectiveFeature
-              | VexillaValueFeature
-          )?.valueType === "number" && (
+          {shape.valueType === "number" && (
             <Radio.Group
-              name="numberType"
               label="Number Type"
-              value={numberType}
-              onChange={(event) => {
-                environments.forEach((environment) => {
-                  const currentFeature =
-                    environment.features?.[feature?.featureId || ""];
-
-                  const featureHasValueType =
-                    currentFeature.featureType === "selective" ||
-                    currentFeature.featureType === "value";
-
-                  const isNumberFeature =
-                    featureHasValueType &&
-                    currentFeature.valueType === "number";
-
-                  if (isNumberFeature && currentFeature) {
-                    (
-                      feature as
-                        | VexillaSelectiveFeatureNumbers
-                        | VexillaValueFeatureNumber
-                    ).numberType = event as VexillaNumberType;
-
-                    (
-                      currentFeature as
-                        | VexillaSelectiveFeatureNumbers
-                        | VexillaValueFeatureNumber
-                    ).numberType = event as VexillaNumberType;
-                  }
-                });
-              }}
+              value={shape.numberType}
+              onChange={(value) =>
+                change({ ...shape, numberType: value as "int" | "float" })
+              }
             >
-              <Group mt="sm" mb="lg" align="center" justify="center">
-                <Radio value="int" label="Integer" mr="3rem" />
+              <Group my="sm">
+                <Radio value="int" label="Integer" />
                 <Radio value="float" label="Float" />
               </Group>
             </Radio.Group>
           )}
         </>
       )}
-
-      {environments.map((environment) => {
-        const featureDetails =
-          environment?.features?.[feature?.featureId || ""];
-
-        function safelySetDetails(newDetails: Partial<VexillaFeature> = {}) {
-          const defaultDetails =
-            environment.defaultEnvironmentFeatureValues[
-              featureDetails?.featureType
-            ];
-          if (!environment.features) {
-            environment.features = {};
-          }
-
-          if (!feature) {
-            console.error(
-              "Looks like somebody forgot their towel. feature should NOT have been undefined"
-            );
-            return;
-          }
-
-          if (!featureDetails && defaultDetails) {
-            environment.features[feature.featureId] = {
-              ...defaultDetails,
-              ...newDetails,
-            } as VexillaFeature;
-          } else if (!featureDetails && !defaultDetails) {
-            // TODO: find global defaults to fall back to
-            environment.features[feature.featureId] = {} as any;
-          } else {
-            const envFeature = environment.features[feature.featureId];
-            Object.entries(newDetails).forEach(([key, value]) => {
-              const featureKey = key as keyof VexillaFeature;
-              (envFeature as any)[featureKey] = value;
-            });
-          }
-        }
-
-        return (
-          <div key={environment.environmentId}>
-            <h4>{environment.name}</h4>
-            {featureDetails?.featureType === "toggle" && (
-              <Switch
-                checked={featureDetails?.value || false}
-                onLabel="ON"
-                offLabel="OFF"
-                onChange={(event) => {
-                  safelySetDetails({ value: event.currentTarget.checked });
-                }}
-              />
-            )}
-            {featureDetails?.featureType === "gradual" && (
-              <>
-                <CustomSlider
-                  value={featureDetails?.seed || 0}
-                  label={"Seed"}
-                  tooltipText="This value is passed to the PRNG to get a specific subset of users."
-                  onChange={(newSeed) => {
-                    const newSeedNumber = Number(newSeed);
-                    if (!isNaN(newSeedNumber)) {
-                      safelySetDetails({ seed: newSeedNumber });
-                    }
-                  }}
-                  showRandomButton
-                />
-                <CustomSlider
-                  value={featureDetails?.value || 0}
-                  label={"Threshold"}
-                  tooltipText="This value determines what percentage of users should see this feature."
-                  onChange={(newValue) => {
-                    safelySetDetails({ value: newValue });
-                  }}
-                />
-              </>
-            )}
-            {featureDetails?.featureType === "selective" && (
-              <SelectiveList
-                valueType={featureDetails.valueType}
-                items={
-                  (environment.features[feature?.featureId || ""]?.value as (
-                    | string
-                    | number
-                  )[]) || []
+      <Radio.Group
+        label="Schedule Type"
+        value={feature.scheduleType}
+        onChange={(value) => {
+          feature.scheduleType = value as VexillaScheduleType;
+          environments.forEach((env) => {
+            if (env.features[featureId]) {
+              env.features[featureId].scheduleType =
+                value as VexillaScheduleType;
+            }
+          });
+        }}
+      >
+        <Group my="sm">
+          <Radio value="" label="None" />
+          <Radio value="global" label="Global" />
+          <Radio value="environment" label="Per Environment" />
+        </Group>
+      </Radio.Group>
+      <section id="group-defaults">
+        <h3>Group defaults</h3>
+        <Text mb="sm">
+          Complete default values are included in the group JSON. Global
+          schedules apply to every environment.
+        </Text>
+        <FeatureFields
+          key={`${featureId}-${feature.featureType}-${shape.valueType}-${shape.numberType}`}
+          feature={feature}
+          expectedFeatureId={featureId}
+          onScheduleChange={(schedule) => {
+            if (feature.scheduleType === "global") {
+              environments.forEach((env) => {
+                const f = env.features[featureId];
+                if (f) {
+                  f.schedule = { ...schedule };
                 }
-                onListChange={(newList) => {
-                  safelySetDetails({
-                    value: (newList || ([] as string[])) as any,
-                  });
-                }}
-              />
-            )}
-
-            {featureDetails?.featureType === "value" &&
-              featureDetails.valueType === "string" && (
-                <TextInput
-                  label={"Value"}
-                  defaultValue={featureDetails?.value}
-                  onChange={(event) => {
-                    safelySetDetails({
-                      value: event.target.value,
-                    });
-                  }}
-                />
-              )}
-
-            {featureDetails?.featureType === "value" &&
-              featureDetails.valueType === "number" && (
-                <CustomNumberInput
-                  value={featureDetails.value || 0}
-                  numberType={featureDetails.numberType}
-                  label={"Value"}
-                  onChange={(value) => {
-                    safelySetDetails({
-                      value,
-                    });
-                  }}
-                />
-              )}
-
-            {!!feature?.scheduleType &&
-              feature?.scheduleType === "environment" && (
-                <ScheduledForm
-                  featureSchedule={
-                    featureDetails?.schedule || {
-                      start: Date.now(),
-                      end: Date.now(),
-                      timezone: "UTC",
-                      timeType: "none",
-                      startTime: 0,
-                      endTime: 0,
-                    }
-                  }
-                  onChange={(newSchedule) => {
-                    safelySetDetails({ schedule: newSchedule });
-                  }}
-                />
-              )}
-          </div>
-        );
-      })}
+              });
+            }
+          }}
+        />
+      </section>
+      {environmentEntries.map(([environmentId, env]) => (
+        <section key={environmentId} id={`environment-${environmentId}`}>
+          <h3>{env.name}</h3>
+          {env.environmentId !== environmentId && (
+            <Button
+              mb="sm"
+              onClick={() => {
+                env.environmentId = environmentId;
+              }}
+            >
+              Use environment ID {environmentId}
+            </Button>
+          )}
+          {env.features[featureId] ? (
+            <FeatureFields
+              feature={env.features[featureId]}
+              expectedFeatureId={featureId}
+            />
+          ) : (
+            <Text c="red">
+              Missing feature. Choose its type above to explicitly initialize
+              complete defaults.
+            </Text>
+          )}
+        </section>
+      ))}
     </PageLayout>
   );
 }

@@ -61,19 +61,6 @@ export interface Group {
   environments: Record<string, VexillaEnvironment>;
 }
 
-export type PublishedEnvironment = Omit<
-  VexillaEnvironment,
-  "defaultEnvironmentFeatureValues"
->;
-
-export interface PublishedGroup {
-  name: string;
-  groupId: string;
-  features: Record<string, VexillaFeature>;
-  environments: Record<string, PublishedEnvironment>;
-  meta: { version: "v1" };
-}
-
 export interface UpdatePayload<T> {
   previous: T;
   current: T;
@@ -170,12 +157,6 @@ export interface VexillaClientConfig {
   };
 }
 
-export interface ManifestGroup {
-  name: string;
-  groupId: string;
-}
-
-export interface VexillaManifest {
-  version: string;
-  groups: ManifestGroup[];
-}
+// Published wire types are schema-derived; authoring types above may hold incomplete dates.
+export type { PublishedGroup, PublishedEnvironment } from './published';
+export type { PublishedManifest as VexillaManifest, PublishedManifestGroup as ManifestGroup } from './published';

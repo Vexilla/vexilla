@@ -19,6 +19,6 @@ class SelectiveFeature extends Feature
     public static function fromRaw(object $rawFeature): SelectiveFeature
     {
         $schedule = Schedule::fromRaw($rawFeature->schedule);
-        return new SelectiveFeature($rawFeature->name, $rawFeature->featureId, $rawFeature->featureType, $rawFeature->scheduleType, $schedule, $rawFeature->valueType, $rawFeature->value, $rawFeature->numberType);
+        return new SelectiveFeature($rawFeature->name, $rawFeature->featureId, $rawFeature->featureType, $rawFeature->scheduleType, $schedule, $rawFeature->valueType, $rawFeature->value, $rawFeature->numberType ?? '');
     }
 }

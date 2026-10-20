@@ -569,7 +569,7 @@ function DiffModal({
                   </Flex>
 
                   <Collapse in={!collapsedDiffs[changePath]}>
-                    <Text className="truncate bg-slate-50 px-2 mt-2">
+                    <Text component="div" className="truncate bg-slate-50 px-2 mt-2">
                       <pre>
                         <code>{formatDifferenceText(change)}</code>
                       </pre>

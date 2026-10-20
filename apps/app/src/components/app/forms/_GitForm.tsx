@@ -1,4 +1,4 @@
-import _React, { PropsWithChildren, useEffect, useState } from "react";
+import _React, { PropsWithChildren, useEffect } from "react";
 import {
   Timeline,
   Select,
@@ -52,7 +52,7 @@ export function GitForm({
   branches: Branch[];
   refresh: () => void;
   isTargetBranchValid: (branchName: string) => Promise<boolean>;
-  initializeBranch: (repositoryId: string, branchName: string) => Promise<void>;
+  initializeBranch?: (repositoryId: string, branchName: string) => Promise<void>;
 }>) {
   const hosting = config?.hosting as HostingConfigGitBase;
 
@@ -235,9 +235,10 @@ export function GitForm({
                 </Text>
                 <Button
                   className="mt-2"
+                  disabled={!initializeBranch}
                   onClick={async () => {
                     // create commit on repository and target branch with README CONTENTS
-                    if (targetBranch) {
+                    if (targetBranch && initializeBranch) {
                       try {
                         await initializeBranch(repositoryId, targetBranch);
                         notifications.show({

@@ -1,0 +1,12 @@
+[
+  {"id":"js","directory":"clients/js","command":["pnpm","test:contract"],"runner":"ubuntu-24.04"},
+  {"id":"python","directory":"clients/python","command":["python","-m","pytest","tests/test_contract.py","-q"],"runner":"ubuntu-24.04"},
+  {"id":"go","directory":"clients/go","command":["go","test","./pkg/vexilla","-run","TestSharedContract","-count=1"],"runner":"ubuntu-24.04"},
+  {"id":"rust","directory":"clients/rust","command":["cargo","test","--locked","--lib","shared_contract"],"runner":"ubuntu-24.04"},
+  {"id":"csharp","directory":"clients/csharp","command":["dotnet","run","--project","Contract/Contract.csproj"],"runner":"ubuntu-24.04"},
+  {"id":"swift","directory":".","command":["swift","test","--filter","ContractTests"],"runner":"macos-14"},
+  {"id":"kotlin","directory":"clients/kotlin","command":["./gradlew","test","--tests","ContractTest"],"runner":"ubuntu-24.04"},
+  {"id":"php","directory":"clients/php","command":["php","contract/test.php"],"runner":"ubuntu-24.04"},
+  {"id":"elixir","directory":"clients/elixir","command":["mix","test","test/contract_test.exs"],"runner":"ubuntu-24.04"},
+  {"id":"ocaml","directory":"clients/ocaml","command":["opam","exec","--","dune","exec","test/contract.exe"],"runner":"ubuntu-24.04"}
+]

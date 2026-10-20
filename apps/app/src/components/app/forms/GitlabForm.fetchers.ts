@@ -1,5 +1,5 @@
 import { config } from "../../../stores/config-valtio";
-import { AppState, HostingConfigGitBase } from "../../../types";
+import { HostingConfigGitBase } from "../../../types";
 import { GitFetcher } from "../../../utils/fetcher";
 import { README_CONTENTS } from "../../../utils/repo-init";
 import {
@@ -61,7 +61,7 @@ export class GitLabFetcher extends GitFetcher {
     );
   }
 
-  private async fetchBranch(branchName: string) {
+  async fetchBranch(branchName: string) {
     if (config.hosting.provider === "gitlab") {
       return this.getRequest<GitLabBranch>(
         `/repos/${config.hosting.owner}/${config.hosting.repositoryName}/branches/${branchName}`
@@ -97,7 +97,7 @@ export class GitLabFetcher extends GitFetcher {
     }
   }
 
-  private async createBranch(newBranchName: string, head: string) {
+  async createBranch(newBranchName: string, head: string) {
     if (config.hosting.provider === "gitlab") {
       return this.payloadRequest<GitLabBranch>(
         `/projects/${config.hosting.repositoryId}/repository/branches`,

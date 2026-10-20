@@ -625,3 +625,6 @@ mod tests {
         assert!(value_float == 42.42);
     }
 }
+
+#[cfg(test)]
+mod contract;

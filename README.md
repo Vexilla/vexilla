@@ -49,3 +49,5 @@ If you're using Apple Silicon, you may need to take additional steps to ensure c
 Current Vexilla code is released under a combination of two licenses, the Business Source License (BSL) and the MIT License.
 
 Please see the [License file](./LICENSE) for more info.
+
+SDK contributors: see the [JSON contract and validation workflow](CONTRIBUTING.md).
