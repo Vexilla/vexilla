@@ -8,6 +8,7 @@
     "TODObuild:clients:docs:go": "ts-node ./scripts/build-client-readmes.ts",
     "build:clients:docs": "pnpm run \"/^build:clients:docs:.*/\"",
     "build": "turbo run build",
+    "build:app": "turbo run build --filter=\"./packages/*\" --filter=\"./apps/app\"",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
