@@ -3,14 +3,22 @@ import { Link, Outlet, useSearchParams } from "react-router-dom";
 import { AppShell, Flex, Modal, Box, Text, Button } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useSnapshot } from "valtio";
-import { set as lodashSet } from "lodash-es";
+import { cloneDeep, set as lodashSet, unset as lodashUnset } from "lodash-es";
 import { Difference } from "microdiff";
 
 import { Group, ContractIssue } from "@vexilla/types";
 
 import { nanoid } from "./utils/nanoid";
 import { fetchersMap } from "./utils/fetchers.map";
-import { config, remoteConfig, remoteMetadata } from "./stores/config-valtio";
+import {
+  config,
+  remoteConfig,
+  remoteMetadata,
+  invalidateRemoteMetadata,
+  isRemoteBaselineReady,
+  configReadRefresh,
+  requestRemoteRead,
+} from "./stores/config-valtio";
 
 import { CustomList, CustomListItem } from "./components/CustomList";
 import { OnboardingForm } from "./components/app/OnboardingForm";
@@ -18,14 +26,25 @@ import { Status } from "./components/Status";
 
 import "./App.css";
 import { notifications } from "@mantine/notifications";
-import { HostingProvider, AppState } from "./types";
+import { AppState, HostingConfig } from "./types";
 
-import { publishApprovedChanges } from "./utils/publication";
+import { startConfigPolling } from "./utils/config-polling";
+import {
+  createGitHosting,
+  gitLocationKey,
+  gitErrorMessage,
+} from "./utils/fetcher";
+
+import {
+  PublicationDestinationError,
+  publishApprovedChanges,
+} from "./utils/publication";
 
 function App() {
   const [publicationIssues, setPublicationIssues] = useState<ContractIssue[]>(
     []
   );
+  const remoteRefreshRevision = useSnapshot(configReadRefresh).revision;
   const configSnapshot = useSnapshot(config);
   useSnapshot(remoteConfig);
   useSnapshot(remoteMetadata);
@@ -41,79 +60,32 @@ function App() {
     if (searchParams.has("logged_in")) {
       openHostingConfigModal();
     }
-  }, [searchParams]);
-
-  const { accessToken, repositoryName, owner } =
-    config.hosting.providerType === "git"
-      ? config.hosting
-      : {
-          accessToken: "",
-          repositoryName: "",
-          owner: "",
-        };
+  }, [searchParams, openHostingConfigModal]);
 
   const groups = config.groups;
-
+  const provider = configSnapshot.hosting.provider;
+  const providerType = configSnapshot.hosting.providerType;
   const gitMethods = useMemo(() => {
-    if (config.hosting.provider) {
-      const fetchers = fetchersMap[config.hosting.provider]();
-      return fetchers;
-    }
-  }, [accessToken, owner, repositoryName, configSnapshot]);
+    return providerType === "git" && provider
+      ? fetchersMap[provider]()
+      : undefined;
+  }, [provider, providerType]);
 
   useEffect(() => {
-    if (!config.hosting?.provider) {
+    if (!provider) {
       openHostingConfigModal();
-    } else {
-      if (config.hosting?.providerType === "git") {
-        // show modal for Github repo selection
-        if (config.hosting?.provider === "github") {
-        } else {
-        }
-      } else if (config.hosting?.providerType === "direct") {
-        console.log("direct provider type");
-      } else {
-        console.log("empty provider type");
-      }
     }
-  }, [configSnapshot]);
+  }, [provider, openHostingConfigModal]);
 
+  const readContextKey =
+    gitMethods?.getReadContextKey(configSnapshot.hosting) || "";
+  const locationKey = gitLocationKey(configSnapshot.hosting);
   useEffect(() => {
-    async function fetchCurrentConfig() {
-      if (config.hosting?.providerType === "git" && accessToken) {
-        const fetcher =
-          fetchersMap[config.hosting.provider as HostingProvider]?.();
-
-        if (fetcher) {
-          try {
-            const result = await fetcher.getCurrentConfig();
-            remoteConfig.groups = result.groups;
-            remoteConfig.hosting = result.hosting;
-            remoteConfig.modifiedAt = result.modifiedAt;
-            remoteMetadata.remoteModifiedAt = result.modifiedAt;
-          } catch (e: any) {
-            console.log("Failed to fetch current config. Invalidating token.");
-            config.hosting.accessToken = "";
-          }
-        }
-      } else {
-        console.log(
-          "Initial provider type was not git",
-          config.hosting?.providerType
-        );
-      }
+    if (remoteMetadata.locationKey !== locationKey) {
+      invalidateRemoteMetadata(locationKey);
     }
-
-    const interval = setInterval(() => {
-      fetchCurrentConfig();
-    }, 30000);
-
-    fetchCurrentConfig();
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, [accessToken]);
+    return gitMethods ? startConfigPolling(gitMethods) : undefined;
+  }, [gitMethods, readContextKey, locationKey, remoteRefreshRevision]);
 
   return (
     <>
@@ -182,7 +154,15 @@ function App() {
           <OnboardingForm
             config={config}
             updateProvider={({ provider, providerType }) => {
-              Object.assign(config.hosting, { provider, providerType });
+              if (provider === config.hosting.provider) {
+                return;
+              }
+              config.hosting =
+                provider === "github" ||
+                provider === "gitlab" ||
+                provider === "bitbucket"
+                  ? createGitHosting(provider)
+                  : ({ provider, providerType } as HostingConfig);
             }}
           />
         </Box>
@@ -216,14 +196,32 @@ function App() {
               showConfig={() => {
                 openHostingConfigModal();
               }}
-              updateLocal={() => {}}
+              retryRemoteRead={requestRemoteRead}
               mergeRemoteConfig={async (changes, approvals) => {
+                if (!isRemoteBaselineReady()) {
+                  throw new Error(
+                    "Read the current repository before merging changes."
+                  );
+                }
                 mergeRemoteChanges(config, changes, approvals);
 
                 remoteMetadata.remoteMergedAt = Date.now();
               }}
               publish={async (changes, approvals) => {
-                if (config.hosting.providerType === "git" && gitMethods) {
+                if (
+                  !gitMethods ||
+                  !isRemoteBaselineReady() ||
+                  readContextKey !==
+                    gitMethods.getReadContextKey(config.hosting)
+                ) {
+                  throw new Error(
+                    "Read the current repository before publishing."
+                  );
+                }
+                try {
+                  const shouldCreatePullRequest =
+                    config.hosting.providerType === "git" &&
+                    config.hosting.shouldCreatePullRequest;
                   const result = await publishApprovedChanges(
                     config,
                     changes,
@@ -234,8 +232,23 @@ function App() {
                     setPublicationIssues(result.issues);
                   } else {
                     setPublicationIssues([]);
-                    notifications.show({ message: "PR Created" });
+                    notifications.show({
+                      message: shouldCreatePullRequest
+                        ? "Pull request created"
+                        : "Changes published",
+                    });
+                    requestRemoteRead();
                   }
+                } catch (error) {
+                  notifications.show({
+                    color: "red",
+                    message:
+                      error instanceof PublicationDestinationError
+                        ? error.message
+                        : gitErrorMessage(error),
+                  });
+                  requestRemoteRead();
+                  throw error;
                 }
               }}
             />
@@ -293,13 +306,13 @@ function mergeRemoteChanges(
     if (approved) {
       switch (change.type) {
         case "CHANGE":
-          lodashSet(localConfig, change.path, change.value);
+          lodashSet(localConfig, change.path, cloneDeep(change.value));
           break;
         case "CREATE":
-          lodashSet(localConfig, change.path, change.value);
+          lodashSet(localConfig, change.path, cloneDeep(change.value));
           break;
         case "REMOVE":
-          lodashSet(localConfig, change.path, undefined);
+          lodashUnset(localConfig, change.path);
           break;
       }
     }

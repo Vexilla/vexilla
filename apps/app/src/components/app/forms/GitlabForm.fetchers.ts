@@ -1,395 +1,387 @@
 import { config } from "../../../stores/config-valtio";
-import { HostingConfigGitBase } from "../../../types";
-import { GitFetcher } from "../../../utils/fetcher";
-import { README_CONTENTS } from "../../../utils/repo-init";
+import type {
+  AppState,
+  HostingConfig,
+  HostingConfigGitLab,
+} from "../../../types";
 import {
+  GitFetcher,
+  GitReadError,
+  hasValue,
+  decodeBase64Text,
+  gitLocationKey,
+} from "../../../utils/fetcher";
+import { README_CONTENTS } from "../../../utils/repo-init";
+import type {
   GitLabRepositoryTreeResponse,
   GitLabBranch,
-  GitLabCreateBranchOptions,
-  GitLabCreateMergeRequestResponse,
-  GitLabCommit,
-  GitLabCreateCommitOptions,
   GitLabCreateCommitActionOptions,
-  GitLabCreateMergeRequestOptions,
   GitLabGetProjectsResponse,
   GitLabRepositoryFileResponse,
 } from "./GitlabForm.types";
-import { cloneDeep } from "lodash-es";
 
-const DEFAULT_GITLAB_BASE_URL = `https://gitlab.com`;
+const DEFAULT_GITLAB_BASE_URL = "https://gitlab.com";
+const MAX_PAGES = 1000;
+type Context = Readonly<HostingConfigGitLab>;
+type FileToPublish = { content: string; filePath: string };
 
 function getGitLabBaseUrl(baseUrl = DEFAULT_GITLAB_BASE_URL) {
-  if (baseUrl.trim() === "") {
-    baseUrl = DEFAULT_GITLAB_BASE_URL;
-  }
-  return `${baseUrl}/api/v4`;
+  return `${baseUrl.trim() || DEFAULT_GITLAB_BASE_URL}/api/v4`;
 }
 
-const commonHeaders = {
-  Accept: "application/vnd.github+json",
-  "X-GitLab-Api-Version": "2022-11-28",
-};
+export function hasGitLabAuthentication(
+  hosting: HostingConfig
+): hosting is HostingConfigGitLab {
+  return (
+    hosting.provider === "gitlab" &&
+    hosting.providerType === "git" &&
+    hasValue(hosting.accessToken)
+  );
+}
+
+export function hasGitLabRepository(hosting: HostingConfig) {
+  return (
+    hasGitLabAuthentication(hosting) &&
+    hasValue(hosting.repositoryId) &&
+    hasValue(hosting.owner) &&
+    hasValue(hosting.repositoryName)
+  );
+}
+
+export function gitlabDiscoveryKey(hosting: HostingConfig) {
+  return JSON.stringify(
+    hasGitLabAuthentication(hosting)
+      ? [
+          hosting.provider,
+          hosting.accessToken,
+          getGitLabBaseUrl(hosting.baseUrl),
+        ]
+      : [hosting.provider, hosting.providerType]
+  );
+}
 
 export class GitLabFetcher extends GitFetcher {
-  // private async fetchInstallations() {
-  //   if (config.hosting.provider === "gitlab") {
-  //     return this.getRequest<GitLabGetInstallationsResponse>(
-  //       `/user/installations`
-  //     );
-  //   } else {
-  //     throw new Error(
-  //       "GitlabFetcher.fetchBranches() called on non-gitlab config"
-  //     );
-  //   }
-  // }
+  private readonly baselineHeads = new Map<string, string>();
 
-  async fetchBranches() {
-    if (config.hosting.provider === "gitlab") {
-      return this.getRequest<GitLabBranch[]>(
-        `/projects/${config.hosting.repositoryId}/repository/branches/`
-      );
-    } else {
-      throw new Error(
-        "GitlabFetcher.fetchBranches() called on non-gitlab config"
-      );
+  private rememberReadHead(context: Context, head: string) {
+    if (
+      this.getReadContextKey(context) === this.getReadContextKey(config.hosting)
+    ) {
+      this.baselineHeads.set(gitLocationKey(context), head);
     }
   }
 
-  async fetchRepositories() {
-    return this.getRequest<GitLabGetProjectsResponse>(
-      `/projects?simple=true&membership=true`
+  isRepositoryReady(hosting: HostingConfig) {
+    return hasGitLabRepository(hosting);
+  }
+
+  isConfigReady(hosting: HostingConfig) {
+    return (
+      hasGitLabAuthentication(hosting) &&
+      hasGitLabRepository(hosting) &&
+      hasValue(hosting.targetBranch)
     );
   }
 
-  async fetchBranch(branchName: string) {
-    if (config.hosting.provider === "gitlab") {
-      return this.getRequest<GitLabBranch>(
-        `/repos/${config.hosting.owner}/${config.hosting.repositoryName}/branches/${branchName}`
-      );
-    } else {
-      throw new Error(
-        "GitlabFetcher.fetchBranch() called on non-gitlab config"
-      );
+  private captureRepository(): Context {
+    const context = { ...config.hosting };
+    if (!hasGitLabAuthentication(context) || !hasGitLabRepository(context)) {
+      throw new GitReadError("GitLab repository selection is incomplete");
     }
+    return context;
   }
 
-  private async fetchTree(branchName?: string) {
-    if (config.hosting.provider === "gitlab") {
-      let url = `/projects/${config.hosting.repositoryId}/repository/tree?ref=${branchName}`;
-
-      return this.getRequest<GitLabRepositoryTreeResponse>(url).catch(() => []);
-    } else {
-      throw new Error("GitlabFetcher.fetchTree() called on non-gitlab config");
-    }
+  private projectPath(context: Context) {
+    return `/projects/${encodeURIComponent(context.repositoryId)}`;
   }
 
-  private async fetchFile(fileName: string, branchName?: string) {
-    if (config.hosting.provider === "gitlab") {
-      return this.getRequest<GitLabRepositoryFileResponse>(
-        `/projects/${config.hosting.repositoryId}/repository/files/${fileName}${
-          Boolean(branchName?.trim())
-            ? `?ref=${encodeURIComponent(branchName?.trim() || "")}`
-            : ""
-        }`
+  async fetchBranches() {
+    const context = this.captureRepository();
+    return this.fetchAll<GitLabBranch>(
+      `${this.projectPath(context)}/repository/branches`,
+      context
+    );
+  }
+
+  async fetchRepositories(): Promise<GitLabGetProjectsResponse> {
+    const context = { ...config.hosting };
+    if (!hasGitLabAuthentication(context)) {
+      throw new GitReadError("GitLab authentication is incomplete");
+    }
+    return this.fetchAll<GitLabGetProjectsResponse[number]>(
+      "/projects?simple=true&membership=true",
+      context
+    );
+  }
+
+  private async fetchAll<T>(path: string, context: Context): Promise<T[]> {
+    const values: T[] = [];
+    const seen = new Set<string>();
+    let page = 1;
+    for (let count = 0; count < MAX_PAGES; count++) {
+      const response = await this.request(
+        `${path}${path.includes("?") ? "&" : "?"}per_page=100&page=${page}`,
+        context
       );
-    } else {
-      throw new Error("GitlabFetcher.fetchFile() called on non-gitlab config");
+      const entries: T[] = await response.json();
+      if (!Array.isArray(entries)) {
+        throw new GitReadError("Invalid GitLab collection response");
+      }
+      const fingerprint = JSON.stringify(entries);
+      if (seen.has(fingerprint)) {
+        throw new GitReadError("Repeated GitLab pagination page");
+      }
+      seen.add(fingerprint);
+      values.push(...entries);
+      const next = response.headers.get("X-Next-Page");
+      if (next === "" || (next === null && entries.length < 100)) {
+        return values;
+      }
+      const nextPage = next === null ? page + 1 : Number(next);
+      if (
+        !Number.isSafeInteger(nextPage) ||
+        nextPage <= page ||
+        entries.length === 0
+      ) {
+        throw new GitReadError("Invalid GitLab pagination");
+      }
+      page = nextPage;
+    }
+    throw new GitReadError("GitLab pagination limit exceeded");
+  }
+
+  async fetchBranch(
+    branchName: string,
+    context: Context = this.captureRepository()
+  ) {
+    if (!hasValue(branchName)) {
+      throw new GitReadError("GitLab branch selection is incomplete");
+    }
+    const branch = await this.getRequest<GitLabBranch>(
+      `${this.projectPath(context)}/repository/branches/${encodeURIComponent(
+        branchName
+      )}`,
+      context
+    );
+    if (!hasValue(branch.commit?.id)) {
+      throw new GitReadError("Invalid GitLab branch response");
+    }
+    return branch;
+  }
+
+  private fetchFile(fileName: string, ref: string, context: Context) {
+    return this.getRequest<GitLabRepositoryFileResponse>(
+      `${this.projectPath(context)}/repository/files/${encodeURIComponent(
+        fileName
+      )}?ref=${encodeURIComponent(ref)}`,
+      context
+    );
+  }
+
+  async getCurrentConfig(): Promise<AppState | null> {
+    const context = this.captureRepository();
+    if (!hasValue(context.targetBranch)) {
+      throw new GitReadError("GitLab config selection is incomplete");
+    }
+    const branch = await this.fetchBranch(context.targetBranch, context);
+    let file: GitLabRepositoryFileResponse;
+    try {
+      file = await this.fetchFile("config.json", branch.commit.id, context);
+    } catch (error) {
+      // The captured commit was verified above; only a missing file is absence.
+      if (error instanceof GitReadError && error.status === 404) {
+        this.rememberReadHead(context, branch.commit.id);
+        return null;
+      }
+      throw error;
+    }
+    const result = JSON.parse(
+      file.encoding === "base64" ? decodeBase64Text(file.content) : file.content
+    );
+    if (
+      !result ||
+      typeof result !== "object" ||
+      !Array.isArray(result.groups) ||
+      !result.hosting ||
+      typeof result.hosting !== "object" ||
+      Array.isArray(result.hosting) ||
+      !Number.isFinite(result.modifiedAt)
+    ) {
+      throw new GitReadError("Invalid GitLab config document");
+    }
+    this.rememberReadHead(context, branch.commit.id);
+    return result;
+  }
+
+  async isBranchValid(branchName: string) {
+    if (!hasGitLabRepository(config.hosting) || !hasValue(branchName)) {
+      return false;
+    }
+    const context = this.captureRepository();
+    try {
+      const entries = await this.getRequest<GitLabRepositoryTreeResponse>(
+        `${this.projectPath(context)}/repository/tree?ref=${encodeURIComponent(
+          branchName
+        )}&per_page=1`,
+        context
+      );
+      if (!Array.isArray(entries)) {
+        throw new GitReadError("Invalid GitLab tree response");
+      }
+      return entries.length > 0;
+    } catch (error) {
+      if (error instanceof GitReadError && error.status === 404) {
+        return false;
+      }
+      throw error;
     }
   }
 
   async createBranch(newBranchName: string, head: string) {
-    if (config.hosting.provider === "gitlab") {
-      return this.payloadRequest<GitLabBranch>(
-        `/projects/${config.hosting.repositoryId}/repository/branches`,
-        {
-          branch: newBranchName,
-          ref: head,
-        } as GitLabCreateBranchOptions
-      );
-    } else {
-      throw new Error(
-        "GitlabFetcher.createBranch() called on non-gitlab config"
-      );
+    const context = this.captureRepository();
+    if (!hasValue(newBranchName) || !hasValue(head)) {
+      throw new GitReadError("GitLab branch selection is incomplete");
     }
-  }
-
-  private async createCommit(
-    targetBranchName: string,
-    files: GitLabCreateCommitActionOptions[],
-    newBranchName?: string
-  ) {
-    if (config.hosting.provider === "gitlab") {
-      let payload = {
-        branch: targetBranchName,
-        commit_message: "chore: update Vexilla feature flags",
-        actions: files,
-      } as GitLabCreateCommitOptions;
-
-      if (Boolean(newBranchName)) {
-        payload = {
-          branch: newBranchName,
-          commit_message: "chore: update Vexilla feature flags",
-          actions: files,
-          start_branch: targetBranchName,
-        } as GitLabCreateCommitOptions;
-      }
-
-      return this.payloadRequest<GitLabCommit>(
-        `/projects/${config.hosting.repositoryId}/repository/commits`,
-        payload
-      );
-    } else {
-      throw new Error(
-        "GitlabFetcher.createCommit() called on non-gitlab config"
-      );
-    }
-  }
-
-  // private async updateBranch(branchName: string, commitSha: string) {
-  //   if (config.hosting.provider === "gitlab") {
-  //     return this.payloadRequest<GitLabBranch>(
-  //       `/repos/${config.hosting.owner}/${config.hosting.repositoryName}/git/refs/heads/${branchName}`,
-  //       {
-  //         sha: commitSha,
-  //       },
-  //       "PATCH"
-  //     );
-  //   } else {
-  //     throw new Error(
-  //       "GitlabFetcher.updateBranch() called on non-gitlab config"
-  //     );
-  //   }
-  // }
-
-  private async createMergeRequest(
-    branchName: string,
-    baseBranchName: string,
-    description = ""
-  ) {
-    if (config.hosting.provider === "gitlab") {
-      return this.payloadRequest<GitLabCreateMergeRequestResponse>(
-        `/projects/${config.hosting.repositoryId}/merge_requests`,
-        {
-          title: "Update Vexilla feature flags",
-          target_branch: baseBranchName,
-          source_branch: branchName,
-          allow_collaboration: true,
-          description: `
-${description}
-This PR was generated by Vexilla.
-        `,
-        } as GitLabCreateMergeRequestOptions
-      );
-    } else {
-      throw new Error(
-        "GitlabFetcher.createPullRequest() called on non-gitlab config"
-      );
-    }
-  }
-
-  async getCurrentConfig() {
-    if (config.hosting.provider === "gitlab") {
-      return this.fetchFile("config%2Ejson", config.hosting.targetBranch)
-        .then((response) => {
-          return JSON.parse(response.content);
-        })
-        .catch(() => {
-          return cloneDeep(config);
-        });
-    } else {
-      throw new Error(
-        "GitlabFetcher.getCurrentConfig() called on non-gitlab config"
-      );
-    }
-  }
-
-  async isBranchValid(branchName: string) {
-    if (config.hosting.provider === "gitlab") {
-      const result = await this.fetchTree(branchName)
-        .then((files) => {
-          return files.length > 0;
-        })
-        .catch(() => false);
-
-      return result;
-    } else {
-      throw new Error(
-        "GitlabFetcher.isBranchValid() called on non-gitlab config"
-      );
-    }
+    return this.payloadRequest(
+      `${this.projectPath(context)}/repository/branches`,
+      { branch: newBranchName, ref: head },
+      context
+    );
   }
 
   async initializeBranch(branchName: string) {
-    await this.createCommit(branchName, [
+    const context = this.captureRepository();
+    if (!hasValue(branchName)) {
+      throw new GitReadError("GitLab branch selection is incomplete");
+    }
+    await this.createCommit(
+      branchName,
+      [{ action: "create", file_path: "README.md", content: README_CONTENTS }],
+      context
+    );
+  }
+
+  async publish(branchName: string, files: FileToPublish[]) {
+    const context = this.captureRepository();
+    if (!hasValue(branchName)) {
+      throw new GitReadError("GitLab branch selection is incomplete");
+    }
+    const expectedHead = this.baselineHeads.get(
+      gitLocationKey({ ...context, targetBranch: branchName })
+    );
+    const pendingFiles = files.map((file) => ({ ...file }));
+    const branch = await this.fetchBranch(branchName, context);
+    if (expectedHead && branch.commit.id !== expectedHead) {
+      throw new GitReadError(
+        "The GitLab branch changed since the last read. Refresh and merge before publishing.",
+        409
+      );
+    }
+    const actions = await Promise.all(
+      pendingFiles.map(
+        async (file): Promise<GitLabCreateCommitActionOptions> => {
+          let existing: GitLabRepositoryFileResponse | undefined;
+          try {
+            existing = await this.fetchFile(
+              file.filePath,
+              branch.commit.id,
+              context
+            );
+          } catch (error) {
+            if (!(error instanceof GitReadError && error.status === 404)) {
+              throw error;
+            }
+          }
+          return {
+            action: existing ? "update" : "create",
+            file_path: file.filePath,
+            content: file.content,
+            encoding: "text",
+            ...(hasValue(existing?.last_commit_id)
+              ? { last_commit_id: existing.last_commit_id }
+              : {}),
+          };
+        }
+      )
+    );
+    if (context.shouldCreatePullRequest) {
+      const newBranchName = `${context.branchNamePrefix}${Date.now()}`;
+      await this.createCommit(
+        newBranchName,
+        actions,
+        context,
+        branch.commit.id
+      );
+      await this.payloadRequest(
+        `${this.projectPath(context)}/merge_requests`,
+        {
+          title: "Update Vexilla feature flags",
+          target_branch: branchName,
+          source_branch: newBranchName,
+          allow_collaboration: true,
+          description: "This PR was generated by Vexilla.",
+        },
+        context
+      );
+    } else {
+      await this.createCommit(branchName, actions, context);
+    }
+  }
+
+  private createCommit(
+    branch: string,
+    actions: GitLabCreateCommitActionOptions[],
+    context: Context,
+    startSha?: string
+  ) {
+    return this.payloadRequest(
+      `${this.projectPath(context)}/repository/commits`,
       {
-        action: "create",
-        file_path: "README.md",
-        content: README_CONTENTS,
+        branch,
+        commit_message: "chore: update Vexilla feature flags",
+        actions,
+        ...(startSha ? { start_sha: startSha } : {}),
       },
-    ]);
+      context
+    );
   }
 
-  async publish(
-    branchName: string,
-    files: {
-      content: string;
-      filePath: string;
-    }[]
-  ) {
-    if (
-      config.hosting.providerType === "git" &&
-      config.hosting.provider === "gitlab"
-    ) {
-      if (config.hosting.shouldCreatePullRequest) {
-        this.publishPullRequest(branchName, files);
-      } else {
-        this.publishDirectly(branchName, files);
-      }
-    } else {
-      throw new Error("GitlabFetcher.publish() called on non-gitlab config");
-    }
-  }
-
-  private async publishDirectly(
-    branchName: string,
-    files: {
-      content: string;
-      filePath: string;
-    }[]
-  ) {
-    try {
-      const tree = await this.fetchTree(branchName);
-
-      const mappedFiles: GitLabCreateCommitActionOptions[] = files.map(
-        (file) => {
-          const action = Boolean(
-            tree?.find((blob) => blob.path === file.filePath)?.id
-          )
-            ? "create"
-            : "update";
-
-          return {
-            action,
-            file_path: file.filePath,
-            content: file.content,
-            encoding: "text",
-          };
-        }
-      );
-
-      // createCommit
-      await this.createCommit(branchName, mappedFiles);
-    } catch (e: any) {
-      console.log({ e });
-      throw new Error("Failed to publish directly.");
-    }
-  }
-
-  private async publishPullRequest(
-    baseBranch: string,
-    files: {
-      content: string;
-      filePath: string;
-    }[],
-    description = ""
-  ) {
-    try {
-      // check if files exist and determine createCommit actions
-      const tree = await this.fetchTree(baseBranch);
-
-      const mappedFiles: GitLabCreateCommitActionOptions[] = files.map(
-        (file) => {
-          const action = Boolean(
-            tree?.find((blob) => blob.path === file.filePath)?.id
-          )
-            ? "update"
-            : "create";
-
-          return {
-            action,
-            file_path: file.filePath,
-            content: file.content,
-            encoding: "text",
-          };
-        }
-      );
-
-      // create branch
-      const gitHosting = config.hosting as HostingConfigGitBase;
-      const newBranchName = `${gitHosting.branchNamePrefix}${Date.now()}`;
-
-      await this.createCommit(baseBranch, mappedFiles, newBranchName);
-
-      await this.createMergeRequest(newBranchName, baseBranch, description);
-    } catch (e: any) {
-      console.log({ e });
-      throw new Error("Failed to publish pull request.");
-    }
-  }
-
-  private async getRequest<T>(path: string) {
-    if (config.hosting.provider === "gitlab") {
-      const Authorization = `Bearer ${config.hosting.accessToken}`;
-
-      const url = `${getGitLabBaseUrl(config.hosting.baseUrl)}${path}`;
-
-      const response = await fetch(url, {
-        headers: {
-          ...commonHeaders,
-          Authorization,
-        },
-      });
-
-      const responseBody: T = await response.json();
-
-      if (!response.ok) {
-        console.log(`Error fetching ${url}`, responseBody);
-        throw new Error(`Error fetching ${url}`);
-      } else {
-        return responseBody;
-      }
-    } else {
-      throw new Error(
-        "GitlabFetcher.createPullRequest() called on non-gitlab config"
-      );
-    }
-  }
-
-  private async payloadRequest<T>(
+  private async request(
     path: string,
-    payload: Record<string, any>,
-    method: "POST" | "PUT" | "PATCH" | "QUERY" = "POST"
+    context: Context,
+    payload?: Record<string, unknown>
   ) {
-    if (config.hosting.provider === "gitlab") {
-      const Authorization = `Bearer ${config.hosting.accessToken}`;
-
-      const url = `${getGitLabBaseUrl(config.hosting.baseUrl)}${path}`;
-
-      const response = await fetch(url, {
+    const response = await fetch(
+      `${getGitLabBaseUrl(context.baseUrl)}${path}`,
+      {
         headers: {
-          ...commonHeaders,
-          Authorization,
-          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${context.accessToken}`,
+          ...(payload ? { "Content-Type": "application/json" } : {}),
         },
-        body: JSON.stringify(payload),
-        method,
-      });
-
-      const responseBody: T = await response.json();
-
-      if (
-        (response.status < 200 || response.status > 299) &&
-        response.status !== 404
-      ) {
-        console.log(`Error sending to ${url}`, responseBody);
-        throw new Error(`Error sending to ${url}`);
-      } else {
-        return responseBody;
+        ...(payload ? { method: "POST", body: JSON.stringify(payload) } : {}),
       }
-    } else {
-      throw new Error(
-        "GitlabFetcher.createPullRequest() called on non-gitlab config"
+    );
+    if (!response.ok) {
+      throw new GitReadError(
+        `GitLab ${payload ? "write" : "read"} failed (${response.status})`,
+        response.status
       );
     }
+    return response;
+  }
+
+  private async getRequest<T>(path: string, context: Context): Promise<T> {
+    return (await this.request(path, context)).json();
+  }
+
+  private async payloadRequest(
+    path: string,
+    payload: Record<string, unknown>,
+    context: Context
+  ) {
+    const response = await this.request(path, context, payload);
+    const body = await response.text();
+    return body ? JSON.parse(body) : undefined;
   }
 }

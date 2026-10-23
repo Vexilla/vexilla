@@ -1,4 +1,4 @@
-import _React, { PropsWithChildren, useEffect } from "react";
+import { PropsWithChildren, ReactNode, useEffect, useState } from "react";
 import {
   Timeline,
   Select,
@@ -12,23 +12,16 @@ import {
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 
-import {
-  AppState,
-  HostingConfigBitbucket,
-  HostingConfigGitBase,
-  HostingConfigGitLab,
-  HostingConfigGithub,
-} from "../../../types";
+import { AppState, HostingConfigGitBase } from "../../../types";
+import { GitFetcher, isGitUnauthorized } from "../../../utils/fetcher";
+import { requestRemoteRead } from "../../../stores/config-valtio";
 
 import { DEFAULT_BRANCH_PREFIX } from "../../../utils/constants";
 import { TimelineItemTitle } from "../../TimelineItemTitle";
 
 import { Icon } from "@iconify/react";
 import refreshBroken from "@iconify/icons-solar/refresh-broken";
-import squareArrowRightUpBroken from "@iconify/icons-solar/square-arrow-right-up-broken";
 import type { Branch, Repository } from "./_GitForm.types";
-
-const GITHUB_APP_NAME = import.meta.env.VITE_GITHUB_APP_NAME;
 
 export function GitForm({
   config,
@@ -39,35 +32,51 @@ export function GitForm({
   targetBranch,
   branches,
   refresh,
-  isTargetBranchValid,
+  refreshTimestamp,
+  fetcher,
   initializeBranch,
+  onRepositoryChange,
+  repositoryAction,
+  repositoryTooltip,
+  errors = [],
 }: PropsWithChildren<{
-  totalElements: number;
   activeElement: number;
   config: AppState;
-  updateConfig: (newConfig: AppState) => void;
   repositories: Repository[];
   repositoryId: string;
   targetBranch?: string;
   branches: Branch[];
   refresh: () => void;
-  isTargetBranchValid: (branchName: string) => Promise<boolean>;
-  initializeBranch?: (repositoryId: string, branchName: string) => Promise<void>;
+  refreshTimestamp: number;
+  fetcher: GitFetcher;
+  initializeBranch?: (
+    repositoryId: string,
+    branchName: string
+  ) => Promise<void>;
+  onRepositoryChange: (id: string | null) => void;
+  repositoryAction?: ReactNode;
+  repositoryTooltip?: string;
+  errors?: string[];
 }>) {
   const hosting = config?.hosting as HostingConfigGitBase;
+  const [validationResult, setValidationResult] = useState({
+    context: "",
+    error: "",
+  });
 
   const repository = repositories.find(
-    (repository) => `${repository.id}` === repositoryId,
+    (repository) => `${repository.id}` === repositoryId
   );
 
   const branchOptions =
     branches.length === 0
       ? [
-          {
-            label: repository?.defaultBranch || "",
-            value: repository?.defaultBranch || "",
-          },
-        ]
+          ...new Set(
+            [targetBranch, repository?.defaultBranch].filter(
+              (name): name is string => Boolean(name)
+            )
+          ),
+        ].map((name) => ({ label: name, value: name }))
       : branches
           .filter((branch) => {
             const prefix = hosting.branchNamePrefix || DEFAULT_BRANCH_PREFIX;
@@ -82,23 +91,61 @@ export function GitForm({
             value: branch.name,
           }));
 
+  const validationContext = fetcher.getReadContextKey(config.hosting);
+  const validationReady = fetcher.isRepositoryReady(config.hosting);
+
   useEffect(() => {
+    let active = true;
+    const key = fetcher.getReadContextKey(config.hosting);
+    const isCurrent = () =>
+      active && key === fetcher.getReadContextKey(config.hosting);
     async function getBranchValidity() {
-      console.log("Getting branch validity", { targetBranch, repositoryId });
-      if (targetBranch) {
-        const valid = await isTargetBranchValid(targetBranch);
-        console.log("useEffect: checking if branch is valid", valid);
-        hosting.branchIsValid = valid;
+      if (validationReady && targetBranch) {
+        setValidationResult({ context: "", error: "" });
+        try {
+          const valid = await fetcher.isBranchValid(targetBranch);
+          if (isCurrent()) {
+            hosting.branchIsValid = valid;
+            setValidationResult({ context: key, error: "" });
+          }
+        } catch (error) {
+          if (
+            isCurrent() &&
+            isGitUnauthorized(error) &&
+            hosting.providerType === "git"
+          ) {
+            hosting.accessToken = "";
+          } else if (isCurrent()) {
+            setValidationResult({
+              context: key,
+              error: "Could not validate this branch. Refresh to try again.",
+            });
+          }
+        }
       }
     }
-
-    getBranchValidity();
-  }, [targetBranch, repositoryId]);
-
-  console.log("GitForm", { targetBranch, branches });
+    void getBranchValidity();
+    return () => {
+      active = false;
+    };
+  }, [
+    config,
+    hosting,
+    fetcher,
+    targetBranch,
+    repositoryId,
+    validationReady,
+    validationContext,
+    refreshTimestamp,
+  ]);
 
   return (
     <Box w="100%">
+      {errors.map((error) => (
+        <Text role="alert" c="red" key={error} mb="sm">
+          {error}
+        </Text>
+      ))}
       <Timeline active={activeElement}>
         <Timeline.Item>
           <TimelineItemTitle title="Git-specific Config" />
@@ -128,71 +175,27 @@ export function GitForm({
         <Timeline.Item>
           <TimelineItemTitle
             title="Repository"
-            tooltipText="This depends on which repos you installed the Github App into."
+            tooltipText={repositoryTooltip}
           />
           <Flex direction="row" align="center" gap="0.5rem">
             <Select
-              value={repositoryId}
-              w={"100%"}
-              onChange={async (selectedRepositoryId) => {
-                if (hosting.provider === "github") {
-                  const githubHosting =
-                    hosting as unknown as HostingConfigGithub;
-                  hosting.repositoryId = `${selectedRepositoryId}`;
-                  const repository = repositories.find(
-                    (repository) => `${repository.id}` === selectedRepositoryId,
-                  );
-                  githubHosting.owner = repository?.owner || "";
-                  githubHosting.repositoryName = repository?.name || "";
-                } else if (hosting.provider === "gitlab") {
-                  const gitlabHosting =
-                    hosting as unknown as HostingConfigGitLab;
-                  const repository = repositories.find(
-                    (repository) => `${repository.id}` === selectedRepositoryId,
-                  );
-
-                  gitlabHosting.repositoryId = `${selectedRepositoryId}`;
-                  gitlabHosting.owner = repository?.owner || "";
-                  gitlabHosting.repositoryName = repository?.name || "";
-
-                  gitlabHosting.targetBranch = repository?.defaultBranch;
-                } else if (hosting.provider === "bitbucket") {
-                  const bitbucketHosting =
-                    hosting as unknown as HostingConfigBitbucket;
-                  const repository = repositories.find(
-                    (repository) => `${repository.id}` === selectedRepositoryId,
-                  );
-
-                  console.log("REPOSITORIES", { repositories });
-                  console.log({ branches });
-
-                  bitbucketHosting.repositoryId = `${selectedRepositoryId}`;
-                  bitbucketHosting.owner = repository?.owner || "";
-                  bitbucketHosting.repositoryName = repository?.name || "";
-
-                  bitbucketHosting.targetBranch = repository?.defaultBranch;
-                }
+              aria-label="Repository"
+              clearable
+              clearButtonProps={{
+                "aria-label": "Clear repository selection",
+                "aria-hidden": false,
+                tabIndex: 0,
               }}
+              value={repositoryId || null}
+              w={"100%"}
+              onChange={onRepositoryChange}
               data={repositories.map((repository) => ({
                 label: `${repository.owner}/${repository.name}`,
                 value: `${repository.id}`,
               }))}
             />
 
-            <ActionIcon
-              variant="subtle"
-              title="Edit your installation's repository access"
-              onClick={() => {
-                window
-                  ?.open(
-                    `https://github.com/apps/${GITHUB_APP_NAME}/installations/new`,
-                    "_blank",
-                  )
-                  ?.focus();
-              }}
-            >
-              <Icon icon={squareArrowRightUpBroken} width={24} />
-            </ActionIcon>
+            {repositoryAction}
           </Flex>
         </Timeline.Item>
         <Timeline.Item>
@@ -204,9 +207,11 @@ export function GitForm({
           <Flex direction="row" align="center" gap="0.5rem">
             <Select
               w="100%"
-              value={targetBranch || repository?.defaultBranch}
+              aria-label="Target Branch"
+              value={targetBranch || repository?.defaultBranch || null}
               onChange={async (selectedBranchName) => {
-                if (hosting.provider === "github") {
+                if (hosting.providerType === "git") {
+                  hosting.branchIsValid = false;
                   hosting.targetBranch = selectedBranchName || "";
                 }
               }}
@@ -214,6 +219,7 @@ export function GitForm({
             />
 
             <ActionIcon
+              aria-label="Refresh repositories and branches"
               variant="subtle"
               onClick={() => {
                 refresh();
@@ -223,9 +229,18 @@ export function GitForm({
             </ActionIcon>
           </Flex>
 
+          {validationResult.context === validationContext &&
+            validationResult.error && (
+              <Text role="alert" c="red" mt="sm">
+                {validationResult.error}
+              </Text>
+            )}
+
           {Boolean(hosting.provider) &&
             Boolean(hosting.repositoryId) &&
             Boolean(hosting.targetBranch) &&
+            validationResult.context === validationContext &&
+            !validationResult.error &&
             !hosting.branchIsValid && (
               <Flex direction="column" className="bg-red-50 mt-2 rounded p-2">
                 <Text fw="bold">This repo or branch is empty.</Text>
@@ -239,20 +254,25 @@ export function GitForm({
                   onClick={async () => {
                     // create commit on repository and target branch with README CONTENTS
                     if (targetBranch && initializeBranch) {
+                      const key = fetcher.getReadContextKey(config.hosting);
                       try {
                         await initializeBranch(repositoryId, targetBranch);
+                        if (key !== fetcher.getReadContextKey(config.hosting)) {
+                          return;
+                        }
                         notifications.show({
                           type: "success",
                           message: "Branch initialized successfully.",
                         });
                         hosting.branchIsValid = true;
-                      } catch (e: any) {
+                        refresh();
+                        requestRemoteRead();
+                      } catch {
                         notifications.show({
                           type: "error",
                           message: "Error initializing branch.",
                         });
                       }
-                    } else {
                     }
                   }}
                 >

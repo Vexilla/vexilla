@@ -10,6 +10,7 @@
     "build": "pnpm tsc && pnpm build:vite",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
+    "test:config": "node --import tsx --test test/config-state.test.ts test/github-reads.test.ts test/git-provider-reads.test.ts test/remote-baseline.test.ts test/github-writes.test.ts test/git-provider-writes.test.ts",
     "test:publication": "node --import tsx --test test/publication.test.ts",
     "test:browser": "playwright test"
   },

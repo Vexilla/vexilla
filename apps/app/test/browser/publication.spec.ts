@@ -70,6 +70,16 @@ async function openEditor(page: Page, local: any) {
       (window as any).__files.push(files);
     };
   });
+  // Persisted timestamps no longer authorize an unverified baseline. Review
+  // the fetched difference explicitly, keeping the local draft in this test.
+  await page.getByRole("button", { name: "View", exact: true }).click();
+  await page.getByRole("button", { name: "Reject All", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Merge Remote Changes", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Publish", exact: true })
+  ).toBeEnabled();
   return writes;
 }
 async function publish(page: Page) {

@@ -1,10 +1,10 @@
-import _React, { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { Button, Timeline, Select, ActionIcon, Flex } from "@mantine/core";
 
-import { AppState, HostingProvider } from "../../../types";
+import { AppState } from "../../../types";
 
 import { Branch, Repository } from "./_GitForm.types";
-import { GitHubFetcher } from "./GithubForm.fetchers";
+
 import { GitHubInstallation } from "./GithubForm.types";
 
 import { GitForm } from "./_GitForm";
@@ -14,8 +14,18 @@ import { GithubLogo } from "../../logos/GithubLogo";
 import { Icon } from "@iconify/react";
 import verifiedCheckBold from "@iconify/icons-solar/verified-check-bold";
 import closeCircleBroken from "@iconify/icons-solar/close-circle-broken";
+import squareArrowRightUpBroken from "@iconify/icons-solar/square-arrow-right-up-broken";
 import refreshBroken from "@iconify/icons-solar/refresh-broken";
-import { fetchersMap } from "../../../utils/fetchers.map";
+import {
+  GitHubFetcher,
+  canDiscoverGitHubRepositories,
+  hasGitHubAuthentication,
+  hasGitHubRepository,
+  githubContextKey,
+  githubDiscoveryKey,
+  selectGitHubRepository,
+} from "./GithubForm.fetchers";
+import { isGitUnauthorized } from "../../../utils/fetcher";
 import { useSnapshot } from "valtio";
 
 const githubAppName = import.meta.env.VITE_GITHUB_APP_NAME;
@@ -26,7 +36,6 @@ const githubClientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
 
 interface GithubFormProps {
   config: AppState;
-  updateConfig: (newConfig: AppState) => void;
 }
 
 const buttonStyling = {
@@ -45,55 +54,44 @@ const disabledButtonStyling = {
 
 export function GithubForm({ config }: GithubFormProps) {
   const configSnapshot = useSnapshot(config);
-  const {
-    accessToken,
-    installationId,
-    repositoryId,
-    repositoryName,
-    owner,
-    targetBranch,
-    provider,
-    providerType,
-  } =
+  const { accessToken, installationId, repositoryId, targetBranch } =
     configSnapshot.hosting.provider === "github"
       ? configSnapshot.hosting
       : {
           accessToken: "",
           installationId: "",
           repositoryId: "",
-          repositoryName: "",
-          owner: "",
           targetBranch: "",
-          provider: "",
-          providerType: "",
         };
   const [installations, setInstallations] = useState<GitHubInstallation[]>([]);
   const [repositories, setRepositories] = useState<Repository[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now());
+  const [installationError, setInstallationError] = useState("");
+  const [repositoryError, setRepositoryError] = useState("");
+  const [branchError, setBranchError] = useState("");
+  const previousInstallationKey = useRef("");
+  const previousRepositoryKey = useRef("");
+  const previousBranchKey = useRef("");
 
   const githubMethods = useMemo(() => {
     return new GitHubFetcher();
-  }, [accessToken, owner, repositoryName]);
+  }, []);
 
   function refresh() {
-    setRefreshTimestamp(Date.now());
+    setRefreshTimestamp((value) => value + 1);
   }
 
   function clearHosting() {
     if (config.hosting.provider === "github") {
       config.hosting.accessToken = "";
       config.hosting.installationId = "";
-      config.hosting.repositoryId = "";
+      selectGitHubRepository(config.hosting);
     } else {
       console.error(
         `Wrong hosting provider in github form: ${configSnapshot.hosting.provider}`
       );
     }
-
-    // until we fix the mutability of config in child forms,
-    // this function is not needed
-    // updateConfig(config);
   }
 
   let activeElement = 0;
@@ -107,112 +105,204 @@ export function GithubForm({ config }: GithubFormProps) {
     activeElement = 3;
   }
 
+  const discoveryKey = githubDiscoveryKey(configSnapshot.hosting);
+  const contextKey = githubContextKey(configSnapshot.hosting);
+  const repositoryReady = hasGitHubRepository(configSnapshot.hosting);
+
   useEffect(() => {
-    async function fetchData() {
-      try {
-        if (accessToken && config.hosting.provider === "github") {
-          const installationsResponse =
-            await githubMethods.fetchInstallations();
-          setInstallations(installationsResponse.installations);
-          if (installationsResponse.installations.length === 1) {
-            config.hosting.installationId = `${installationsResponse.installations[0].id}`;
-          }
-          if (config.hosting.installationId) {
-            const repositoriesResponse = await githubMethods.fetchRepositories(
-              config.hosting.installationId
-            );
-            config.hosting.targetBranch =
-              repositoriesResponse.repositories[0].default_branch || "main";
-            setRepositories(
-              repositoriesResponse.repositories.map((_repository) => ({
-                name: _repository.name,
-                id: `${_repository.id}`,
-                owner: _repository.owner.login,
-                defaultBranch: _repository.default_branch,
-              }))
-            );
-            if (repositoriesResponse.repositories.length === 1) {
-              config.hosting.repositoryId = `${repositoriesResponse.repositories[0].id}`;
-              config.hosting.owner = `${repositoriesResponse.repositories[0].owner.login}`;
-              config.hosting.repositoryName = `${repositoriesResponse.repositories[0].name}`;
-              config.hosting.targetBranch = `${repositoriesResponse.repositories[0].default_branch}`;
-            }
-          }
-        }
-      } catch (e: any) {
-        // this should probably only be modifying the snapshot, not the full state
-        clearHosting();
-      }
+    let active = true;
+    const isCurrent = () =>
+      active && discoveryKey === githubDiscoveryKey(config.hosting);
+    if (previousInstallationKey.current !== discoveryKey) {
+      setInstallations([]);
+      previousInstallationKey.current = discoveryKey;
     }
-    fetchData();
-  }, [accessToken, installationId, refreshTimestamp]);
-
-  useEffect(() => {
-    async function getBranches() {
-      if (accessToken && repositoryName && owner) {
-        const fetchedBranches = await githubMethods.fetchBranches();
-
-        setBranches(
-          fetchedBranches.map((_branch) => ({
-            name: _branch.name,
-            id: `${_branch.id}`,
-          }))
+    setInstallationError("");
+    async function discoverInstallations() {
+      if (!hasGitHubAuthentication(config.hosting)) {
+        return;
+      }
+      try {
+        const response = await githubMethods.fetchInstallations();
+        if (!isCurrent() || config.hosting.provider !== "github") {
+          return;
+        }
+        setInstallations(response.installations);
+        const hosting = config.hosting;
+        const selected = response.installations.find(
+          (installation) => `${installation.id}` === hosting.installationId
         );
+        const nextId = selected
+          ? `${selected.id}`
+          : response.installations.length === 1
+          ? `${response.installations[0].id}`
+          : "";
+        if (nextId !== config.hosting.installationId) {
+          selectGitHubRepository(config.hosting);
+          config.hosting.installationId = nextId;
+        }
+      } catch (error) {
         if (
-          fetchedBranches.length === 1 &&
+          isCurrent() &&
+          isGitUnauthorized(error) &&
           config.hosting.provider === "github"
         ) {
-          config.hosting.targetBranch = fetchedBranches[0].name;
-        }
-      } else {
-        console.log("One of these isn't what it should be", {
-          accessToken,
-          repositoryName,
-          owner,
-        });
-      }
-    }
-    getBranches();
-  }, [accessToken, owner, repositoryName]);
-
-  useEffect(() => {
-    if (provider && providerType && accessToken && owner && repositoryName) {
-      async function fetchCurrentConfig() {
-        if (configSnapshot.hosting?.providerType === "git") {
-          const fetcher =
-            fetchersMap[configSnapshot.hosting.provider as HostingProvider]?.();
-
-          if (fetcher) {
-            await fetcher.getCurrentConfig();
-          } else {
-            console.log("no fetcher");
-          }
-        } else {
-          console.log(
-            "Initial provider type was not git",
-            configSnapshot.hosting?.providerType
+          config.hosting.accessToken = "";
+        } else if (isCurrent()) {
+          setInstallationError(
+            "Could not load installations. Refresh to try again."
           );
         }
       }
-
-      fetchCurrentConfig();
     }
-  }, [provider, providerType, accessToken, owner, repositoryName]);
+    void discoverInstallations();
+    return () => {
+      active = false;
+    };
+  }, [config, discoveryKey, refreshTimestamp, githubMethods]);
+
+  useEffect(() => {
+    let active = true;
+    const isCurrent = () =>
+      active && discoveryKey === githubDiscoveryKey(config.hosting);
+    if (previousRepositoryKey.current !== discoveryKey) {
+      setRepositories([]);
+      setBranches([]);
+      previousRepositoryKey.current = discoveryKey;
+    }
+    setRepositoryError("");
+    async function discoverRepositories() {
+      if (
+        !canDiscoverGitHubRepositories(config.hosting) ||
+        config.hosting.provider !== "github"
+      ) {
+        return;
+      }
+      try {
+        const response = await githubMethods.fetchRepositories(
+          config.hosting.installationId
+        );
+        if (!isCurrent() || config.hosting.provider !== "github") {
+          return;
+        }
+        const available = response.repositories.map((repository) => ({
+          id: `${repository.id}`,
+          name: repository.name,
+          path: repository.name,
+          owner: repository.owner.login,
+          defaultBranch: repository.default_branch,
+        }));
+        setRepositories(available);
+        const hosting = config.hosting;
+        const selected = available.find(
+          (repository) => repository.id === hosting.repositoryId
+        );
+        selectGitHubRepository(
+          config.hosting,
+          selected || (available.length === 1 ? available[0] : undefined)
+        );
+      } catch (error) {
+        if (
+          isCurrent() &&
+          isGitUnauthorized(error) &&
+          config.hosting.provider === "github"
+        ) {
+          config.hosting.accessToken = "";
+        } else if (isCurrent()) {
+          setRepositoryError(
+            "Could not load repositories. Refresh to try again."
+          );
+        }
+      }
+    }
+    void discoverRepositories();
+    return () => {
+      active = false;
+    };
+  }, [config, discoveryKey, refreshTimestamp, githubMethods]);
+
+  useEffect(() => {
+    let active = true;
+    const isCurrent = () =>
+      active && contextKey === githubContextKey(config.hosting);
+    if (previousBranchKey.current !== contextKey) {
+      setBranches([]);
+      previousBranchKey.current = contextKey;
+    }
+    setBranchError("");
+    async function getBranches() {
+      if (!repositoryReady) {
+        return;
+      }
+      try {
+        const fetched = await githubMethods.fetchBranches();
+        if (isCurrent()) {
+          setBranches(
+            fetched.map((branch) => ({ name: branch.name, id: `${branch.id}` }))
+          );
+        }
+      } catch (error) {
+        if (
+          isCurrent() &&
+          isGitUnauthorized(error) &&
+          config.hosting.provider === "github"
+        ) {
+          config.hosting.accessToken = "";
+        } else if (isCurrent()) {
+          setBranchError("Could not load branches. Refresh to try again.");
+        }
+      }
+    }
+    void getBranches();
+    return () => {
+      active = false;
+    };
+  }, [config, contextKey, repositoryReady, refreshTimestamp, githubMethods]);
 
   return (
     <>
       <GitForm
         config={config}
-        updateConfig={() => {}}
         activeElement={activeElement}
-        totalElements={4}
         branches={branches}
         targetBranch={targetBranch}
         repositories={repositories}
         repositoryId={repositoryId}
         refresh={refresh}
-        isTargetBranchValid={async (branchName) => {
-          return githubMethods.isBranchValid(branchName);
+        refreshTimestamp={refreshTimestamp}
+        fetcher={githubMethods}
+        errors={[installationError, repositoryError, branchError].filter(
+          Boolean
+        )}
+        initializeBranch={async (_repositoryId, branchName) => {
+          await githubMethods.initializeBranch(branchName);
+        }}
+        repositoryTooltip="This depends on which repos you installed the GitHub App into."
+        repositoryAction={
+          <ActionIcon
+            aria-label="Edit installation repository access"
+            variant="subtle"
+            title="Edit your installation's repository access"
+            onClick={() => {
+              window
+                .open(
+                  `https://github.com/apps/${githubAppName}/installations/new`,
+                  "_blank"
+                )
+                ?.focus();
+            }}
+          >
+            <Icon icon={squareArrowRightUpBroken} width={24} />
+          </ActionIcon>
+        }
+        onRepositoryChange={(id) => {
+          if (config.hosting.provider === "github") {
+            setBranches([]);
+            selectGitHubRepository(
+              config.hosting,
+              repositories.find((repository) => repository.id === id)
+            );
+          }
         }}
       >
         <Timeline.Item>
@@ -252,6 +342,7 @@ export function GithubForm({ config }: GithubFormProps) {
                 </Button>
 
                 <ActionIcon
+                  aria-label="Sign out of GitHub"
                   variant="subtle"
                   onClick={() => {
                     clearHosting();
@@ -295,9 +386,18 @@ export function GithubForm({ config }: GithubFormProps) {
                 Installed
               </Button>
             )}
-            {!!installationId && installations.length > 1 && (
+            {installations.length > 1 && (
               <Select
-                value={installationId}
+                aria-label="Installation"
+                value={installationId || null}
+                onChange={(id) => {
+                  if (config.hosting.provider === "github") {
+                    setRepositories([]);
+                    setBranches([]);
+                    selectGitHubRepository(config.hosting);
+                    config.hosting.installationId = id || "";
+                  }
+                }}
                 data={installations.map((installation) => ({
                   label: installation.html_url,
                   value: `${installation.id}`,
@@ -306,6 +406,7 @@ export function GithubForm({ config }: GithubFormProps) {
             )}
 
             <ActionIcon
+              aria-label="Refresh installations"
               variant="subtle"
               onClick={() => {
                 refresh();
