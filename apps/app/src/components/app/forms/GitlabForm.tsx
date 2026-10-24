@@ -1,11 +1,16 @@
-import _React, { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { Button, Timeline, ActionIcon, Flex } from "@mantine/core";
 
-import { AppState, HostingProvider } from "../../../types";
+import { AppState } from "../../../types";
 
 import { Branch, Repository } from "./_GitForm.types";
-import { GitLabFetcher } from "./GitlabForm.fetchers";
-// import { GitHubInstallation } from "./GitLabForm.types";
+import {
+  GitLabFetcher,
+  hasGitLabAuthentication,
+  hasGitLabRepository,
+  gitlabDiscoveryKey,
+} from "./GitlabForm.fetchers";
+import { selectGitRepository, isGitUnauthorized } from "../../../utils/fetcher";
 
 import { GitForm } from "./_GitForm";
 import { TimelineItemTitle } from "../../TimelineItemTitle";
@@ -14,9 +19,7 @@ import { GitLabLogo } from "../../logos/GitLabLogo";
 import { Icon } from "@iconify/react";
 import verifiedCheckBold from "@iconify/icons-solar/verified-check-bold";
 import closeCircleBroken from "@iconify/icons-solar/close-circle-broken";
-import { fetchersMap } from "../../../utils/fetchers.map";
 import { useSnapshot } from "valtio";
-
 
 const baseAuthCallbackUrl = `${window.location.protocol}//${window.location.host}/auth/callback`;
 
@@ -24,7 +27,6 @@ const gitlabClientId = import.meta.env.VITE_GITLAB_CLIENT_ID;
 
 interface GitLabFormProps {
   config: AppState;
-  updateConfig: (newConfig: AppState) => void;
 }
 
 const buttonStyling = {
@@ -43,53 +45,40 @@ const disabledButtonStyling = {
 
 export function GitLabForm({ config }: GitLabFormProps) {
   const configSnapshot = useSnapshot(config);
-  const {
-    accessToken,
-    repositoryId,
-    repositoryName,
-    owner,
-    targetBranch,
-    provider,
-    providerType,
-    branchIsValid,
-  } =
+  const { accessToken, repositoryId, targetBranch, branchIsValid } =
     configSnapshot.hosting.provider === "gitlab"
       ? configSnapshot.hosting
       : {
           accessToken: "",
           repositoryId: "",
-          repositoryName: "",
-          owner: "",
           targetBranch: "",
-          provider: "",
-          providerType: "",
           branchIsValid: false,
         };
   const [repositories, setRepositories] = useState<Repository[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now());
+  const [repositoryError, setRepositoryError] = useState("");
+  const [branchError, setBranchError] = useState("");
+  const previousRepositoryKey = useRef("");
+  const previousBranchKey = useRef("");
 
   const gitlabMethods = useMemo(() => {
     return new GitLabFetcher();
-  }, [accessToken, owner, repositoryName]);
+  }, []);
 
   function refresh() {
-    setRefreshTimestamp(Date.now());
+    setRefreshTimestamp((value) => value + 1);
   }
 
   function clearHosting() {
     if (config.hosting.provider === "gitlab") {
       config.hosting.accessToken = "";
-      config.hosting.repositoryId = "";
+      selectGitRepository(config.hosting);
     } else {
       console.error(
         `Wrong hosting provider in gitlab form: ${configSnapshot.hosting.provider}`
       );
     }
-
-    // until we fix the mutability of config in child forms,
-    // this function is not needed
-    // updateConfig(config);
   }
 
   let activeElement = 0;
@@ -105,122 +94,122 @@ export function GitLabForm({ config }: GitLabFormProps) {
     activeElement = 3;
   }
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        if (accessToken && config.hosting.provider === "gitlab") {
-          // const installationsResponse =
-          //   await gitlabMethods.fetchInstallations();
-          // setInstallations(installationsResponse.installations);
-          // if (installationsResponse.installations.length === 1) {
-          //   config.hosting.installationId = `${installationsResponse.installations[0].id}`;
-          // }
-          // if (config.hosting.installationId) {
-          const repositoriesResponse = await gitlabMethods.fetchRepositories();
+  const discoveryKey = gitlabDiscoveryKey(configSnapshot.hosting);
+  const contextKey = gitlabMethods.getReadContextKey(configSnapshot.hosting);
+  const repositoryReady = hasGitLabRepository(configSnapshot.hosting);
 
-          setRepositories(
-            repositoriesResponse.map((_repository) => ({
-              name: _repository.name,
-              id: `${_repository.id}`,
-              owner: `${_repository.namespace.path}`,
-              defaultBranch: `${_repository.default_branch}`,
-            }))
-          );
-          if (repositoriesResponse.length === 1) {
-            config.hosting.repositoryId = `${repositoriesResponse[0].id}`;
-            config.hosting.owner = `${repositoriesResponse[0].namespace.path}`;
-            config.hosting.repositoryName = `${repositoriesResponse[0].name}`;
-            config.hosting.targetBranch = `${repositoriesResponse[0].default_branch}`;
-          }
-          // }
+  useEffect(() => {
+    let active = true;
+    const isCurrent = () =>
+      active && discoveryKey === gitlabDiscoveryKey(config.hosting);
+    if (previousRepositoryKey.current !== discoveryKey) {
+      setRepositories([]);
+      setBranches([]);
+      previousRepositoryKey.current = discoveryKey;
+    }
+    setRepositoryError("");
+    async function discoverRepositories() {
+      if (!hasGitLabAuthentication(config.hosting)) {
+        return;
+      }
+      const hosting = config.hosting;
+      try {
+        const response = await gitlabMethods.fetchRepositories();
+        if (!isCurrent()) {
+          return;
         }
-      } catch (e: any) {
-        // this should probably only be modifying the snapshot, not the full state
-        clearHosting();
+        const available = response.map((repository) => ({
+          id: `${repository.id}`,
+          name: repository.name,
+          path: repository.path || repository.name,
+          owner: repository.namespace.full_path || repository.namespace.path,
+          defaultBranch: repository.default_branch || "",
+        }));
+        setRepositories(available);
+        const selected = available.find(
+          (repository) => repository.id === hosting.repositoryId
+        );
+        selectGitRepository(
+          hosting,
+          selected || (available.length === 1 ? available[0] : undefined)
+        );
+      } catch (error) {
+        if (isCurrent() && isGitUnauthorized(error)) {
+          hosting.accessToken = "";
+        } else if (isCurrent()) {
+          setRepositoryError(
+            "Could not load repositories. Refresh to try again."
+          );
+        }
       }
     }
-    fetchData();
-  }, [accessToken, refreshTimestamp]);
+    void discoverRepositories();
+    return () => {
+      active = false;
+    };
+  }, [config, discoveryKey, refreshTimestamp, gitlabMethods]);
 
   useEffect(() => {
+    let active = true;
+    const isCurrent = () =>
+      active && contextKey === gitlabMethods.getReadContextKey(config.hosting);
+    if (previousBranchKey.current !== contextKey) {
+      setBranches([]);
+      previousBranchKey.current = contextKey;
+    }
+    setBranchError("");
     async function getBranches() {
-      if (accessToken && repositoryName && owner) {
-        const fetchedBranches = await gitlabMethods
-          .fetchBranches()
-          .catch(() => []);
-
-        // if (
-        //   fetchedBranches.length === 0 &&
-        //   config.hosting.provider === "gitlab"
-        // ) {
-        //   fetchedBranches[0] = {
-        //     name:
-        //   };
-        // }
+      if (!repositoryReady) {
+        return;
+      }
+      try {
+        const response = await gitlabMethods.fetchBranches();
+        if (isCurrent()) {
+          setBranches(
+            response.map((branch) => ({ name: branch.name, id: branch.name }))
+          );
+        }
+      } catch (error) {
         if (
-          fetchedBranches.length === 1 &&
+          isCurrent() &&
+          isGitUnauthorized(error) &&
           config.hosting.provider === "gitlab"
         ) {
-          config.hosting.targetBranch = fetchedBranches[0].name;
-        }
-
-        setBranches(
-          fetchedBranches.map((_branch) => ({
-            name: _branch.name,
-            id: `${_branch.name}`,
-          }))
-        );
-      } else {
-        console.log("One of these isn't what it should be", {
-          accessToken,
-          repositoryName,
-          owner,
-        });
-      }
-    }
-    getBranches();
-  }, [accessToken, owner, repositoryName]);
-
-  useEffect(() => {
-    if (provider && providerType && accessToken && owner && repositoryName) {
-      async function fetchCurrentConfig() {
-        if (configSnapshot.hosting?.providerType === "git") {
-          const fetcher =
-            fetchersMap[configSnapshot.hosting.provider as HostingProvider]?.();
-
-          if (fetcher) {
-            await fetcher.getCurrentConfig();
-          } else {
-            console.log("no fetcher");
-          }
-        } else {
-          console.log(
-            "Initial provider type was not git",
-            configSnapshot.hosting?.providerType
-          );
+          config.hosting.accessToken = "";
+        } else if (isCurrent()) {
+          setBranchError("Could not load branches. Refresh to try again.");
         }
       }
-
-      fetchCurrentConfig();
     }
-  }, [provider, providerType, accessToken, owner, repositoryName]);
+    void getBranches();
+    return () => {
+      active = false;
+    };
+  }, [config, contextKey, repositoryReady, refreshTimestamp, gitlabMethods]);
 
   return (
     <>
       <GitForm
         config={config}
-        updateConfig={() => {}}
         activeElement={activeElement}
-        totalElements={4}
         branches={branches}
         targetBranch={targetBranch}
         repositories={repositories}
         repositoryId={repositoryId}
         refresh={refresh}
-        isTargetBranchValid={async (branchName) => {
-          return gitlabMethods.isBranchValid(branchName);
+        refreshTimestamp={refreshTimestamp}
+        fetcher={gitlabMethods}
+        errors={[repositoryError, branchError].filter(Boolean)}
+        onRepositoryChange={(id) => {
+          if (config.hosting.provider === "gitlab") {
+            setBranches([]);
+            selectGitRepository(
+              config.hosting,
+              repositories.find((repository) => repository.id === id)
+            );
+          }
         }}
-        initializeBranch={async (branchName: string) => {
+        initializeBranch={async (_repositoryId, branchName) => {
           await gitlabMethods.initializeBranch(branchName);
         }}
       >
@@ -261,6 +250,7 @@ export function GitLabForm({ config }: GitLabFormProps) {
                 </Button>
 
                 <ActionIcon
+                  aria-label="Sign out of GitLab"
                   variant="subtle"
                   onClick={() => {
                     clearHosting();

@@ -1,4 +1,3 @@
-import _React, { useState } from "react";
 import { Select, Flex } from "@mantine/core";
 import type {
   AppState,
@@ -81,9 +80,6 @@ export function OnboardingForm({
   updateProvider,
 }: OnboardingFormProps) {
   const configSnapshot = useSnapshot(config);
-  const [_providerType, setProviderType] = useState(
-    configSnapshot?.hosting?.providerType
-  );
 
   const FormComponent = formMap[configSnapshot?.hosting?.provider || ""];
 
@@ -115,7 +111,6 @@ export function OnboardingForm({
               return false;
             })?.providerType || "";
 
-          setProviderType(newProviderType);
           updateProvider({
             provider: newProvider || "",
             providerType: newProviderType,
@@ -123,12 +118,7 @@ export function OnboardingForm({
         }}
       />
       <Flex py={"2rem"} px={"1rem"}>
-        <FormComponent
-          config={config}
-          updateConfig={() => {
-            console.log("update config");
-          }}
-        />
+        <FormComponent config={config} />
       </Flex>
     </div>
   );

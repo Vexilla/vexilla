@@ -6,6 +6,15 @@ import {
   PublicationResult,
 } from "@vexilla/publishing";
 import type { AppState } from "../types";
+import { gitLocationKey, gitReadContextKey } from "./fetcher";
+
+export class PublicationDestinationError extends Error {
+  constructor() {
+    super(
+      "Select and load the desired repository and branch before publishing there."
+    );
+  }
+}
 
 /** Apply review decisions to a copy so a rejected publication cannot edit saved drafts. */
 export function approvedConfig(
@@ -41,6 +50,20 @@ export async function publishApprovedChanges(
   write: (files: PublicationFile[], targetBranch?: string) => Promise<void>
 ): Promise<PublicationResult> {
   const approved = approvedConfig(config, changes, approvals);
+  const destination = (state: AppState) =>
+    JSON.stringify([
+      gitLocationKey(state.hosting),
+      gitReadContextKey(
+        state.hosting.providerType === "git"
+          ? { ...state.hosting, accessToken: "" }
+          : state.hosting
+      ),
+    ]);
+  // Review choices may change backup content, but cannot authorize another
+  // transport destination whose remote baseline has not been read.
+  if (destination(approved) !== destination(config)) {
+    throw new PublicationDestinationError();
+  }
   const result = serializePublication(approved);
   if (!result.success) {
     return result;

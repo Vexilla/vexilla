@@ -1,4 +1,4 @@
-import _React, { PropsWithChildren, useState } from "react";
+import _React, { PropsWithChildren, useEffect, useState } from "react";
 import { useSnapshot } from "valtio";
 import { Difference } from "microdiff";
 import {
@@ -20,6 +20,9 @@ import {
   localDifferences,
   remoteDifferences,
   remoteMetadata,
+  remoteReadState,
+  remoteReadAuthority,
+  isRemoteReadContextCurrent,
 } from "../stores/config-valtio";
 import { CustomCard } from "./CustomCard";
 
@@ -44,7 +47,7 @@ const IGNORED_CHANGE_PATHS = [
 interface StatusProps {
   config: AppState;
   showConfig: () => void;
-  updateLocal: () => void;
+  retryRemoteRead: () => void;
   publish: (
     changes: Difference[],
     approvals: Record<string, boolean>
@@ -60,11 +63,19 @@ export function Status({
   showConfig,
   publish,
   mergeRemoteConfig,
+  retryRemoteRead,
 }: StatusProps) {
   const validationSnapshot = useSnapshot(validation);
   useSnapshot(localDifferences);
   useSnapshot(remoteDifferences);
-  useSnapshot(remoteMetadata);
+  const metadata = useSnapshot(remoteMetadata);
+  const authority = useSnapshot(remoteReadAuthority);
+  const baselineReady = useSnapshot(remoteReadState).ready;
+  const readContextCurrent =
+    authority.context.length > 0 && isRemoteReadContextCurrent();
+  const initializationRequired =
+    readContextCurrent && metadata.status === "initialization-required";
+  const initializing = readContextCurrent && metadata.status === "initializing";
 
   const [
     remoteChangesModalOpened,
@@ -96,25 +107,53 @@ export function Status({
   let remoteDiffStatus = StatusItemStatus.Error;
   let remoteChangesCount = remoteChanges.length;
   if (
-    remoteMetadata.remoteMergedAt > remoteMetadata.remoteModifiedAt ||
-    remoteChangesCount === 0
+    baselineReady &&
+    (remoteMetadata.remoteMergedAt > remoteMetadata.remoteModifiedAt ||
+      remoteChangesCount === 0)
   ) {
     remoteDiffStatus = StatusItemStatus.Good;
     remoteChangesCount = 0;
   }
 
   let diffStatus = StatusItemStatus.Error;
-  if (localChanges.length > 0 && remoteDiffStatus === StatusItemStatus.Good) {
+  if (
+    (localChanges.length > 0 || metadata.status === "absent") &&
+    remoteDiffStatus === StatusItemStatus.Good
+  ) {
     diffStatus = StatusItemStatus.Good;
   }
 
   const isPublishable =
+    baselineReady &&
     validationStatus === StatusItemStatus.Good &&
     diffStatus === StatusItemStatus.Good;
 
   let publishErrorText = "";
-  if (validationErrors.length > 0) {
+  if (initializing) {
+    publishErrorText = "Initializing the selected branch…";
+  } else if (initializationRequired) {
+    publishErrorText =
+      "Initialize the selected repository in Config before publishing.";
+  } else if (
+    !baselineReady &&
+    readContextCurrent &&
+    (metadata.status === "loading" || metadata.status === "error")
+  ) {
+    publishErrorText =
+      metadata.status === "error"
+        ? metadata.readError
+        : metadata.status === "loading"
+        ? "Loading configuration from the selected repository…"
+        : "Read the selected repository before publishing.";
+  } else if (validationErrors.length > 0) {
     publishErrorText = "There are errors with your hosting/git config.";
+  } else if (!baselineReady) {
+    publishErrorText =
+      metadata.status === "error"
+        ? metadata.readError
+        : metadata.status === "loading"
+        ? "Loading configuration from the selected repository…"
+        : "Read the selected repository before publishing.";
   } else if (remoteDiffStatus === StatusItemStatus.Error) {
     publishErrorText = "There are remote changes to merge.";
   } else if (localChanges.length === 0) {
@@ -153,14 +192,16 @@ export function Status({
           openRemoteChangesModal();
         }}
         actionButtonDisabled={
+          !baselineReady ||
           validationErrors.length > 0 ||
           remoteDiffStatus === StatusItemStatus.Good
         }
-        disabled={validationErrors.length > 0}
+        disabled={!baselineReady || validationErrors.length > 0}
       />
 
       <DiffModal
         changes={remoteChanges}
+        disabled={!baselineReady}
         opened={remoteChangesModalOpened}
         closeModal={closeRemoteChangesModal}
         primaryAction={mergeRemoteConfig}
@@ -173,7 +214,6 @@ export function Status({
         title="Local"
         status={diffStatus}
         issueCount={localChanges.length || 0}
-        onActionButtonClick={() => {}}
         actionButtonDisabled={true}
         disabled={
           validationErrors.length > 0 ||
@@ -183,6 +223,7 @@ export function Status({
 
       <DiffModal
         changes={localChanges}
+        disabled={!isPublishable}
         opened={publishModalOpened}
         closeModal={closePublishModal}
         primaryAction={publish}
@@ -199,6 +240,18 @@ export function Status({
         </Flex>
       )}
 
+      {!baselineReady &&
+        metadata.status !== "loading" &&
+        !initializing &&
+        (initializationRequired ||
+          metadata.status === "error" ||
+          validationErrors.length === 0) && (
+          <Button variant="outline" onClick={retryRemoteRead}>
+            {initializationRequired
+              ? "Refresh repository availability"
+              : "Retry repository read"}
+          </Button>
+        )}
       <div className="w-full p-2">
         <Button
           className="w-full"
@@ -251,7 +304,7 @@ interface StatusItemProps {
   status: StatusItemStatus;
   issueCount: number;
   actionButtonLabel?: string;
-  onActionButtonClick: () => void;
+  onActionButtonClick?: () => void;
   actionButtonDisabled?: boolean;
   disabled?: boolean;
 }
@@ -320,6 +373,7 @@ interface DiffModalProps {
   primaryActionLabel: string;
   direction: "incoming" | "outgoing";
   config: AppState;
+  disabled?: boolean;
 }
 
 function DiffModal({
@@ -330,7 +384,17 @@ function DiffModal({
   primaryActionLabel,
   direction,
   config,
+  disabled = false,
 }: DiffModalProps) {
+  const [pending, setPending] = useState(false);
+  const [actionError, setActionError] = useState("");
+  const changesKey = JSON.stringify(changes);
+  useEffect(() => {
+    setApprovals({});
+    setCollapsedDiffs({});
+    setActionError("");
+  }, [changesKey]);
+
   const [approvals, setApprovals] = useState<Record<string, boolean>>({});
   const [collapsedDiffs, setCollapsedDiffs] = useState<Record<string, boolean>>(
     {}
@@ -471,7 +535,7 @@ function DiffModal({
           <Button
             variant="filled"
             onClick={acceptAll}
-            disabled={approvalCount === changes.length}
+            disabled={disabled || pending || approvalCount === changes.length}
           >
             Accept All
           </Button>
@@ -479,7 +543,7 @@ function DiffModal({
             variant="filled"
             color="red"
             onClick={rejectAll}
-            disabled={approvalCount === changes.length}
+            disabled={disabled || pending || approvalCount === changes.length}
           >
             Reject All
           </Button>
@@ -513,6 +577,11 @@ function DiffModal({
                       <ActionIcon
                         variant="subtle"
                         color="gray"
+                        aria-label={
+                          collapsedDiffs[changePath]
+                            ? "Expand change"
+                            : "Collapse change"
+                        }
                         title={
                           collapsedDiffs[changePath] ? "Expand" : "Collapse"
                         }
@@ -547,6 +616,7 @@ function DiffModal({
                         size={"sm"}
                         variant="filled"
                         color="blue"
+                        aria-label="Accept Change"
                         title="Accept Change"
                         onClick={() => {
                           acceptOne(change);
@@ -558,6 +628,7 @@ function DiffModal({
                         size={"sm"}
                         variant="filled"
                         color="red"
+                        aria-label="Reject Change"
                         title="Reject Change"
                         onClick={() => {
                           rejectOne(change);
@@ -569,7 +640,10 @@ function DiffModal({
                   </Flex>
 
                   <Collapse in={!collapsedDiffs[changePath]}>
-                    <Text component="div" className="truncate bg-slate-50 px-2 mt-2">
+                    <Text
+                      component="div"
+                      className="truncate bg-slate-50 px-2 mt-2"
+                    >
                       <pre>
                         <code>{formatDifferenceText(change)}</code>
                       </pre>
@@ -581,6 +655,11 @@ function DiffModal({
           })}
         </div>
         <Flex direction="column">
+          {actionError && (
+            <Text role="alert" c="red">
+              {actionError}
+            </Text>
+          )}
           {approvalCount !== changes.length && (
             <Flex direction="row" justify={"flex-end"} pb="0.5rem">
               <Text c="red" className="text-right">
@@ -602,13 +681,26 @@ function DiffModal({
 
             <Button
               variant="filled"
-              onClick={() => {
-                primaryAction(changes, approvals).then(() => {
+              loading={pending}
+              onClick={async () => {
+                if (disabled || pending) {
+                  return;
+                }
+                setPending(true);
+                setActionError("");
+                try {
+                  await primaryAction(changes, approvals);
                   clearApprovals();
                   closeModal();
-                });
+                } catch {
+                  setActionError(
+                    "Unable to complete this action. Please retry."
+                  );
+                } finally {
+                  setPending(false);
+                }
               }}
-              disabled={approvalCount !== changes.length}
+              disabled={disabled || pending || approvalCount !== changes.length}
             >
               {primaryActionLabel}
             </Button>

@@ -13,7 +13,7 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "contract:generate": "pnpm --filter @vexilla/types build && pnpm --filter @vexilla/publishing build && node --import ./packages/publishing/node_modules/tsx/dist/loader.mjs contract/scripts/generate.ts",
-    "contract:test:producer": "pnpm contract:check:blocks && pnpm --filter @vexilla/types check:generated && node contract/scripts/python-requirements.cjs --check && pnpm --filter @vexilla/types test && pnpm --filter @vexilla/publishing test && pnpm --filter app test:publication",
+    "contract:test:producer": "pnpm contract:check:blocks && pnpm --filter @vexilla/types check:generated && node contract/scripts/python-requirements.cjs --check && pnpm --filter @vexilla/types test && pnpm --filter @vexilla/publishing test && pnpm --filter app test:publication && pnpm --filter app test:config",
     "contract:check:blocks": "node contract/scripts/check-blocks.cjs",
     "contract:serve": "node contract/scripts/serve.cjs",
     "contract:run": "node contract/scripts/run.cjs",
