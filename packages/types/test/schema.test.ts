@@ -58,3 +58,13 @@ test("the existing gradual SDK fixture has valid group and environment seeds", (
   );
   assert.deepEqual(validateGroup(group), []);
 });
+
+test("Unicode validation covers object keys and extra fields without replacing text", () => {
+  for (const invalid of ["\ud800", "\udfff", "\ud800x", "\udc00\ud800"]) {
+    assert.ok(validateManifest({ version: "v1", groups: [], extra: { [invalid]: "ok" } }).length);
+    assert.ok(validateManifest({ version: "v1", groups: [], extra: [invalid] }).length);
+  }
+  for (const valid of ["😀", "\ufffd", "\\ud800"]) {
+    assert.deepEqual(validateManifest({ version: "v1", groups: [], extra: { [valid]: valid } }), []);
+  }
+});

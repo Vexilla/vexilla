@@ -28,7 +28,7 @@ To get started is easy. Follow these steps to get started with integration.
 
 You will need to create a Client within your app. This optionally takes in the `{{CustomInstanceHash}}` for use with gradual rollout as well as Selective features.
 
-After creation, call `{{SyncFlags}}`. This can be chained from the constructor since it returns the client instance.
+{{#SetupDescription}}{{{SetupDescription}}}{{/SetupDescription}}{{^SetupDescription}}After creation, call `{{SyncFlags}}`. This can be chained from the constructor since it returns the client instance.{{/SetupDescription}}
 
 **Important Note**: All methods that make HTTP requests take in a callback for the request itself. This allows you to use your existing dependencies or standard library methods to keep this bundle smaller and less opinionated.
 

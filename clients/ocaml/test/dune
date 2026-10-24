@@ -6,4 +6,4 @@
 (executable
  (name contract)
  (modules contract)
- (libraries vexilla yojson lwt.unix))
+ (libraries vexilla yojson lwt.unix str))

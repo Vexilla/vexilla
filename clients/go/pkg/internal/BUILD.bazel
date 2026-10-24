@@ -8,7 +8,12 @@ go_library(
         "scheduling.go",
         "types.go",
         "exceptions.go",
+        "compat.go",
+        "validation.go",
+        "wire_json.go",
+        "unicode.go",
     ],
+    embedsrcs = ["compatibility.json"],
     importpath = "github.com/vexilla/vexilla/clients/go/pkg/internal",
     visibility = ["//clients/go/pkg:__subpackages__"],
 )
@@ -19,6 +24,7 @@ go_test(
         "hashing_test.go",
         "scheduling_test.go",
         "exceptions_test.go",
+        "unicode_test.go",
     ],
     embed = [":internal"],
 )

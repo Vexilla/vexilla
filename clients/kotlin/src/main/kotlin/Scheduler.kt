@@ -1,111 +1,47 @@
 package dev.vexilla
 
-import kotlinx.datetime.*
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 
 object Scheduler {
+    private const val DAY = 86400000L
 
-    fun isScheduledFeatureActive(feature: Feature): Boolean {
-        return isScheduleActive(feature.schedule, feature.scheduleType)
-    }
+    private fun day(value: Long): Long = Math.floorDiv(value, DAY) * DAY
 
-    fun isScheduleActive(schedule: Schedule, scheduleType: ScheduleType): Boolean {
-        return isScheduleActiveWithNow(schedule, scheduleType, Clock.System.now())
-    }
+    fun isScheduledFeatureActive(feature: Feature): Boolean =
+        isScheduleActive(feature.schedule, feature.scheduleType)
 
-    fun isScheduleActiveWithNow(schedule: Schedule, scheduleType: ScheduleType, now: Instant): Boolean {
+    fun isScheduleActive(schedule: Schedule, scheduleType: ScheduleType): Boolean =
+        isScheduleActiveMillis(schedule, scheduleType, Clock.System.now().toEpochMilliseconds())
 
-        val nowMillis = now.toEpochMilliseconds()
+    fun isScheduleActiveWithNow(
+        schedule: Schedule,
+        scheduleType: ScheduleType,
+        now: Instant,
+    ): Boolean = isScheduleActiveMillis(schedule, scheduleType, now.toEpochMilliseconds())
 
-        when (scheduleType) {
-            ScheduleType.EMPTY -> return true
-            ScheduleType.GLOBAL,
-            ScheduleType.ENVIRONMENT -> {
-                val startDate = Instant.fromEpochMilliseconds(schedule.start)
-                val startOfStartDate =
-                    LocalDateTime(
-                        startDate.toLocalDateTime(TimeZone.UTC).date,
-                        LocalTime(0, 0)
-                    ).toInstant(
-                        TimeZone.UTC
-                    )
-
-                val endDate = Instant.fromEpochMilliseconds(schedule.end)
-                val endOfEndDate =
-                    LocalDateTime(
-                        endDate.toLocalDateTime(TimeZone.UTC).date,
-                        LocalTime(23, 59, 59, 999_999_999)
-                    ).toInstant(
-                        TimeZone.UTC
-                    )
-
-                if (!(startOfStartDate..endOfEndDate).contains(now)) {
-                    return false
-                }
-
-                val startTime = Instant.fromEpochMilliseconds(schedule.startTime).toLocalDateTime(TimeZone.UTC)
-                val endTime = Instant.fromEpochMilliseconds(schedule.endTime).toLocalDateTime(TimeZone.UTC)
-
-                when (schedule.timeType) {
-                    ScheduleTimeType.NONE -> return true
-                    ScheduleTimeType.START_END -> {
-
-                        val startOfEndDate = LocalDateTime(
-                            endDate.toLocalDateTime(TimeZone.UTC).date,
-                            LocalTime(
-                                0, 0, 0, 0
-                            )
-                        ).toInstant(TimeZone.UTC)
-
-                        val startDateTimestampWithStartTime =
-                            startOfStartDate.toEpochMilliseconds() + schedule.startTime
-                        val endDateTimestampWithEndTime = startOfEndDate.toEpochMilliseconds() + schedule.endTime
-
-                        return nowMillis in startDateTimestampWithStartTime..endDateTimestampWithEndTime
-                    }
-
-                    ScheduleTimeType.DAILY -> {
-                        val zeroDay = Instant
-                            .fromEpochMilliseconds(0)
-                            .toLocalDateTime(TimeZone.UTC)
-
-                        val nowTimestamp = now.epochSeconds
-
-                        val todayZeroTime =
-                            LocalDateTime(
-                                now.toLocalDateTime(TimeZone.UTC).date,
-                                LocalTime(0, 0)
-                            ).toInstant(
-                                TimeZone.UTC
-                            ).epochSeconds
-
-                        val zeroedStartTimestamp =
-                            LocalDateTime(
-                                zeroDay.date,
-                                LocalTime(startTime.hour, startTime.minute, startTime.second, startTime.nanosecond)
-                            ).toInstant(
-                                TimeZone.UTC
-                            ).epochSeconds
-
-                        val zeroedEndTimestamp =
-                            LocalDateTime(
-                                zeroDay.date,
-                                LocalTime(endTime.hour, endTime.minute, endTime.second, endTime.nanosecond)
-                            ).toInstant(
-                                TimeZone.UTC
-                            ).epochSeconds
-
-                        val startTimestamp = todayZeroTime + zeroedStartTimestamp
-                        val endTimestamp = todayZeroTime + zeroedEndTimestamp
-
-                        return if (zeroedStartTimestamp > zeroedEndTimestamp) {
-                            nowTimestamp >= startTimestamp || nowTimestamp <= endTimestamp
-                        } else {
-                            (startTimestamp..endTimestamp).contains(nowTimestamp)
-                        }
-                    }
+    fun isScheduleActiveMillis(schedule: Schedule, scheduleType: ScheduleType, now: Long): Boolean {
+        if (scheduleType == ScheduleType.EMPTY) {
+            return true
+        }
+        if (now < day(schedule.start) || now > day(schedule.end) + DAY - 1) {
+            return false
+        }
+        return when (schedule.timeType) {
+            ScheduleTimeType.NONE -> true
+            ScheduleTimeType.START_END ->
+                now >= day(schedule.start) + schedule.startTime &&
+                    now <= day(schedule.end) + schedule.endTime
+            ScheduleTimeType.DAILY -> {
+                val clock = Math.floorMod(now, DAY)
+                val start = Math.floorMod(schedule.startTime, DAY)
+                val end = Math.floorMod(schedule.endTime, DAY)
+                if (start <= end) {
+                    clock >= start && clock <= end
+                } else {
+                    clock >= start || clock <= end
                 }
             }
-
         }
     }
 }

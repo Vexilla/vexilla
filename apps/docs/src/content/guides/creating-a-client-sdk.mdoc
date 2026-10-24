@@ -11,7 +11,7 @@ Depending on the kind of language you are implementing for, the process will fee
 
 ## Lookup tables
 
-Your client should maintain lookup tables that allow consumers to use the name or ID value without changing any functionality. If using the CLI to generate types, your users will likely pass ID values obfsucated behind contants or enums.
+Your client should maintain lookup tables that allow consumers to use the exact ID, exact name, or publisher-normalized name alias without changing any functionality. If using the CLI to generate types, your users will likely pass ID values obfsucated behind contants or enums.
 
 ## Constructor
 
@@ -20,7 +20,7 @@ The constructor needs to take in a few arguments to set up the rest of the funct
 - config: This contains the main configuration values.
   - baseUrl: string: The URL where your flags live without a file path. The file path will be appended internally when fetching the manifest and flags.
   - environment: string: This corresponds to the environment you want to use to determine flag functionality. Can be the name value or environmentId value.
-  - customInstanceHash: string: The default value you would like to use for gradual flags. It will often be a userId value but that is left up to the consumer of the SDK.
+  - customInstanceHash: an optional finite numeric or string instance ID for gradual and selective flags. Toggles and values do not require an ID.
 - suppressLogs: boolean: You may want to log or warn about various things during usage of the client SDK. A consumer of the SDK should be able to disable this.
 
 ## Methods
@@ -42,7 +42,13 @@ The implementation of these methods will depend on the specific language. Some l
 
 ## Testing
 
-Your client SDK should make sure to test some of the core functions such as the hasing algorithm for string values. It will also need to test the scheduling functionality because time is fickle.
+Use the shared corpus and receipt protocol described in [the contribution guide](https://github.com/Vexilla/vexilla/blob/main/CONTRIBUTING.md) and `contract/CORPUS.md`. It defines literal hash, binary64 rollout, millisecond UTC schedule, validation, lifecycle, and failure expectations. Run the actual SDK paths against the producer's immutable bytes; do not copy an evaluator into the adapter or relax a vector for one language. A skipped or empty native suite cannot earn a receipt.
+
+Validate fetched data and direct setters before replacing caches. Preserve false, zero, empty strings/lists/maps, compatible extra fields, safe integer bounds, and complete environment features. Do not coerce strings/booleans, invent seeds/dates, or let caller mutation bypass validation. Reject unpaired surrogates and invalid UTF-8 in every string and key, including compatible extras, before a decoder replaces them. Accept valid pairs and literal U+FFFD without normalization. Names use the publisher’s pinned normalization and timezone data, with stale aliases removed on refresh. Select the complete feature from the environment.
+
+Hash UTF-8 bytes with unsigned 32-bit FNV-1a. Numeric IDs use ECMAScript binary64 text, and rollout membership uses the untruncated seeded remainder and strict `<`. Resolve invalid kinds and missing IDs before scheduling. Schedules use inclusive UTC integer-millisecond endpoints, including overnight and equal-endpoint daily windows; timezone labels keep UTC interpretation.
+
+The required inventory is JS/TS, Python, Go, Rust, C#, Swift, Kotlin, PHP, Elixir, OCaml, and Lua. Dart is excluded. Lua uses `require("vexilla_client")`, a configuration table, snake-case manifest/group get/set/sync methods, and decoded-table fetch callbacks. Its required command must run Lua 5.5 and LuaJIT 2.1 separately, plus every additional version advertised by its rockspec. An unavailable or failing interpreter fails the command; one runtime cannot stand in for another.
 
 ## CLI
 
@@ -54,7 +60,7 @@ You will need to edit the CLI tool in `packages/cli` for two specific things.
 
 First is the template in `packages/cli/src/templates.ts`. It takes in data from the transform function and outputs idiomatic code in a place of the user's choosing.
 
-Secondly, you will need to add a transform function that generates the values passed to the template. Make sure to use `Case` to give variable names the proper casing for the language you are building the SDK for.
+Secondly, you will need to add a transform function that generates the values passed to the template. Use the language's identifier and reserved-word rules and escape every string literal. The Lua transformer returns a require-able table; its tests load generated constants under every supported runtime, use them in real evaluations, and check that existing language output remains unchanged.
 
 ## Pull Request
 

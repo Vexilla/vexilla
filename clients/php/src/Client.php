@@ -2,475 +2,191 @@
 
 namespace Vexilla;
 
-use Vexilla\Types\Environment;
-use Vexilla\Types\Feature;
-use Vexilla\Types\FeatureType;
-use Vexilla\Types\GradualFeature;
-use Vexilla\Types\Group;
-use Vexilla\Types\GroupMeta;
-use Vexilla\Types\Manifest;
-use Vexilla\Types\ManifestGroup;
-use Vexilla\Types\NumberType;
-use Vexilla\Types\RealIds;
-use Vexilla\Types\SelectiveFeature;
-use Vexilla\Types\ToggleFeature;
-use Vexilla\Types\ValueFloatFeature;
-use Vexilla\Types\ValueIntFeature;
-use Vexilla\Types\ValueStringFeature;
-use Vexilla\Types\ValueType;
-use Vexilla\Exceptions\InvalidShouldFeatureValueTypeException;
-use Vexilla\Exceptions\InvalidShouldFeatureTypeException;
-use Vexilla\Exceptions\InvalidValueFeatureTypeException;
-use Vexilla\Exceptions\GroupLookupKeyNotFoundException;
-use Vexilla\Exceptions\EnvironmentLookupKeyNotFoundException;
-use Vexilla\Exceptions\GroupFeatureKeyNotFoundException;
-use Vexilla\Exceptions\EnvironmentFeatureKeyNotFoundException;
-
-
+use Vexilla\Types\{Manifest, Group, Feature, ToggleFeature, GradualFeature, SelectiveFeature, ValueFeature, ValueStringFeature, ValueIntFeature, ValueFloatFeature};
 class Client
 {
     private string $baseUrl;
     private string $environment;
-    private string $customInstanceHash;
-
-    private Manifest $manifest;
-    private array $groups;
-
-    private array $groupLookupTable;
-    private array $environmentLookupTable;
-    private array $featureLookupTable;
-
-    private bool $showLogs;
-
-    function __construct(string $baseUrl, string $environment, string $customInstanceHash, bool $showLogs = false)
+    private $customInstanceHash;
+    private ?Manifest $manifest = null;
+    private array $groups = [];
+    private array $groupLookupTable = [];
+    private array $environmentLookupTable = [];
+    private array $featureLookupTable = [];
+    public function __construct(string $baseUrl, string $environment, $customInstanceHash = null, bool $showLogs = false)
     {
-        $this->baseUrl = $baseUrl;
+        $this->baseUrl = rtrim($baseUrl, '/');
         $this->environment = $environment;
         $this->customInstanceHash = $customInstanceHash;
-        $this->showLogs = $showLogs;
-
-        $this->groupLookupTable = [];
-        $this->environmentLookupTable = [];
-        $this->featureLookupTable = [];
     }
-
-    public function getManifest(callable $callback): Manifest
+    private function request(string $path, callable $callback)
     {
-
-        $decodedJson = $callback(
-            sprintf(
-                '%s/manifest.json',
-                $this->baseUrl
-            )
-        );
-
-        $groups = [];
-
-        foreach ($decodedJson->groups as &$group) {
-            $group = new ManifestGroup($group->name, $group->groupId);
-            array_push($groups, $group);
+        try {
+            return $callback($this->baseUrl . '/' . $path);
+        } catch (\Throwable $error) {
+            throw new ContractException('fetch', 'Fetch failed: ' . $error->getMessage());
         }
-
-        $manifest = new Manifest(
-            $decodedJson->version,
-            $groups
-        );
-
-        return $manifest;
     }
-
-    public function setManifest(Manifest $manifest)
+    public function getManifest(callable $callback) : Manifest
     {
-        $this->manifest = $manifest;
-
-        $groupLookupTable = [];
-
-        foreach ($manifest->groups as $group) {
-            $groupLookupTable[$group->name] = $group->groupId;
-            $groupLookupTable[$group->groupId] = $group->groupId;
-        }
-
-        unset($group);
-
-        $this->groupLookupTable = $groupLookupTable;
+        return Codec::manifest($this->request('manifest.json', $callback));
     }
-
-    public function syncManifest(callable $callback)
+    public function setManifest(Manifest $manifest) : void
     {
-        $manifest = $this->getManifest($callback);
-        $this->setManifest($manifest);
-    }
-
-    /*  $callback contents
-        $response = file_get_contents(
-            $url
-        );
-
-        $decodedJson = json_decode($response);
-    */
-
-    public function getFlags(string $groupNameOrId, callable $callback): Group
-    {
-
-        $groupId = $this->groupLookupTable[$groupNameOrId];
-
-        $decodedJson = $callback(
-            sprintf(
-                '%s/%s.json',
-                $this->baseUrl,
-                $groupId
-            )
-        );
-
-        $environments = [];
-
-        foreach ($decodedJson->environments as $rawEnvironment) {
-            $environmentFeatures = [];
-
-            foreach ($rawEnvironment->features as $rawFeature) {
-                $feature = null;
-
-                if ($rawFeature->featureType === FeatureType::TOGGLE) {
-                    $feature = ToggleFeature::fromRaw($rawFeature);
-                } else if ($rawFeature->featureType === FeatureType::GRADUAL) {
-                    $feature = GradualFeature::fromRaw($rawFeature);
-                } else if ($rawFeature->featureType === FeatureType::SELECTIVE) {
-                    $feature = SelectiveFeature::fromRaw($rawFeature);
-                } else if ($rawFeature->featureType === FeatureType::VALUE) {
-                    if ($rawFeature->valueType === ValueType::STRING) {
-                        $feature = ValueStringFeature::fromRaw($rawFeature);
-                    } else if ($rawFeature->numberType == NumberType::INT) {
-                        $feature = ValueIntFeature::fromRaw($rawFeature);
-                    } else if ($rawFeature->numberType === NumberType::FLOAT) {
-                        $feature = ValueFloatFeature::fromRaw($rawFeature);
-                    }
-                }
-
-                if ($feature) {
-                    $environmentFeatures[$rawFeature->featureId] = $feature;
-                }
-
+        Validation::tree($manifest);
+        $snapshot = Codec::manifest(Codec::wire($manifest));
+        $aliases = [];
+        $surviving = [];
+        foreach ($snapshot->groups as $g) {
+            Validation::alias($aliases, $g->groupId, $g->name);
+            if (isset($this->groups[$g->groupId]) && $this->groups[$g->groupId]->name === $g->name) {
+                $surviving[$g->groupId] = $this->groups[$g->groupId];
             }
-
-            unset($rawFeature);
-
-            $environment = new Environment($rawEnvironment->name, $rawEnvironment->environmentId, $environmentFeatures);
-
-            $environments[$environment->environmentId] = $environment;
         }
-
-        unset($rawEnvironment);
-
+        $this->manifest = $snapshot;
+        $this->groupLookupTable = $aliases;
+        $this->groups = $surviving;
+        $this->environmentLookupTable = array_intersect_key($this->environmentLookupTable, $surviving);
+        $this->featureLookupTable = array_intersect_key($this->featureLookupTable, $surviving);
+    }
+    public function syncManifest(callable $callback) : void
+    {
+        $this->setManifest($this->getManifest($callback));
+    }
+    private function groupId(string $name) : string
+    {
+        if (!array_key_exists($name, $this->groupLookupTable)) {
+            throw new ContractException('lookup', 'Group not found: ' . $name);
+        }
+        return $this->groupLookupTable[$name];
+    }
+    private function match(Group $group) : void
+    {
+        if ($this->manifest === null) {
+            throw new ContractException('lookup', 'Manifest not installed');
+        }
+        foreach ($this->manifest->groups as $g) {
+            if ($g->groupId === $group->groupId && $g->name === $group->name) {
+                return;
+            }
+        }
+        throw new ContractException('validation', 'Group ID/name differs from manifest');
+    }
+    public function getFlags(string $groupNameOrId, callable $callback) : Group
+    {
+        $id = $this->groupId($groupNameOrId);
+        $g = Codec::group($this->request($id . '.json', $callback));
+        $this->match($g);
+        Validation::check($g->groupId === $id, 'Fetched group differs from requested group');
+        return $g;
+    }
+    public function setFlags(Group $flagGroup) : void
+    {
+        Validation::tree($flagGroup);
+        $snapshot = Codec::group(Codec::wire($flagGroup));
+        $this->match($snapshot);
+        $envs = [];
         $features = [];
-
-        foreach ($decodedJson->features as $rawFeature) {
-            $feature = Feature::fromRaw($rawFeature);
-            $features[$feature->featureId] = $feature;
+        foreach ($snapshot->environments as $id => $e) {
+            Validation::alias($envs, (string) $id, $e->name);
         }
-
-        unset($rawFeature);
-
-        $group = new Group($decodedJson->name, $decodedJson->groupId, new GroupMeta($decodedJson->meta->version), $environments, $features);
-
-        return $group;
+        foreach ($snapshot->features as $id => $f) {
+            Validation::alias($features, (string) $id, $f->name);
+        }
+        $id = $snapshot->groupId;
+        $this->groups[$id] = $snapshot;
+        $this->environmentLookupTable[$id] = $envs;
+        $this->featureLookupTable[$id] = $features;
     }
-
-    public function setFlags(Group $flagGroup): void
+    public function syncFlags(string $groupNameOrId, callable $callback) : void
     {
-
-        $this->groups[$flagGroup->groupId] = $flagGroup;
-
-        if (!$this->environmentLookupTable) {
-            $this->environmentLookupTable = [];
-        }
-
-        if (!isset($this->environmentLookupTable, $flagGroup->groupId)) {
-            $this->environmentLookupTable[$flagGroup->groupId] = [];
-        }
-
-        foreach ($flagGroup->environments as $environment) {
-            $this->environmentLookupTable[$flagGroup->groupId][$environment->name] = $environment->environmentId;
-            $this->environmentLookupTable[$flagGroup->groupId][$environment->environmentId] = $environment->environmentId;
-        }
-
-        if (!isset($this->featureLookupTable, $flagGroup->groupId)) {
-            $this->featureLookupTable[$flagGroup->groupId] = [];
-        }
-
-        foreach ($flagGroup->features as $feature) {
-            $this->featureLookupTable[$flagGroup->groupId][$feature->name] = $feature->featureId;
-            $this->featureLookupTable[$flagGroup->groupId][$feature->featureId] = $feature->featureId;
-        }
+        $this->setFlags($this->getFlags($groupNameOrId, $callback));
     }
-
-    public function syncFlags(string $groupNameOrId, callable $callback): void
+    private function feature(string $group, string $name) : Feature
     {
-        $group = $this->getFlags($groupNameOrId, $callback);
-        $this->setFlags($group);
+        $id = $this->groupId($group);
+        $stored = $this->groups[$id] ?? null;
+        $env = $this->environmentLookupTable[$id][$this->environment] ?? null;
+        $fid = $this->featureLookupTable[$id][$name] ?? null;
+        if ($stored === null || $env === null || $fid === null) {
+            throw new ContractException('lookup', 'Group, environment or feature not installed');
+        }
+        return $stored->environments[$env]->features[$fid];
     }
-
-    public function should(string $groupNameOrId, string $featureNameOrId): bool
+    public function should(string $groupNameOrId, string $featureNameOrId) : bool
     {
-        return $this->shouldCustomString($groupNameOrId, $featureNameOrId, $this->customInstanceHash);
+        return $this->shouldCustom($groupNameOrId, $featureNameOrId, $this->customInstanceHash);
     }
-
-    public function shouldCustomString(string $groupNameOrId, string $featureNameOrId, string $customInstanceId): bool
+    public function shouldCustomString(string $groupNameOrId, string $featureNameOrId, $customInstanceId) : bool
     {
-        $realObjects = $this->getRealObjects($groupNameOrId, $featureNameOrId);
-
-        $environment = $realObjects->environment;
-        $feature = $realObjects->feature;
-
-        $withinSchedule = Scheduler::isScheduledFeatureActive($feature);
-
-        if (!$withinSchedule) {
+        return $this->shouldCustom($groupNameOrId, $featureNameOrId, $customInstanceId);
+    }
+    public function shouldCustomInt(string $groupNameOrId, string $featureNameOrId, $customInstanceId) : bool
+    {
+        return $this->shouldCustom($groupNameOrId, $featureNameOrId, $customInstanceId);
+    }
+    public function shouldCustomFloat(string $groupNameOrId, string $featureNameOrId, $customInstanceId) : bool
+    {
+        return $this->shouldCustom($groupNameOrId, $featureNameOrId, $customInstanceId);
+    }
+    public function shouldCustom(string $groupNameOrId, string $featureNameOrId, $customInstanceId) : bool
+    {
+        $f = $this->feature($groupNameOrId, $featureNameOrId);
+        if ($f instanceof ValueFeature) {
+            throw new ContractException('kind', 'Value feature requires a value operation');
+        }
+        if ($f instanceof ToggleFeature) {
+            return Scheduler::isScheduledFeatureActive($f) && $f->value;
+        }
+        Hasher::validateInstance($customInstanceId);
+        if (!Scheduler::isScheduledFeatureActive($f)) {
             return false;
         }
-
-        switch ($feature->featureType) {
-            case FeatureType::TOGGLE:
-                $toggleFeature = $environment->getToggleFeature($feature->featureId);
-                return $toggleFeature->value;
-            case FeatureType::GRADUAL:
-                $gradualFeature = $environment->getGradualFeature($feature->featureId);
-                return Hasher::hashString($customInstanceId, $gradualFeature->seed) <= $gradualFeature->value;
-            case FeatureType::SELECTIVE:
-                $selectiveFeature = $environment->getSelectiveFeature($feature->featureId);
-
-
-                if ($selectiveFeature->valueType === ValueType::STRING) {
-                    return in_array($customInstanceId, $selectiveFeature->value);
-                } else {
-                    throw new InvalidShouldFeatureValueTypeException('shouldCustomString must be called with a string instanceId. Use shouldCustomInt or shouldCustomFloat, instead.');
-                }
-            case FeatureType::VALUE:
-                throw new InvalidShouldFeatureTypeException('should* functions are not compatible with ValueFeatures. Use the value* methods instead.');
-
-            default:
-                throw new InvalidShouldFeatureTypeException('Invalid FeatureType for should* methods. Must be toggle, gradual, or selective.');
+        if ($f instanceof GradualFeature) {
+            return Hasher::hashString(Hasher::instanceText($customInstanceId), $f->seed) < $f->value;
         }
-    }
-
-    public function shouldCustomInt(string $groupNameOrId, string $featureNameOrId, int $customInstanceId): bool
-    {
-        $realObjects = $this->getRealObjects($groupNameOrId, $featureNameOrId);
-
-        $environment = $realObjects->environment;
-        $feature = $realObjects->feature;
-
-        $withinSchedule = Scheduler::isScheduledFeatureActive($feature);
-
-        if (!$withinSchedule) {
+        if ($f instanceof SelectiveFeature) {
+            if ($f->valueType === 'string') {
+                return is_string($customInstanceId) && in_array($customInstanceId, $f->value, true);
+            }
+            if (!is_int($customInstanceId) && !is_float($customInstanceId)) {
+                return false;
+            }
+            foreach ($f->value as $v) {
+                if ((float) $v === (float) $customInstanceId) {
+                    return true;
+                }
+            }
             return false;
         }
-
-        switch ($feature->featureType) {
-            case FeatureType::TOGGLE:
-                $toggleFeature = $environment->getToggleFeature($feature->featureId);
-                return $toggleFeature->value;
-            case FeatureType::GRADUAL:
-                $gradualFeature = $environment->getGradualFeature($feature->featureId);
-                return Hasher::hashString("$customInstanceId", $gradualFeature->seed) <= $gradualFeature->value;
-            case FeatureType::SELECTIVE:
-                $selectiveFeature = $environment->getSelectiveFeature($feature->featureId);
-
-                if ($selectiveFeature->numberType === NumberType::INT) {
-                    return in_array($customInstanceId, $selectiveFeature->value);
-                } else {
-                    throw new InvalidShouldFeatureValueTypeException('shouldCustomInt must be called with an int instanceId. Use shouldCustomString or shouldCustomFloat, instead.');
-                }
-            case FeatureType::VALUE:
-                throw new InvalidShouldFeatureTypeException('should* functions are not compatible with ValueFeatures. Use the value* methods instead.');
-
-            default:
-                throw new InvalidShouldFeatureTypeException('Invalid FeatureType for should* methods. Must be toggle, gradual, or selective.');
-        }
+        throw new ContractException('kind', 'Unsupported boolean feature');
     }
-
-    public function shouldCustomFloat(string $groupNameOrId, string $featureNameOrId, float $customInstanceId): bool
+    public function value(string $groupNameOrId, string $featureNameOrId, $default)
     {
-        $realObjects = $this->getRealObjects($groupNameOrId, $featureNameOrId);
-
-        $environment = $realObjects->environment;
-        $feature = $realObjects->feature;
-
-        $withinSchedule = Scheduler::isScheduledFeatureActive($feature);
-
-        if (!$withinSchedule) {
-            return false;
+        $f = $this->feature($groupNameOrId, $featureNameOrId);
+        if (!$f instanceof ValueFeature) {
+            throw new ContractException('kind', 'Expected value feature');
         }
-
-        switch ($feature->featureType) {
-            case FeatureType::TOGGLE:
-                $toggleFeature = $environment->getToggleFeature($feature->featureId);
-                return $toggleFeature->value;
-            case FeatureType::GRADUAL:
-                $gradualFeature = $environment->getGradualFeature($feature->featureId);
-                return Hasher::hashString("$customInstanceId", $gradualFeature->seed) <= $gradualFeature->value;
-            case FeatureType::SELECTIVE:
-                $selectiveFeature = $environment->getSelectiveFeature($feature->featureId);
-
-                if ($selectiveFeature->numberType === NumberType::FLOAT) {
-                    return in_array($customInstanceId, $selectiveFeature->value);
-                } else {
-                    throw new InvalidShouldFeatureValueTypeException('shouldCustomFloat must be called with a float instanceId. Use shouldCustomInt or shouldCustomString, instead.');
-                }
-            case FeatureType::VALUE:
-                throw new InvalidShouldFeatureTypeException('should* functions are not compatible with ValueFeatures. Use the value* methods instead.');
-
-            default:
-                throw new InvalidShouldFeatureTypeException('Invalid FeatureType for should* methods. Must be toggle, gradual, or selective.');
-        }
+        return Scheduler::isScheduledFeatureActive($f) ? $f->value : $default;
     }
-
-    public function valueString(string $groupNameOrId, string $featureNameOrId, string $default): string
+    private function typedValue(string $group, string $name, $default, string $class)
     {
-        $realObjects = $this->getRealObjects($groupNameOrId, $featureNameOrId);
-
-        $environment = $realObjects->environment;
-        $feature = $realObjects->feature;
-
-        if ($feature->featureType !== FeatureType::VALUE) {
-            throw new InvalidValueFeatureTypeException('valueString must be called for a ValueFeature. Use a should* method, instead.');
+        $f = $this->feature($group, $name);
+        if (!$f instanceof $class) {
+            throw new ContractException('kind', 'Value subtype differs');
         }
-
-        $withinSchedule = Scheduler::isScheduledFeatureActive($feature);
-
-        if (!$withinSchedule) {
-            return $default;
-        }
-
-        $valueFeature = $environment->getValueStringFeature($feature->featureId);
-
-        return $valueFeature->value;
+        return Scheduler::isScheduledFeatureActive($f) ? $f->value : $default;
     }
-
-    public function valueInt(string $groupNameOrId, string $featureNameOrId, int $default): int
+    public function valueString(string $groupNameOrId, string $featureNameOrId, string $default) : string
     {
-        $realObjects = $this->getRealObjects($groupNameOrId, $featureNameOrId);
-
-        $environment = $realObjects->environment;
-        $feature = $realObjects->feature;
-
-        if ($feature->featureType !== FeatureType::VALUE) {
-            throw new InvalidValueFeatureTypeException('valueInt must be called for a ValueFeature. Use a should* method, instead.');
-        }
-
-        $withinSchedule = Scheduler::isScheduledFeatureActive($feature);
-
-        if (!$withinSchedule) {
-            return $default;
-        }
-
-        $valueFeature = $environment->getValueIntFeature($feature->featureId);
-
-        return $valueFeature->value;
+        return $this->typedValue($groupNameOrId, $featureNameOrId, $default, ValueStringFeature::class);
     }
-
-    public function valueFloat(string $groupNameOrId, string $featureNameOrId, float $default): float
+    public function valueInt(string $groupNameOrId, string $featureNameOrId, int $default) : int
     {
-        $realObjects = $this->getRealObjects($groupNameOrId, $featureNameOrId);
-
-        $environment = $realObjects->environment;
-        $feature = $realObjects->feature;
-
-        if ($feature->featureType !== FeatureType::VALUE) {
-            throw new InvalidValueFeatureTypeException('valueInt must be called for a ValueFeature. Use a should* method, instead.');
-        }
-
-        $withinSchedule = Scheduler::isScheduledFeatureActive($feature);
-
-        if (!$withinSchedule) {
-            return $default;
-        }
-
-        $valueFeature = $environment->getValueFloatFeature($feature->featureId);
-
-        return $valueFeature->value;
+        return $this->typedValue($groupNameOrId, $featureNameOrId, $default, ValueIntFeature::class);
     }
-
-    private function getGroup(string $groupId): ?Group
+    public function valueFloat(string $groupNameOrId, string $featureNameOrId, float $default) : float
     {
-        return $this->groups[$groupId];
-    }
-
-    private function getRealObjects(string $groupNameOrId, string $featureNameOrId): RealObjects
-    {
-        $realIds = $this->getRealIds($groupNameOrId, $featureNameOrId);
-
-        $group = $this->getGroup($realIds->groupId);
-
-        if (!$group) {
-            throw new GroupLookupKeyNotFoundException("Group not found.");
-        }
-
-        $environment = $group->getEnvironment($realIds->environmentId);
-
-        if (!$environment) {
-            throw new EnvironmentLookupKeyNotFoundException("Environment not found.");
-        }
-
-        $feature = $environment->getFeature($realIds->featureId);
-
-        if (!$feature) {
-            throw new EnvironmentFeatureKeyNotFoundException("Feature not found.");
-        }
-
-        return new RealObjects($environment, $feature);
-    }
-
-    private function getRealIds(string $groupNameOrId, string $featureNameOrId): RealIds
-    {
-        $groupId = $this->groupLookupTable[$groupNameOrId];
-
-        if (!$groupId) {
-            throw new GroupLookupKeyNotFoundException('GroupID does not exist in lookup table. Make sure to fetch the manifest before hand.');
-        }
-
-        $groupEnvironmentLookupTable = $this->environmentLookupTable[$groupId];
-
-        if (!$groupEnvironmentLookupTable) {
-            throw new EnvironmentLookupKeyNotFoundException('Group EnvironmentLookupTable does not exist in lookup table. Make sure to fetch the manifest and group/flags before hand.');
-        }
-
-        $environmentId = $groupEnvironmentLookupTable[$this->environment];
-
-        if (!$environmentId) {
-            throw new EnvironmentLookupKeyNotFoundException('Environment does not exist in lookup table. Make sure to fetch the manifest and group/flags before hand.');
-        }
-
-        $groupFeatureLookupTable = $this->featureLookupTable[$groupId];
-
-        if (!$groupFeatureLookupTable) {
-            throw new GroupFeatureKeyNotFoundException('Group FeatureLookupTable does not exist in lookup table. Make sure to fetch the manifest and group/flags before hand.');
-        }
-
-        $featureId = $groupFeatureLookupTable[$featureNameOrId];
-
-        if (!$featureId) {
-            throw new EnvironmentFeatureKeyNotFoundException('Feature does not exist in lookup table. Make sure to fetch the manifest and group/flags before hand.');
-        }
-
-        return new RealIds($groupId, $environmentId, $featureId);
-    }
-
-    private function log(string $message)
-    {
-        if ($this->showLogs) {
-            echo $message;
-            error_log($message);
-        }
-    }
-}
-
-class RealObjects
-{
-    public Environment $environment;
-    public Feature $feature;
-
-    function __construct(Environment $environment, Feature $feature)
-    {
-        $this->environment = $environment;
-        $this->feature = $feature;
+        return $this->typedValue($groupNameOrId, $featureNameOrId, $default, ValueFloatFeature::class);
     }
 }

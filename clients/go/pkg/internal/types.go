@@ -55,6 +55,7 @@ type BaseEnvironment struct {
 
 type Environment struct {
 	BaseEnvironment
+	decoded bool
 
 	ToggleFeatures  map[FeatureId]ToggleFeature  `json:"-"`
 	GradualFeatures map[FeatureId]GradualFeature `json:"-"`
@@ -96,11 +97,15 @@ type RealIds struct {
 }
 
 type Feature struct {
-	Name         FeatureName  `json:"name"`
-	FeatureId    FeatureId    `json:"featureId"`
-	FeatureType  FeatureType  `json:"featureType"`
-	ScheduleType ScheduleType `json:"scheduleType"`
-	Schedule     Schedule     `json:"schedule"`
+	Name         FeatureName     `json:"name"`
+	FeatureId    FeatureId       `json:"featureId"`
+	FeatureType  FeatureType     `json:"featureType"`
+	ScheduleType ScheduleType    `json:"scheduleType"`
+	Schedule     Schedule        `json:"schedule"`
+	Value        json.RawMessage `json:"value"`
+	Seed         float64         `json:"seed,omitempty"`
+	ValueType    ValueType       `json:"valueType,omitempty"`
+	NumberType   NumberType      `json:"numberType,omitempty"`
 }
 
 type ToggleFeature struct {
@@ -131,7 +136,7 @@ const (
 type ValueFeature struct {
 	Feature
 	ValueType  ValueType  `json:"valueType"`
-	NumberType NumberType `json:"numberType"`
+	NumberType NumberType `json:"numberType,omitempty"`
 }
 
 type ValueStringFeature struct {
@@ -152,7 +157,7 @@ type ValueFloatFeature struct {
 type SelectiveFeature struct {
 	Feature
 	ValueType  ValueType  `json:"valueType"`
-	NumberType NumberType `json:"numberType"`
+	NumberType NumberType `json:"numberType,omitempty"`
 }
 
 type SelectiveStringFeature struct {

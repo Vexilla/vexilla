@@ -11,15 +11,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10.14.0
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: pnpm --filter @vexilla/types check:generated
       - run: pnpm contract:generate
+      - run: node contract/scripts/check-compat.cjs
       - run: pnpm contract:test:producer
       - run: pnpm contract:test:gate
       - run: pnpm --filter app exec playwright install --with-deps chromium
@@ -46,67 +45,99 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
       - uses: actions/download-artifact@v4
         with:
           name: sdk-contract
           path: .contract-artifacts
-      - if: matrix.id == 'js'
+      - if: matrix.id == 'js' || matrix.id == 'lua'
         uses: pnpm/action-setup@v4
-        with:
-          version: 10.14.0
       - if: matrix.id == 'js'
         run: pnpm install --frozen-lockfile --ignore-scripts --filter @vexilla/client...
       - if: matrix.id == 'js'
         run: pnpm --filter @vexilla/types build
+      - if: matrix.id == 'lua'
+        run: pnpm install --frozen-lockfile --ignore-scripts --filter @vexilla/cli...
+      - if: matrix.id == 'lua'
+        run: pnpm --filter @vexilla/types build && pnpm --filter @vexilla/cli build
+      - if: matrix.id == 'lua'
+        name: Build pinned Lua runtimes, clock, decoder, and LuaRocks
+        run: node contract/scripts/setup-lua.cjs
+      - if: matrix.id == 'lua'
+        name: Verify Lua constants under every advertised runtime
+        run: node --test packages/cli/test/lua.test.cjs
       - if: matrix.id == 'python'
         uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: "3.9"
       - if: matrix.id == 'python'
         run: python -m pip install --require-hashes -r clients/python/contract-requirements.txt
       - if: matrix.id == 'go'
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version: "1.23"
           cache-dependency-path: clients/go/go.sum
       - if: matrix.id == 'rust'
         run: rustup toolchain install stable --profile minimal && rustup default stable
       - if: matrix.id == 'csharp'
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: "8.0.x"
       - if: matrix.id == 'kotlin'
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: '8'
+          java-version: "8"
       - if: matrix.id == 'php'
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '7.4'
+          php-version: "7.4"
           extensions: mbstring, pcov
           tools: composer:2.2
       - if: matrix.id == 'php'
-        run: composer install --no-interaction --prefer-dist --no-dev --working-dir=clients/php
+        run: composer install --no-interaction --prefer-dist --working-dir=clients/php
       - if: matrix.id == 'elixir'
         uses: erlef/setup-beam@v1
         with:
-          otp-version: '26.2'
-          elixir-version: '1.15.7'
+          otp-version: "26.2"
+          elixir-version: "1.15.7"
       - if: matrix.id == 'elixir'
         run: mix deps.get
         working-directory: clients/elixir
       - if: matrix.id == 'ocaml'
         uses: ocaml/setup-ocaml@v3
         with:
-          ocaml-compiler: '4.14.2'
+          ocaml-compiler: "4.14.2"
       - if: matrix.id == 'ocaml'
         run: opam install . --deps-only --with-test --yes
         working-directory: clients/ocaml
       - run: node contract/scripts/run.cjs "$SDK"
         env:
           SDK: ${{ matrix.id }}
+      - uses: ./.github/actions/test-server
+      - name: Run native regression suite
+        shell: bash
+        env:
+          SDK: ${{ matrix.id }}
+          VEXILLA_CONTRACT_DIR: ${{ github.workspace }}/.contract-artifacts
+          TEST_SERVER_HOST: localhost:3000
+        run: |
+          case "$SDK" in
+            js) pnpm --filter @vexilla/client test ;;
+            python) cd clients/python && python -m pytest tests -q ;;
+            go) cd clients/go && go test ./... -count=1 ;;
+            rust) cd clients/rust && cargo test --locked --lib ;;
+            csharp) dotnet test clients/csharp/Native.Tests/Native.Tests.csproj -p:RestoreLockedMode=true ;;
+            swift) swift test ;;
+            kotlin) cd clients/kotlin && TEST_SERVER_HOST=http://localhost:3000 ./gradlew test --no-daemon ;;
+            php) cd clients/php && php vendor/bin/phpunit --do-not-cache-result --bootstrap vendor/autoload.php tests ;;
+            elixir) cd clients/elixir && mix test ;;
+            ocaml) cd clients/ocaml && opam exec -- dune runtest ;;
+            lua) echo "Lua's contract command already ran the full native suite and installed example on every advertised runtime." ;;
+            *) echo "Unknown SDK: $SDK" >&2; exit 1 ;;
+          esac
+      - name: Verify native suites kept the shared artifacts unchanged
+        run: node -e 'require("./contract/scripts/gate.cjs").verifyArtifacts(".contract-artifacts")'
       - uses: actions/upload-artifact@v4
         with:
           name: contract-receipt-${{ matrix.id }}
@@ -122,7 +153,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
       - uses: actions/download-artifact@v4
         with:
           name: sdk-contract

@@ -1,0 +1,79 @@
+LanguageName = 'lua'
+LanguageDisplayName = 'Lua'
+InstallInstructions = '''
+From this monorepo checkout, build the development rock with LuaRocks 3.13.0:
+
+```sh
+cd clients/lua
+luarocks make vexilla_client-scm-1.rockspec
+```
+
+The import remains `require("vexilla_client")`. LuaSocket 3.1.0 provides a millisecond wall clock. HTTP and JSON libraries are chosen by the application; dkjson 2.11 is used only by the examples and tests.
+
+Verified runtimes are Lua 5.1.5, 5.2.4, 5.3.6, 5.4.9, 5.5.1, and LuaJIT 2.1.1792527110. Run `node contract/scripts/setup-lua.cjs` from the repository root to build pinned, isolated toolchains, then `node contract/scripts/run.cjs lua` after generating the shared artifacts. Every advertised runtime is required; missing tools fail verification.
+'''
+CustomInstanceHash = 'custom_instance_id'
+SyncFlags = 'sync_flags'
+SetupDescription = 'Create a client with a configuration table, then call `sync_manifest(fetch)` followed by `sync_flags(group, fetch)`. Sync methods return no value. Getters validate and return data without installing it; setters install independent validated snapshots.'
+SetupSnippet = '''
+```lua
+local Client = require("vexilla_client")
+local client = Client.new({
+  base_url = "https://flags.example.com",
+  environment = "prod",
+  custom_instance_id = "user-123", -- optional for toggles and values
+  show_logs = false,
+})
+client:sync_manifest(fetch)
+client:sync_flags("Checkout", fetch)
+```
+
+`fetch(url)` must return a decoded v1 manifest or group table and raise an error on transport failure. Preserve JSON nulls and array/object identity when decoding, for example with `dkjson.decode(text, 1, dkjson.null)`. Plain empty tables are interpreted according to their field; explicit decoder array/object tags are validated. Fetch failures and invalid refreshes preserve the installed snapshot.
+'''
+Should = 'should'
+UsageSnippet = '''
+```lua
+if client:should("Checkout", "New Checkout") then
+  -- Enable the feature for the configured instance.
+end
+local enabled = client:should("Checkout", "Gradual", "another-user")
+local title = client:value("Checkout", "Title", "Checkout")
+```
+
+Group, environment, and feature lookups accept IDs, exact names, and normalized name aliases. Gradual and selective evaluations require a finite numeric or string instance ID. Numeric and string IDs remain distinct for selective features. Value access returns the caller's default when inactive, while active zero and empty strings remain values. Wrong feature-kind operations raise errors before scheduling fallbacks.
+'''
+Example = '''
+The offline example below uses the same callback boundary as an HTTP implementation. After `pnpm contract:generate`, run it with `VEXILLA_CONTRACT_DIR` pointing at `.contract-artifacts` and the installed rock on your Lua path:
+
+```lua
+local Client = require("vexilla_client")
+local json = require("dkjson")
+local artifacts = assert(os.getenv("VEXILLA_CONTRACT_DIR"))
+local function fetch(url)
+  local file = assert(io.open(artifacts .. "/" .. assert(url:match("([^/]+)$")), "rb"))
+  local text = file:read("*a"); file:close()
+  local value, _, err = json.decode(text, 1, json.null)
+  assert(not err, err)
+  return value
+end
+local client = Client.new({base_url = "https://contract", environment = "prod", custom_instance_id = "member"})
+client:sync_manifest(fetch)
+client:sync_flags("Contract", fetch)
+assert(client:should("Contract", "Toggle"))
+assert(client:should("Contract", "Selective Int", 42))
+assert(client:value("Contract", "Value String", "fallback") == "hello")
+```
+
+The executable version is `examples/contract.lua`. Native verification installs the rock into a fresh tree and runs the example and complete contract under every supported interpreter.
+'''
+API = '''
+- `Client.new(config, show_logs)` creates an isolated client. Configuration fields are `base_url`, `environment` (default `prod`), optional `custom_instance_id`, and optional `show_logs`.
+- `get_manifest(fetch)` / `set_manifest(manifest)` / `sync_manifest(fetch)` fetch, install, or combine those operations.
+- `get_flags(group, fetch)` / `set_flags(group)` / `sync_flags(group, fetch)` do the same for groups listed in the manifest.
+- `should(group, feature, optional_instance_id)` evaluates toggle, gradual, and selective string/int/float features.
+- `value(group, feature, default_value)` reads value string/int/float features.
+
+Gradual hashing uses UTF-8 FNV-1a and an untruncated binary64 seeded bucket with strict `<` comparison. Schedules use inclusive UTC millisecond boundaries, including overnight daily windows. Timezone labels are validated for compatibility and retain UTC evaluation.
+
+This migration replaces the legacy positional constructor, `fetch_flags("features.json")`, single-file/`untagged` format, and `should(feature)` API with v1 manifest/group operations. `Client` is local to the module. There is no mandatory HTTP transport or RapidJSON dependency. Saved v1 data must satisfy the existing publisher's structural and identity rules; clients do not coerce or repair malformed values. Package release versions and publication are a separate release action.
+'''

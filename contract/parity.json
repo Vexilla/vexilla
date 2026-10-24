@@ -1,0 +1,7465 @@
+{
+  "version": 1,
+  "hashes": [
+    {
+      "id": "hash/empty",
+      "text": "",
+      "expected": {
+        "value": 2166136261
+      }
+    },
+    {
+      "id": "hash/ascii",
+      "text": "hello",
+      "expected": {
+        "value": 1335831723
+      }
+    },
+    {
+      "id": "hash/uuid",
+      "text": "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a",
+      "expected": {
+        "value": 1396772471
+      }
+    },
+    {
+      "id": "hash/zero-bucket",
+      "text": "232",
+      "expected": {
+        "value": 669660000
+      }
+    },
+    {
+      "id": "hash/nul",
+      "text": "a\u0000b",
+      "expected": {
+        "value": 284404690
+      }
+    },
+    {
+      "id": "hash/bmp",
+      "text": "漢字",
+      "expected": {
+        "value": 1493684210
+      }
+    },
+    {
+      "id": "hash/supplementary",
+      "text": "😀",
+      "expected": {
+        "value": 866293256
+      }
+    },
+    {
+      "id": "hash/composed",
+      "text": "é",
+      "expected": {
+        "value": 513665217
+      }
+    },
+    {
+      "id": "hash/decomposed",
+      "text": "é",
+      "expected": {
+        "value": 4204513055
+      }
+    },
+    {
+      "id": "hash/ascii-42",
+      "text": "42",
+      "expected": {
+        "value": 2279835011
+      }
+    },
+    {
+      "id": "hash/fraction",
+      "text": "4.25",
+      "expected": {
+        "value": 1239518302
+      }
+    }
+  ],
+  "numbers": [
+    {
+      "id": "number/integer",
+      "instance": 42,
+      "expected": {
+        "value": {
+          "text": "42",
+          "hash": 2279835011
+        }
+      }
+    },
+    {
+      "id": "number/integral-float",
+      "instance": 42,
+      "expected": {
+        "value": {
+          "text": "42",
+          "hash": 2279835011
+        }
+      }
+    },
+    {
+      "id": "number/negative-zero",
+      "instance": 0,
+      "expected": {
+        "value": {
+          "text": "0",
+          "hash": 890022063
+        }
+      }
+    },
+    {
+      "id": "number/zero",
+      "instance": 0,
+      "expected": {
+        "value": {
+          "text": "0",
+          "hash": 890022063
+        }
+      }
+    },
+    {
+      "id": "number/fraction",
+      "instance": 4.25,
+      "expected": {
+        "value": {
+          "text": "4.25",
+          "hash": 1239518302
+        }
+      }
+    },
+    {
+      "id": "number/fixed-small",
+      "instance": 1e-06,
+      "expected": {
+        "value": {
+          "text": "0.000001",
+          "hash": 1341680232
+        }
+      }
+    },
+    {
+      "id": "number/exponent-small",
+      "instance": 1e-07,
+      "expected": {
+        "value": {
+          "text": "1e-7",
+          "hash": 1378411983
+        }
+      }
+    },
+    {
+      "id": "number/fixed-large",
+      "instance": 100000000000000000000,
+      "expected": {
+        "value": {
+          "text": "100000000000000000000",
+          "hash": 4184488476
+        }
+      }
+    },
+    {
+      "id": "number/exponent-large",
+      "instance": 1e+21,
+      "expected": {
+        "value": {
+          "text": "1e+21",
+          "hash": 3064443381
+        }
+      }
+    },
+    {
+      "id": "number/negative",
+      "instance": -12.5,
+      "expected": {
+        "value": {
+          "text": "-12.5",
+          "hash": 1574419950
+        }
+      }
+    },
+    {
+      "id": "number/safe-max",
+      "instance": 9007199254740991,
+      "expected": {
+        "value": {
+          "text": "9007199254740991",
+          "hash": 2897316267
+        }
+      }
+    },
+    {
+      "id": "number/exact-large-integer",
+      "instance": 9007199254740992,
+      "expected": {
+        "value": {
+          "text": "9007199254740992",
+          "hash": 2914093886
+        }
+      }
+    },
+    {
+      "id": "number/subnormal",
+      "instance": 5e-324,
+      "expected": {
+        "value": {
+          "text": "5e-324",
+          "hash": 698147593
+        }
+      }
+    },
+    {
+      "id": "number/max",
+      "instance": 1.7976931348623157e+308,
+      "expected": {
+        "value": {
+          "text": "1.7976931348623157e+308",
+          "hash": 220999136
+        }
+      }
+    },
+    {
+      "id": "number/roundtrip",
+      "instance": 333333333.3333333,
+      "expected": {
+        "value": {
+          "text": "333333333.3333333",
+          "hash": 2447125231
+        }
+      }
+    }
+  ],
+  "gradual": [
+    {
+      "id": "gradual/zero",
+      "instance": "232",
+      "seed": 1,
+      "threshold": 0,
+      "expected": {
+        "value": {
+          "bucket": 0,
+          "enabled": false
+        }
+      }
+    },
+    {
+      "id": "gradual/full",
+      "instance": "hello",
+      "seed": 1,
+      "threshold": 1,
+      "expected": {
+        "value": {
+          "bucket": 0.723,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "id": "gradual/fractional-truncation",
+      "instance": "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a",
+      "seed": 0.32,
+      "threshold": 0.1905,
+      "expected": {
+        "value": {
+          "bucket": 0.19072000002861023,
+          "enabled": false
+        }
+      }
+    },
+    {
+      "id": "gradual/kotlin-multiplier",
+      "instance": "hello",
+      "seed": 0.32,
+      "threshold": 0.2,
+      "expected": {
+        "value": {
+          "bucket": 0.1513600000143051,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "id": "gradual/unicode",
+      "instance": "😀",
+      "seed": 0.22,
+      "threshold": 0.4,
+      "expected": {
+        "value": {
+          "bucket": 0.5163199999928474,
+          "enabled": false
+        }
+      }
+    },
+    {
+      "id": "gradual/numeric-int",
+      "instance": 42,
+      "seed": 1,
+      "threshold": 0.5,
+      "expected": {
+        "value": {
+          "bucket": 0.011,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "id": "gradual/numeric-float",
+      "instance": 4.25,
+      "seed": 0.32,
+      "threshold": 0.5,
+      "expected": {
+        "value": {
+          "bucket": 0.8566399999856948,
+          "enabled": false
+        }
+      }
+    },
+    {
+      "id": "gradual/negative-threshold",
+      "instance": "hello",
+      "seed": 1,
+      "threshold": -0.5,
+      "expected": {
+        "value": {
+          "bucket": 0.723,
+          "enabled": false
+        }
+      }
+    },
+    {
+      "id": "gradual/large-threshold",
+      "instance": "hello",
+      "seed": 1,
+      "threshold": 1.5,
+      "expected": {
+        "value": {
+          "bucket": 0.723,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "id": "gradual/equal",
+      "instance": "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a",
+      "seed": 0.32,
+      "threshold": 0.19072000002861023,
+      "expected": {
+        "value": {
+          "bucket": 0.19072000002861023,
+          "enabled": false
+        }
+      }
+    },
+    {
+      "id": "gradual/below",
+      "instance": "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a",
+      "seed": 0.32,
+      "threshold": 0.1907200000286102,
+      "expected": {
+        "value": {
+          "bucket": 0.19072000002861023,
+          "enabled": false
+        }
+      }
+    },
+    {
+      "id": "gradual/above",
+      "instance": "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a",
+      "seed": 0.32,
+      "threshold": 0.19072000002861025,
+      "expected": {
+        "value": {
+          "bucket": 0.19072000002861023,
+          "enabled": true
+        }
+      }
+    }
+  ],
+  "schedules": [
+    {
+      "id": "schedule/unscheduled/outside",
+      "scheduleType": "",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      },
+      "now": -1,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/global-outer/before",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      },
+      "now": -1,
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "schedule/global-outer/start",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      },
+      "now": 0,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/global-outer/after-start",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      },
+      "now": 1,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/global-outer/before-end",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      },
+      "now": 259199998,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/global-outer/end",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      },
+      "now": 259199999,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/global-outer/after-end",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      },
+      "now": 259200000,
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "schedule/environment-outer/before",
+      "scheduleType": "environment",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      },
+      "now": -1,
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "schedule/environment-outer/start",
+      "scheduleType": "environment",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      },
+      "now": 0,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/environment-outer/after-start",
+      "scheduleType": "environment",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      },
+      "now": 1,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/environment-outer/before-end",
+      "scheduleType": "environment",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      },
+      "now": 259199998,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/environment-outer/end",
+      "scheduleType": "environment",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      },
+      "now": 259199999,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/environment-outer/after-end",
+      "scheduleType": "environment",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      },
+      "now": 259200000,
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "schedule/negative-date/before",
+      "scheduleType": "global",
+      "schedule": {
+        "start": -1,
+        "end": -1,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      },
+      "now": -86400001,
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "schedule/negative-date/start",
+      "scheduleType": "global",
+      "schedule": {
+        "start": -1,
+        "end": -1,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      },
+      "now": -86400000,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/negative-date/end",
+      "scheduleType": "global",
+      "schedule": {
+        "start": -1,
+        "end": -1,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      },
+      "now": -1,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/negative-date/after",
+      "scheduleType": "global",
+      "schedule": {
+        "start": -1,
+        "end": -1,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      },
+      "now": 0,
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "schedule/absolute/before",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "start/end",
+        "startTime": 123,
+        "endTime": 456
+      },
+      "now": 122,
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "schedule/absolute/start",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "start/end",
+        "startTime": 123,
+        "endTime": 456
+      },
+      "now": 123,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/absolute/after-start",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "start/end",
+        "startTime": 123,
+        "endTime": 456
+      },
+      "now": 124,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/absolute/before-end",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "start/end",
+        "startTime": 123,
+        "endTime": 456
+      },
+      "now": 172800455,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/absolute/end",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "start/end",
+        "startTime": 123,
+        "endTime": 456
+      },
+      "now": 172800456,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/absolute/after-end",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "start/end",
+        "startTime": 123,
+        "endTime": 456
+      },
+      "now": 172800457,
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "schedule/absolute-reversed/gap",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 0,
+        "timezone": "UTC",
+        "timeType": "start/end",
+        "startTime": 456,
+        "endTime": 123
+      },
+      "now": 200,
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "schedule/absolute-reversed/first",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 0,
+        "timezone": "UTC",
+        "timeType": "start/end",
+        "startTime": 456,
+        "endTime": 123
+      },
+      "now": 123,
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "schedule/absolute-reversed/last",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 0,
+        "timezone": "UTC",
+        "timeType": "start/end",
+        "startTime": 456,
+        "endTime": 123
+      },
+      "now": 456,
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "schedule/daily/before",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": 123,
+        "endTime": 456
+      },
+      "now": 122,
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "schedule/daily/start",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": 123,
+        "endTime": 456
+      },
+      "now": 123,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/daily/after-start",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": 123,
+        "endTime": 456
+      },
+      "now": 124,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/daily/before-end",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": 123,
+        "endTime": 456
+      },
+      "now": 455,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/daily/end",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": 123,
+        "endTime": 456
+      },
+      "now": 456,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/daily/after-end",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": 123,
+        "endTime": 456
+      },
+      "now": 457,
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "schedule/daily/next-day",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": 123,
+        "endTime": 456
+      },
+      "now": 86400123,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/daily/outside",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": 123,
+        "endTime": 456
+      },
+      "now": 259200123,
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "schedule/overnight/before",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": 86399877,
+        "endTime": 456
+      },
+      "now": 86399876,
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "schedule/overnight/start",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": 86399877,
+        "endTime": 456
+      },
+      "now": 86399877,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/overnight/after-start",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": 86399877,
+        "endTime": 456
+      },
+      "now": 86399878,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/overnight/midnight",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": 86399877,
+        "endTime": 456
+      },
+      "now": 86400000,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/overnight/end",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": 86399877,
+        "endTime": 456
+      },
+      "now": 86400456,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/overnight/after-end",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": 86399877,
+        "endTime": 456
+      },
+      "now": 86400457,
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "schedule/overnight/outer-before",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": 86399877,
+        "endTime": 456
+      },
+      "now": -1,
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "schedule/overnight/outer-after",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": 86399877,
+        "endTime": 456
+      },
+      "now": 259200000,
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "schedule/equal/before",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": 123,
+        "endTime": 123
+      },
+      "now": 122,
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "schedule/equal/at",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": 123,
+        "endTime": 123
+      },
+      "now": 123,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/equal/after",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": 123,
+        "endTime": 123
+      },
+      "now": 124,
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "schedule/modulo/before",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": -123,
+        "endTime": 86400456
+      },
+      "now": 86399876,
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "schedule/modulo/start",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": -123,
+        "endTime": 86400456
+      },
+      "now": 86399877,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/modulo/end",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": -123,
+        "endTime": 86400456
+      },
+      "now": 456,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/modulo/after",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": -123,
+        "endTime": 86400456
+      },
+      "now": 457,
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "schedule/negative-now/before",
+      "scheduleType": "global",
+      "schedule": {
+        "start": -86400000,
+        "end": 0,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": -123,
+        "endTime": 456
+      },
+      "now": -124,
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "schedule/negative-now/start",
+      "scheduleType": "global",
+      "schedule": {
+        "start": -86400000,
+        "end": 0,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": -123,
+        "endTime": 456
+      },
+      "now": -123,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/negative-now/end",
+      "scheduleType": "global",
+      "schedule": {
+        "start": -86400000,
+        "end": 0,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": -123,
+        "endTime": 456
+      },
+      "now": -86399544,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/negative-now/after",
+      "scheduleType": "global",
+      "schedule": {
+        "start": -86400000,
+        "end": 0,
+        "timezone": "UTC",
+        "timeType": "daily",
+        "startTime": -123,
+        "endTime": 456
+      },
+      "now": -86399543,
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "schedule/non-utc/utc-start",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "America/Los_Angeles",
+        "timeType": "daily",
+        "startTime": 123,
+        "endTime": 456
+      },
+      "now": 123,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/non-utc/utc-after",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 0,
+        "end": 172800000,
+        "timezone": "America/Los_Angeles",
+        "timeType": "daily",
+        "startTime": 123,
+        "endTime": 456
+      },
+      "now": 457,
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "schedule/extreme-positive/at",
+      "scheduleType": "global",
+      "schedule": {
+        "start": 9007199254740991,
+        "end": 9007199254740991,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      },
+      "now": 9007199254740991,
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "schedule/extreme-negative/at",
+      "scheduleType": "global",
+      "schedule": {
+        "start": -9007199254740991,
+        "end": -9007199254740991,
+        "timezone": "UTC",
+        "timeType": "none",
+        "startTime": 0,
+        "endTime": 0
+      },
+      "now": -9007199254740991,
+      "expected": {
+        "value": true
+      }
+    }
+  ],
+  "validation": [
+    {
+      "id": "validation/missing-manifest-version",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/manifest/version"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-manifest-groups",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/manifest/groups"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-entry-name",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/manifest/groups/0/name"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-entry-groupId",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/manifest/groups/0/groupId"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-group-name",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/name"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-group-groupId",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/groupId"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-group-meta",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/meta"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-group-features",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-group-environments",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/environments"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-meta-version",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/meta/version"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-env-name",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/environments/dev/name"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-env-environmentId",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/environments/dev/environmentId"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-env-features",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/environments/dev/features"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-toggle-name",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/toggle/name"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-toggle-featureId",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/toggle/featureId"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-toggle-featureType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/toggle/featureType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-toggle-scheduleType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/toggle/scheduleType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-toggle-schedule",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/toggle/schedule"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-toggle-value",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/toggle/value"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-gradual-name",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/gradual/name"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-gradual-featureId",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/gradual/featureId"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-gradual-featureType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/gradual/featureType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-gradual-scheduleType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/gradual/scheduleType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-gradual-schedule",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/gradual/schedule"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-gradual-value",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/gradual/value"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-gradual-seed",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/gradual/seed"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-selective-string-name",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/selective-string/name"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-selective-string-featureId",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/selective-string/featureId"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-selective-string-featureType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/selective-string/featureType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-selective-string-scheduleType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/selective-string/scheduleType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-selective-string-schedule",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/selective-string/schedule"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-selective-string-value",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/selective-string/value"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-selective-string-valueType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/selective-string/valueType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-selective-int-name",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/selective-int/name"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-selective-int-featureId",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/selective-int/featureId"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-selective-int-featureType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/selective-int/featureType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-selective-int-scheduleType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/selective-int/scheduleType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-selective-int-schedule",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/selective-int/schedule"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-selective-int-value",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/selective-int/value"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-selective-int-valueType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/selective-int/valueType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-selective-int-numberType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/selective-int/numberType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-selective-float-name",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/selective-float/name"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-selective-float-featureId",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/selective-float/featureId"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-selective-float-featureType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/selective-float/featureType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-selective-float-scheduleType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/selective-float/scheduleType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-selective-float-schedule",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/selective-float/schedule"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-selective-float-value",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/selective-float/value"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-selective-float-valueType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/selective-float/valueType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-selective-float-numberType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/selective-float/numberType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-value-string-name",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/value-string/name"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-value-string-featureId",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/value-string/featureId"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-value-string-featureType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/value-string/featureType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-value-string-scheduleType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/value-string/scheduleType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-value-string-schedule",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/value-string/schedule"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-value-string-value",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/value-string/value"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-value-string-valueType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/value-string/valueType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-value-int-name",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/value-int/name"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-value-int-featureId",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/value-int/featureId"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-value-int-featureType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/value-int/featureType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-value-int-scheduleType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/value-int/scheduleType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-value-int-schedule",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/value-int/schedule"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-value-int-value",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/value-int/value"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-value-int-valueType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/value-int/valueType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-value-int-numberType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/value-int/numberType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-value-float-name",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/value-float/name"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-value-float-featureId",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/value-float/featureId"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-value-float-featureType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/value-float/featureType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-value-float-scheduleType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/value-float/scheduleType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-value-float-schedule",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/value-float/schedule"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-value-float-value",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/value-float/value"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-value-float-valueType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/value-float/valueType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-value-float-numberType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/value-float/numberType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-schedule-start",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/toggle/schedule/start"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-schedule-end",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/toggle/schedule/end"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-schedule-timezone",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/toggle/schedule/timezone"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-schedule-timeType",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/toggle/schedule/timeType"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-schedule-startTime",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/toggle/schedule/startTime"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/missing-schedule-endTime",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/toggle/schedule/endTime"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/manifest-version",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/manifest/version",
+          "value": "v2"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/meta-version",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/meta/version",
+          "value": "v2"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/empty-id",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/groupId",
+          "value": ""
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/manifest-array",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/manifest/groups",
+          "value": {}
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/features-object",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features",
+          "value": []
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/env-object",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments",
+          "value": []
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/feature-null",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle",
+          "value": null
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/schedule-null",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule",
+          "value": null
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/toggle-number",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/value",
+          "value": 0
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/toggle-string",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/value",
+          "value": "false"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/kind",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/featureType",
+          "value": "unknown"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/schedule-kind",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/scheduleType",
+          "value": "none"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/value-kind",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/value-int/valueType",
+          "value": "int"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/number-kind",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/value-int/numberType",
+          "value": "integer"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/selective-object",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/selective-string/value",
+          "value": {}
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/selective-scalar",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/selective-int/value",
+          "value": 42
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/selective-item-type",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/selective-int/value",
+          "value": [
+            "42"
+          ]
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/string-value-type",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/value-string/value",
+          "value": false
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/integer-fraction",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/value-int/value",
+          "value": 42.5
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/integer-string",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/value-int/value",
+          "value": "42"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/integer-boolean",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/value-int/value",
+          "value": true
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/integer-overflow",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/value-int/value",
+          "value": 9007199254740992
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/integer-underflow",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/value-int/value",
+          "value": -9007199254740992
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/float-string",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/value-float/value",
+          "value": "4.25"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/float-null",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/value-float/value",
+          "value": null
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/gradual-null",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/gradual/value",
+          "value": null
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/seed-default-zero",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/gradual/seed",
+          "value": 0
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/seed-default-negative",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/gradual/seed",
+          "value": -0.1
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/seed-default-large",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/gradual/seed",
+          "value": 1.000001
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/seed-default-null",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/gradual/seed",
+          "value": null
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/seed-default-string",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/gradual/seed",
+          "value": "0.5"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/seed-default-boolean",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/gradual/seed",
+          "value": true
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/seed-default-missing",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/features/gradual/seed"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/seed-default-half",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/gradual/seed",
+          "value": 0.5
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/seed-default-one",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/gradual/seed",
+          "value": 1
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/seed-dev-zero",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/dev/features/gradual/seed",
+          "value": 0
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/seed-dev-negative",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/dev/features/gradual/seed",
+          "value": -0.1
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/seed-dev-large",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/dev/features/gradual/seed",
+          "value": 1.000001
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/seed-dev-null",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/dev/features/gradual/seed",
+          "value": null
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/seed-dev-string",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/dev/features/gradual/seed",
+          "value": "0.5"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/seed-dev-boolean",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/dev/features/gradual/seed",
+          "value": true
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/seed-dev-missing",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/environments/dev/features/gradual/seed"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/seed-dev-half",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/dev/features/gradual/seed",
+          "value": 0.5
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/seed-dev-one",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/dev/features/gradual/seed",
+          "value": 1
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/seed-prod-zero",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/prod/features/gradual/seed",
+          "value": 0
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/seed-prod-negative",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/prod/features/gradual/seed",
+          "value": -0.1
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/seed-prod-large",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/prod/features/gradual/seed",
+          "value": 1.000001
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/seed-prod-null",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/prod/features/gradual/seed",
+          "value": null
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/seed-prod-string",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/prod/features/gradual/seed",
+          "value": "0.5"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/seed-prod-boolean",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/prod/features/gradual/seed",
+          "value": true
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/seed-prod-missing",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/environments/prod/features/gradual/seed"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/seed-prod-half",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/prod/features/gradual/seed",
+          "value": 0.5
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/seed-prod-one",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/prod/features/gradual/seed",
+          "value": 1
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/schedule-start-fraction",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/start",
+          "value": 0.5
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/schedule-start-overflow",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/start",
+          "value": 9007199254740992
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/schedule-start-null",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/start",
+          "value": null
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/schedule-start-boolean",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/start",
+          "value": true
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/schedule-start-string",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/start",
+          "value": "0"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/schedule-end-fraction",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/end",
+          "value": 0.5
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/schedule-end-overflow",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/end",
+          "value": 9007199254740992
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/schedule-end-null",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/end",
+          "value": null
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/schedule-end-boolean",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/end",
+          "value": true
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/schedule-end-string",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/end",
+          "value": "0"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/schedule-startTime-fraction",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/startTime",
+          "value": 0.5
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/schedule-startTime-overflow",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/startTime",
+          "value": 9007199254740992
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/schedule-startTime-null",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/startTime",
+          "value": null
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/schedule-startTime-boolean",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/startTime",
+          "value": true
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/schedule-startTime-string",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/startTime",
+          "value": "0"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/schedule-endTime-fraction",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/endTime",
+          "value": 0.5
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/schedule-endTime-overflow",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/endTime",
+          "value": 9007199254740992
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/schedule-endTime-null",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/endTime",
+          "value": null
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/schedule-endTime-boolean",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/endTime",
+          "value": true
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/schedule-endTime-string",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/endTime",
+          "value": "0"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/timezone-empty",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/timezone",
+          "value": ""
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/timezone-invalid",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/timezone",
+          "value": "Invalid/Zone"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/timezone-type",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/timezone",
+          "value": 0
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/timeType-invalid",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/timeType",
+          "value": "hourly"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/group-map-id",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/groupId",
+          "value": "different"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/env-map-id",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/dev/environmentId",
+          "value": "different"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/feature-map-id",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/featureId",
+          "value": "different"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/env-feature-map-id",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/dev/features/toggle/featureId",
+          "value": "different"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/env-feature-name",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/dev/features/toggle/name",
+          "value": "different"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/env-feature-kind",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/dev/features/toggle/featureType",
+          "value": "gradual"
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/dev/features/toggle/value",
+          "value": 0.4
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/dev/features/toggle/seed",
+          "value": 0.5
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/env-feature-missing",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/groups/contract-group/environments/dev/features/toggle"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/manifest-group-name",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/manifest/groups/0/name",
+          "value": "different"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/feature-alias-collision",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/gradual/name",
+          "value": "Toggle"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/env-alias-collision",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/prod/name",
+          "value": "dev"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/manifest-alias-collision",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/manifest/groups/1",
+          "value": {
+            "groupId": "other",
+            "name": "contract-group"
+          }
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/integer-valid-max",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/value-int/value",
+          "value": 9007199254740991
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/integer-valid-min",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/value-int/value",
+          "value": -9007199254740991
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/integer-valid-integral",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/value-int/value",
+          "value": 42
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/integer-valid-zero",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/value-int/value",
+          "value": 0
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/gradual-threshold-negative",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/gradual/value",
+          "value": -0.5
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/gradual-threshold-above-one",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/gradual/value",
+          "value": 1.5
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/compatible-extras",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/manifest/extra",
+          "value": true
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/extra",
+          "value": {}
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/extra",
+          "value": []
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/extra",
+          "value": "ok"
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/empty-manifest",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/manifest/groups",
+          "value": []
+        },
+        {
+          "op": "set",
+          "path": "/groups",
+          "value": {}
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/empty-group",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features",
+          "value": {}
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments",
+          "value": {}
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/false-zero-empty-publication",
+      "mutations": [],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/timezone-valid-UTC",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/timezone",
+          "value": "UTC"
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/timezone-valid-utc",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/timezone",
+          "value": "utc"
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/timezone-valid-GMT",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/timezone",
+          "value": "GMT"
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/timezone-valid-US-Pacific",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/timezone",
+          "value": "US/Pacific"
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/timezone-valid-America-Los_Angeles",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/timezone",
+          "value": "America/Los_Angeles"
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/timezone-valid-Asia-Kathmandu",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/timezone",
+          "value": "Asia/Kathmandu"
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/timezone-valid-+0100",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/schedule/timezone",
+          "value": "+01:00"
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/native-NaN-gradual-seed",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/gradual/seed",
+          "nativeNumber": "NaN"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/native-NaN-gradual-value",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/gradual/value",
+          "nativeNumber": "NaN"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/native-NaN-value-float-value",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/value-float/value",
+          "nativeNumber": "NaN"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/native-NaN-selective-float-value-0",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/selective-float/value/0",
+          "nativeNumber": "NaN"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/native-Infinity-gradual-seed",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/gradual/seed",
+          "nativeNumber": "Infinity"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/native-Infinity-gradual-value",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/gradual/value",
+          "nativeNumber": "Infinity"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/native-Infinity-value-float-value",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/value-float/value",
+          "nativeNumber": "Infinity"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/native-Infinity-selective-float-value-0",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/selective-float/value/0",
+          "nativeNumber": "Infinity"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/native--Infinity-gradual-seed",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/gradual/seed",
+          "nativeNumber": "-Infinity"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/native--Infinity-gradual-value",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/gradual/value",
+          "nativeNumber": "-Infinity"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/native--Infinity-value-float-value",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/value-float/value",
+          "nativeNumber": "-Infinity"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/native--Infinity-selective-float-value-0",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/selective-float/value/0",
+          "nativeNumber": "-Infinity"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unsafe-group-195",
+      "mutations": [
+        {
+          "op": "copy",
+          "from": "/groups/contract-group",
+          "path": "/groups/manifest"
+        },
+        {
+          "op": "remove",
+          "path": "/groups/contract-group"
+        },
+        {
+          "op": "set",
+          "path": "/groups/manifest/groupId",
+          "value": "manifest"
+        },
+        {
+          "op": "set",
+          "path": "/manifest/groups/0/groupId",
+          "value": "manifest"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unsafe-group-196",
+      "mutations": [
+        {
+          "op": "copy",
+          "from": "/groups/contract-group",
+          "path": "/groups/config"
+        },
+        {
+          "op": "remove",
+          "path": "/groups/contract-group"
+        },
+        {
+          "op": "set",
+          "path": "/groups/config/groupId",
+          "value": "config"
+        },
+        {
+          "op": "set",
+          "path": "/manifest/groups/0/groupId",
+          "value": "config"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unsafe-group-197",
+      "mutations": [
+        {
+          "op": "copy",
+          "from": "/groups/contract-group",
+          "path": "/groups/."
+        },
+        {
+          "op": "remove",
+          "path": "/groups/contract-group"
+        },
+        {
+          "op": "set",
+          "path": "/groups/./groupId",
+          "value": "."
+        },
+        {
+          "op": "set",
+          "path": "/manifest/groups/0/groupId",
+          "value": "."
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unsafe-group-198",
+      "mutations": [
+        {
+          "op": "copy",
+          "from": "/groups/contract-group",
+          "path": "/groups/.."
+        },
+        {
+          "op": "remove",
+          "path": "/groups/contract-group"
+        },
+        {
+          "op": "set",
+          "path": "/groups/../groupId",
+          "value": ".."
+        },
+        {
+          "op": "set",
+          "path": "/manifest/groups/0/groupId",
+          "value": ".."
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unsafe-group-199",
+      "mutations": [
+        {
+          "op": "copy",
+          "from": "/groups/contract-group",
+          "path": "/groups/a~1b"
+        },
+        {
+          "op": "remove",
+          "path": "/groups/contract-group"
+        },
+        {
+          "op": "set",
+          "path": "/groups/a~1b/groupId",
+          "value": "a/b"
+        },
+        {
+          "op": "set",
+          "path": "/manifest/groups/0/groupId",
+          "value": "a/b"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unsafe-group-200",
+      "mutations": [
+        {
+          "op": "copy",
+          "from": "/groups/contract-group",
+          "path": "/groups/a\\b"
+        },
+        {
+          "op": "remove",
+          "path": "/groups/contract-group"
+        },
+        {
+          "op": "set",
+          "path": "/groups/a\\b/groupId",
+          "value": "a\\b"
+        },
+        {
+          "op": "set",
+          "path": "/manifest/groups/0/groupId",
+          "value": "a\\b"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unsafe-group-201",
+      "mutations": [
+        {
+          "op": "copy",
+          "from": "/groups/contract-group",
+          "path": "/groups/a\u0000b"
+        },
+        {
+          "op": "remove",
+          "path": "/groups/contract-group"
+        },
+        {
+          "op": "set",
+          "path": "/groups/a\u0000b/groupId",
+          "value": "a\u0000b"
+        },
+        {
+          "op": "set",
+          "path": "/manifest/groups/0/groupId",
+          "value": "a\u0000b"
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unicode-high-manifest-name",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/manifest/groups/0/name",
+          "wireString": "\"\\ud800\""
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unicode-high-group-name",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/name",
+          "wireString": "\"\\ud800\""
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unicode-high-feature-value",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/value-string/value",
+          "wireString": "\"\\ud800\""
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unicode-high-manifest-extra",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/manifest/compatNote",
+          "wireString": "\"\\ud800\""
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unicode-high-group-extra",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/compatNote",
+          "wireString": "\"\\ud800\""
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unicode-low-manifest-name",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/manifest/groups/0/name",
+          "wireString": "\"\\udfff\""
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unicode-low-group-name",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/name",
+          "wireString": "\"\\udfff\""
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unicode-low-feature-value",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/value-string/value",
+          "wireString": "\"\\udfff\""
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unicode-low-manifest-extra",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/manifest/compatNote",
+          "wireString": "\"\\udfff\""
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unicode-low-group-extra",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/compatNote",
+          "wireString": "\"\\udfff\""
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unicode-high-ascii-manifest-name",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/manifest/groups/0/name",
+          "wireString": "\"\\ud800x\""
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unicode-high-ascii-group-name",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/name",
+          "wireString": "\"\\ud800x\""
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unicode-high-ascii-feature-value",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/value-string/value",
+          "wireString": "\"\\ud800x\""
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unicode-high-ascii-manifest-extra",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/manifest/compatNote",
+          "wireString": "\"\\ud800x\""
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unicode-high-ascii-group-extra",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/compatNote",
+          "wireString": "\"\\ud800x\""
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unicode-reversed-manifest-name",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/manifest/groups/0/name",
+          "wireString": "\"\\udc00\\ud800\""
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unicode-reversed-group-name",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/name",
+          "wireString": "\"\\udc00\\ud800\""
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unicode-reversed-feature-value",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/value-string/value",
+          "wireString": "\"\\udc00\\ud800\""
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unicode-reversed-manifest-extra",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/manifest/compatNote",
+          "wireString": "\"\\udc00\\ud800\""
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unicode-reversed-group-extra",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/compatNote",
+          "wireString": "\"\\udc00\\ud800\""
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unicode-pair-feature-value",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/value-string/value",
+          "wireString": "\"\\ud83d\\ude00\""
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/unicode-pair-manifest-extra",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/manifest/compatNote",
+          "wireString": "\"\\ud83d\\ude00\""
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/unicode-pair-group-extra",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/compatNote",
+          "wireString": "\"\\ud83d\\ude00\""
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/unicode-replacement-feature-value",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/value-string/value",
+          "wireString": "\"\\ufffd\""
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/unicode-replacement-manifest-extra",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/manifest/compatNote",
+          "wireString": "\"\\ufffd\""
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/unicode-replacement-group-extra",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/compatNote",
+          "wireString": "\"\\ufffd\""
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/extra-subtype-missing-null",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/valueType",
+          "value": null
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/extra-subtype-boolean-number",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/valueType",
+          "value": false
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/dev/features/toggle/valueType",
+          "value": false
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/prod/features/toggle/valueType",
+          "value": 0
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/extra-subtype-compatible-boolean",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/valueType",
+          "value": true
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/dev/features/toggle/valueType",
+          "value": true
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/prod/features/toggle/valueType",
+          "value": true
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "validation/extra-subtype-object-identity",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/toggle/valueType",
+          "value": {}
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/dev/features/toggle/valueType",
+          "value": {}
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/prod/features/toggle/valueType",
+          "value": {}
+        }
+      ],
+      "expected": {
+        "error": "validation"
+      }
+    },
+    {
+      "id": "validation/unicode-distinct-map-identities",
+      "mutations": [
+        {
+          "op": "copy",
+          "from": "/groups/contract-group/features/value-int",
+          "path": "/groups/contract-group/features/é"
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/é/name",
+          "value": "é"
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/é/featureId",
+          "value": "é"
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/é/value",
+          "value": 11
+        },
+        {
+          "op": "copy",
+          "from": "/groups/contract-group/environments/dev/features/value-int",
+          "path": "/groups/contract-group/environments/dev/features/é"
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/dev/features/é/name",
+          "value": "é"
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/dev/features/é/featureId",
+          "value": "é"
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/dev/features/é/value",
+          "value": 11
+        },
+        {
+          "op": "copy",
+          "from": "/groups/contract-group/environments/prod/features/value-int",
+          "path": "/groups/contract-group/environments/prod/features/é"
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/prod/features/é/name",
+          "value": "é"
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/prod/features/é/featureId",
+          "value": "é"
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/prod/features/é/value",
+          "value": 11
+        },
+        {
+          "op": "copy",
+          "from": "/groups/contract-group/features/value-int",
+          "path": "/groups/contract-group/features/é"
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/é/name",
+          "value": "é"
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/é/featureId",
+          "value": "é"
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/features/é/value",
+          "value": 22
+        },
+        {
+          "op": "copy",
+          "from": "/groups/contract-group/environments/dev/features/value-int",
+          "path": "/groups/contract-group/environments/dev/features/é"
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/dev/features/é/name",
+          "value": "é"
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/dev/features/é/featureId",
+          "value": "é"
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/dev/features/é/value",
+          "value": 22
+        },
+        {
+          "op": "copy",
+          "from": "/groups/contract-group/environments/prod/features/value-int",
+          "path": "/groups/contract-group/environments/prod/features/é"
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/prod/features/é/name",
+          "value": "é"
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/prod/features/é/featureId",
+          "value": "é"
+        },
+        {
+          "op": "set",
+          "path": "/groups/contract-group/environments/prod/features/é/value",
+          "value": 22
+        }
+      ],
+      "expected": {
+        "value": true
+      }
+    }
+  ],
+  "operations": [
+    {
+      "id": "operation/lookup-id",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": "member"
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "selective-string",
+          "instance": "member"
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/lookup-name",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "Production",
+          "instance": "member"
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "Contract",
+          "feature": "Selective String",
+          "instance": "member"
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/lookup-alias",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "production",
+          "instance": "member"
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract",
+          "feature": "selective-string",
+          "instance": "member"
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/missing-lookups",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": "member"
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "absent",
+          "feature": "toggle",
+          "instance": "member"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "absent",
+          "instance": "member"
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "error": "lookup"
+          },
+          {
+            "error": "lookup"
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/missing-environment",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "absent",
+          "instance": "member"
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "toggle",
+          "instance": "member"
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "error": "lookup"
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/manifest-getter",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": "member"
+        },
+        {
+          "op": "getManifest",
+          "client": "a",
+          "callback": {
+            "file": "manifest.json"
+          },
+          "as": "fetched"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "toggle",
+          "instance": "member"
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "error": "lookup"
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/group-getter",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": "member"
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "getFlags",
+          "client": "a",
+          "group": "contract-group",
+          "callback": {
+            "file": "contract-group.json"
+          },
+          "as": "fetched"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "toggle",
+          "instance": "member"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "fetched"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "toggle",
+          "instance": "member"
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "error": "lookup"
+          },
+          {
+            "value": null
+          },
+          {
+            "value": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/sync",
+      "steps": [
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": "member"
+        },
+        {
+          "op": "syncManifest",
+          "client": "a",
+          "callback": {
+            "file": "manifest.json"
+          }
+        },
+        {
+          "op": "syncFlags",
+          "client": "a",
+          "group": "contract-group",
+          "callback": {
+            "file": "contract-group.json"
+          }
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "toggle",
+          "instance": "member"
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/fetch-failure-manifest",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": "member"
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "syncManifest",
+          "client": "a",
+          "group": "contract-group",
+          "callback": {
+            "throws": true
+          }
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "toggle",
+          "instance": "member"
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "error": "fetch"
+          },
+          {
+            "value": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/fetch-failure-group",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": "member"
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "syncFlags",
+          "client": "a",
+          "group": "contract-group",
+          "callback": {
+            "throws": true
+          }
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "toggle",
+          "instance": "member"
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "error": "fetch"
+          },
+          {
+            "value": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/invalid-refresh",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": "member"
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "mutate",
+          "data": "g",
+          "mutations": [
+            {
+              "op": "set",
+              "path": "/environments/dev/features/gradual/seed",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "toggle",
+          "instance": "member"
+        },
+        {
+          "op": "mutate",
+          "data": "m",
+          "mutations": [
+            {
+              "op": "remove",
+              "path": "/version"
+            }
+          ]
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "toggle",
+          "instance": "member"
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "error": "validation"
+          },
+          {
+            "value": true
+          },
+          {
+            "value": null
+          },
+          {
+            "error": "validation"
+          },
+          {
+            "value": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/caller-mutation",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": "member"
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "mutate",
+          "data": "g",
+          "mutations": [
+            {
+              "op": "set",
+              "path": "/environments/prod/features/toggle/value",
+              "value": false
+            }
+          ]
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "toggle",
+          "instance": "member"
+        },
+        {
+          "op": "mutate",
+          "data": "m",
+          "mutations": [
+            {
+              "op": "set",
+              "path": "/groups",
+              "value": []
+            }
+          ]
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "toggle",
+          "instance": "member"
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": true
+          },
+          {
+            "value": null
+          },
+          {
+            "value": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/client-isolation",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": "member"
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "new",
+          "client": "b",
+          "environment": "prod",
+          "instance": "member"
+        },
+        {
+          "op": "setManifest",
+          "client": "b",
+          "data": "m"
+        },
+        {
+          "op": "mutate",
+          "data": "g",
+          "mutations": [
+            {
+              "op": "set",
+              "path": "/environments/prod/features/toggle/value",
+              "value": false
+            }
+          ]
+        },
+        {
+          "op": "setFlags",
+          "client": "b",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "toggle",
+          "instance": "member"
+        },
+        {
+          "op": "should",
+          "client": "b",
+          "group": "contract-group",
+          "feature": "toggle",
+          "instance": "member"
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": true
+          },
+          {
+            "value": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/replace-group",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": "member"
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "mutate",
+          "data": "g",
+          "mutations": [
+            {
+              "op": "set",
+              "path": "/environments/prod/features/toggle/value",
+              "value": false
+            }
+          ]
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "toggle",
+          "instance": "member"
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/replace-feature-alias",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": "member"
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "mutate",
+          "data": "g",
+          "mutations": [
+            {
+              "op": "set",
+              "path": "/features/toggle/name",
+              "value": "Renamed Toggle"
+            }
+          ]
+        },
+        {
+          "op": "mutate",
+          "data": "g",
+          "mutations": [
+            {
+              "op": "set",
+              "path": "/environments/dev/features/toggle/name",
+              "value": "Renamed Toggle"
+            }
+          ]
+        },
+        {
+          "op": "mutate",
+          "data": "g",
+          "mutations": [
+            {
+              "op": "set",
+              "path": "/environments/prod/features/toggle/name",
+              "value": "Renamed Toggle"
+            }
+          ]
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "Toggle",
+          "instance": "member"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "Renamed Toggle",
+          "instance": "member"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "renamed-toggle",
+          "instance": "member"
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "error": "lookup"
+          },
+          {
+            "value": true
+          },
+          {
+            "value": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/replace-environment-alias",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": "member"
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "mutate",
+          "data": "g",
+          "mutations": [
+            {
+              "op": "set",
+              "path": "/environments/prod/name",
+              "value": "Renamed Production"
+            }
+          ]
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "new",
+          "client": "b",
+          "environment": "Production",
+          "instance": "member"
+        },
+        {
+          "op": "setManifest",
+          "client": "b",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "b",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "b",
+          "group": "contract-group",
+          "feature": "toggle",
+          "instance": "member"
+        },
+        {
+          "op": "new",
+          "client": "c",
+          "environment": "renamed-production",
+          "instance": "member"
+        },
+        {
+          "op": "setManifest",
+          "client": "c",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "c",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "c",
+          "group": "contract-group",
+          "feature": "toggle",
+          "instance": "member"
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "error": "lookup"
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/manifest-removal",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": "member"
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "mutate",
+          "data": "m",
+          "mutations": [
+            {
+              "op": "set",
+              "path": "/groups",
+              "value": []
+            }
+          ]
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "toggle",
+          "instance": "member"
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "error": "lookup"
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/manifest-rename",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": "member"
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "mutate",
+          "data": "m",
+          "mutations": [
+            {
+              "op": "set",
+              "path": "/groups/0/name",
+              "value": "Renamed Group"
+            }
+          ]
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "toggle",
+          "instance": "member"
+        },
+        {
+          "op": "mutate",
+          "data": "g",
+          "mutations": [
+            {
+              "op": "set",
+              "path": "/name",
+              "value": "Renamed Group"
+            }
+          ]
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "Contract",
+          "feature": "toggle",
+          "instance": "member"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "Renamed Group",
+          "feature": "toggle",
+          "instance": "member"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "renamed-group",
+          "feature": "toggle",
+          "instance": "member"
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "error": "lookup"
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "error": "lookup"
+          },
+          {
+            "value": true
+          },
+          {
+            "value": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/instance-18",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": null
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "selective-int",
+          "instance": 42
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/instance-19",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": null
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "selective-int",
+          "instance": 42
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/instance-20",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": null
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "selective-int",
+          "instance": "42"
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/instance-21",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": null
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "selective-string",
+          "instance": 42
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/instance-22",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": null
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "selective-float",
+          "instance": 4.25
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/instance-23",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": null
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "selective-string",
+          "instance": ""
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/instance-24",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": null
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "gradual",
+          "instance": true
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "error": "instance"
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/instance-25",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": null
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "selective-int",
+          "instance": true
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "error": "instance"
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/instance-26",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": null
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "gradual",
+          "instance": null
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "error": "instance"
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/instance-27",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": null
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "selective-string",
+          "instance": null
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "error": "instance"
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/no-id-required",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": null
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "toggle",
+          "instance": null
+        },
+        {
+          "op": "value",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "value-int",
+          "default": 123
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": true
+          },
+          {
+            "value": 42
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/kind-precedes-inactive-schedule",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": "member"
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "mutate",
+          "data": "g",
+          "mutations": [
+            {
+              "op": "set",
+              "path": "/environments/prod/features/value-int/scheduleType",
+              "value": "global"
+            }
+          ]
+        },
+        {
+          "op": "mutate",
+          "data": "g",
+          "mutations": [
+            {
+              "op": "set",
+              "path": "/environments/prod/features/value-int/schedule/start",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "op": "mutate",
+          "data": "g",
+          "mutations": [
+            {
+              "op": "set",
+              "path": "/environments/prod/features/value-int/schedule/end",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "value-int",
+          "instance": "member"
+        },
+        {
+          "op": "value",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "scheduled-global",
+          "default": 123
+        },
+        {
+          "op": "value",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "value-int",
+          "default": 123
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "error": "kind"
+          },
+          {
+            "error": "kind"
+          },
+          {
+            "value": 123
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/id-precedes-inactive-schedule",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": null
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "mutate",
+          "data": "g",
+          "mutations": [
+            {
+              "op": "set",
+              "path": "/environments/prod/features/gradual/scheduleType",
+              "value": "global"
+            }
+          ]
+        },
+        {
+          "op": "mutate",
+          "data": "g",
+          "mutations": [
+            {
+              "op": "set",
+              "path": "/environments/prod/features/gradual/schedule/start",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "op": "mutate",
+          "data": "g",
+          "mutations": [
+            {
+              "op": "set",
+              "path": "/environments/prod/features/gradual/schedule/end",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "gradual",
+          "instance": null
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "error": "instance"
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/false-like-values",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "dev",
+          "instance": null
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "toggle",
+          "instance": null
+        },
+        {
+          "op": "value",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "value-string",
+          "default": "fallback"
+        },
+        {
+          "op": "value",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "value-int",
+          "default": 123
+        },
+        {
+          "op": "should",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "selective-int",
+          "instance": 42
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": false
+          },
+          {
+            "value": ""
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "operation/unicode-distinct-map-identities",
+      "steps": [
+        {
+          "op": "load",
+          "file": "manifest.json",
+          "as": "m"
+        },
+        {
+          "op": "load",
+          "file": "contract-group.json",
+          "as": "g"
+        },
+        {
+          "op": "new",
+          "client": "a",
+          "environment": "prod",
+          "instance": "member"
+        },
+        {
+          "op": "mutate",
+          "data": "g",
+          "mutations": [
+            {
+              "op": "copy",
+              "from": "/features/value-int",
+              "path": "/features/é"
+            },
+            {
+              "op": "set",
+              "path": "/features/é/name",
+              "value": "é"
+            },
+            {
+              "op": "set",
+              "path": "/features/é/featureId",
+              "value": "é"
+            },
+            {
+              "op": "set",
+              "path": "/features/é/value",
+              "value": 11
+            },
+            {
+              "op": "copy",
+              "from": "/environments/dev/features/value-int",
+              "path": "/environments/dev/features/é"
+            },
+            {
+              "op": "set",
+              "path": "/environments/dev/features/é/name",
+              "value": "é"
+            },
+            {
+              "op": "set",
+              "path": "/environments/dev/features/é/featureId",
+              "value": "é"
+            },
+            {
+              "op": "set",
+              "path": "/environments/dev/features/é/value",
+              "value": 11
+            },
+            {
+              "op": "copy",
+              "from": "/environments/prod/features/value-int",
+              "path": "/environments/prod/features/é"
+            },
+            {
+              "op": "set",
+              "path": "/environments/prod/features/é/name",
+              "value": "é"
+            },
+            {
+              "op": "set",
+              "path": "/environments/prod/features/é/featureId",
+              "value": "é"
+            },
+            {
+              "op": "set",
+              "path": "/environments/prod/features/é/value",
+              "value": 11
+            },
+            {
+              "op": "copy",
+              "from": "/features/value-int",
+              "path": "/features/é"
+            },
+            {
+              "op": "set",
+              "path": "/features/é/name",
+              "value": "é"
+            },
+            {
+              "op": "set",
+              "path": "/features/é/featureId",
+              "value": "é"
+            },
+            {
+              "op": "set",
+              "path": "/features/é/value",
+              "value": 22
+            },
+            {
+              "op": "copy",
+              "from": "/environments/dev/features/value-int",
+              "path": "/environments/dev/features/é"
+            },
+            {
+              "op": "set",
+              "path": "/environments/dev/features/é/name",
+              "value": "é"
+            },
+            {
+              "op": "set",
+              "path": "/environments/dev/features/é/featureId",
+              "value": "é"
+            },
+            {
+              "op": "set",
+              "path": "/environments/dev/features/é/value",
+              "value": 22
+            },
+            {
+              "op": "copy",
+              "from": "/environments/prod/features/value-int",
+              "path": "/environments/prod/features/é"
+            },
+            {
+              "op": "set",
+              "path": "/environments/prod/features/é/name",
+              "value": "é"
+            },
+            {
+              "op": "set",
+              "path": "/environments/prod/features/é/featureId",
+              "value": "é"
+            },
+            {
+              "op": "set",
+              "path": "/environments/prod/features/é/value",
+              "value": 22
+            }
+          ]
+        },
+        {
+          "op": "setManifest",
+          "client": "a",
+          "data": "m"
+        },
+        {
+          "op": "setFlags",
+          "client": "a",
+          "data": "g"
+        },
+        {
+          "op": "value",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "é",
+          "default": -1
+        },
+        {
+          "op": "value",
+          "client": "a",
+          "group": "contract-group",
+          "feature": "é",
+          "default": -1
+        }
+      ],
+      "expected": {
+        "value": [
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": null
+          },
+          {
+            "value": 11
+          },
+          {
+            "value": 22
+          }
+        ]
+      }
+    }
+  ],
+  "aliases": [
+    {
+      "id": "alias/0",
+      "name": "Contract Group",
+      "expected": {
+        "value": "contract-group"
+      }
+    },
+    {
+      "id": "alias/1",
+      "name": "HTTPServer ID",
+      "expected": {
+        "value": "httpserver-id"
+      }
+    },
+    {
+      "id": "alias/2",
+      "name": "hello_world",
+      "expected": {
+        "value": "hello-world"
+      }
+    },
+    {
+      "id": "alias/3",
+      "name": "foo.bar",
+      "expected": {
+        "value": "foo-bar"
+      }
+    },
+    {
+      "id": "alias/4",
+      "name": "already-kebab",
+      "expected": {
+        "value": "already-kebab"
+      }
+    },
+    {
+      "id": "alias/5",
+      "name": "café Name",
+      "expected": {
+        "value": "café-name"
+      }
+    },
+    {
+      "id": "alias/6",
+      "name": "İstanbul",
+      "expected": {
+        "value": "i̇stanbul"
+      }
+    },
+    {
+      "id": "alias/7",
+      "name": "straße",
+      "expected": {
+        "value": "straße"
+      }
+    },
+    {
+      "id": "alias/8",
+      "name": "漢字 😀",
+      "expected": {
+        "value": "漢字-😀"
+      }
+    },
+    {
+      "id": "alias/9",
+      "name": "déjà Vu",
+      "expected": {
+        "value": "déjà-vu"
+      }
+    },
+    {
+      "id": "alias/10",
+      "name": "Ångström",
+      "expected": {
+        "value": "ångström"
+      }
+    },
+    {
+      "id": "alias/11",
+      "name": "XMLHttpRequest",
+      "expected": {
+        "value": "xmlhttp-request"
+      }
+    },
+    {
+      "id": "alias/12",
+      "name": "foo\u0000Bar",
+      "expected": {
+        "value": "foo\u0000-bar"
+      }
+    },
+    {
+      "id": "alias/13",
+      "name": "__proto__",
+      "expected": {
+        "value": "-proto"
+      }
+    },
+    {
+      "id": "alias/14",
+      "name": "constructor",
+      "expected": {
+        "value": "constructor"
+      }
+    },
+    {
+      "id": "alias/15",
+      "name": "",
+      "expected": {
+        "value": ""
+      }
+    }
+  ],
+  "timezones": [
+    {
+      "id": "timezone/0",
+      "timezone": "UTC",
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "timezone/1",
+      "timezone": "utc",
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "timezone/2",
+      "timezone": "US/Pacific",
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "timezone/3",
+      "timezone": "Asia/Kathmandu",
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "timezone/4",
+      "timezone": "+01:00",
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "timezone/5",
+      "timezone": "+0130",
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "timezone/6",
+      "timezone": "-23",
+      "expected": {
+        "value": true
+      }
+    },
+    {
+      "id": "timezone/7",
+      "timezone": "+24:00",
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "timezone/8",
+      "timezone": "Factory",
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "timezone/9",
+      "timezone": "",
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "timezone/10",
+      "timezone": "America/Not_A_Zone",
+      "expected": {
+        "value": false
+      }
+    },
+    {
+      "id": "timezone/no-trailing-newline",
+      "timezone": "+01\n",
+      "expected": {
+        "value": false
+      }
+    }
+  ]
+}

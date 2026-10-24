@@ -243,6 +243,11 @@ public struct GradualFeature: BaseFeature {
     case name, featureId, scheduleType, schedule, value, seed
   }
 
+  init(name: String, featureId: String, scheduleType: ScheduleType, schedule: Schedule, value: Float64, seed: Float64) {
+    self.name = name; self.featureId = featureId; self.scheduleType = scheduleType; self.schedule = schedule; self.value = value
+    self.seed = seed
+  }
+
   public init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     name = try container.decode(String.self, forKey: .name)
@@ -267,6 +272,10 @@ public struct SelectiveFeature: BaseFeature {
     case string([String])
     case int([Int64])
     case float([Float64])
+  }
+
+  init(name: String, featureId: String, scheduleType: ScheduleType, schedule: Schedule, value: Value) {
+    self.name = name; self.featureId = featureId; self.scheduleType = scheduleType; self.schedule = schedule; self.value = value
   }
 
   public init(from decoder: Decoder) throws {
@@ -313,6 +322,10 @@ public struct ValueFeature: BaseFeature {
     case float(Float64)
   }
 
+  init(name: String, featureId: String, scheduleType: ScheduleType, schedule: Schedule, value: Value) {
+    self.name = name; self.featureId = featureId; self.scheduleType = scheduleType; self.schedule = schedule; self.value = value
+  }
+
   public init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     name = try container.decode(String.self, forKey: .name)
@@ -351,21 +364,54 @@ public struct ManifestGroup: Decodable {
   public let groupId: String
 }
 
-public struct Manifest: Decodable {
+public struct Manifest {
   public let version: String
   public let groups: [ManifestGroup]
 }
 
-public struct Environment: Decodable {
+public struct Environment {
   public let name: String
   public let environmentId: String
-  public let features: [String: Feature]
+  public let features: StringMap<Feature>
 }
 
-public struct Group: Decodable {
+public struct Group {
   public let name: String
   public let groupId: String
   public let meta: GroupMeta
-  public let environments: [String: Environment]
-  public let features: [String: Feature]
+  public let environments: StringMap<Environment>
+  public let features: StringMap<Feature>
+}
+
+// Use these byte-preserving factories rather than Foundation's normalization
+// of object keys during aggregate model decoding.
+extension Manifest {
+    public static func decode(data: Data) throws -> Manifest {
+        let wire = try Wire.decode(data)
+        try Validation.manifest(wire)
+        return Manifest(version: try wire["version"].text(), groups: try wire["groups"].array().map {
+            ManifestGroup(name: try $0["name"].text(), groupId: try $0["groupId"].text())
+        })
+    }
+}
+extension Group {
+    public static func decode(data: Data) throws -> Group {
+        let wire = try Wire.decode(data)
+        try Validation.group(wire)
+        func features(_ value: Wire) throws -> StringMap<Feature> {
+            var result = StringMap<Feature>()
+            for entry in try value.object() {
+                result[entry.key] = try Feature.decoded(entry.value)
+            }
+            return result
+        }
+        var environments = StringMap<Environment>()
+        for entry in try wire["environments"].object() {
+            environments[entry.key] = Environment(name: try entry.value["name"].text(),
+                environmentId: try entry.value["environmentId"].text(), features: try features(entry.value["features"]))
+        }
+        return Group(name: try wire["name"].text(), groupId: try wire["groupId"].text(),
+            meta: GroupMeta(version: try wire["meta"]["version"].text()), environments: environments,
+            features: try features(wire["features"]))
+    }
 }

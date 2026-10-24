@@ -1,383 +1,232 @@
 package dev.vexilla
 
-import kotlinx.serialization.json.*
-import kotlin.reflect.typeOf
-
 class Client(
     private val baseUrl: String,
     private val environment: String,
-    private val instanceId: String,
-    // private val showLogs: Boolean? = false
+    private val instanceId: Any?,
 ) {
+    constructor(
+        baseUrl: String,
+        environment: String,
+        instanceId: String,
+    ) : this(baseUrl, environment, instanceId as Any?)
 
     private var manifest: Manifest? = null
-    private var flagGroups: MutableMap<String, Group> = mutableMapOf()
+    private var groups: Map<String, Group> = emptyMap()
+    private var groupAliases: Map<String, String> = emptyMap()
+    private var environmentAliases: Map<String, Map<String, String>> = emptyMap()
+    private var featureAliases: Map<String, Map<String, String>> = emptyMap()
 
-    private var groupLookupTable: MutableMap<String, String> = mutableMapOf()
-    private var environmentLookupTable: MutableMap<String, MutableMap<String, String>> = mutableMapOf()
-    private var featureLookupTable: MutableMap<String, MutableMap<String, String>> = mutableMapOf()
-
-    suspend fun getManifest(fetch: suspend (url: String) -> String): Manifest {
-        val url = "${this.baseUrl}/manifest.json"
-        val response = fetch(url)
-        val manifest = Json.decodeFromString<Manifest>(response)
-        return manifest
-    }
-
-    fun setManifest(manifest: Manifest) {
-        this.manifest = manifest
-
-        for (group in manifest.groups) {
-            this.groupLookupTable[group.name] = group.groupId
-            this.groupLookupTable[group.groupId] = group.groupId
+    private suspend fun request(path: String, fetch: suspend (String) -> String): String {
+        try {
+            return fetch(baseUrl.trimEnd('/') + "/" + path)
+        } catch (e: Exception) {
+            if (e is java.util.concurrent.CancellationException) {
+                throw e
+            }
+            throw ContractException("fetch", "Failed to fetch $path: " + e.message)
         }
     }
 
-    suspend fun syncManifest(fetch: suspend (url: String) -> String) {
-        val manifest = this.getManifest(fetch)
-        this.setManifest(manifest)
+    suspend fun getManifest(fetch: suspend (String) -> String): Manifest =
+        VexillaCodec.decodeManifest(request("manifest.json", fetch))
+
+    fun setManifest(manifest: Manifest) {
+        val snapshot = VexillaCodec.manifest(VexillaCodec.json(manifest))
+        val aliases = mutableMapOf<String, String>()
+        snapshot.groups.forEach { Validation.addAlias(aliases, it.groupId, it.name) }
+        val surviving =
+            groups.filter { (id, g) ->
+                snapshot.groups.any { it.groupId == id && it.name == g.name }
+            }
+        this.manifest = snapshot
+        groups = surviving
+        groupAliases = aliases
+        environmentAliases = environmentAliases.filterKeys { it in surviving }
+        featureAliases = featureAliases.filterKeys { it in surviving }
     }
 
-    suspend fun getFlags(groupNameOrId: String, fetch: suspend (url: String) -> String): Group {
-        val groupId = this.groupLookupTable[groupNameOrId]
-        val url = "${this.baseUrl}/${groupId}.json"
-        val response = fetch(url)
+    suspend fun syncManifest(fetch: suspend (String) -> String) {
+        setManifest(getManifest(fetch))
+    }
 
-        val group = deserializeGroup(Json.parseToJsonElement(response))
+    private fun groupID(name: String) =
+        groupAliases[name] ?: throw ContractException("lookup", "Group not found: $name")
 
+    private fun match(group: Group) {
+        val m = manifest ?: throw ContractException("lookup", "Manifest not installed")
+        Validation.check(
+            m.groups.any { it.groupId == group.groupId && it.name == group.name },
+            "Group differs from manifest ID/name",
+        )
+    }
+
+    suspend fun getFlags(groupNameOrId: String, fetch: suspend (String) -> String): Group {
+        val id = groupID(groupNameOrId)
+        val group = VexillaCodec.decodeGroup(request("$id.json", fetch))
+        match(group)
+        Validation.check(group.groupId == id, "Fetched group differs from requested group")
         return group
     }
 
     fun setFlags(group: Group) {
-        val groupId = this.groupLookupTable[group.groupId] ?: throw Error("Group (${group.groupId}) not found")
-        this.flagGroups[groupId] = group
-
-        if (this.environmentLookupTable[groupId] == null) {
-            this.environmentLookupTable[groupId] = mutableMapOf()
+        val snapshot = VexillaCodec.group(VexillaCodec.json(group))
+        match(snapshot)
+        val environments = mutableMapOf<String, String>()
+        val features = mutableMapOf<String, String>()
+        snapshot.environments.forEach { (id, env) ->
+            Validation.addAlias(environments, id, env.name)
         }
-
-        for (entry in group.environments.entries) {
-            this.environmentLookupTable[groupId]!![entry.value.name] = entry.value.environmentId
-            this.environmentLookupTable[groupId]!![entry.value.environmentId] = entry.value.environmentId
+        snapshot.features.forEach { (id, feature) ->
+            Validation.addAlias(features, id, feature.name)
         }
+        groups = groups + (snapshot.groupId to snapshot)
+        environmentAliases = environmentAliases + (snapshot.groupId to environments)
+        featureAliases = featureAliases + (snapshot.groupId to features)
+    }
 
+    suspend fun syncFlags(groupNameOrId: String, fetch: suspend (String) -> String) {
+        setFlags(getFlags(groupNameOrId, fetch))
+    }
 
-        if (this.featureLookupTable[groupId] == null) {
-            this.featureLookupTable[groupId] = mutableMapOf()
+    private fun feature(group: String, name: String): Feature {
+        val id = groupID(group)
+        val stored = groups[id] ?: throw ContractException("lookup", "Group not installed")
+        val env =
+            environmentAliases[id]?.get(environment)
+                ?: throw ContractException("lookup", "Environment not found")
+        val fid =
+            featureAliases[id]?.get(name) ?: throw ContractException("lookup", "Feature not found")
+        return stored.environments[env]?.features?.get(fid)
+            ?: throw ContractException("lookup", "Feature not installed")
+    }
+
+    fun should(
+        groupNameOrId: String,
+        featureNameOrId: String,
+        instanceId: String? = null,
+    ): Result<Boolean> = shouldCustom(groupNameOrId, featureNameOrId, instanceId ?: this.instanceId)
+
+    fun shouldCustomInt(
+        groupNameOrId: String,
+        featureNameOrId: String,
+        instanceId: Int,
+    ): Result<Boolean> = shouldCustom(groupNameOrId, featureNameOrId, instanceId)
+
+    fun shouldCustomLong(
+        groupNameOrId: String,
+        featureNameOrId: String,
+        instanceId: Long,
+    ): Result<Boolean> = shouldCustom(groupNameOrId, featureNameOrId, instanceId)
+
+    fun shouldCustomFloat(
+        groupNameOrId: String,
+        featureNameOrId: String,
+        instanceId: Float,
+    ): Result<Boolean> = shouldCustom(groupNameOrId, featureNameOrId, instanceId)
+
+    fun shouldCustomDouble(
+        groupNameOrId: String,
+        featureNameOrId: String,
+        instanceId: Double,
+    ): Result<Boolean> = shouldCustom(groupNameOrId, featureNameOrId, instanceId)
+
+    fun shouldCustom(
+        groupNameOrId: String,
+        featureNameOrId: String,
+        instanceId: Any?,
+    ): Result<Boolean> = runCatching {
+        val f = feature(groupNameOrId, featureNameOrId)
+        if (f is ValueFeature) {
+            throw ContractException("kind", "Value feature requires a value operation")
         }
-
-        for (entry in group.features.entries) {
-            this.featureLookupTable[groupId]!![entry.value.name] = entry.value.featureId
-            this.featureLookupTable[groupId]!![entry.value.featureId] = entry.value.featureId
+        if (f is ToggleFeature) {
+            return@runCatching Scheduler.isScheduledFeatureActive(f) && f.value
+        }
+        Hasher.validateInstance(instanceId)
+        if (!Scheduler.isScheduledFeatureActive(f)) {
+            return@runCatching false
+        }
+        when (f) {
+            is GradualFeature ->
+                Hasher.hashString(Hasher.instanceText(instanceId), f.seed) < f.value
+            is SelectiveStringFeature -> instanceId is String && instanceId in f.value
+            is SelectiveIntFeature ->
+                instanceId is Number && f.value.any { it.toDouble() == instanceId.toDouble() }
+            is SelectiveFloatFeature -> instanceId is Number && instanceId.toDouble() in f.value
+            else -> throw ContractException("kind", "Unsupported boolean feature")
         }
     }
 
-    suspend fun syncFlags(groupNameOrId: String, fetch: suspend (url: String) -> String) {
-        val flags = this.getFlags(groupNameOrId, fetch)
-        this.setFlags(flags)
-    }
-
-    fun should(groupNameOrId: String, featureNameOrId: String, instanceId: String = this.instanceId): Result<Boolean> {
-        val feature = this.getFeature(groupNameOrId, featureNameOrId)
-        if (!Scheduler.isScheduledFeatureActive(feature)) {
-            return Result.success(false)
-        }
-
-        return when (feature) {
-            is ToggleFeature -> Result.success(feature.value)
-            is GradualFeature -> Result.success(Hasher.hashString(instanceId, feature.seed) < feature.value)
-            is SelectiveFeature -> {
-                when (feature) {
-                    is SelectiveStringFeature -> Result.success(feature.value.contains(instanceId))
-                    else -> Result.failure(Error("should function must only be called for features with a valueType of 'string'. Try shouldCustomInt, shouldCustomLong, shouldCustomFloat, or shouldCustomDouble"))
-                }
+    fun value(groupNameOrId: String, featureNameOrId: String, default: Any?): Result<Any?> =
+        runCatching {
+            val f = feature(groupNameOrId, featureNameOrId)
+            if (f !is ValueFeature) {
+                throw ContractException("kind", "Feature is not a value")
             }
-
-            is ValueFeature -> Result.failure(Error("should cannot be called on features with featureType of 'value'"))
-        }
-    }
-
-    fun shouldCustomInt(groupNameOrId: String, featureNameOrId: String, instanceId: Int): Result<Boolean> {
-        return this.shouldCustomLong(groupNameOrId, featureNameOrId, instanceId.toLong())
-    }
-
-    fun shouldCustomLong(groupNameOrId: String, featureNameOrId: String, instanceId: Long): Result<Boolean> {
-        val feature = this.getFeature(groupNameOrId, featureNameOrId)
-        if (!Scheduler.isScheduledFeatureActive(feature)) {
-            return Result.success(false)
-        }
-
-        return when (feature) {
-            is ToggleFeature -> Result.success(feature.value)
-            is GradualFeature -> Result.success(Hasher.hashLong(instanceId, feature.seed) < feature.value)
-            is SelectiveFeature -> {
-                when (feature) {
-                    is SelectiveIntFeature -> Result.success(feature.value.contains(instanceId))
-                    else -> Result.failure(Error("shouldCustomInt/shouldCustomLong function must only be called for features with a valueType of 'int'. Try should, shouldFloat, or shouldDouble"))
-                }
+            if (!Scheduler.isScheduledFeatureActive(f)) {
+                return@runCatching default
             }
-
-            is ValueFeature -> Result.failure(Error("shouldCustomInt/shouldCustomLong cannot be called on features with featureType of 'value'"))
-        }
-    }
-
-    fun shouldCustomFloat(groupNameOrId: String, featureNameOrId: String, instanceId: Float): Result<Boolean> {
-        return this.shouldCustomDouble(groupNameOrId, featureNameOrId, instanceId.toDouble())
-    }
-
-    fun shouldCustomDouble(groupNameOrId: String, featureNameOrId: String, instanceId: Double): Result<Boolean> {
-        val feature = this.getFeature(groupNameOrId, featureNameOrId)
-        if (!Scheduler.isScheduledFeatureActive(feature)) {
-            return Result.success(false)
-        }
-
-        return when (feature) {
-            is ToggleFeature -> Result.success(feature.value)
-            is GradualFeature -> Result.success(Hasher.hashDouble(instanceId, feature.seed) < feature.value)
-            is SelectiveFeature -> {
-                when (feature) {
-                    is SelectiveFloatFeature -> Result.success(feature.value.contains(instanceId))
-                    else -> Result.failure(Error("shouldCustomFloat/shouldCustomDouble function must only be called for features with a valueType of 'int'. Try should, shouldFloat, or shouldDouble"))
-                }
+            when (f) {
+                is ValueStringFeature -> f.value
+                is ValueIntFeature -> f.value
+                is ValueFloatFeature -> f.value
             }
+        }
 
-            is ValueFeature -> Result.failure(Error("shouldCustomFloat/shouldCustomDouble cannot be called on features with featureType of 'value'"))
+    fun valueString(
+        groupNameOrId: String,
+        featureNameOrId: String,
+        default: String,
+    ): Result<String> = runCatching {
+        val f = feature(groupNameOrId, featureNameOrId)
+        if (f !is ValueStringFeature) {
+            throw ContractException("kind", "Expected string value feature")
+        }
+        if (Scheduler.isScheduledFeatureActive(f)) {
+            f.value
+        } else {
+            default
         }
     }
 
-    fun valueString(groupNameOrId: String, featureNameOrId: String, default: String): Result<String> {
-        val feature = this.getFeature(groupNameOrId, featureNameOrId)
-        if (!Scheduler.isScheduledFeatureActive(feature)) {
-            return Result.success(default)
-        }
-
-        return when (feature) {
-            is ValueFeature -> {
-                when (feature) {
-                    is ValueStringFeature -> return Result.success(feature.value)
-                    else -> Result.failure(Error("valueString function must only be called for features with a valueType of 'string'. Try valueInt, valueLong, valueFloat, or valueDouble"))
-                }
+    fun valueLong(groupNameOrId: String, featureNameOrId: String, default: Long): Result<Long> =
+        runCatching {
+            val f = feature(groupNameOrId, featureNameOrId)
+            if (f !is ValueIntFeature) {
+                throw ContractException("kind", "Expected integer value feature")
             }
-
-            else -> Result.failure(Error("valueString can only be called on features with featureType of 'value'"))
-        }
-    }
-
-    fun valueInt(groupNameOrId: String, featureNameOrId: String, default: Int): Result<Int> {
-        val resultLong = this.valueLong(groupNameOrId, featureNameOrId, default.toLong())
-        return resultLong.map { it.toInt() }
-    }
-
-    fun valueLong(groupNameOrId: String, featureNameOrId: String, default: Long): Result<Long> {
-        val feature = this.getFeature(groupNameOrId, featureNameOrId)
-        if (!Scheduler.isScheduledFeatureActive(feature)) {
-            return Result.success(default)
-        }
-
-        return when (feature) {
-            is ValueFeature -> {
-                when (feature) {
-                    is ValueIntFeature -> Result.success(feature.value)
-                    else -> Result.failure(Error("valueInt/valueLong functions must only be called for features with a valueType of 'int'. Try valueString, valueFloat, or valueDouble"))
-                }
+            if (Scheduler.isScheduledFeatureActive(f)) {
+                f.value
+            } else {
+                default
             }
-
-            else -> Result.failure(Error("valueString can only be called on features with featureType of 'value'"))
-        }
-    }
-
-    fun valueFloat(groupNameOrId: String, featureNameOrId: String, default: Float): Result<Float> {
-        val resultDouble = this.valueDouble(groupNameOrId, featureNameOrId, default.toDouble())
-        return resultDouble.map { it.toFloat() }
-    }
-
-    fun valueDouble(groupNameOrId: String, featureNameOrId: String, default: Double): Result<Double> {
-        val feature = this.getFeature(groupNameOrId, featureNameOrId)
-        if (!Scheduler.isScheduledFeatureActive(feature)) {
-            return Result.success(default)
         }
 
-        return when (feature) {
-            is ValueFeature -> {
-                when (feature) {
-                    is ValueFloatFeature -> Result.success(feature.value)
-                    else -> Result.failure(Error("valueFloat/valueDouble function must only be called for features with a valueType of 'float'. Try valueString, valueInt, or valueLong"))
-                }
+    fun valueInt(groupNameOrId: String, featureNameOrId: String, default: Int): Result<Int> =
+        valueLong(groupNameOrId, featureNameOrId, default.toLong()).mapCatching {
+            if (it < Int.MIN_VALUE || it > Int.MAX_VALUE) {
+                throw ContractException("kind", "Value is outside Int")
             }
+            it.toInt()
+        }
 
-            else -> Result.failure(Error("valueString can only be called on features with featureType of 'value'"))
+    fun valueDouble(
+        groupNameOrId: String,
+        featureNameOrId: String,
+        default: Double,
+    ): Result<Double> = runCatching {
+        val f = feature(groupNameOrId, featureNameOrId)
+        if (f !is ValueFloatFeature) {
+            throw ContractException("kind", "Expected float value feature")
+        }
+        if (Scheduler.isScheduledFeatureActive(f)) {
+            f.value
+        } else {
+            default
         }
     }
 
-    private fun deserializeFeature(json: JsonElement): Feature {
-
-        val featureId = json.jsonObject["featureId"]!!.jsonPrimitive.content
-        val name = json.jsonObject["name"]!!.jsonPrimitive.content
-
-        val scheduleType = when (json.jsonObject["scheduleType"]!!.jsonPrimitive.content) {
-            ScheduleType.EMPTY.typeName -> ScheduleType.EMPTY
-            ScheduleType.GLOBAL.typeName -> ScheduleType.GLOBAL
-            ScheduleType.ENVIRONMENT.typeName -> ScheduleType.ENVIRONMENT
-            else -> throw Exception("Unknown schedule type: " + json.jsonObject["scheduleType"]!!.jsonPrimitive.content)
-        }
-
-
-        val rawSchedule = json.jsonObject["schedule"]!!
-
-        val scheduleTimeType = when (rawSchedule.jsonObject["timeType"]!!.jsonPrimitive.content) {
-            ScheduleTimeType.NONE.typeName -> ScheduleTimeType.NONE
-            ScheduleTimeType.DAILY.typeName -> ScheduleTimeType.DAILY
-            ScheduleTimeType.START_END.typeName -> ScheduleTimeType.START_END
-            else -> throw Exception("Unknown schedule time type: " + rawSchedule.jsonObject["timeType"]!!.jsonPrimitive.content)
-        }
-
-        val schedule = Schedule(
-            start = rawSchedule.jsonObject["start"]!!.jsonPrimitive.content.toLong(),
-            end = rawSchedule.jsonObject["end"]!!.jsonPrimitive.content.toLong(),
-            timezone = rawSchedule.jsonObject["timezone"]!!.jsonPrimitive.content,
-            timeType = scheduleTimeType,
-            startTime = rawSchedule.jsonObject["startTime"]!!.jsonPrimitive.content.toLong(),
-            endTime = rawSchedule.jsonObject["endTime"]!!.jsonPrimitive.content.toLong(),
-        )
-
-
-        return when (json.jsonObject["featureType"]?.jsonPrimitive?.content) {
-            FeatureType.TOGGLE.typeName -> ToggleFeature(
-                featureId = featureId,
-                name = name,
-                scheduleType = scheduleType,
-                schedule = schedule,
-                value = json.jsonObject["value"]!!.jsonPrimitive.content.toBoolean(),
-            )
-
-            FeatureType.GRADUAL.typeName -> GradualFeature(
-                featureId = featureId,
-                name = name,
-                scheduleType = scheduleType,
-                schedule = schedule,
-                value = json.jsonObject["value"]!!.jsonPrimitive.content.toDouble(),
-                seed = json.jsonObject["seed"]!!.jsonPrimitive.let { seed ->
-                    require(!seed.isString) { "seed must be a JSON number" }
-                    seed.content.toDouble()
-                }
-            )
-
-            FeatureType.SELECTIVE.typeName -> when (json.jsonObject["valueType"]?.jsonPrimitive?.content) {
-                ValueType.STRING.typeName -> SelectiveStringFeature(
-                    featureId = featureId,
-                    name = name,
-                    scheduleType = scheduleType,
-                    schedule = schedule,
-                    value = json.jsonObject["value"]!!.jsonArray.map { it.jsonPrimitive.content }.toList()
-                )
-
-                ValueType.NUMBER.typeName -> when (json.jsonObject["numberType"]?.jsonPrimitive?.content) {
-                    NumberType.INT.typeName -> SelectiveIntFeature(
-                        featureId = featureId,
-                        name = name,
-                        scheduleType = scheduleType,
-                        schedule = schedule,
-                        value = json.jsonObject["value"]!!.jsonArray.map { it.jsonPrimitive.long }.toList()
-                    )
-
-                    NumberType.FLOAT.typeName -> SelectiveFloatFeature(
-                        featureId = featureId,
-                        name = name,
-                        scheduleType = scheduleType,
-                        schedule = schedule,
-                        value = json.jsonObject["value"]!!.jsonArray.map { it.jsonPrimitive.double }.toList()
-                    )
-
-                    else -> throw Exception("Unknown Feature: key 'numberType' not found or does not match any feature type")
-                }
-
-                else -> throw Exception("Unknown Feature: key 'valueType' not found or does not match any feature type")
-            }
-
-            FeatureType.VALUE.typeName -> when (json.jsonObject["valueType"]?.jsonPrimitive?.content) {
-                ValueType.STRING.typeName -> ValueStringFeature(
-                    featureId = featureId,
-                    name = name,
-                    scheduleType = scheduleType,
-                    schedule = schedule,
-                    value = json.jsonObject["value"]!!.jsonPrimitive.content.toString()
-                )
-
-                ValueType.NUMBER.typeName -> when (json.jsonObject["numberType"]?.jsonPrimitive?.content) {
-                    NumberType.INT.typeName -> ValueIntFeature(
-                        featureId = featureId,
-                        name = name,
-                        scheduleType = scheduleType,
-                        schedule = schedule,
-                        value = json.jsonObject["value"]!!.jsonPrimitive.long
-                    )
-
-                    NumberType.FLOAT.typeName -> ValueFloatFeature(
-                        featureId = featureId,
-                        name = name,
-                        scheduleType = scheduleType,
-                        schedule = schedule,
-                        value = json.jsonObject["value"]!!.jsonPrimitive.double
-                    )
-
-                    else -> throw Exception("Unknown Feature: key 'numberType' not found or does not match any feature type")
-                }
-
-                else -> throw Exception("Unknown Feature: key 'valueType' not found or does not match any feature type")
-            }
-
-            else -> throw Exception("Unknown Feature: key 'featureType' not found or does not match any feature type")
-        }
-    }
-
-    private fun deserializeGroup(json: JsonElement): Group {
-
-        val environments = mutableMapOf<String, Environment>();
-        for (environment in json.jsonObject["environments"]!!.jsonObject.values) {
-            val environmentFeatures = mutableMapOf<String, Feature>()
-            for (feature in environment.jsonObject["features"]!!.jsonObject.values) {
-                environmentFeatures[feature.jsonObject["featureId"]!!.jsonPrimitive.content] =
-                    deserializeFeature(feature)
-            }
-            environments[environment.jsonObject["environmentId"]!!.jsonPrimitive.content] = Environment(
-                features = environmentFeatures,
-                environmentId = environment.jsonObject["environmentId"]!!.jsonPrimitive.content,
-                name = environment.jsonObject["name"]!!.jsonPrimitive.content
-            )
-        }
-
-        val features = mutableMapOf<String, Feature>()
-        for (feature in json.jsonObject["features"]!!.jsonObject.values) {
-            features[feature.jsonObject["featureId"]!!.jsonPrimitive.content] = deserializeFeature(feature)
-        }
-
-        return Group(
-            name = json.jsonObject["name"]!!.jsonPrimitive.content,
-            groupId = json.jsonObject["groupId"]!!.jsonPrimitive.content,
-            meta = GroupMeta(
-                version = json.jsonObject["meta"]!!.jsonObject["version"]!!.jsonPrimitive.content,
-            ),
-            environments = environments,
-            features = features
-        )
-    }
-
-    private fun getFeature(groupNameOrId: String, featureNameOrId: String): Feature {
-        val groupId = this.groupLookupTable[groupNameOrId] ?: throw Error("Group (${groupNameOrId}) not found")
-        val groupEnvironments =
-            this.environmentLookupTable[groupId] ?: throw Error("Environments not found for Group (${groupId})")
-
-        val environmentId =
-            groupEnvironments[this.environment] ?: throw Error("Environment (${this.environment}) not found")
-
-        val groupFeatures = this.featureLookupTable[groupId] ?: throw Error("Features not found for Group (${groupId})")
-        val featureId = groupFeatures[featureNameOrId] ?: throw Error("Feature (${featureNameOrId}) not found")
-
-        val group = this.flagGroups[groupId] ?: throw Error("Group (${groupId}) not found")
-        val environment = group.environments[environmentId] ?: throw Error("Environment (${environmentId}) not found")
-
-        return environment.features[featureId]
-            ?: throw Error("Feature (${featureId}) not found in Environment (${environmentId}) for Group (${groupId})")
-    }
-
+    fun valueFloat(groupNameOrId: String, featureNameOrId: String, default: Float): Result<Float> =
+        valueDouble(groupNameOrId, featureNameOrId, default.toDouble()).map { it.toFloat() }
 }

@@ -13,12 +13,14 @@ import (
 type Client struct {
 	Environment string
 	BaseURL     string
-	InstanceId  string
+	InstanceId  interface{}
 
 	ShowLogs bool
 
-	Manifest   Manifest
-	FlagGroups map[GroupId]Group
+	Manifest          Manifest
+	FlagGroups        map[GroupId]Group
+	installedGroups   map[GroupId]Group
+	installedManifest Manifest
 
 	groupLookupTable       map[string]GroupId
 	environmentLookupTable map[GroupId]map[string]EnvironmentId
@@ -26,13 +28,15 @@ type Client struct {
 }
 
 // Create a new client for consuming feature flags.
-func NewClient(environment string, baseURL string, customInstanceHash string, showLogs bool) Client {
+func NewClient(environment string, baseURL string, customInstanceHash interface{}, showLogs bool) Client {
 	return Client{
 		Environment: environment,
 		BaseURL:     baseURL,
 		InstanceId:  customInstanceHash,
 
-		FlagGroups: make(map[GroupId]Group),
+		FlagGroups:      make(map[GroupId]Group),
+		installedGroups: make(map[GroupId]Group),
+		ShowLogs:        showLogs,
 
 		groupLookupTable:       make(map[string]GroupId),
 		environmentLookupTable: make(map[GroupId]map[string]EnvironmentId),
@@ -46,13 +50,20 @@ func (client Client) GetManifest(fetch func(url string) (*http.Response, error))
 	response, fetchErr := fetch(url)
 
 	if fetchErr != nil {
-		return Manifest{}, fetchErr
+		return Manifest{}, WrapFetchError(fetchErr)
 	}
 
+	if response == nil || response.Body == nil {
+		return Manifest{}, WrapFetchError(fmt.Errorf("missing response body"))
+	}
+	defer response.Body.Close()
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		return Manifest{}, WrapFetchError(fmt.Errorf("HTTP status %d", response.StatusCode))
+	}
 	bodyBytes, err := io.ReadAll(response.Body)
 
 	if err != nil {
-		return Manifest{}, err
+		return Manifest{}, WrapFetchError(err)
 	}
 
 	var fetchedManifest Manifest
@@ -66,17 +77,41 @@ func (client Client) GetManifest(fetch func(url string) (*http.Response, error))
 }
 
 // Sets a fetched manifest within the Client instance. It can also be useful for mocking flags for testing.
-func (client *Client) SetManifest(manifest Manifest) {
-	client.Manifest = manifest
-
-	if client.groupLookupTable == nil {
-		client.groupLookupTable = make(map[string]GroupId)
+func (client *Client) SetManifest(manifest Manifest) error {
+	if err := ValidateUnicode(manifest); err != nil {
+		return err
 	}
-
-	for _, group := range manifest.Groups {
-		client.groupLookupTable[string(group.Name)] = group.GroupId
-		client.groupLookupTable[string(group.GroupId)] = group.GroupId
+	data, err := json.Marshal(manifest)
+	if err != nil {
+		return ValidationError(err.Error())
 	}
+	var snapshot Manifest
+	if err := json.Unmarshal(data, &snapshot); err != nil {
+		return err
+	}
+	aliases := make(map[string]GroupId)
+	entries := make(map[GroupId]GroupName)
+	for _, group := range snapshot.Groups {
+		entries[group.GroupId] = group.Name
+		for _, key := range []string{string(group.GroupId), string(group.Name), NormalizeName(string(group.Name))} {
+			aliases[key] = group.GroupId
+		}
+	}
+	for id, group := range client.installedGroups {
+		if name, ok := entries[id]; !ok || name != group.Name {
+			delete(client.installedGroups, id)
+			delete(client.FlagGroups, id)
+			delete(client.featureLookupTable, id)
+			delete(client.environmentLookupTable, id)
+		}
+	}
+	client.installedManifest = snapshot
+	// The public inspection fields are independent copies, never cache owners.
+	if err := json.Unmarshal(data, &client.Manifest); err != nil {
+		return err
+	}
+	client.groupLookupTable = aliases
+	return nil
 }
 
 // Fetches and sets the manifest within the client to facilitate name->Id lookups.
@@ -87,9 +122,7 @@ func (client *Client) SyncManifest(fetch func(url string) (*http.Response, error
 		return err
 	}
 
-	client.SetManifest(newManifest)
-
-	return nil
+	return client.SetManifest(newManifest)
 }
 
 // Fetches the flags for a specific flag group. Can use the ID or the name of the group for the lookup.
@@ -105,13 +138,20 @@ func (client *Client) GetFlags(groupNameOrId string, fetch func(url string) (*ht
 	response, fetchErr := fetch(url)
 
 	if fetchErr != nil {
-		return Group{}, fetchErr
+		return Group{}, WrapFetchError(fetchErr)
 	}
 
+	if response == nil || response.Body == nil {
+		return Group{}, WrapFetchError(fmt.Errorf("missing response body"))
+	}
+	defer response.Body.Close()
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		return Group{}, WrapFetchError(fmt.Errorf("HTTP status %d", response.StatusCode))
+	}
 	bodyBytes, err := io.ReadAll(response.Body)
 
 	if err != nil {
-		return Group{}, err
+		return Group{}, WrapFetchError(err)
 	}
 
 	var fetchedGroup Group
@@ -121,46 +161,62 @@ func (client *Client) GetFlags(groupNameOrId string, fetch func(url string) (*ht
 		return Group{}, unmarshallErr
 	}
 
+	if err := ValidateGroupAgainstManifest(fetchedGroup, client.installedManifest); err != nil {
+		return Group{}, err
+	}
+	if fetchedGroup.GroupId != groupId {
+		return Group{}, ValidationError("Fetched group differs from requested group")
+	}
 	return fetchedGroup, nil
 }
 
 // Sets a fetched flag group within the Client instance.
 func (client *Client) SetFlags(group Group) error {
-
-	groupId := client.groupLookupTable[string(group.GroupId)]
-
-	if groupId == "" {
+	if client.installedManifest.Version == "" {
 		return NewGroupLookupError(string(group.GroupId))
 	}
-
-	client.FlagGroups[groupId] = group
-
+	if err := ValidateGroupAgainstManifest(group, client.installedManifest); err != nil {
+		return err
+	}
+	data, err := json.Marshal(group)
+	if err != nil {
+		return ValidationError(err.Error())
+	}
+	var snapshot, public Group
+	if err := json.Unmarshal(data, &snapshot); err != nil {
+		return err
+	}
+	if err := json.Unmarshal(data, &public); err != nil {
+		return err
+	}
+	environments := make(map[string]EnvironmentId)
+	features := make(map[string]FeatureId)
+	for id, env := range snapshot.Environments {
+		for _, key := range []string{string(id), string(env.Name), NormalizeName(string(env.Name))} {
+			environments[key] = id
+		}
+	}
+	for id, feature := range snapshot.Features {
+		for _, key := range []string{string(id), string(feature.Name), NormalizeName(string(feature.Name))} {
+			features[key] = id
+		}
+	}
+	if client.installedGroups == nil {
+		client.installedGroups = make(map[GroupId]Group)
+	}
+	if client.FlagGroups == nil {
+		client.FlagGroups = make(map[GroupId]Group)
+	}
 	if client.environmentLookupTable == nil {
 		client.environmentLookupTable = make(map[GroupId]map[string]EnvironmentId)
 	}
-
-	if client.environmentLookupTable[group.GroupId] == nil {
-		client.environmentLookupTable[group.GroupId] = make(map[string]EnvironmentId)
-	}
-
-	for _, environment := range group.Environments {
-		client.environmentLookupTable[group.GroupId][string(environment.Name)] = environment.EnvironmentId
-		client.environmentLookupTable[group.GroupId][string(environment.EnvironmentId)] = environment.EnvironmentId
-	}
-
 	if client.featureLookupTable == nil {
 		client.featureLookupTable = make(map[GroupId]map[string]FeatureId)
 	}
-
-	if client.featureLookupTable[group.GroupId] == nil {
-		client.featureLookupTable[group.GroupId] = make(map[string]FeatureId)
-	}
-
-	for _, feature := range group.Features {
-		client.featureLookupTable[group.GroupId][string(feature.Name)] = feature.FeatureId
-		client.featureLookupTable[group.GroupId][string(feature.FeatureId)] = feature.FeatureId
-	}
-
+	client.installedGroups[group.GroupId] = snapshot
+	client.FlagGroups[group.GroupId] = public
+	client.environmentLookupTable[group.GroupId] = environments
+	client.featureLookupTable[group.GroupId] = features
 	return nil
 }
 
@@ -178,211 +234,88 @@ func (client *Client) SyncFlags(groupNameOrId string, fetch func(url string) (*h
 
 // Checks if a toggle, gradual, or selective flag should be enabled. Other methods exist for other flag types, such as value.
 func (client Client) Should(groupNameOrId string, featureNameOrId string) (bool, error) {
-	return client.ShouldCustomString(groupNameOrId, featureNameOrId, client.InstanceId)
+	return client.shouldInstance(groupNameOrId, featureNameOrId, client.InstanceId)
 }
 
 // Checks if a toggle, gradual, or selective flag should be enabled. Uses a custom instance ID rather than the one set in the Client. Other methods exist for other flag types, such as value.
-func (client Client) ShouldCustomString(groupNameOrId string, featureNameOrId string, customInstanceId string) (bool, error) {
-
-	realIds, err := client.getRealIds(groupNameOrId, featureNameOrId)
-
+func (client Client) ShouldCustomString(groupNameOrId, featureNameOrId, instance string) (bool, error) {
+	return client.shouldInstance(groupNameOrId, featureNameOrId, instance)
+}
+func (client Client) ShouldCustomInt(groupNameOrId, featureNameOrId string, instance int64) (bool, error) {
+	return client.shouldInstance(groupNameOrId, featureNameOrId, instance)
+}
+func (client Client) ShouldCustomFloat(groupNameOrId, featureNameOrId string, instance float64) (bool, error) {
+	return client.shouldInstance(groupNameOrId, featureNameOrId, instance)
+}
+func (client Client) shouldInstance(groupNameOrId, featureNameOrId string, instance interface{}) (bool, error) {
+	raw, err := client.getRawFeature(groupNameOrId, featureNameOrId)
 	if err != nil {
 		return false, err
 	}
-
-	rawFeature, err := client.getRawFeature(groupNameOrId, featureNameOrId)
-
+	if raw.FeatureType == ValueFeatureType {
+		return false, NewFeatureTypeError(featureNameOrId, []FeatureType{GradualFeatureType, ToggleFeatureType, SelectiveFeatureType}, ValueFeatureType)
+	}
+	text := ""
+	if raw.FeatureType == GradualFeatureType || raw.FeatureType == SelectiveFeatureType {
+		text, err = InstanceText(instance)
+		if err != nil {
+			return false, &ContractError{Kind: "instance", Message: err.Error()}
+		}
+	}
+	ids, err := client.getRealIds(groupNameOrId, featureNameOrId)
 	if err != nil {
 		return false, err
 	}
-
-	environment := client.FlagGroups[realIds.RealGroupId].Environments[realIds.RealEnvironmentId]
-
-	if environment.EnvironmentId == "" {
-		return false, NewEnvironmentLookupError(string(realIds.RealGroupId), string(realIds.RealEnvironmentId))
-	}
-
-	switch rawFeature.FeatureType {
+	env := client.installedGroups[ids.RealGroupId].Environments[ids.RealEnvironmentId]
+	switch raw.FeatureType {
 	case ToggleFeatureType:
-		toggleFeature := environment.ToggleFeatures[realIds.RealFeatureId]
-
-		if !IsScheduleActive(toggleFeature.Schedule, toggleFeature.ScheduleType) {
-			return false, nil
-		}
-
-		return toggleFeature.Value, nil
+		f := env.ToggleFeatures[ids.RealFeatureId]
+		return IsScheduleActive(f.Schedule, f.ScheduleType) && f.Value, nil
 	case GradualFeatureType:
-		gradualFeature := environment.GradualFeatures[realIds.RealFeatureId]
-
-		if !IsScheduleActive(gradualFeature.Schedule, gradualFeature.ScheduleType) {
-			return false, nil
-		}
-
-		return HashStringInstanceID(customInstanceId, gradualFeature.Seed) < gradualFeature.Value, nil
+		f := env.GradualFeatures[ids.RealFeatureId]
+		return IsScheduleActive(f.Schedule, f.ScheduleType) && HashStringInstanceID(text, f.Seed) < f.Value, nil
 	case SelectiveFeatureType:
-
-		selectiveFeature := environment.SelectiveFeatures[realIds.RealFeatureId]
-
-		if !IsScheduleActive(selectiveFeature.Schedule, selectiveFeature.ScheduleType) {
+		f := env.SelectiveFeatures[ids.RealFeatureId]
+		if !IsScheduleActive(f.Schedule, f.ScheduleType) {
 			return false, nil
 		}
-
-		switch selectiveFeature.ValueType {
-		case StringValueType:
-			selectiveStringFeature := environment.SelectiveStringFeatures[realIds.RealFeatureId]
-
-			for i := range selectiveStringFeature.Value {
-				if selectiveStringFeature.Value[i] == customInstanceId {
+		if value, ok := instance.(string); ok {
+			if f.ValueType != StringValueType {
+				return false, nil
+			}
+			for _, member := range env.SelectiveStringFeatures[ids.RealFeatureId].Value {
+				if member == value {
 					return true, nil
 				}
 			}
-		case NumberValueType:
-			switch selectiveFeature.NumberType {
-			case IntNumberType:
-				return false, NewSelectiveFeatureValueTypeError(selectiveFeature.FeatureId, string(StringValueType), string(IntNumberType))
-			case FloatNumberType:
-				return false, NewSelectiveFeatureValueTypeError(selectiveFeature.FeatureId, string(StringValueType), string(FloatNumberType))
-			}
-		}
-
-	case ValueFeatureType:
-		return false, NewFeatureTypeError(featureNameOrId, []FeatureType{GradualFeatureType, ToggleFeatureType, SelectiveFeatureType}, ValueFeatureType)
-	}
-
-	return false, nil
-}
-
-// Checks if a toggle, gradual, or selective flag should be enabled. Uses a custom instance ID as an int64 rather than the string set in the Client. Other methods exist for other flag types, such as value.
-func (client Client) ShouldCustomInt(groupNameOrId string, featureNameOrId string, customInstanceId int64) (bool, error) {
-
-	realIds, err := client.getRealIds(groupNameOrId, featureNameOrId)
-
-	if err != nil {
-		return false, err
-	}
-
-	rawFeature, err := client.getRawFeature(groupNameOrId, featureNameOrId)
-
-	if err != nil {
-		return false, err
-	}
-
-	environment := client.FlagGroups[realIds.RealGroupId].Environments[realIds.RealEnvironmentId]
-
-	if environment.EnvironmentId == "" {
-		return false, NewEnvironmentLookupError(string(realIds.RealGroupId), string(realIds.RealEnvironmentId))
-	}
-
-	switch rawFeature.FeatureType {
-	case ToggleFeatureType:
-		toggleFeature := environment.ToggleFeatures[realIds.RealFeatureId]
-
-		if !IsScheduleActive(toggleFeature.Schedule, toggleFeature.ScheduleType) {
 			return false, nil
 		}
-
-		return toggleFeature.Value, nil
-	case GradualFeatureType:
-		gradualFeature := environment.GradualFeatures[realIds.RealFeatureId]
-		if !IsScheduleActive(gradualFeature.Schedule, gradualFeature.ScheduleType) {
+		var numeric float64
+		switch value := instance.(type) {
+		case int64:
+			numeric = float64(value)
+		case int:
+			numeric = float64(value)
+		case float64:
+			numeric = value
+		}
+		if f.ValueType != NumberValueType {
 			return false, nil
 		}
-		return HashIntInstanceID(customInstanceId, gradualFeature.Seed) < gradualFeature.Value, nil
-
-	case SelectiveFeatureType:
-		selectiveFeature := environment.SelectiveFeatures[realIds.RealFeatureId]
-
-		if !IsScheduleActive(selectiveFeature.Schedule, selectiveFeature.ScheduleType) {
-			return false, nil
-		}
-
-		switch selectiveFeature.ValueType {
-		case StringValueType:
-			return false, NewSelectiveFeatureValueTypeError(selectiveFeature.FeatureId, string(IntNumberType), string(StringValueType))
-		case NumberValueType:
-			switch selectiveFeature.NumberType {
-			case IntNumberType:
-				selectiveIntFeature := environment.SelectiveIntFeatures[realIds.RealFeatureId]
-
-				for i := range selectiveIntFeature.Value {
-					if selectiveIntFeature.Value[i] == customInstanceId {
-						return true, nil
-					}
+		if f.NumberType == IntNumberType {
+			for _, member := range env.SelectiveIntFeatures[ids.RealFeatureId].Value {
+				if float64(member) == numeric {
+					return true, nil
 				}
-
-			case FloatNumberType:
-				return false, NewSelectiveFeatureValueTypeError(selectiveFeature.FeatureId, string(IntNumberType), string(FloatNumberType))
 			}
-		}
-	case ValueFeatureType:
-		return false, NewFeatureTypeError(featureNameOrId, []FeatureType{GradualFeatureType, ToggleFeatureType, SelectiveFeatureType}, ValueFeatureType)
-	}
-
-	return false, nil
-}
-
-// Checks if a toggle, gradual, or selective flag should be enabled. Uses a custom instance ID as an float64 rather than the string set in the Client. Other methods exist for other flag types, such as value.
-func (client Client) ShouldCustomFloat(groupNameOrId string, featureNameOrId string, customInstanceId float64) (bool, error) {
-
-	realIds, err := client.getRealIds(groupNameOrId, featureNameOrId)
-
-	if err != nil {
-		return false, err
-	}
-
-	rawFeature, err := client.getRawFeature(groupNameOrId, featureNameOrId)
-
-	if err != nil {
-		return false, err
-	}
-
-	environment := client.FlagGroups[realIds.RealGroupId].Environments[realIds.RealEnvironmentId]
-
-	if environment.EnvironmentId == "" {
-		return false, NewEnvironmentLookupError(string(realIds.RealGroupId), string(realIds.RealEnvironmentId))
-	}
-
-	switch rawFeature.FeatureType {
-	case ToggleFeatureType:
-		toggleFeature := environment.ToggleFeatures[realIds.RealFeatureId]
-		if !IsScheduleActive(toggleFeature.Schedule, toggleFeature.ScheduleType) {
-			return false, nil
-		}
-		return toggleFeature.Value, nil
-	case GradualFeatureType:
-		gradualFeature := environment.GradualFeatures[realIds.RealFeatureId]
-		if !IsScheduleActive(gradualFeature.Schedule, gradualFeature.ScheduleType) {
-			return false, nil
-		}
-		return HashFloatInstanceID(customInstanceId, gradualFeature.Seed) < gradualFeature.Value, nil
-	case SelectiveFeatureType:
-		selectiveFeature := environment.SelectiveFeatures[realIds.RealFeatureId]
-
-		if !IsScheduleActive(selectiveFeature.Schedule, selectiveFeature.ScheduleType) {
-			return false, nil
-		}
-
-		switch selectiveFeature.ValueType {
-		case StringValueType:
-			return false, NewSelectiveFeatureValueTypeError(selectiveFeature.FeatureId, string(FloatNumberType), string(StringValueType))
-		case NumberValueType:
-			switch selectiveFeature.NumberType {
-			case IntNumberType:
-				return false, NewSelectiveFeatureValueTypeError(selectiveFeature.FeatureId, string(FloatNumberType), string(IntNumberType))
-			case FloatNumberType:
-				selectiveFloatFeature := environment.SelectiveFloatFeatures[realIds.RealFeatureId]
-
-				for i := range selectiveFloatFeature.Value {
-					if selectiveFloatFeature.Value[i] == customInstanceId {
-						return true, nil
-					}
+		} else {
+			for _, member := range env.SelectiveFloatFeatures[ids.RealFeatureId].Value {
+				if member == numeric {
+					return true, nil
 				}
 			}
 		}
-	case ValueFeatureType:
-		return false, NewFeatureTypeError(featureNameOrId, []FeatureType{GradualFeatureType, ToggleFeatureType, SelectiveFeatureType}, ValueFeatureType)
 	}
-
 	return false, nil
 }
 
@@ -405,7 +338,7 @@ func (client *Client) ValueString(groupNameOrId string, featureNameOrId string, 
 		return defaultValue, err
 	}
 
-	valueStringFeature := client.FlagGroups[realIds.RealGroupId].Environments[realIds.RealEnvironmentId].ValueStringFeatures[realIds.RealFeatureId]
+	valueStringFeature := client.installedGroups[realIds.RealGroupId].Environments[realIds.RealEnvironmentId].ValueStringFeatures[realIds.RealFeatureId]
 
 	if valueStringFeature.FeatureId == "" {
 		return defaultValue, NewFeatureLookUpError(string(realIds.RealGroupId), string(realIds.RealFeatureId), string(realIds.RealEnvironmentId))
@@ -437,7 +370,7 @@ func (client *Client) ValueInt(groupNameOrId string, featureNameOrId string, def
 		return defaultValue, err
 	}
 
-	valueIntFeature := client.FlagGroups[realIds.RealGroupId].Environments[realIds.RealEnvironmentId].ValueIntFeatures[realIds.RealFeatureId]
+	valueIntFeature := client.installedGroups[realIds.RealGroupId].Environments[realIds.RealEnvironmentId].ValueIntFeatures[realIds.RealFeatureId]
 
 	if valueIntFeature.FeatureId == "" {
 		return defaultValue, NewFeatureLookUpError(string(realIds.RealGroupId), string(realIds.RealFeatureId), string(realIds.RealEnvironmentId))
@@ -468,7 +401,7 @@ func (client *Client) ValueFloat(groupNameOrId string, featureNameOrId string, d
 		return defaultValue, err
 	}
 
-	valueFloatFeature := client.FlagGroups[realIds.RealGroupId].Environments[realIds.RealEnvironmentId].ValueFloatFeatures[realIds.RealFeatureId]
+	valueFloatFeature := client.installedGroups[realIds.RealGroupId].Environments[realIds.RealEnvironmentId].ValueFloatFeatures[realIds.RealFeatureId]
 
 	if valueFloatFeature.FeatureId == "" {
 		return defaultValue, NewFeatureLookUpError(string(realIds.RealGroupId), string(realIds.RealFeatureId), string(realIds.RealEnvironmentId))
@@ -488,13 +421,20 @@ func (client *Client) getRawFeature(groupNameOrId string, featureNameOrId string
 		return Feature{}, err
 	}
 
-	rawFeature := client.FlagGroups[realIds.RealGroupId].Features[realIds.RealFeatureId]
-
-	if rawFeature.FeatureId == "" {
-		return Feature{}, NewFeatureLookUpError(string(realIds.RealGroupId), string(realIds.RealFeatureId), string(realIds.RealEnvironmentId))
+	environment := client.installedGroups[realIds.RealGroupId].Environments[realIds.RealEnvironmentId]
+	if feature, ok := environment.ToggleFeatures[realIds.RealFeatureId]; ok {
+		return feature.Feature, nil
 	}
-
-	return rawFeature, nil
+	if feature, ok := environment.GradualFeatures[realIds.RealFeatureId]; ok {
+		return feature.Feature, nil
+	}
+	if feature, ok := environment.SelectiveFeatures[realIds.RealFeatureId]; ok {
+		return feature.Feature, nil
+	}
+	if feature, ok := environment.ValueFeatures[realIds.RealFeatureId]; ok {
+		return feature.Feature, nil
+	}
+	return Feature{}, NewFeatureLookUpError(groupNameOrId, featureNameOrId, client.Environment)
 }
 
 func (client *Client) getRealIds(groupNameOrId string, featureNameOrId string) (RealIds, error) {

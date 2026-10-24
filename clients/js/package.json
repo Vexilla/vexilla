@@ -5,9 +5,9 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test:gradual": "ts-node src/test_gradual.ts",
-    "test:scheduling": "ts-node src/test_scheduling.ts",
-    "test:client": "ts-node src/test_client.ts",
+    "test:gradual": "node --import tsx src/test_gradual.ts",
+    "test:scheduling": "node --import tsx src/test_scheduling.ts",
+    "test:client": "node --import tsx src/test_client.ts",
     "test": "pnpm run \"/^test:.*/\"",
     "compile": "tsup && node --import tsx scripts/hack-dist-types.ts",
     "test:contract": "node --import tsx --test test/contract.test.ts"
@@ -27,12 +27,13 @@
     "ts-loader": "^8.0.11",
     "ts-node": "^10.9.1",
     "tsup": "^8.0.2",
+    "tsx": "4.20.5",
     "typescript": "^5.0.4",
     "uuid": "^8.3.2",
-    "xxhashjs": "^0.2.2",
-    "tsx": "4.20.5"
+    "xxhashjs": "^0.2.2"
   },
   "dependencies": {
+    "ajv": "8.17.1",
     "case": "^1.6.3",
     "dayjs": "^1.11.7"
   },

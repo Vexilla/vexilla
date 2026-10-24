@@ -2,24 +2,10 @@ package internal
 
 import (
 	"encoding/json"
-	"fmt"
-	"math"
 )
 
-func (feature *GradualFeature) UnmarshalJSON(bytes []byte) error {
-	type wireGradualFeature GradualFeature
-	var decoded wireGradualFeature
-	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return err
-	}
-	if math.IsNaN(decoded.Seed) || math.IsInf(decoded.Seed, 0) || decoded.Seed <= 0 || decoded.Seed > 1 {
-		return fmt.Errorf("seed must be a finite number greater than 0 and less than or equal to 1")
-	}
-	*feature = GradualFeature(decoded)
-	return nil
-}
-
 func (environment *Environment) UnmarshalJSON(bytes []byte) error {
+	*environment = Environment{decoded: true}
 	var baseEnvironment BaseEnvironment
 	err := json.Unmarshal(bytes, &baseEnvironment)
 	if err != nil {

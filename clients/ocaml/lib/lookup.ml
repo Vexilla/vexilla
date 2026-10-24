@@ -78,6 +78,10 @@ module Feature_table = struct
     feature_table
     |> set ~key:(`Id feature_id) ~value:feature_id
     |> set ~key:(`Name name) ~value:feature_id
+    |> set ~key:(`Id (Compatibility.normalize name)) ~value:feature_id
+    |> set ~key:(`Name (Compatibility.normalize name)) ~value:feature_id
+    |> set ~key:(`Name feature_id) ~value:feature_id
+    |> set ~key:(`Id name) ~value:feature_id
   ;;
 end
 
@@ -90,6 +94,10 @@ module Environment_table = struct
     environment_table
     |> set ~key:(`Id id) ~value:id
     |> set ~key:(`Name name) ~value:id
+    |> set ~key:(`Id (Compatibility.normalize name)) ~value:id
+    |> set ~key:(`Name (Compatibility.normalize name)) ~value:id
+    |> set ~key:(`Name id) ~value:id
+    |> set ~key:(`Id name) ~value:id
   ;;
 end
 

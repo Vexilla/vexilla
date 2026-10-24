@@ -1,6 +1,5 @@
 import type {
   VexillaClientConfig,
-  VexillaGradualFeature,
   VexillaManifest,
   PublishedGroup,
   VexillaFeature,
@@ -17,15 +16,18 @@ import { isScheduledFeatureActive } from "./scheduling";
 
 type FetchHook<T> = (url: string) => Promise<T>;
 
-function validateSeed(seed: unknown): void {
+import { VexillaError } from "./errors";
+import { isWellFormedUnicode } from "@vexilla/types";
+import { validateGroupData, validateManifestData } from "./validation";
+
+function validInstance(value: unknown): asserts value is string | number {
   if (
-    typeof seed !== "number" ||
-    !Number.isFinite(seed) ||
-    seed <= 0 ||
-    seed > 1
+    !(typeof value === "string" && isWellFormedUnicode(value)) &&
+    !(typeof value === "number" && Number.isFinite(value))
   ) {
-    throw new Error(
-      "feature.seed must be a finite number greater than 0 and less than or equal to 1"
+    throw new VexillaError(
+      "instance",
+      "A finite numeric or string instance ID is required"
     );
   }
 }
@@ -36,39 +38,64 @@ export class VexillaClient {
   protected environment: string;
   protected customInstanceHash = "";
 
-  protected manifest: VexillaManifest;
-  protected flagGroups: Record<string, PublishedGroup> = {};
-  protected groupLookupTable: Record<string, string> = {};
-  protected featureLookupTable: Record<string, Record<string, string>> = {};
-  protected environmentLookupTable: Record<string, Record<string, string>> = {};
+  protected manifest: VexillaManifest | undefined;
+  protected flagGroups: Record<string, PublishedGroup> = Object.create(null);
+  protected groupLookupTable: Record<string, string> = Object.create(null);
+  protected featureLookupTable: Record<string, Record<string, string>> =
+    Object.create(null);
+  protected environmentLookupTable: Record<string, Record<string, string>> =
+    Object.create(null);
 
-  constructor(config: VexillaClientConfig, showLogs = false) {
+  constructor(
+    config: Pick<
+      VexillaClientConfig,
+      "baseUrl" | "environment" | "customInstanceId"
+    >,
+    showLogs = false
+  ) {
     this.showLogs = showLogs;
     this.baseUrl = config.baseUrl;
-    this.environment = config.environment || "prod";
+    this.environment = config.environment ?? "prod";
     this.customInstanceHash = config.customInstanceId;
   }
 
   async getManifest(
     fetchHook: FetchHook<VexillaManifest>
   ): Promise<VexillaManifest> {
+    let result: unknown;
     try {
-      const result = await fetchHook(`${this.baseUrl}/manifest.json`);
-      return result;
-    } catch (e: any) {
-      this.warn("Error: failed to fetch manifest", e);
-      return { version: "v1", groups: [] };
+      result = await fetchHook(`${this.baseUrl}/manifest.json`);
+    } catch (error) {
+      throw new VexillaError(
+        "fetch",
+        "Failed to fetch manifest: " + String(error)
+      );
     }
+    validateManifestData(result);
+    return structuredClone(result);
   }
 
   async setManifest(manifest: VexillaManifest) {
-    this.manifest = manifest;
-    this.groupLookupTable = createGroupLookupTable(manifest.groups);
+    validateManifestData(manifest);
+    const snapshot = structuredClone(manifest);
+    const lookup = createGroupLookupTable(snapshot.groups);
+    for (const [id, group] of Object.entries(this.flagGroups)) {
+      if (
+        !snapshot.groups.some(
+          (entry) => entry.groupId === id && entry.name === group.name
+        )
+      ) {
+        delete this.flagGroups[id];
+        delete this.featureLookupTable[id];
+        delete this.environmentLookupTable[id];
+      }
+    }
+    this.manifest = snapshot;
+    this.groupLookupTable = lookup;
   }
 
   async syncManifest(fetchHook: FetchHook<VexillaManifest>) {
-    const manifest = await this.getManifest(fetchHook);
-    this.setManifest(manifest);
+    await this.setManifest(await this.getManifest(fetchHook));
   }
 
   async getFlags(
@@ -76,48 +103,47 @@ export class VexillaClient {
     fetchHook: FetchHook<PublishedGroup>
   ): Promise<PublishedGroup> {
     if (!this.manifest) {
-      throw new Error("Manifest is not fetched");
+      throw new VexillaError("lookup", "Manifest is not fetched");
     }
-    let groupId = this.groupLookupTable[groupNameOrId];
-
-    if (!groupId) {
-      throw new Error("FlagGroup not found in manifest.");
+    const id = this.groupLookupTable[groupNameOrId];
+    if (!id) {
+      throw new VexillaError("lookup", "FlagGroup not found in manifest");
     }
-
-    const flagsResponse: PublishedGroup = await fetchHook(
-      `${this.baseUrl}/${groupId}.json`
-    );
-    return flagsResponse;
+    let flags: unknown;
+    try {
+      flags = await fetchHook(`${this.baseUrl}/${id}.json`);
+    } catch (error) {
+      throw new VexillaError(
+        "fetch",
+        "Failed to fetch group: " + String(error)
+      );
+    }
+    validateGroupData(flags, this.manifest);
+    if (flags.groupId !== id) {
+      throw new VexillaError(
+        "validation",
+        "Fetched group does not match the requested group"
+      );
+    }
+    return structuredClone(flags);
   }
 
   setFlags(flags: PublishedGroup) {
-    for (const features of [
-      flags.features,
-      ...Object.values(flags.environments).map((env) => env.features),
-    ]) {
-      for (const feature of Object.values(features)) {
-        if (feature.featureType === "gradual") {
-          validateSeed(feature.seed);
-        }
-      }
+    if (!this.manifest) {
+      throw new VexillaError("lookup", "Manifest is not fetched");
     }
-    let groupId = this.groupLookupTable[flags.groupId];
-
-    this.featureLookupTable[groupId] = createFeatureLookupTable(flags.features);
-    this.environmentLookupTable[groupId] = createEnvironmentLookupTable(
-      flags.environments
-    );
-
-    this.flagGroups[groupId] = flags;
+    validateGroupData(flags, this.manifest);
+    const snapshot = structuredClone(flags);
+    const groupId = snapshot.groupId;
+    const features = createFeatureLookupTable(snapshot.features);
+    const environments = createEnvironmentLookupTable(snapshot.environments);
+    this.featureLookupTable[groupId] = features;
+    this.environmentLookupTable[groupId] = environments;
+    this.flagGroups[groupId] = snapshot;
   }
 
   async syncFlags(groupNameOrId: string, fetchHook: FetchHook<PublishedGroup>) {
-    if (!this.manifest) {
-      throw new Error("Manifest is not fetched");
-    }
-
-    const flags = await this.getFlags(groupNameOrId, fetchHook);
-    this.setFlags(flags);
+    this.setFlags(await this.getFlags(groupNameOrId, fetchHook));
   }
 
   should(
@@ -125,47 +151,28 @@ export class VexillaClient {
     featureName: string,
     customInstanceHash?: string | number
   ): boolean {
-    const actualItems = this.getActualItems(groupNameOrId, featureName);
-
-    let { feature } = actualItems;
-
+    const { feature } = this.getActualItems(groupNameOrId, featureName);
+    if (feature.featureType === "value") {
+      throw new VexillaError("kind", "Tried calling should on a value feature");
+    }
+    const instance = customInstanceHash ?? this.customInstanceHash;
+    if (
+      feature.featureType === "gradual" ||
+      feature.featureType === "selective"
+    ) {
+      validInstance(instance);
+    }
     if (!isScheduledFeatureActive(feature)) {
       return false;
     }
-
-    let _should = false;
     switch (feature.featureType) {
       case "toggle":
-        _should = feature.value;
-        break;
-
+        return feature.value;
       case "gradual":
-        validateSeed(feature.seed);
-
-        if (customInstanceHash == null && this.customInstanceHash == null) {
-          throw new Error(
-            "customInstanceHash config must be defined when using 'gradual' Feature Types"
-          );
-        }
-        feature = feature as VexillaGradualFeature;
-
-        _should =
-          hashString(
-            `${customInstanceHash ?? this.customInstanceHash}`,
-            feature.seed
-          ) <= feature.value;
-        break;
-
+        return hashString(String(instance), feature.seed) < feature.value;
       case "selective":
-        const instanceHash = customInstanceHash ?? this.customInstanceHash;
-        _should = (feature.value as (string | number)[]).includes(instanceHash);
-        break;
-
-      default:
-        throw Error(`Unsupported Feature Type: ${feature.featureType}`);
+        return (feature.value as (string | number)[]).includes(instance);
     }
-
-    return _should;
   }
 
   safeShould(
@@ -189,7 +196,10 @@ export class VexillaClient {
     const actualItems = this.getActualItems(groupNameOrId, featureName);
 
     if (actualItems.feature.featureType !== "value") {
-      throw new Error("Tried calling value on non-value feature.");
+      throw new VexillaError(
+        "kind",
+        "Tried calling value on non-value feature."
+      );
     }
 
     if (!isScheduledFeatureActive(actualItems.feature)) {
@@ -224,7 +234,8 @@ export class VexillaClient {
     const group = this.flagGroups[groupId];
 
     if (!group) {
-      throw new Error(
+      throw new VexillaError(
+        "lookup",
         "should() called before flags were fetched for this group"
       );
     }
@@ -232,25 +243,33 @@ export class VexillaClient {
     const environmentId =
       this.environmentLookupTable[groupId][this.environment];
     if (!environmentId) {
-      throw new Error(`Environment(${this.environment}) could not be found`);
+      throw new VexillaError(
+        "lookup",
+        `Environment(${this.environment}) could not be found`
+      );
     }
 
     const environment = this.flagGroups[groupId].environments[environmentId];
     if (!environment) {
-      throw new Error(
+      throw new VexillaError(
+        "lookup",
         `Environment (${this.environment}) not found in group (${groupNameOrId}, ${groupId}).`
       );
     }
 
     const featureId = this.featureLookupTable[groupId][featureNameOrId];
     if (!featureId) {
-      throw new Error(`Feature(${featureNameOrId}) could not be found`);
+      throw new VexillaError(
+        "lookup",
+        `Feature(${featureNameOrId}) could not be found`
+      );
     }
 
     let feature = environment.features[featureId];
 
     if (!feature) {
-      throw new Error(
+      throw new VexillaError(
+        "lookup",
         `feature is undefined for environment(${this.environment}), group(${groupNameOrId}), or feature (${featureNameOrId})`
       );
     }

@@ -1,0 +1,27 @@
+local json = require('dkjson')
+local hash = require('vexilla.hash')
+local number = require('vexilla.number')
+local schedule = require('vexilla.schedule')
+local lookup = require('vexilla.lookup')
+local errors = require('vexilla.errors')
+local function invalid(value)
+  local ok, err = pcall(hash.instance_text, value)
+  assert(not ok and errors.is(err, 'instance'))
+end
+invalid(nil); invalid(false); invalid(true); invalid(math.huge); invalid(-math.huge); invalid(0/0)
+invalid(string.char(237,160,128)); invalid(string.char(237,191,191)); invalid(string.char(255))
+if math.maxinteger then invalid(math.maxinteger); invalid(math.mininteger + 1) end
+assert(hash.instance_text('') == '')
+assert(hash.instance_text(-0.0) == '0')
+assert(hash.instance_text(42.0) == '42')
+assert(hash.instance_text(9007199254740992) == '9007199254740992')
+assert(lookup.normalize('ΟΣ') == 'ος')
+assert(lookup.normalize('ΟΣΑ') == 'οσα')
+local file = assert(io.open(assert(os.getenv('VEXILLA_NUMERIC_CHECKS')), 'rb'))
+local vectors, _, err = json.decode(file:read('*a'), 1, json.null);file:close();assert(not err, err)
+for _, sample in ipairs(vectors) do
+  assert(number.format(sample.value + 0.0) == sample.text, sample.text)
+end
+local now = schedule.now()
+assert(now % 1 == 0 and now > 1700000000000)
+print(_VERSION, jit and jit.version or '', #vectors, 'numeric regressions and native checks passed')

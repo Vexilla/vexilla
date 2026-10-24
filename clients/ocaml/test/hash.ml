@@ -13,7 +13,7 @@ let () =
                 Hash.hash_instance_id ~seed
                   "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a"
               in
-              let expected = 0.19 in
+              let expected = 0.19072000002861023 in
 
               (check @@ float epsilon_float) "equal" expected actual);
           test_case "should not" `Quick (fun () ->
@@ -22,7 +22,7 @@ let () =
                 Hash.hash_instance_id ~seed
                   "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a"
               in
-              let expected = 0.943 in
+              let expected = 0.9436200000047684 in
 
               (check @@ float epsilon_float) "equal" expected actual);
         ] );

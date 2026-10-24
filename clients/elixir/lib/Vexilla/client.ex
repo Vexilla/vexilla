@@ -1,190 +1,172 @@
 defmodule VexillaClient do
-  @moduledoc """
-  VexillaClient is the core module of this SDK. Most interaction with Vexilla and your feature flags will be through this module.
-  """
-  require FeatureType
-
-  @doc """
-  Create a config for the VexillaClient. This config will need to be passed to all subsequent module functions.
-  """
+  @moduledoc "An immutable client configuration with validated publication snapshots."
   def create_config(base_url, environment, instance_id)
-      when is_binary(base_url) and is_binary(environment) and is_binary(instance_id) do
+      when is_binary(base_url) and is_binary(environment) do
     %{
-      base_url: base_url,
+      base_url: String.trim_trailing(base_url, "/"),
       environment: environment,
       instance_id: instance_id,
-      manifest: %{},
+      manifest: nil,
+      groups: %{},
       group_lookup_table: %{},
       environment_lookup_table: %{},
-      feature_lookup_table: %{},
-      groups: %{}
+      feature_lookup_table: %{}
     }
   end
 
-  @doc """
-  Fetches the manifest file for facilitating name->id lookups. Does not set the value on the client. You would need to call `set_manifest` after. Alternatively, you can use `sync_manifest` to do both steps with less code.
-  """
-  def get_manifest!(config, http_callback) when is_function(http_callback) do
-    http_callback.("#{config.base_url}/manifest.json")
+  defp request(config, path, callback) do
+    try do
+      callback.(config.base_url <> "/" <> path)
+    rescue
+      error -> raise VexillaContractError, kind: "fetch", message: Exception.message(error)
+    end
   end
 
-  @doc """
-  Sets a fetched manifest within the VexillaClient instance. It can also be useful for mocking flags for testing.
-  """
+  def get_manifest!(config, http_callback),
+    do:
+      config
+      |> request("manifest.json", http_callback)
+      |> VexillaValidation.decode()
+      |> VexillaValidation.manifest()
+
   def set_manifest(config, manifest) do
-    group_lookup_table =
-      Enum.reduce(manifest["groups"], %{}, fn group, group_lookup_table ->
-        group_lookup_table
-        |> Map.put(group["groupId"], group["groupId"])
-        |> Map.put(group["name"], group["groupId"])
+    VexillaValidation.manifest(manifest)
+
+    aliases =
+      Enum.reduce(manifest["groups"], %{}, fn g, acc ->
+        VexillaValidation.alias(acc, g["groupId"], g["name"])
       end)
 
-    # %{config: config, manifest: manifest, group_lookup_table: group_lookup_table}
-    config
-    |> Map.put(:manifest, manifest)
-    |> Map.put(:group_lookup_table, group_lookup_table)
+    groups =
+      Map.filter(config.groups, fn {id, g} ->
+        Enum.any?(manifest["groups"], &(&1["groupId"] == id and &1["name"] == g["name"]))
+      end)
+
+    %{
+      config
+      | manifest: manifest,
+        group_lookup_table: aliases,
+        groups: groups,
+        environment_lookup_table: Map.take(config.environment_lookup_table, Map.keys(groups)),
+        feature_lookup_table: Map.take(config.feature_lookup_table, Map.keys(groups))
+    }
   end
 
-  @doc """
-  Fetches and sets the manifest within the client to facilitate name->Id lookups.
-  """
-  def sync_manifest!(config, http_callback) when is_function(http_callback) do
-    manifest = get_manifest!(config, http_callback)
-    set_manifest(config, manifest)
+  def sync_manifest!(config, http_callback),
+    do: set_manifest(config, get_manifest!(config, http_callback))
+
+  defp lookup(map, key) do
+    case Map.fetch(map, key) do
+      {:ok, v} ->
+        v
+
+      :error ->
+        raise VexillaContractError, kind: "lookup", message: "Lookup not found: #{inspect(key)}"
+    end
   end
 
-  @doc """
-  Fetches the flags for a specific flag group. Can use the ID or the name of the group for the lookup.
-  """
-  def get_flags!(config, group_name_or_id, http_callback) when is_function(http_callback) do
-    group_id = config.group_lookup_table[group_name_or_id]
-    group = http_callback.("#{config.base_url}/#{group_id}.json")
-    validate_seeds!(group)
+  defp match(config, group) do
+    if config.manifest == nil,
+      do: raise(VexillaContractError, kind: "lookup", message: "Manifest not installed")
+
+    VexillaValidation.check(
+      Enum.any?(
+        config.manifest["groups"],
+        &(&1["groupId"] == group["groupId"] and &1["name"] == group["name"])
+      ),
+      "Group differs from manifest ID/name"
+    )
+  end
+
+  def get_flags!(config, group_name_or_id, http_callback) do
+    id = lookup(config.group_lookup_table, group_name_or_id)
+
+    group =
+      config
+      |> request(id <> ".json", http_callback)
+      |> VexillaValidation.decode()
+      |> VexillaValidation.group()
+
+    match(config, group)
+    VexillaValidation.check(group["groupId"] == id, "Fetched group differs from requested group")
     group
   end
 
-  @doc """
-  Sets a fetched flag group within the Client instance.
-  """
   def set_flags(config, group) do
-    validate_seeds!(group)
-    group_environments =
-      Enum.reduce(Map.values(group["environments"]), %{}, fn environment, group_environments ->
-        group_environments
-        |> Map.put(environment["environmentId"], environment["environmentId"])
-        |> Map.put(environment["name"], environment["environmentId"])
+    VexillaValidation.group(group)
+    match(config, group)
+
+    envs =
+      Enum.reduce(group["environments"], %{}, fn {id, e}, acc ->
+        VexillaValidation.alias(acc, id, e["name"])
       end)
 
-    environment_lookup_table =
-      Map.put_new(
-        config.environment_lookup_table,
-        group["groupId"],
-        group_environments
-      )
-
-    group_features =
-      Enum.reduce(Map.values(group["features"]), %{}, fn feature, group_features ->
-        group_features
-        |> Map.put(feature["featureId"], feature["featureId"])
-        |> Map.put(feature["name"], feature["featureId"])
+    features =
+      Enum.reduce(group["features"], %{}, fn {id, f}, acc ->
+        VexillaValidation.alias(acc, id, f["name"])
       end)
 
-    feature_lookup_table =
-      Map.put_new(config.feature_lookup_table, group["groupId"], group_features)
+    id = group["groupId"]
 
-    config_groups = Map.put(config.groups, group["groupId"], group)
-
-    config
-    |> Map.put(:environment_lookup_table, environment_lookup_table)
-    |> Map.put(:feature_lookup_table, feature_lookup_table)
-    |> Map.put(:groups, config_groups)
+    %{
+      config
+      | groups: Map.put(config.groups, id, group),
+        environment_lookup_table: Map.put(config.environment_lookup_table, id, envs),
+        feature_lookup_table: Map.put(config.feature_lookup_table, id, features)
+    }
   end
 
-  @doc """
-  Sets a fetched flag group within the Client instance.
-  """
-  def sync_flags!(config, group_name_or_id, http_callback) do
-    group = get_flags!(config, group_name_or_id, http_callback)
-    set_flags(config, group)
+  def sync_flags!(config, group_name_or_id, http_callback),
+    do: set_flags(config, get_flags!(config, group_name_or_id, http_callback))
+
+  defp feature(config, group_name, feature_name) do
+    id = lookup(config.group_lookup_table, group_name)
+    group = lookup(config.groups, id)
+    env = config.environment_lookup_table |> lookup(id) |> lookup(config.environment)
+    fid = config.feature_lookup_table |> lookup(id) |> lookup(feature_name)
+    group["environments"][env]["features"][fid]
   end
 
-  defp validate_seeds!(group) do
-    feature_maps = [group["features"] | Enum.map(Map.values(group["environments"]), & &1["features"])]
-    for features <- feature_maps, feature <- Map.values(features), feature["featureType"] == "gradual" do
-      seed = feature["seed"]
-      unless is_number(seed) and seed > 0 and seed <= 1 do
-        raise ArgumentError, "seed must be a number greater than 0 and less than or equal to 1"
-      end
-    end
-  end
+  def should!(config, group_name_or_id, feature_name_or_id),
+    do: should_custom!(config, group_name_or_id, feature_name_or_id, config.instance_id)
 
-  @doc """
-  Checks if a toggle, gradual, or selective flag should be enabled. Other methods exist for other flag types, such as value.
-  """
-  def should!(config, group_name_or_id, feature_name_or_id) do
-    should_custom!(config, group_name_or_id, feature_name_or_id, config.instance_id)
-  end
-
-  @doc """
-  Checks if a toggle, gradual, or selective flag should be enabled. Uses a custom instance ID rather than the one set in the Client. Other methods exist for other flag types, such as value.
-  """
   def should_custom!(config, group_name_or_id, feature_name_or_id, custom_instance_id) do
-    group_id = config.group_lookup_table[group_name_or_id]
-    group = config.groups[group_id]
+    f = feature(config, group_name_or_id, feature_name_or_id)
 
-    environment_id = config.environment_lookup_table[group_id][config.environment]
-    environment = group["environments"][environment_id]
+    if f["featureType"] == "value",
+      do:
+        raise(VexillaContractError,
+          kind: "kind",
+          message: "Value feature requires value operation"
+        )
 
-    feature_id = config.feature_lookup_table[group_id][feature_name_or_id]
-    feature = environment["features"][feature_id]
+    if f["featureType"] != "toggle", do: Hasher.validate_instance(custom_instance_id)
 
-    feature_type_toggle = FeatureType.toggle()
-    feature_type_gradual = FeatureType.gradual()
-    feature_type_selective = FeatureType.selective()
-    feature_type_value = FeatureType.value()
+    if Scheduler.is_scheduled_feature_active(f) do
+      case f["featureType"] do
+        "toggle" ->
+          f["value"]
 
-    within_schedule = Scheduler.is_scheduled_feature_active(feature)
+        "gradual" ->
+          Hasher.hash_string(Hasher.instance_text(custom_instance_id), f["seed"]) < f["value"]
 
-    case {feature["featureType"], within_schedule} do
-      {_, false} ->
-        false
-
-      {^feature_type_toggle, _} ->
-        feature["value"]
-
-      {^feature_type_gradual, _} ->
-        Hasher.hash_string(custom_instance_id, feature["seed"]) < feature["value"]
-
-      {^feature_type_selective, _} ->
-        Enum.find_index(feature["value"], fn value -> value == custom_instance_id end) != nil
-
-      {^feature_type_value, _} ->
-        raise InvalidShouldFeatureTypeError, message: "Value Features are not supported by `should`. Try `value!` instead."
+        "selective" ->
+          Enum.any?(f["value"], fn v ->
+            (is_binary(v) and is_binary(custom_instance_id) and v === custom_instance_id) or
+              (is_number(v) and is_number(custom_instance_id) and v == custom_instance_id)
+          end)
+      end
+    else
+      false
     end
   end
 
-  @doc """
-  Gets an environment specific string or number value and falls back to a default if the feature is outside of its schedule.
-  """
   def value!(config, group_name_or_id, feature_name_or_id, default_value) do
-    group_id = config.group_lookup_table[group_name_or_id]
-    group = config.groups[group_id]
+    f = feature(config, group_name_or_id, feature_name_or_id)
 
-    environment_id = config.environment_lookup_table[group_id][config.environment]
-    environment = group["environments"][environment_id]
+    if f["featureType"] != "value",
+      do: raise(VexillaContractError, kind: "kind", message: "Expected value feature")
 
-    feature_id = config.feature_lookup_table[group_id][feature_name_or_id]
-    feature = environment["features"][feature_id]
-
-    if feature["featureType"] != FeatureType.value() do
-      raise InvalidValueFeatureTypeError, message: "feature (#{feature_id}) is not of type 'value'"
-    end
-
-    within_schedule = Scheduler.is_scheduled_feature_active(feature)
-
-    case within_schedule do
-      true -> feature["value"]
-      false -> default_value
-    end
+    if Scheduler.is_scheduled_feature_active(f), do: f["value"], else: default_value
   end
 end

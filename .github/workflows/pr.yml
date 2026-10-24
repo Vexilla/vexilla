@@ -62,11 +62,16 @@ jobs:
           TEST_SERVER_HOST: localhost:3000
 
   test-elixir:
+    needs: sdk-json-contract
     runs-on: ubuntu-latest
     container: elixir:1.15.7
 
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: sdk-contract
+          path: .contract-artifacts
       - uses: ./.github/actions/test-server
 
       - name: Cache Mix dependencies
@@ -85,6 +90,7 @@ jobs:
           mix test.coverage
         env:
           TEST_SERVER_HOST: localhost:3000
+          VEXILLA_CONTRACT_DIR: ${{ github.workspace }}/.contract-artifacts
 
   test-bazel:
     runs-on: ubuntu-latest
