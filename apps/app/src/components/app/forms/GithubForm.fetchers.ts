@@ -1,4 +1,8 @@
-import { config } from "../../../stores/config-valtio";
+import {
+  captureRemoteRead,
+  config,
+  isRemoteReadCurrent,
+} from "../../../stores/config-valtio";
 import { AppState, HostingConfig, HostingConfigGithub } from "../../../types";
 import {
   GitFetcher,
@@ -98,11 +102,26 @@ const commonHeaders = {
 
 type PublicationFile = { content: string; filePath: string };
 
+// The response body is deliberately reduced to a safe internal classification.
+class EmptyGitHubRepositoryError extends GitReadError {
+  constructor() {
+    super("GitHub repository requires initialization", 409);
+  }
+}
+
 export class GitHubFetcher extends GitFetcher {
+  readonly usesReadPreparation: boolean = true;
   private readonly baselineHeads = new Map<string, string>();
 
-  private rememberReadHead(context: HostingConfigGithub, head: string) {
-    if (githubContextKey(context) === githubContextKey(config.hosting)) {
+  private rememberReadHead(
+    context: HostingConfigGithub,
+    head: string,
+    ticket: ReturnType<typeof captureRemoteRead>
+  ) {
+    if (
+      isRemoteReadCurrent(ticket) &&
+      githubContextKey(context) === githubContextKey(config.hosting)
+    ) {
       this.baselineHeads.set(gitLocationKey(context), head);
     }
   }
@@ -115,6 +134,49 @@ export class GitHubFetcher extends GitFetcher {
   }
   getReadContextKey(hosting: HostingConfig) {
     return githubContextKey(hosting);
+  }
+
+  async prepareRead(): Promise<"ready" | "initialization-required"> {
+    const context = this.repositoryContext();
+    if (!canReadGitHubConfig(context)) {
+      throw new GitReadError("GitHub branch selection is incomplete");
+    }
+    const branches = await this.paginate<GitHubBranch>(
+      `${this.repositoryPath(context)}/branches`,
+      context
+    );
+    if (branches.some((branch) => branch.name === context.targetBranch)) {
+      return "ready";
+    }
+    if (branches.length) {
+      throw new GitReadError("The selected GitHub branch does not exist", 404);
+    }
+    try {
+      // A successful empty branch list alone also permits repositories with tags.
+      // Only GitHub's specific empty Git database response proves initialization
+      // is required. Do not start the ordinary named-branch/config read here.
+      await this.request(
+        `${this.repositoryPath(context)}/git/trees/${encodeURIComponent(
+          context.targetBranch || ""
+        )}`,
+        context,
+        {},
+        true
+      );
+    } catch (error) {
+      if (error instanceof EmptyGitHubRepositoryError) {
+        return "initialization-required";
+      }
+      throw error;
+    }
+    throw new GitReadError("Unable to verify the selected GitHub branch");
+  }
+
+  shouldPrepareAfterReadError(error: unknown) {
+    return (
+      error instanceof GitReadError &&
+      (error.status === 404 || error.status === 409)
+    );
   }
 
   async fetchInstallations(): Promise<GitHubGetInstallationsResponse> {
@@ -277,6 +339,7 @@ export class GitHubFetcher extends GitFetcher {
   }
 
   async getCurrentConfig(): Promise<AppState | null> {
+    const ticket = captureRemoteRead();
     const context = this.repositoryContext();
     if (!canReadGitHubConfig(context)) {
       throw new GitReadError("GitHub config selection is incomplete");
@@ -300,7 +363,7 @@ export class GitHubFetcher extends GitFetcher {
           "GitHub tree is incomplete; config absence is unknown"
         );
       }
-      this.rememberReadHead(context, head);
+      this.rememberReadHead(context, head, ticket);
       return null;
     }
     if (!hasValue(entry.sha) || (entry.type && entry.type !== "blob")) {
@@ -329,7 +392,7 @@ export class GitHubFetcher extends GitFetcher {
     ) {
       throw new GitReadError("Invalid GitHub config document");
     }
-    this.rememberReadHead(context, head);
+    this.rememberReadHead(context, head, ticket);
     return result;
   }
 
@@ -346,7 +409,12 @@ export class GitHubFetcher extends GitFetcher {
       if (!Array.isArray(response.tree)) {
         throw new GitReadError("Invalid GitHub tree response");
       }
-      return response.tree.length > 0;
+      if (response.truncated) {
+        throw new GitReadError(
+          "GitHub tree is incomplete; validity is unknown"
+        );
+      }
+      return true;
     } catch (error) {
       if (
         error instanceof GitReadError &&
@@ -458,7 +526,11 @@ export class GitHubFetcher extends GitFetcher {
       for (const entry of entries) {
         const identity = collection ? entry?.id : entry?.name;
         if (
-          !(typeof identity === "number" && Number.isSafeInteger(identity)) &&
+          !(
+            collection &&
+            typeof identity === "number" &&
+            Number.isSafeInteger(identity)
+          ) &&
           !hasValue(identity)
         ) {
           throw new GitReadError("Invalid GitHub pagination entry");
@@ -470,11 +542,14 @@ export class GitHubFetcher extends GitFetcher {
         entryIdentities.add(key);
       }
       all.push(...entries);
-      const next = response.headers
+      const nextLinks = response.headers
         .get("Link")
         ?.split(",")
-        .find((link) => /;\s*rel="next"/.test(link))
-        ?.match(/<([^>]+)>/)?.[1];
+        .filter((link) => /;\s*rel="next"/.test(link));
+      const next = nextLinks?.[0]?.match(/<([^>]+)>/)?.[1];
+      if ((nextLinks?.length && !next) || (nextLinks?.length || 0) > 1) {
+        throw new GitReadError("Invalid GitHub pagination link");
+      }
       if (!next) {
         if (total !== undefined && all.length !== total) {
           throw new GitReadError(
@@ -494,7 +569,8 @@ export class GitHubFetcher extends GitFetcher {
   private async request(
     path: string,
     context: HostingConfigGithub,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    classifyEmptyRepository = false
   ) {
     const url = new URL(path, GITHUB_BASE_URL);
     if (url.origin !== GITHUB_BASE_URL || url.username || url.password) {
@@ -510,6 +586,24 @@ export class GitHubFetcher extends GitFetcher {
       },
     });
     if (!response.ok) {
+      if (classifyEmptyRepository && response.status === 409) {
+        try {
+          const body: unknown = await response.json();
+          if (
+            body &&
+            typeof body === "object" &&
+            "message" in body &&
+            body.message === "Git Repository is empty."
+          ) {
+            throw new EmptyGitHubRepositoryError();
+          }
+        } catch (error) {
+          if (error instanceof EmptyGitHubRepositoryError) {
+            throw error;
+          }
+          // Malformed response bodies still produce the safe HTTP error below.
+        }
+      }
       throw new GitReadError(
         `GitHub request failed (${response.status})`,
         response.status

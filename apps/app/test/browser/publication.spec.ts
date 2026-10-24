@@ -52,6 +52,9 @@ async function openEditor(page: Page, local: any) {
       return route.fulfill({ json: { sha: "new", tree: [] } });
     }
     const url = route.request().url();
+    if (new URL(url).pathname.endsWith("/branches")) {
+      return route.fulfill({ json: [{ name: local.hosting.targetBranch }] });
+    }
     return route.fulfill({
       json: url.includes("/git/trees/")
         ? { tree: [{ path: "config.json", sha: "blob" }] }

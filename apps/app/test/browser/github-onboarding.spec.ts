@@ -144,6 +144,147 @@ async function choose(page: Page, label: string, option: string) {
   await page.getByText(option, { exact: true }).click();
 }
 
+const localDraft = () => ({
+  modifiedAt: 10,
+  groups: [
+    { groupId: "local", name: "Local draft", features: {}, environments: {} },
+  ],
+  hosting: hosting(),
+});
+const publishButton = (page: Page) =>
+  page.getByRole("button", {
+    name: "Publish",
+    exact: true,
+    includeHidden: true,
+  });
+const initializeButton = (page: Page) =>
+  page.getByRole("button", { name: "Initialize", exact: true });
+const refreshRepository = (page: Page) =>
+  page
+    .getByRole("button", { name: "Refresh repositories and branches" })
+    .click();
+function deferred(page: Page) {
+  let release!: () => void;
+  const waiting = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  page.once("close", release);
+  return { waiting, release };
+}
+
+async function mockEmptyGitHub(
+  page: Page,
+  options: {
+    initial?: any;
+    defaultBranch?: string;
+    targetBranch?: string;
+    intercept?: (
+      route: Route,
+      repository: { initialized: boolean; remoteDocument?: any }
+    ) => Promise<boolean>;
+  } = {}
+) {
+  const repository: { initialized: boolean; remoteDocument?: any } = {
+    initialized: false,
+  };
+  const targetBranch = options.targetBranch ?? "main";
+  const operations: string[] = [];
+  const writes: { path: string; payload: any; authorization?: string }[] = [];
+  const mocked = await mockGitHub(page, {
+    initial: options.initial,
+    repositories: [
+      { ...repoA, default_branch: options.defaultBranch ?? "main" },
+    ],
+    intercept: async (route) => {
+      const request = route.request();
+      const path = new URL(request.url()).pathname;
+      operations.push(`${request.method()} ${path}`);
+      const initialization =
+        request.method() === "PUT" && path.endsWith("/contents/README.md");
+      if (initialization) {
+        writes.push({
+          path,
+          payload: request.postDataJSON(),
+          authorization: request.headers().authorization,
+        });
+      }
+      if (options.intercept && (await options.intercept(route, repository))) {
+        return true;
+      }
+      if (initialization) {
+        repository.initialized = true;
+        await route.fulfill({
+          status: 201,
+          json: { content: { sha: "readme" } },
+        });
+        return true;
+      }
+      if (!path.startsWith("/repos/owner-a/repo-a/")) {
+        return false;
+      }
+      if (path.endsWith("/branches")) {
+        await route.fulfill({
+          json: repository.initialized ? [{ name: targetBranch }] : [],
+        });
+        return true;
+      }
+      if (!repository.initialized && path.includes("/branches/")) {
+        await route.fulfill({
+          status: 404,
+          json: { message: "Branch not found" },
+        });
+        return true;
+      }
+      if (path.includes("/git/trees/")) {
+        await route.fulfill(
+          repository.initialized
+            ? {
+                json: {
+                  tree: [
+                    { path: "README.md", sha: "readme" },
+                    ...(repository.remoteDocument
+                      ? [{ path: "config.json", sha: "external-config" }]
+                      : []),
+                  ],
+                },
+              }
+            : {
+                status: 409,
+                json: { message: "Git Repository is empty." },
+              }
+        );
+        return true;
+      }
+      if (
+        repository.remoteDocument &&
+        path.endsWith("/git/blobs/external-config")
+      ) {
+        await route.fulfill({
+          json: {
+            content: Buffer.from(
+              JSON.stringify(repository.remoteDocument)
+            ).toString("base64"),
+          },
+        });
+        return true;
+      }
+      return false;
+    },
+  });
+  return { ...mocked, repository, operations, writes };
+}
+
+async function expectInitializationRequired(page: Page) {
+  await expect
+    .poll(async () => (await readState(page)).remoteMetadata.status)
+    .toBe("initialization-required");
+  await expect(initializeButton(page)).toBeEnabled();
+  await expect(
+    page.getByText("This repository needs initialization.")
+  ).toBeVisible();
+  await expect(publishButton(page)).toBeDisabled();
+}
+
 for (const callbackInstallation of [false, true]) {
   for (const count of [0, 1, 2]) {
     test(`fresh callback ${
@@ -418,7 +559,7 @@ for (const replacement of ["repository", "branch", "token"] as const) {
   }
 }
 
-test("a late validation result cannot validate a newly selected branch", async ({
+test("a late old tree cannot replace an existing branch's valid empty tree", async ({
   page,
 }) => {
   let release!: () => void,
@@ -430,13 +571,13 @@ test("a late validation result cannot validate a newly selected branch", async (
   const { requests, errors } = await mockGitHub(page, {
     initial: { modifiedAt: 10, groups: [], hosting: hosting() },
     intercept: async (route) => {
-      if (route.request().url().endsWith("/git/trees/main")) {
+      if (route.request().url().endsWith("/git/trees/head-main")) {
         delayed = true;
         await gate;
         await route.fulfill({ json: { tree: [{ path: "README.md" }] } });
         return true;
       }
-      if (route.request().url().endsWith("/git/trees/release")) {
+      if (route.request().url().endsWith("/git/trees/head-release")) {
         await route.fulfill({ json: { tree: [] } });
         return true;
       }
@@ -445,15 +586,19 @@ test("a late validation result cannot validate a newly selected branch", async (
   });
   await page.goto("/?logged_in");
   await expect.poll(() => delayed).toBe(true);
-  await choose(page, "Target Branch", "release");
+  await changeHosting(page, { targetBranch: "release" });
   await expect
-    .poll(() => requests.includes("/repos/owner-a/repo-a/git/trees/release"))
+    .poll(() =>
+      requests.includes("/repos/owner-a/repo-a/git/trees/head-release")
+    )
     .toBe(true);
   release();
-  await expect(
-    page.getByText("This repo or branch is empty.", { exact: true })
-  ).toBeVisible();
-  expect((await readState(page)).config.hosting.branchIsValid).toBe(false);
+  await expect
+    .poll(async () => (await readState(page)).remoteMetadata.status)
+    .toBe("absent");
+  expect((await readState(page)).config.hosting.branchIsValid).toBe(true);
+  await expect(initializeButton(page)).toHaveCount(0);
+  await expect(publishButton(page)).toBeEnabled();
   assertClean(requests, errors);
 });
 
@@ -591,7 +736,7 @@ test("repository discovery follows pagination and preserves a selected later-pag
   assertClean(requests, errors);
 });
 
-test("failed refresh preserves discovered options and a second refresh retries validation", async ({
+test("failed refresh preserves discovered options and a second refresh retries the read", async ({
   page,
 }) => {
   let failing = false;
@@ -601,7 +746,8 @@ test("failed refresh preserves discovered options and a second refresh retries v
       const path = new URL(route.request().url()).pathname;
       if (
         failing &&
-        (path.endsWith("/repositories") || path.endsWith("/git/trees/main"))
+        (path.endsWith("/repositories") ||
+          path.endsWith("/git/trees/head-main"))
       ) {
         await route.fulfill({
           status: 500,
@@ -626,9 +772,10 @@ test("failed refresh preserves discovered options and a second refresh retries v
   await expect(
     page.getByText("Could not load repositories. Refresh to try again.")
   ).toBeVisible();
-  await expect(
-    page.getByText("Could not validate this branch. Refresh to try again.")
-  ).toBeVisible();
+  await expect
+    .poll(async () => (await readState(page)).remoteMetadata.status)
+    .toBe("error");
+  await expect(initializeButton(page)).toHaveCount(0);
   await expect(
     page.getByRole("textbox", { name: "Repository", exact: true })
   ).toHaveValue("owner-a/repo-a");
@@ -638,9 +785,9 @@ test("failed refresh preserves discovered options and a second refresh retries v
   await page
     .getByRole("button", { name: "Refresh repositories and branches" })
     .click();
-  await expect(
-    page.getByText("Could not validate this branch. Refresh to try again.")
-  ).toHaveCount(0);
+  await expect
+    .poll(async () => (await readState(page)).remoteMetadata.status)
+    .toBe("ready");
   assertClean(requests, errors);
 });
 
@@ -665,6 +812,12 @@ test("a failed new-context read blocks Publish while a verified absent config pe
       }
       if (absent && path.endsWith("/git/trees/head-first")) {
         await route.fulfill({ json: { tree: [{ path: "README.md" }] } });
+        return true;
+      }
+      if (absent && path.endsWith("/branches")) {
+        await route.fulfill({
+          json: [{ name: "main" }, { name: "release" }, { name: "first" }],
+        });
         return true;
       }
       return false;
@@ -693,59 +846,501 @@ test("a failed new-context read blocks Publish while a verified absent config pe
   assertClean(requests, errors);
 });
 
-test("an empty repository can be initialized on main and immediately rechecks its config", async ({
+test("a fresh repository naming main pauses reads and initializes into an absent baseline", async ({
   page,
 }) => {
-  let initialized = false;
-  const { requests, errors } = await mockGitHub(page, {
-    repositories: [{ ...repoA, default_branch: "" }],
-    intercept: async (route) => {
+  const initial = {
+    ...localDraft(),
+    hosting: { provider: "", providerType: "" },
+  };
+  const { requests, errors, operations, writes } = await mockEmptyGitHub(page, {
+    initial,
+  });
+  await page.clock.install();
+  await page.goto("/auth/callback/github?code=fake&installation_id=1");
+  await expectInitializationRequired(page);
+  const state = await readState(page);
+  expect(state.config.groups).toEqual(initial.groups);
+  expect(state.config.hosting).toMatchObject({
+    accessToken: "test-token",
+    installationId: "1",
+    repositoryId: "10",
+    owner: "owner-a",
+    repositoryName: "repo-a",
+    targetBranch: "main",
+    branchIsValid: false,
+  });
+  expect(state.remoteConfig.groups).toEqual([]);
+  expect(state.remoteMetadata).toMatchObject({
+    remoteModifiedAt: 0,
+    remoteMergedAt: 0,
+  });
+  expect(requests.filter((path) => path.includes("/branches/"))).toEqual([]);
+  expect(requests.filter((path) => path.includes("/git/trees/"))).toEqual([
+    "/repos/owner-a/repo-a/git/trees/main",
+  ]);
+  expect(requests.filter((path) => path.includes("/git/blobs/"))).toEqual([]);
+  expect(writes).toEqual([]);
+  const before = [...operations];
+  await page.clock.fastForward(120000);
+  expect(operations).toEqual(before);
+  await expectInitializationRequired(page);
+  await expect(
+    page.getByText(/Could not read|Could not fetch|Could not validate/)
+  ).toHaveCount(0);
+
+  await initializeButton(page).click();
+  await expect
+    .poll(async () => (await readState(page)).remoteMetadata.status)
+    .toBe("absent");
+  const initialized = await readState(page);
+  expect(initialized.config.groups).toEqual(initial.groups);
+  expect(initialized.remoteConfig.groups).toEqual([]);
+  expect(initialized.remoteConfig.hosting.accessToken).toBe("");
+  expect(initialized.config.hosting.branchIsValid).toBe(true);
+  expect(initialized.validationSuccess).toBe(true);
+  await expect(publishButton(page)).toBeEnabled();
+  expect(writes).toHaveLength(1);
+  expect(writes[0]).toMatchObject({
+    path: "/repos/owner-a/repo-a/contents/README.md",
+    authorization: "Bearer test-token",
+    payload: { branch: "main", message: "chore: initialize Vexilla" },
+  });
+  expect(writes[0].payload.sha).toBeUndefined();
+  expect(Buffer.from(writes[0].payload.content, "base64").toString()).toContain(
+    "Vexilla"
+  );
+  const writeIndex = operations.indexOf(
+    "PUT /repos/owner-a/repo-a/contents/README.md"
+  );
+  const followup = operations.slice(writeIndex + 1);
+  expect(
+    followup.indexOf("GET /repos/owner-a/repo-a/branches")
+  ).toBeGreaterThanOrEqual(0);
+  expect(
+    followup.indexOf("GET /repos/owner-a/repo-a/branches/main")
+  ).toBeGreaterThan(followup.indexOf("GET /repos/owner-a/repo-a/branches"));
+  expect(
+    followup.indexOf("GET /repos/owner-a/repo-a/git/trees/head-main")
+  ).toBeGreaterThan(
+    followup.indexOf("GET /repos/owner-a/repo-a/branches/main")
+  );
+  expect(
+    requests.filter((path) => path.includes("/branches/main"))
+  ).toHaveLength(1);
+  expect(requests.filter((path) => path.includes("/git/blobs/"))).toEqual([]);
+  expect(
+    await page.evaluate(() => localStorage.getItem("remoteMetadata"))
+  ).not.toContain("test-token");
+  assertClean(requests, errors);
+});
+
+test("initialization prevents duplicate writes and waits for the acknowledged write's config read", async ({
+  page,
+}) => {
+  const write = deferred(page);
+  const read = deferred(page);
+  let verifying = false;
+  const { requests, errors, operations, writes } = await mockEmptyGitHub(page, {
+    intercept: async (route, repository) => {
       const path = new URL(route.request().url()).pathname;
-      if (
-        route.request().method() === "PUT" &&
-        path.endsWith("/contents/README.md")
-      ) {
-        expect(route.request().postDataJSON().branch).toBe("main");
-        initialized = true;
-        await route.fulfill({ json: { content: { sha: "readme" } } });
+      if (route.request().method() === "PUT") {
+        await write.waiting;
+        repository.initialized = true;
+        await route.fulfill({
+          status: 201,
+          json: { content: { sha: "readme" } },
+        });
         return true;
       }
-      if (
-        !initialized &&
-        (/\/branches\/main$/.test(path) || /\/git\/trees\/main$/.test(path))
-      ) {
-        await route.fulfill({ status: 404, json: {} });
+      if (repository.initialized && path.includes("/git/trees/head-")) {
+        verifying = true;
+        await read.waiting;
+      }
+      return false;
+    },
+  });
+  await page.clock.install();
+  await page.goto("/auth/callback/github?code=fake&installation_id=1");
+  await expectInitializationRequired(page);
+  // Invoke twice in the same browser task, before React has rendered a disabled button.
+  await initializeButton(page).evaluate((button: HTMLButtonElement) => {
+    button.click();
+    button.click();
+  });
+  await expect.poll(() => writes.length).toBe(1);
+  await expect
+    .poll(async () => (await readState(page)).remoteMetadata.status)
+    .toBe("initializing");
+  await expect(
+    page.getByRole("button", { name: "Initializing…", exact: true })
+  ).toBeDisabled();
+  await expect(publishButton(page)).toBeDisabled();
+  const before = [...operations];
+  await page.clock.fastForward(90000);
+  expect(operations).toEqual(before);
+  write.release();
+  await expect.poll(() => verifying).toBe(true);
+  expect((await readState(page)).config.hosting.branchIsValid).toBe(false);
+  await expect(publishButton(page)).toBeDisabled();
+  read.release();
+  await expect
+    .poll(async () => (await readState(page)).remoteMetadata.status)
+    .toBe("absent");
+  await expect(publishButton(page)).toBeEnabled();
+  expect(writes).toHaveLength(1);
+  assertClean(requests, errors);
+});
+
+test("a failed initialization rediscovers emptiness before allowing an explicit retry", async ({
+  page,
+}) => {
+  let attempts = 0;
+  const initial = localDraft();
+  const { requests, errors, writes, operations } = await mockEmptyGitHub(page, {
+    initial,
+    intercept: async (route) => {
+      if (route.request().method() === "PUT" && ++attempts === 1) {
+        await route.fulfill({
+          status: 500,
+          json: { message: "sensitive initialization details" },
+        });
         return true;
       }
-      if (initialized && path.includes("/git/trees/")) {
-        await route.fulfill({ json: { tree: [{ path: "README.md" }] } });
+      return false;
+    },
+  });
+  await page.goto("/?logged_in");
+  await expectInitializationRequired(page);
+  await initializeButton(page).click();
+  await expect
+    .poll(
+      () => requests.filter((path) => path.endsWith("/git/trees/main")).length
+    )
+    .toBe(2);
+  await expectInitializationRequired(page);
+  expect(writes).toHaveLength(1);
+  await expect(
+    page.getByText(/Initialization was not confirmed/)
+  ).toBeVisible();
+  await expect(page.getByText("sensitive initialization details")).toHaveCount(
+    0
+  );
+  expect(
+    operations.slice(
+      operations.indexOf("PUT /repos/owner-a/repo-a/contents/README.md") + 1
+    )
+  ).toContain("GET /repos/owner-a/repo-a/branches");
+  expect((await readState(page)).config.groups).toEqual(initial.groups);
+  await initializeButton(page).click();
+  await expect
+    .poll(async () => (await readState(page)).remoteMetadata.status)
+    .toBe("absent");
+  expect(writes).toHaveLength(2);
+  assertClean(requests, errors);
+});
+
+for (const failure of ["network", "conflict"] as const) {
+  test(`an initialization ${failure} rechecks an externally created branch without another write`, async ({
+    page,
+  }) => {
+    const initial = localDraft();
+    const { requests, errors, writes } = await mockEmptyGitHub(page, {
+      initial,
+      intercept: async (route, repository) => {
+        if (route.request().method() !== "PUT") {
+          return false;
+        }
+        repository.initialized = true;
+        if (failure === "conflict") {
+          repository.remoteDocument = baseline("Externally initialized");
+        }
+        if (failure === "network") {
+          await route.abort("failed");
+        } else {
+          await route.fulfill({
+            status: 422,
+            json: { message: "README already exists" },
+          });
+        }
+        return true;
+      },
+    });
+    await page.goto("/?logged_in");
+    await expectInitializationRequired(page);
+    await initializeButton(page).click();
+    await expect
+      .poll(async () => (await readState(page)).remoteMetadata.status)
+      .toBe(failure === "conflict" ? "ready" : "absent");
+    expect(writes).toHaveLength(1);
+    expect(writes[0].payload.sha).toBeUndefined();
+    expect((await readState(page)).config.groups).toEqual(initial.groups);
+    expect((await readState(page)).config.hosting.accessToken).toBe(
+      "test-token"
+    );
+    if (failure === "conflict") {
+      expect((await readState(page)).remoteConfig.groups[0].name).toBe(
+        "Externally initialized"
+      );
+    } else {
+      await expect(publishButton(page)).toBeEnabled();
+    }
+    await expect(initializeButton(page)).toHaveCount(0);
+    assertClean(requests, errors);
+  });
+}
+
+test("post-write verification failure offers a read retry without a repeated initialization", async ({
+  page,
+}) => {
+  let failing = true;
+  const { requests, errors, writes } = await mockEmptyGitHub(page, {
+    intercept: async (route, repository) => {
+      const path = new URL(route.request().url()).pathname;
+      if (repository.initialized && failing && path.endsWith("/branches")) {
+        await route.fulfill({
+          status: 503,
+          json: { message: "sensitive verification details" },
+        });
         return true;
       }
       return false;
     },
   });
   await page.goto("/auth/callback/github?code=fake&installation_id=1");
-  await expect(
-    page.getByRole("button", { name: "Initialize", exact: true })
-  ).toBeVisible();
-  expect((await readState(page)).config.hosting.targetBranch).toBe("main");
-  await page.getByRole("button", { name: "Initialize", exact: true }).click();
+  await expectInitializationRequired(page);
+  await initializeButton(page).click();
+  await expect
+    .poll(async () => (await readState(page)).remoteMetadata.status)
+    .toBe("error");
+  await expect(publishButton(page)).toBeDisabled();
+  await expect(initializeButton(page)).toHaveCount(0);
+  await expect(page.getByText("sensitive verification details")).toHaveCount(0);
+  expect(writes).toHaveLength(1);
+  failing = false;
+  await page
+    .getByRole("button", { name: "Retry repository read", exact: true })
+    .first()
+    .click();
   await expect
     .poll(async () => (await readState(page)).remoteMetadata.status)
     .toBe("absent");
+  await expect(publishButton(page)).toBeEnabled();
+  expect(writes).toHaveLength(1);
+  assertClean(requests, errors);
+});
+
+test("Refresh discovers external initialization and preserves an explicit initial branch and drafts", async ({
+  page,
+}) => {
+  const initial = {
+    ...localDraft(),
+    hosting: { ...hosting(), targetBranch: "release" },
+  };
+  const { requests, errors, writes, repository } = await mockEmptyGitHub(page, {
+    initial,
+    targetBranch: "release",
+  });
+  await page.goto("/?logged_in");
+  await expectInitializationRequired(page);
+  expect((await readState(page)).config.hosting.targetBranch).toBe("release");
+  repository.initialized = true;
+  await refreshRepository(page);
   await expect
-    .poll(async () => (await readState(page)).config.hosting.branchIsValid)
-    .toBe(true);
+    .poll(async () => (await readState(page)).remoteMetadata.status)
+    .toBe("absent");
+  expect((await readState(page)).config.hosting.targetBranch).toBe("release");
+  expect((await readState(page)).config.groups).toEqual(initial.groups);
+  expect(requests).toContain("/repos/owner-a/repo-a/branches/release");
+  expect(requests).not.toContain("/repos/owner-a/repo-a/branches/main");
+  expect(writes).toEqual([]);
+  await expect(publishButton(page)).toBeEnabled();
+  assertClean(requests, errors);
+});
+
+test("reload rechecks an empty repository despite saved branch validity and a ready baseline", async ({
+  page,
+}) => {
+  const initial = {
+    ...localDraft(),
+    hosting: { ...hosting(), branchIsValid: true },
+  };
+  const discovery = deferred(page);
+  let delayed = false;
+  const { requests, errors, writes } = await mockEmptyGitHub(page, {
+    initial,
+    intercept: async (route) => {
+      if (
+        !delayed &&
+        new URL(route.request().url()).pathname.endsWith("/branches")
+      ) {
+        delayed = true;
+        await discovery.waiting;
+      }
+      return false;
+    },
+  });
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "remoteMetadata",
+      JSON.stringify({
+        remoteModifiedAt: 100,
+        remoteMergedAt: 200,
+        status: "ready",
+        locationKey: JSON.stringify(["github", "10", "main", "", ""]),
+      })
+    );
+  });
+  await page.goto("/?logged_in");
+  await expect.poll(() => delayed).toBe(true);
+  await expect(publishButton(page)).toBeDisabled();
+  await expect(initializeButton(page)).toHaveCount(0);
+  expect((await readState(page)).remoteMetadata.status).toBe("loading");
+  discovery.release();
+  await expectInitializationRequired(page);
+  await page.reload();
+  await expectInitializationRequired(page);
+  const state = await readState(page);
+  expect(state.config.groups).toEqual(initial.groups);
+  expect(state.config.hosting.branchIsValid).toBe(false);
+  expect(state.remoteConfig.groups).toEqual([]);
+  expect(state.remoteMetadata).toMatchObject({
+    remoteModifiedAt: 0,
+    remoteMergedAt: 0,
+  });
+  expect(requests.filter((path) => path.includes("/branches/"))).toEqual([]);
+  expect(writes).toEqual([]);
+  assertClean(requests, errors);
+});
+
+test("missing default-branch metadata falls back to main only for a fresh selection", async ({
+  page,
+}) => {
+  const { requests, errors, writes } = await mockEmptyGitHub(page, {
+    defaultBranch: "",
+  });
+  await page.goto("/auth/callback/github?code=fake&installation_id=1");
+  await expectInitializationRequired(page);
+  expect((await readState(page)).config.hosting.targetBranch).toBe("main");
+  expect(requests.filter((path) => path.includes("/git/trees/"))).toEqual([
+    "/repos/owner-a/repo-a/git/trees/main",
+  ]);
+  expect(writes).toEqual([]);
+  assertClean(requests, errors);
+});
+
+for (const stale401 of [false, true]) {
+  test(`an obsolete same-context ${
+    stale401 ? "401" : "empty probe"
+  } cannot undo initialization`, async ({ page }) => {
+    const old = deferred(page);
+    let holdNextProbe = false;
+    let delayed = false;
+    const { requests, errors, writes } = await mockEmptyGitHub(page, {
+      intercept: async (route) => {
+        const path = new URL(route.request().url()).pathname;
+        if (!holdNextProbe || !path.endsWith("/git/trees/main")) {
+          return false;
+        }
+        holdNextProbe = false;
+        delayed = true;
+        await old.waiting;
+        await route.fulfill(
+          stale401
+            ? { status: 401, json: { message: "Bad credentials" } }
+            : { status: 409, json: { message: "Git Repository is empty." } }
+        );
+        return true;
+      },
+    });
+    await page.goto("/auth/callback/github?code=fake&installation_id=1");
+    await expectInitializationRequired(page);
+    holdNextProbe = true;
+    await refreshRepository(page);
+    await expect.poll(() => delayed).toBe(true);
+    await refreshRepository(page);
+    await expectInitializationRequired(page);
+    await initializeButton(page).click();
+    await expect
+      .poll(async () => (await readState(page)).remoteMetadata.status)
+      .toBe("absent");
+    const current = await readState(page);
+    const response = page.waitForResponse(
+      (response) =>
+        response.url().endsWith("/git/trees/main") &&
+        response.status() === (stale401 ? 401 : 409)
+    );
+    old.release();
+    await (await response).finished();
+    await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 0)));
+    expect((await readState(page)).remoteMetadata).toEqual(
+      current.remoteMetadata
+    );
+    expect((await readState(page)).config.hosting).toMatchObject({
+      accessToken: "test-token",
+      branchIsValid: true,
+    });
+    await expect(initializeButton(page)).toHaveCount(0);
+    await expect(publishButton(page)).toBeEnabled();
+    expect(writes).toHaveLength(1);
+    assertClean(requests, errors);
+  });
+}
+
+test("an initialization finishing after a repository switch retains its destination and cannot affect the new baseline", async ({
+  page,
+}) => {
+  const write = deferred(page);
+  const { requests, errors, writes } = await mockEmptyGitHub(page, {
+    initial: localDraft(),
+    intercept: async (route, repository) => {
+      if (new URL(route.request().url()).pathname.endsWith("/repositories")) {
+        await route.fulfill({ json: { repositories: [repoA, repoB] } });
+        return true;
+      }
+      if (route.request().method() !== "PUT") {
+        return false;
+      }
+      await write.waiting;
+      repository.initialized = true;
+      await route.fulfill({
+        status: 201,
+        json: { content: { sha: "readme" } },
+      });
+      return true;
+    },
+  });
+  await page.goto("/?logged_in");
+  await expectInitializationRequired(page);
+  await initializeButton(page).click();
+  await expect.poll(() => writes.length).toBe(1);
+  await choose(page, "Repository", "owner-b/repo-b");
   await expect
-    .poll(async () => (await readState(page)).validationSuccess)
-    .toBe(true);
-  await expect(
-    page.getByRole("button", {
-      name: "Publish",
-      exact: true,
-      includeHidden: true,
-    })
-  ).toBeEnabled();
+    .poll(async () => (await readState(page)).remoteMetadata.status)
+    .toBe("ready");
+  const current = await readState(page);
+  const readsA = requests.filter((path) =>
+    path.startsWith("/repos/owner-a/")
+  ).length;
+  const response = page.waitForResponse(
+    (response) => response.request().method() === "PUT"
+  );
+  write.release();
+  await response;
+  await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 0)));
+  expect((await readState(page)).remoteConfig).toEqual(current.remoteConfig);
+  expect((await readState(page)).config.hosting).toMatchObject({
+    repositoryId: "20",
+    targetBranch: "develop",
+  });
+  expect(
+    requests.filter((path) => path.startsWith("/repos/owner-a/")).length
+  ).toBe(readsA);
+  expect(writes).toHaveLength(1);
+  expect(writes[0]).toMatchObject({
+    path: "/repos/owner-a/repo-a/contents/README.md",
+    payload: { branch: "main" },
+  });
   assertClean(requests, errors);
 });
 

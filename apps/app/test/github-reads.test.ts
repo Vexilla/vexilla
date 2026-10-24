@@ -10,8 +10,13 @@ Object.assign(globalThis, {
     setItem: (key: string, value: string) => storage.set(key, value),
   },
 });
-const { config, remoteConfig, remoteMetadata, acceptRemoteConfig } =
-  await import("../src/stores/config-valtio");
+const {
+  config,
+  remoteConfig,
+  remoteMetadata,
+  acceptRemoteConfig,
+  advanceRemoteRead,
+} = await import("../src/stores/config-valtio");
 const {
   GitHubFetcher,
   canDiscoverGitHubRepositories,
@@ -21,7 +26,14 @@ const {
   selectGitHubRepository,
 } = await import("../src/components/app/forms/GithubForm.fetchers");
 const { startConfigPolling } = await import("../src/utils/config-polling");
-const startGitHubConfigPolling = () => startConfigPolling(new GitHubFetcher());
+// These polling regressions isolate the established-branch read path. Availability
+// discovery is exercised independently below and by the onboarding lifecycle tests.
+class EstablishedGitHubFetcher extends GitHubFetcher {
+  readonly usesReadPreparation = false;
+}
+const startGitHubConfigPolling = () => {
+  return startConfigPolling(new EstablishedGitHubFetcher());
+};
 const originalFetch = globalThis.fetch;
 const source = JSON.parse(
   readFileSync(
@@ -77,6 +89,7 @@ test("readiness rejects every absent/blank required field without sending reques
       (config.hosting as any)[key] = value;
       const fetcher = new GitHubFetcher();
       await assert.rejects(() => fetcher.fetchBranches());
+      await assert.rejects(() => fetcher.prepareRead());
       await assert.rejects(() => fetcher.getCurrentConfig());
       assert.equal(await fetcher.isBranchValid("main"), false);
     }
@@ -84,6 +97,8 @@ test("readiness rejects every absent/blank required field without sending reques
   for (const branch of [undefined, "", "   "]) {
     reset();
     config.hosting.targetBranch = branch;
+    await flush();
+    await assert.rejects(() => new GitHubFetcher().prepareRead());
     await assert.rejects(() => new GitHubFetcher().getCurrentConfig());
     assert.equal(
       await new GitHubFetcher().isBranchValid(branch as string),
@@ -150,6 +165,256 @@ test("selection changes identity/default branch together; refresh preserves an e
   );
 });
 
+test("selection without default-branch metadata offers main while refresh preserves an explicit choice", () => {
+  const h = hosting();
+  const repo = { id: "20", owner: "owner-B", name: "empty", defaultBranch: "" };
+  selectGitHubRepository(h, repo);
+  assert.equal(h.targetBranch, "main");
+  h.targetBranch = "release/initial";
+  selectGitHubRepository(h, repo);
+  assert.equal(h.targetBranch, "release/initial");
+});
+
+for (const branch of ["main", "release/initial"]) {
+  test(`a complete empty branch collection plus the specific GitHub 409 prepares ${branch} for initialization`, async () => {
+    reset();
+    config.hosting.targetBranch = branch;
+    await flush();
+    const before = JSON.stringify(config);
+    const seen: string[] = [];
+    globalThis.fetch = async (url) => {
+      seen.push(`${url}`);
+      return new URL(`${url}`).pathname.endsWith("/branches")
+        ? json([])
+        : json({ message: "Git Repository is empty." }, 409);
+    };
+    const fetcher = new GitHubFetcher();
+    assert.equal(fetcher.usesReadPreparation, true);
+    assert.equal(await fetcher.prepareRead(), "initialization-required");
+    assert.deepEqual(
+      seen.map((url) => new URL(url).pathname),
+      [
+        "/repos/owner-A/repo-A/branches",
+        `/repos/owner-A/repo-A/git/trees/${encodeURIComponent(branch)}`,
+      ]
+    );
+    assert.equal(JSON.stringify(config), before);
+  });
+}
+
+test("an existing target branch prepares ready only after all branch pages succeed", async () => {
+  reset();
+  const seen: string[] = [];
+  globalThis.fetch = async (url) => {
+    seen.push(`${url}`);
+    const page = new URL(`${url}`).searchParams.get("page");
+    const response = json([{ name: page === "2" ? "other" : "main" }]);
+    if (!page) {
+      response.headers.set("Link", `<${url}&page=2>; rel="next"`);
+    }
+    return response;
+  };
+  assert.equal(await new GitHubFetcher().prepareRead(), "ready");
+  assert.equal(seen.length, 2);
+  assert.ok(seen.every((url) => new URL(url).pathname.endsWith("/branches")));
+  globalThis.fetch = async (url) => {
+    const response = new URL(`${url}`).searchParams.has("page")
+      ? json({}, 403)
+      : json([{ name: "main" }]);
+    if (response.ok) {
+      response.headers.set("Link", `<${url}&page=2>; rel="next"`);
+    }
+    return response;
+  };
+  await assert.rejects(() => new GitHubFetcher().prepareRead(), {
+    status: 403,
+  });
+});
+
+test("a missing target in a populated repository is a safe missing-branch error without an empty probe", async () => {
+  reset();
+  config.hosting.targetBranch = "missing";
+  let requests = 0;
+  globalThis.fetch = async () => {
+    requests++;
+    return json([{ name: "main" }]);
+  };
+  await assert.rejects(() => new GitHubFetcher().prepareRead(), {
+    status: 404,
+    message: "The selected GitHub branch does not exist",
+  });
+  assert.equal(requests, 1);
+  assert.equal(config.hosting.targetBranch, "missing");
+});
+
+for (const stage of ["branches", "probe"] as const) {
+  for (const failure of [
+    401,
+    403,
+    404,
+    409,
+    500,
+    "network",
+    "malformed",
+  ] as const) {
+    test(`availability ${stage} ${failure} cannot establish initialization readiness`, async () => {
+      reset();
+      await flush();
+      const before = JSON.stringify(config);
+      let requests = 0;
+      globalThis.fetch = async (url) => {
+        requests++;
+        if (
+          stage === "probe" &&
+          new URL(`${url}`).pathname.endsWith("/branches")
+        ) {
+          return json([]);
+        }
+        if (failure === "network") {
+          throw new Error("offline");
+        }
+        if (failure === "malformed") {
+          return new Response("not JSON", {
+            status: stage === "probe" ? 409 : 200,
+          });
+        }
+        return json(
+          {
+            message:
+              failure === 409
+                ? "An unrelated conflict with private information"
+                : "failure",
+          },
+          failure
+        );
+      };
+      await assert.rejects(
+        () => new GitHubFetcher().prepareRead(),
+        (error: unknown) => {
+          assert.ok(error instanceof Error);
+          assert.equal(error.message.includes("private information"), false);
+          if (typeof failure === "number") {
+            assert.equal((error as any).status, failure);
+          }
+          return true;
+        }
+      );
+      assert.equal(requests, stage === "branches" ? 1 : 2);
+      assert.equal(JSON.stringify(config), before);
+    });
+  }
+}
+
+for (const body of [
+  null,
+  {},
+  { name: "main" },
+  [null],
+  [{ name: 1 }],
+  [{ name: " " }],
+]) {
+  test(`malformed branch discovery ${JSON.stringify(
+    body
+  )} is not empty-repository evidence`, async () => {
+    reset();
+    let requests = 0;
+    globalThis.fetch = async () => {
+      requests++;
+      return json(body);
+    };
+    await assert.rejects(() => new GitHubFetcher().prepareRead());
+    assert.equal(requests, 1);
+  });
+}
+
+for (const body of [
+  null,
+  {},
+  { message: "git repository is empty." },
+  { message: "Git Repository is empty" },
+  { message: ["Git Repository is empty."] },
+]) {
+  test(`a 409 probe body ${JSON.stringify(
+    body
+  )} does not satisfy the specific empty-repository classification`, async () => {
+    reset();
+    globalThis.fetch = async (url) =>
+      new URL(`${url}`).pathname.endsWith("/branches")
+        ? json([])
+        : json(body, 409);
+    await assert.rejects(() => new GitHubFetcher().prepareRead(), {
+      status: 409,
+    });
+  });
+}
+
+test("an empty branch listing with a successful tree probe does not establish initialization readiness", async () => {
+  reset();
+  globalThis.fetch = async (url) =>
+    new URL(`${url}`).pathname.endsWith("/branches")
+      ? json([])
+      : json({ tree: [] });
+  await assert.rejects(
+    () => new GitHubFetcher().prepareRead(),
+    /Unable to verify/
+  );
+});
+
+for (const link of [
+  'missing-url; rel="next"',
+  '<https://untrusted.example/branches>; rel="next"',
+  '<https://api.github.com/repos/owner-A/repo-A/branches?per_page=100>; rel="next"',
+  '<https://api.github.com/repos/owner-A/repo-A/branches?page=2>; rel="next", <https://api.github.com/repos/owner-A/repo-A/branches?page=3>; rel="next"',
+]) {
+  test(`incomplete branch discovery rejects pagination ${link}`, async () => {
+    reset();
+    let requests = 0;
+    globalThis.fetch = async () => {
+      requests++;
+      const response = json([{ name: "main" }]);
+      response.headers.set("Link", link);
+      return response;
+    };
+    await assert.rejects(() => new GitHubFetcher().prepareRead());
+    assert.equal(requests, 1);
+  });
+}
+
+test("availability keeps all discovery and probe requests at captured repository and authorization", async () => {
+  reset();
+  const seen: { url: string; token: string }[] = [];
+  globalThis.fetch = async (url, options) => {
+    seen.push({
+      url: `${url}`,
+      token: (options!.headers as any).Authorization,
+    });
+    config.hosting = {
+      ...hosting(),
+      accessToken: "token-B",
+      owner: "owner-B",
+      repositoryName: "repo-B",
+      targetBranch: "release",
+    };
+    return new URL(`${url}`).pathname.endsWith("/branches")
+      ? json([])
+      : json({ message: "Git Repository is empty." }, 409);
+  };
+  assert.equal(
+    await new GitHubFetcher().prepareRead(),
+    "initialization-required"
+  );
+  assert.equal(seen.length, 2);
+  assert.ok(
+    seen.every(
+      (request) =>
+        request.url.includes("/repos/owner-A/repo-A/") &&
+        request.token === "Bearer token-A"
+    )
+  );
+  assert.ok(seen[1].url.endsWith("/git/trees/main"));
+  assert.equal(config.hosting.targetBranch, "release");
+});
+
 test("a multi-step read retains repository and authorization after active selection changes", async () => {
   reset();
   const seen: { url: string; token: string }[] = [];
@@ -188,6 +453,45 @@ test("a multi-step read retains repository and authorization after active select
         r.url.includes("/repos/owner-A/repo-A/") && r.token === "Bearer token-A"
     )
   );
+});
+
+test("an obsolete same-context read cannot replace the newer reviewed commit", async () => {
+  reset();
+  advanceRemoteRead();
+  const fetcher = new GitHubFetcher();
+  let release!: (response: Response) => void;
+  globalThis.fetch = async (url) =>
+    `${url}`.includes("/branches/")
+      ? json({ commit: { sha: "obsolete-head" } })
+      : new Promise((resolve) => {
+          release = resolve;
+        });
+  const oldRead = fetcher.getCurrentConfig();
+  await flush();
+  advanceRemoteRead();
+  globalThis.fetch = async (url) =>
+    `${url}`.includes("/branches/")
+      ? json({ commit: { sha: "current-head" } })
+      : json({ tree: [], truncated: false });
+  assert.equal(await fetcher.getCurrentConfig(), null);
+  release(json({ tree: [], truncated: false }));
+  assert.equal(await oldRead, null);
+  let writes = 0;
+  globalThis.fetch = async (url, options) => {
+    if (options?.method) {
+      writes++;
+      return json({ sha: "written-sha" });
+    }
+    assert.ok(`${url}`.includes("/branches/"));
+    return json({
+      commit: {
+        sha: "current-head",
+        commit: { tree: { sha: "current-tree" } },
+      },
+    });
+  };
+  await fetcher.publish("main", []);
+  assert.equal(writes, 3);
 });
 
 for (const stage of ["branch", "tree", "blob"]) {
@@ -235,6 +539,19 @@ test("only a complete successful tree proves config.json is absent", async () =>
     () => new GitHubFetcher().getCurrentConfig(),
     /incomplete/
   );
+});
+
+test("an existing branch with a complete empty tree is valid and has absent config", async () => {
+  reset();
+  globalThis.fetch = async (url) =>
+    `${url}`.includes("/branches/")
+      ? json({ commit: { sha: "head" } })
+      : json({ tree: [], truncated: false });
+  const fetcher = new GitHubFetcher();
+  assert.equal(await fetcher.isBranchValid("main"), true);
+  assert.equal(await fetcher.getCurrentConfig(), null);
+  globalThis.fetch = async () => json({ tree: [], truncated: true });
+  await assert.rejects(() => fetcher.isBranchValid("main"), /incomplete/);
 });
 
 for (const content of ["null", "[]", "{}", '{"groups":[]}']) {

@@ -61,6 +61,8 @@ export function gitReadContextKey(hosting: HostingConfig) {
           hosting.owner,
           hosting.repositoryName,
           hosting.targetBranch,
+          hosting.provider === "github" ? hosting.installationId : undefined,
+          hosting.provider === "bitbucket" ? hosting.workspaceId : undefined,
           "baseUrl" in hosting ? hosting.baseUrl : undefined,
         ]
       : [hosting.provider, hosting.providerType]
@@ -107,6 +109,17 @@ export function selectGitRepository(
 }
 
 export class Fetcher {
+  readonly usesReadPreparation: boolean = false;
+
+  // Providers can require discovery before ordinary configuration reads.
+  async prepareRead(): Promise<"ready" | "initialization-required"> {
+    return "ready";
+  }
+
+  shouldPrepareAfterReadError(_error: unknown): boolean {
+    return false;
+  }
+
   isConfigReady(hosting: HostingConfig): boolean {
     void hosting;
     return false;

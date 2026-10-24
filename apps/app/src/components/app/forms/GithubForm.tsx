@@ -26,6 +26,13 @@ import {
   selectGitHubRepository,
 } from "./GithubForm.fetchers";
 import { isGitUnauthorized } from "../../../utils/fetcher";
+import {
+  isRemoteReadContextCurrent,
+  remoteMetadata,
+  remoteReadAuthority,
+  requestRemoteRead,
+} from "../../../stores/config-valtio";
+import { initializeGitBranch } from "../../../utils/config-polling";
 import { useSnapshot } from "valtio";
 
 const githubAppName = import.meta.env.VITE_GITHUB_APP_NAME;
@@ -54,6 +61,10 @@ const disabledButtonStyling = {
 
 export function GithubForm({ config }: GithubFormProps) {
   const configSnapshot = useSnapshot(config);
+  const readGeneration = useSnapshot(remoteReadAuthority).generation;
+  const readStatus = useSnapshot(remoteMetadata).status;
+  const initializationPending =
+    readStatus === "initializing" && isRemoteReadContextCurrent();
   const { accessToken, installationId, repositoryId, targetBranch } =
     configSnapshot.hosting.provider === "github"
       ? configSnapshot.hosting
@@ -79,6 +90,7 @@ export function GithubForm({ config }: GithubFormProps) {
   }, []);
 
   function refresh() {
+    requestRemoteRead();
     setRefreshTimestamp((value) => value + 1);
   }
 
@@ -111,15 +123,18 @@ export function GithubForm({ config }: GithubFormProps) {
 
   useEffect(() => {
     let active = true;
+    const generation = remoteReadAuthority.generation;
     const isCurrent = () =>
-      active && discoveryKey === githubDiscoveryKey(config.hosting);
+      active &&
+      generation === remoteReadAuthority.generation &&
+      discoveryKey === githubDiscoveryKey(config.hosting);
     if (previousInstallationKey.current !== discoveryKey) {
       setInstallations([]);
       previousInstallationKey.current = discoveryKey;
     }
     setInstallationError("");
     async function discoverInstallations() {
-      if (!hasGitHubAuthentication(config.hosting)) {
+      if (initializationPending || !hasGitHubAuthentication(config.hosting)) {
         return;
       }
       try {
@@ -159,12 +174,22 @@ export function GithubForm({ config }: GithubFormProps) {
     return () => {
       active = false;
     };
-  }, [config, discoveryKey, refreshTimestamp, githubMethods]);
+  }, [
+    config,
+    discoveryKey,
+    refreshTimestamp,
+    githubMethods,
+    readGeneration,
+    initializationPending,
+  ]);
 
   useEffect(() => {
     let active = true;
+    const generation = remoteReadAuthority.generation;
     const isCurrent = () =>
-      active && discoveryKey === githubDiscoveryKey(config.hosting);
+      active &&
+      generation === remoteReadAuthority.generation &&
+      discoveryKey === githubDiscoveryKey(config.hosting);
     if (previousRepositoryKey.current !== discoveryKey) {
       setRepositories([]);
       setBranches([]);
@@ -173,6 +198,7 @@ export function GithubForm({ config }: GithubFormProps) {
     setRepositoryError("");
     async function discoverRepositories() {
       if (
+        initializationPending ||
         !canDiscoverGitHubRepositories(config.hosting) ||
         config.hosting.provider !== "github"
       ) {
@@ -219,19 +245,34 @@ export function GithubForm({ config }: GithubFormProps) {
     return () => {
       active = false;
     };
-  }, [config, discoveryKey, refreshTimestamp, githubMethods]);
+  }, [
+    config,
+    discoveryKey,
+    refreshTimestamp,
+    githubMethods,
+    readGeneration,
+    initializationPending,
+  ]);
 
   useEffect(() => {
     let active = true;
+    const generation = remoteReadAuthority.generation;
     const isCurrent = () =>
-      active && contextKey === githubContextKey(config.hosting);
+      active &&
+      generation === remoteReadAuthority.generation &&
+      contextKey === githubContextKey(config.hosting);
     if (previousBranchKey.current !== contextKey) {
       setBranches([]);
       previousBranchKey.current = contextKey;
     }
     setBranchError("");
     async function getBranches() {
-      if (!repositoryReady) {
+      if (
+        !repositoryReady ||
+        (readStatus !== "ready" &&
+          readStatus !== "absent" &&
+          readStatus !== "error")
+      ) {
         return;
       }
       try {
@@ -257,7 +298,15 @@ export function GithubForm({ config }: GithubFormProps) {
     return () => {
       active = false;
     };
-  }, [config, contextKey, repositoryReady, refreshTimestamp, githubMethods]);
+  }, [
+    config,
+    contextKey,
+    repositoryReady,
+    refreshTimestamp,
+    githubMethods,
+    readGeneration,
+    readStatus,
+  ]);
 
   return (
     <>
@@ -275,7 +324,7 @@ export function GithubForm({ config }: GithubFormProps) {
           Boolean
         )}
         initializeBranch={async (_repositoryId, branchName) => {
-          await githubMethods.initializeBranch(branchName);
+          await initializeGitBranch(githubMethods, branchName);
         }}
         repositoryTooltip="This depends on which repos you installed the GitHub App into."
         repositoryAction={
@@ -408,6 +457,7 @@ export function GithubForm({ config }: GithubFormProps) {
             <ActionIcon
               aria-label="Refresh installations"
               variant="subtle"
+              disabled={initializationPending}
               onClick={() => {
                 refresh();
               }}

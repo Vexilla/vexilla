@@ -5,7 +5,7 @@ import microdiff from "microdiff";
 import { HostingConfigValidators } from "../utils/validators";
 import { cloneDeep } from "lodash-es";
 import { AppState, HostingConfig } from "../types";
-import { gitLocationKey, hasValue } from "../utils/fetcher";
+import { gitLocationKey, gitReadContextKey, hasValue } from "../utils/fetcher";
 
 const CONFIG_KEY = "config";
 const REMOTE_CONFIG_KEY = "remoteConfig";
@@ -24,7 +24,15 @@ export const defaultConfig = createDefaultConfig();
 
 export const configReadRefresh = proxy({ revision: 0 });
 export function requestRemoteRead() {
+  if (
+    isRemoteReadContextCurrent() &&
+    remoteMetadata.status === "initializing"
+  ) {
+    return;
+  }
+  advanceRemoteRead();
   remoteMetadata.status = "loading";
+  remoteMetadata.readError = "";
   configReadRefresh.revision++;
 }
 
@@ -32,6 +40,40 @@ export const config = proxy<AppState>(
   JSON.parse(localStorage.getItem(CONFIG_KEY) || "false") ||
     createDefaultConfig()
 );
+
+// Request authority is deliberately transient: its context includes credentials.
+export const remoteReadAuthority = proxy({
+  context: gitReadContextKey(config.hosting),
+  generation: 0,
+  initializationError: "",
+});
+
+export function captureRemoteRead() {
+  return {
+    context: gitReadContextKey(config.hosting),
+    generation: remoteReadAuthority.generation,
+  };
+}
+
+export function isRemoteReadContextCurrent() {
+  return remoteReadAuthority.context === gitReadContextKey(config.hosting);
+}
+
+export function isRemoteReadCurrent(
+  ticket: ReturnType<typeof captureRemoteRead>
+) {
+  return (
+    isRemoteReadContextCurrent() &&
+    ticket.context === remoteReadAuthority.context &&
+    ticket.generation === remoteReadAuthority.generation
+  );
+}
+
+export function advanceRemoteRead() {
+  remoteReadAuthority.context = gitReadContextKey(config.hosting);
+  remoteReadAuthority.generation++;
+  return captureRemoteRead();
+}
 
 subscribe(config, (changes) => {
   const changingModifiedAt = changes.find(
@@ -55,6 +97,8 @@ subscribe(remoteConfig, () => {
 export type RemoteReadStatus =
   | "unknown"
   | "loading"
+  | "initialization-required"
+  | "initializing"
   | "ready"
   | "absent"
   | "error";
@@ -78,6 +122,20 @@ export const remoteMetadata = proxy<RemoteMetadata>({
 subscribe(remoteMetadata, () => {
   localStorage.setItem(REMOTE_METADATA_KEY, JSON.stringify(remoteMetadata));
 });
+
+// Invalidate synchronously, before React effects or a late response can run.
+subscribe(
+  config,
+  () => {
+    if (!isRemoteReadContextCurrent()) {
+      advanceRemoteRead();
+      remoteReadAuthority.initializationError = "";
+      remoteMetadata.status = "unknown";
+      remoteMetadata.readError = "";
+    }
+  },
+  true
+);
 
 function baselineMatches(hosting: HostingConfig, metadata: RemoteMetadata) {
   return (

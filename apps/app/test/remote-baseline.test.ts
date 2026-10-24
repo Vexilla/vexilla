@@ -118,7 +118,7 @@ test("token rotation keeps location identity but not stale request authority", (
   }
   config.hosting.accessToken = "rotated";
   assert.equal(gitLocationKey(config.hosting), location);
-  assert.equal(state.isRemoteBaselineReady(), true);
+  assert.equal(state.isRemoteBaselineReady(), false);
 });
 test("metadata migrations preserve branches and empty repositories get an initial branch", () => {
   const hosting: any = {

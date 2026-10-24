@@ -21,6 +21,8 @@ import {
   remoteDifferences,
   remoteMetadata,
   remoteReadState,
+  remoteReadAuthority,
+  isRemoteReadContextCurrent,
 } from "../stores/config-valtio";
 import { CustomCard } from "./CustomCard";
 
@@ -67,7 +69,13 @@ export function Status({
   useSnapshot(localDifferences);
   useSnapshot(remoteDifferences);
   const metadata = useSnapshot(remoteMetadata);
+  const authority = useSnapshot(remoteReadAuthority);
   const baselineReady = useSnapshot(remoteReadState).ready;
+  const readContextCurrent =
+    authority.context.length > 0 && isRemoteReadContextCurrent();
+  const initializationRequired =
+    readContextCurrent && metadata.status === "initialization-required";
+  const initializing = readContextCurrent && metadata.status === "initializing";
 
   const [
     remoteChangesModalOpened,
@@ -121,7 +129,23 @@ export function Status({
     diffStatus === StatusItemStatus.Good;
 
   let publishErrorText = "";
-  if (validationErrors.length > 0) {
+  if (initializing) {
+    publishErrorText = "Initializing the selected branch…";
+  } else if (initializationRequired) {
+    publishErrorText =
+      "Initialize the selected repository in Config before publishing.";
+  } else if (
+    !baselineReady &&
+    readContextCurrent &&
+    (metadata.status === "loading" || metadata.status === "error")
+  ) {
+    publishErrorText =
+      metadata.status === "error"
+        ? metadata.readError
+        : metadata.status === "loading"
+        ? "Loading configuration from the selected repository…"
+        : "Read the selected repository before publishing.";
+  } else if (validationErrors.length > 0) {
     publishErrorText = "There are errors with your hosting/git config.";
   } else if (!baselineReady) {
     publishErrorText =
@@ -218,9 +242,14 @@ export function Status({
 
       {!baselineReady &&
         metadata.status !== "loading" &&
-        validationErrors.length === 0 && (
+        !initializing &&
+        (initializationRequired ||
+          metadata.status === "error" ||
+          validationErrors.length === 0) && (
           <Button variant="outline" onClick={retryRemoteRead}>
-            Retry repository read
+            {initializationRequired
+              ? "Refresh repository availability"
+              : "Retry repository read"}
           </Button>
         )}
       <div className="w-full p-2">

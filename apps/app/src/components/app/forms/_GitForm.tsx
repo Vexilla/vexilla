@@ -1,4 +1,11 @@
-import { PropsWithChildren, ReactNode, useEffect, useState } from "react";
+import {
+  PropsWithChildren,
+  ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { useSnapshot } from "valtio";
 import {
   Timeline,
   Select,
@@ -13,8 +20,19 @@ import {
 import { notifications } from "@mantine/notifications";
 
 import { AppState, HostingConfigGitBase } from "../../../types";
-import { GitFetcher, isGitUnauthorized } from "../../../utils/fetcher";
-import { requestRemoteRead } from "../../../stores/config-valtio";
+import {
+  GitFetcher,
+  gitLocationKey,
+  isGitUnauthorized,
+} from "../../../utils/fetcher";
+import {
+  captureRemoteRead,
+  isRemoteReadContextCurrent,
+  isRemoteReadCurrent,
+  remoteMetadata,
+  remoteReadAuthority,
+  requestRemoteRead,
+} from "../../../stores/config-valtio";
 
 import { DEFAULT_BRANCH_PREFIX } from "../../../utils/constants";
 import { TimelineItemTitle } from "../../TimelineItemTitle";
@@ -59,10 +77,15 @@ export function GitForm({
   errors?: string[];
 }>) {
   const hosting = config?.hosting as HostingConfigGitBase;
+  const metadata = useSnapshot(remoteMetadata);
+  const authority = useSnapshot(remoteReadAuthority);
   const [validationResult, setValidationResult] = useState({
     context: "",
+    generation: -1,
     error: "",
   });
+  const [initializingContext, setInitializingContext] = useState("");
+  const pendingInitialization = useRef<ReturnType<typeof captureRemoteRead>>();
 
   const repository = repositories.find(
     (repository) => `${repository.id}` === repositoryId
@@ -93,20 +116,47 @@ export function GitForm({
 
   const validationContext = fetcher.getReadContextKey(config.hosting);
   const validationReady = fetcher.isRepositoryReady(config.hosting);
+  const availabilityCurrent =
+    isRemoteReadContextCurrent() &&
+    metadata.locationKey === gitLocationKey(config.hosting);
+  const initializationRequired =
+    fetcher.usesReadPreparation &&
+    availabilityCurrent &&
+    metadata.status === "initialization-required";
+  const initializationPending = fetcher.usesReadPreparation
+    ? availabilityCurrent && metadata.status === "initializing"
+    : initializingContext === validationContext;
+  const validationCurrent =
+    validationResult.context === validationContext &&
+    validationResult.generation === authority.generation;
+  const legacyInitializationRequired =
+    !fetcher.usesReadPreparation &&
+    validationCurrent &&
+    !validationResult.error &&
+    !hosting.branchIsValid;
 
   useEffect(() => {
     let active = true;
+    const ticket = captureRemoteRead();
     const key = fetcher.getReadContextKey(config.hosting);
     const isCurrent = () =>
-      active && key === fetcher.getReadContextKey(config.hosting);
+      active &&
+      isRemoteReadCurrent(ticket) &&
+      key === fetcher.getReadContextKey(config.hosting);
     async function getBranchValidity() {
-      if (validationReady && targetBranch) {
-        setValidationResult({ context: "", error: "" });
+      // Prepared providers establish branch validity through the shared read
+      // owner, including the verification after initialization.
+      if (!fetcher.usesReadPreparation && validationReady && targetBranch) {
+        setValidationResult({ context: "", generation: -1, error: "" });
         try {
           const valid = await fetcher.isBranchValid(targetBranch);
           if (isCurrent()) {
             hosting.branchIsValid = valid;
-            setValidationResult({ context: key, error: "" });
+            setValidationResult({
+              context: key,
+              generation: ticket.generation,
+              error: "",
+            });
           }
         } catch (error) {
           if (
@@ -118,6 +168,7 @@ export function GitForm({
           } else if (isCurrent()) {
             setValidationResult({
               context: key,
+              generation: ticket.generation,
               error: "Could not validate this branch. Refresh to try again.",
             });
           }
@@ -137,6 +188,7 @@ export function GitForm({
     validationReady,
     validationContext,
     refreshTimestamp,
+    authority.generation,
   ]);
 
   return (
@@ -221,6 +273,7 @@ export function GitForm({
             <ActionIcon
               aria-label="Refresh repositories and branches"
               variant="subtle"
+              disabled={initializationPending}
               onClick={() => {
                 refresh();
               }}
@@ -229,35 +282,92 @@ export function GitForm({
             </ActionIcon>
           </Flex>
 
-          {validationResult.context === validationContext &&
-            validationResult.error && (
-              <Text role="alert" c="red" mt="sm">
-                {validationResult.error}
+          {validationCurrent && validationResult.error && (
+            <Text role="alert" c="red" mt="sm">
+              {validationResult.error}
+            </Text>
+          )}
+
+          {fetcher.usesReadPreparation &&
+            availabilityCurrent &&
+            metadata.status === "loading" && (
+              <Text role="status" mt="sm">
+                Checking the selected repository…
               </Text>
+            )}
+
+          {fetcher.usesReadPreparation &&
+            availabilityCurrent &&
+            authority.initializationError && (
+              <Text role="alert" c="red" mt="sm">
+                {authority.initializationError}
+              </Text>
+            )}
+
+          {fetcher.usesReadPreparation &&
+            availabilityCurrent &&
+            metadata.status === "error" && (
+              <Flex direction="column" gap="sm" mt="sm">
+                <Text role="alert" c="red">
+                  {metadata.readError}
+                </Text>
+                <Button variant="outline" onClick={refresh}>
+                  Retry repository read
+                </Button>
+              </Flex>
             )}
 
           {Boolean(hosting.provider) &&
             Boolean(hosting.repositoryId) &&
             Boolean(hosting.targetBranch) &&
-            validationResult.context === validationContext &&
-            !validationResult.error &&
-            !hosting.branchIsValid && (
+            (initializationRequired ||
+              initializationPending ||
+              legacyInitializationRequired) && (
               <Flex direction="column" className="bg-red-50 mt-2 rounded p-2">
-                <Text fw="bold">This repo or branch is empty.</Text>
+                <Text fw="bold">
+                  {fetcher.usesReadPreparation
+                    ? "This repository needs initialization."
+                    : "This repo or branch is empty."}
+                </Text>
                 <Text>
-                  You can initialize it with a README file by clicking the
-                  button below.
+                  {initializationPending
+                    ? "Initializing the selected branch…"
+                    : "You can initialize it with a README file by clicking the button below."}
                 </Text>
                 <Button
                   className="mt-2"
-                  disabled={!initializeBranch}
+                  disabled={!initializeBranch || initializationPending}
+                  loading={initializationPending}
                   onClick={async () => {
-                    // create commit on repository and target branch with README CONTENTS
-                    if (targetBranch && initializeBranch) {
+                    if (
+                      targetBranch &&
+                      initializeBranch &&
+                      !initializationPending &&
+                      (fetcher.usesReadPreparation ||
+                        pendingInitialization.current?.context !==
+                          captureRemoteRead().context)
+                    ) {
+                      if (fetcher.usesReadPreparation) {
+                        // The shared operation guards availability and duplicate
+                        // writes, then asks the read owner to verify the result.
+                        try {
+                          await initializeBranch(repositoryId, targetBranch);
+                        } catch {
+                          // Safe failure feedback belongs to shared read state
+                          // and survives the authoritative availability recheck.
+                        }
+                        return;
+                      }
+                      const ticket = captureRemoteRead();
                       const key = fetcher.getReadContextKey(config.hosting);
+                      pendingInitialization.current = ticket;
+                      setInitializingContext(key);
                       try {
                         await initializeBranch(repositoryId, targetBranch);
-                        if (key !== fetcher.getReadContextKey(config.hosting)) {
+                        if (
+                          !isRemoteReadCurrent(ticket) ||
+                          key !== fetcher.getReadContextKey(config.hosting)
+                        ) {
                           return;
                         }
                         notifications.show({
@@ -268,15 +378,22 @@ export function GitForm({
                         refresh();
                         requestRemoteRead();
                       } catch {
-                        notifications.show({
-                          type: "error",
-                          message: "Error initializing branch.",
-                        });
+                        if (isRemoteReadCurrent(ticket)) {
+                          notifications.show({
+                            type: "error",
+                            message: "Error initializing branch.",
+                          });
+                        }
+                      } finally {
+                        if (pendingInitialization.current === ticket) {
+                          pendingInitialization.current = undefined;
+                          setInitializingContext("");
+                        }
                       }
                     }
                   }}
                 >
-                  Initialize
+                  {initializationPending ? "Initializing…" : "Initialize"}
                 </Button>
               </Flex>
             )}
