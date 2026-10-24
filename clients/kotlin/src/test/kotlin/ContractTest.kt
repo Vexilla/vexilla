@@ -516,6 +516,8 @@ class ContractTest {
 
     @Test
     fun nativeSnapshotsAndMalformedValues() = runBlocking {
+        // Check artifact availability before the SDK wraps transport exceptions.
+        assertTrue(File(root, "metadata.json").isFile)
         val c = Client("https://contract", "prod", "member")
         c.syncManifest(fetch)
         val g = VexillaCodec.group(read("contract-group.json"))

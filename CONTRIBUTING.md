@@ -18,7 +18,7 @@ Compatible extra fields are accepted by the schemas. The publisher emits only pu
 
 ## Generate and validate
 
-Use Node 22 and pnpm 10.14.0 from the repository root:
+Use Node 24 and pnpm 10.14.0 from the repository root:
 
 ```sh
 pnpm install --frozen-lockfile --ignore-scripts
@@ -44,7 +44,7 @@ Install the relevant language's dependencies, then run `pnpm contract:run <id>` 
 
 | ID       | SDK                   | Native command (in SDK directory)                        | Toolchain/dependencies                                                                                                                 |
 | -------- | --------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `js`     | JavaScript/TypeScript | `pnpm test:contract`                                     | Node 22; built types package                                                                                                           |
+| `js`     | JavaScript/TypeScript | `pnpm test:contract`                                     | Node 24; built types package                                                                                                           |
 | `python` | Python                | `python -m pytest tests/test_contract.py -q`             | Python 3.9; `pip install --require-hashes -r contract-requirements.txt` exports the existing lock, including production Pydantic 1.9.2 |
 | `go`     | Go                    | `go test ./pkg/vexilla -run TestSharedContract -count=1` | Go 1.23+                                                                                                                               |
 | `rust`   | Rust                  | `cargo test --locked --lib shared_contract`              | Stable Rust; committed Cargo lockfile                                                                                                  |
