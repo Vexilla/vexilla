@@ -1,6 +1,28 @@
 import { Language } from "./types";
 
 export const templates: Record<Language, string> = {
+  lua: `--[[
+{{{disclaimerText}}}
+]]
+return {
+{{#groups}}
+  {{{name}}} = {
+    name = {{{rawName}}},
+    id = {{{id}}},
+    environments = {
+      {{#environments}}
+      {{{name}}} = {{{id}}},
+      {{/environments}}
+    },
+    features = {
+      {{#features}}
+      {{{name}}} = {{{id}}},
+      {{/features}}
+    },
+  },
+{{/groups}}
+}
+`,
   js: `
 /*
   {{{disclaimerText}}}

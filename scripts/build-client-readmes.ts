@@ -10,6 +10,7 @@ const readmeTemplate = fs.readFileSync(
 );
 
 const dir = fs.opendirSync(path.resolve(__dirname, "../clients"));
+const selected = new Set(process.argv.slice(2));
 
 let dirEntry = dir.readSync();
 
@@ -21,6 +22,10 @@ while (dirEntry) {
 
   // ignore old client libraries for now
   if (dirEntry.name.startsWith("client-")) {
+    dirEntry = dir.readSync();
+    continue;
+  }
+  if (selected.size && !selected.has(dirEntry.name)) {
     dirEntry = dir.readSync();
     continue;
   }

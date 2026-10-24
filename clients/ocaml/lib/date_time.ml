@@ -57,7 +57,9 @@ let to_seconds_res t =
   Ptime.to_span t |> Ptime.Span.to_int_s |> Option.to_result ~none:`Invalid_date
 ;;
 
-let to_ms_res t = to_seconds_res t |> Result.map (fun seconds -> Int.mul seconds 1000)
+let to_ms_res t =
+  let days,picoseconds=Ptime.Span.to_d_ps(Ptime.to_span t) in
+  Ok (days * 86400000 + Int64.to_int (Int64.div picoseconds 1000000000L))
 ;;
 
 module Constants = struct

@@ -1,61 +1,46 @@
-LanguageName = 'js'
-LanguageDisplayName = "JS/TS"
+LanguageName = 'php'
+LanguageDisplayName = "PHP"
 InstallInstructions = '''
-
-FOOOOOOO
-
-Using npm or yarn, install the package. Typescript types are shipped with it.
+Install with Composer on PHP 7.4:
 
 ```sh
-npm install --save @vexilla/client
-```
-
-or
-
-```sh
-yarn add @vexilla/client
+composer require vexilla/client
 ```
 '''
 CustomInstanceHash = "customInstanceHash"
-SyncFlags = "fetchFlags"
+SyncFlags = "syncFlags"
+SetupDescription = '''Fetch and install the manifest first, then sync each group you need. Getters validate without installing; setters install owned snapshots, and sync methods combine those steps.'''
 SetupSnippet = '''
-```javascript
-this.client = new VexillaClient({
-  baseUrl: 'https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com',
-  environment: process.env.ENVIRONMENT,
-  customInstanceHash: userId
-});
-this.client.getFlags('features.json');
+```php
+$client = new \Vexilla\Client('https://flags.example.com', 'prod', 'user-123');
+$client->syncManifest($fetch);
+$client->syncFlags('Checkout', $fetch);
 ```
 '''
 Should = "should"
 UsageSnippet = '''
-```javascript
-client.should(FEATURE_NAME)
+```php
+$enabled = $client->should('Checkout', 'New Checkout');
+$title = $client->valueString('Checkout', 'Title', 'Checkout');
 ```
 '''
 Example = '''
-```javascript
-import { VexillaClient } from '@vexilla/client';
+```php
+require 'vendor/autoload.php';
 
-export class FeatureFlagsService {
-  private client;
-
-  constructor() {
-    this.client = new VexillaClient({
-      baseUrl: 'https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com',
-      environment: process.env.ENVIRONMENT,
-      customInstanceHash: userId
-    });
-    this.client.getFlags('features.json');
-  }
-
-  should(featureName) {
-    return this.client?.should(featureName);
-  }
-}
+$fetch = function (string $url): string {
+    $json = file_get_contents($url);
+    if ($json === false) {
+        throw new \RuntimeException('Unable to fetch flags');
+    }
+    return $json;
+};
+$client = new \Vexilla\Client('https://flags.example.com', 'prod', 'user-123');
+$client->syncManifest($fetch);
+$client->syncFlags('Checkout', $fetch);
+$enabled = $client->should('Checkout', 'New Checkout');
+$title = $client->valueString('Checkout', 'Title', 'Checkout');
 ```
-'''
-API='''
-API
+
+Callbacks may return original JSON text or decoded objects. Use `Codec::manifest` and `Codec::group` for direct JSON ingestion, then the native setters. All ingestion validates before installation and preserves the previous snapshot on failure. Numeric IDs use `shouldCustomInt`, `shouldCustomFloat`, or `shouldCustom`; active zero and empty-string values remain actual values. See `contract/MIGRATION.md` before upgrading.
 '''

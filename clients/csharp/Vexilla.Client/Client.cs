@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Vexilla.Client
@@ -9,430 +9,192 @@ namespace Vexilla.Client
     public class VexillaClientBase
     {
         private readonly string _baseUrl;
-        private readonly string _instanceId;
+        private readonly object _instanceId;
         private readonly string _environment;
-
-        private readonly Dictionary<string, Dictionary<string, string>>
-            _environmentLookupTable =
-                new Dictionary<string, Dictionary<string, string>>();
-
-        private readonly Dictionary<string, Dictionary<string, string>>
-            _featureLookupTable =
-                new Dictionary<string, Dictionary<string, string>>();
-
-        private readonly Dictionary<string, Group> _flagGroups =
-            new Dictionary<string, Group>();
-
-        private readonly Dictionary<string, string> _groupLookupTable =
-            new Dictionary<string, string>();
-
         private Manifest _manifest;
+        private Dictionary<string, string> _groupAliases = new Dictionary<string, string>();
+        private readonly Dictionary<string, Group> _groups = new Dictionary<string, Group>();
+        private readonly Dictionary<string, Dictionary<string, string>> _environmentAliases = new Dictionary<string, Dictionary<string, string>>();
+        private readonly Dictionary<string, Dictionary<string, string>> _featureAliases = new Dictionary<string, Dictionary<string, string>>();
 
-        private bool _showLogs;
+        public VexillaClientBase(string baseUrl, string environment, object instanceId, bool showLogs = false)
+        { _baseUrl = baseUrl.TrimEnd('/'); _environment = environment; _instanceId = instanceId; }
+        public VexillaClientBase(string baseUrl, string environment, string instanceId, bool showLogs = false)
+            : this(baseUrl, environment, (object)instanceId, showLogs) { }
 
-        public VexillaClientBase(
-            string baseUrl,
-            string environment,
-            string instanceId,
-            bool showLogs = false
-        )
+        private async Task<string> Fetch(Func<string, Task<string>> fetch, string path)
         {
-            _baseUrl = baseUrl;
-            _environment = environment;
-            _instanceId = instanceId;
-            _showLogs = showLogs;
+            try { return await fetch(_baseUrl + "/" + path); }
+            catch (Exception e) { throw new ContractException("fetch", "Failed to fetch " + path + ": " + e.Message); }
         }
-
-        public async Task<Manifest> GetManifest(
-            Func<string, Task<string>> fetch)
-        {
-            var result = await fetch(_baseUrl + "/manifest.json");
-
-            return JsonSerializer.Deserialize<Manifest>(result,
-                new JsonSerializerOptions
-                {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                    IncludeFields = true
-                });
-        }
-
+        public async Task<Manifest> GetManifest(Func<string, Task<string>> fetch)
+        { return GroupConverter.DeserializeManifest(await Fetch(fetch, "manifest.json")); }
         public void SetManifest(Manifest manifest)
         {
-            _manifest = manifest;
-
-            foreach (var group in manifest.Groups)
+            var snapshot = GroupConverter.DeserializeManifest(GroupConverter.Serialize(manifest));
+            var aliases = new Dictionary<string, string>();
+            foreach (var entry in snapshot.Groups)
             {
-                _groupLookupTable[group.GroupId] = group.GroupId;
-                _groupLookupTable[group.Name] = group.GroupId;
+                Validation.AddAlias(aliases, entry.GroupId, entry.Name);
             }
-        }
 
-        public async Task SyncManifest(Func<string, Task<string>> fetch)
+            foreach (var id in _groups.Keys.ToArray())
+            {
+                if (!snapshot.Groups.Any(e => e.GroupId == id && e.Name == _groups[id].Name))
+                { _groups.Remove(id); _featureAliases.Remove(id); _environmentAliases.Remove(id); }
+            }
+            _manifest = snapshot; _groupAliases = aliases;
+        }
+        public async Task SyncManifest(Func<string, Task<string>> fetch) { SetManifest(await GetManifest(fetch)); }
+        private string GroupId(string name)
         {
-            var manifest = await GetManifest(fetch);
-            SetManifest(manifest);
-        }
+            if (!_groupAliases.TryGetValue(name, out var id))
+            {
+                throw new ContractException("lookup", "Group not found: " + name);
+            }
 
-        public async Task<Group> GetFlags(string groupNameOrId,
-            Func<string, Task<string>> fetch)
+            return id;
+        }
+        private void MatchManifest(Group group)
         {
-            var groupId = _groupLookupTable[groupNameOrId];
-            var result = await fetch(_baseUrl + $"/{groupId}.json");
+            if (_manifest == null)
+            {
+                throw new ContractException("lookup", "Manifest is not installed");
+            }
 
-            return GroupConverter.Deserialize(result);
+            Validation.Require(_manifest.Groups.Any(g => g.GroupId == group.GroupId && g.Name == group.Name), "Group does not match its manifest ID/name");
         }
-
+        public async Task<Group> GetFlags(string groupNameOrId, Func<string, Task<string>> fetch)
+        {
+            var id = GroupId(groupNameOrId);
+            var group = GroupConverter.Deserialize(await Fetch(fetch, id + ".json"));
+            MatchManifest(group); Validation.Require(group.GroupId == id, "Fetched group differs from requested group");
+            return group;
+        }
         public void SetFlags(Group group)
         {
-            _flagGroups[group.GroupId] = group;
-
-
-            if (!_environmentLookupTable.ContainsKey(group.GroupId))
+            var snapshot = GroupConverter.Deserialize(GroupConverter.Serialize(group)); MatchManifest(snapshot);
+            var environments = new Dictionary<string, string>(); var features = new Dictionary<string, string>();
+            foreach (var env in snapshot.Environments)
             {
-                _environmentLookupTable[group.GroupId] =
-                    new Dictionary<string, string>();
+                Validation.AddAlias(environments, env.Key, env.Value.Name);
             }
 
-            foreach (var environmentPair in group.Environments)
+            foreach (var feature in snapshot.Features)
             {
-                _environmentLookupTable[group.GroupId][environmentPair.Key] =
-                    environmentPair.Value.EnvironmentId;
-                _environmentLookupTable[group.GroupId][
-                        environmentPair.Value.Name] =
-                    environmentPair.Value.EnvironmentId;
+                Validation.AddAlias(features, feature.Key, feature.Value.Name);
             }
 
-            if (!_featureLookupTable.ContainsKey(group.GroupId))
-            {
-                _featureLookupTable[group.GroupId] =
-                    new Dictionary<string, string>();
-            }
-
-            foreach (var featurePair in group.Features)
-            {
-                _featureLookupTable[group.GroupId][featurePair.Key] =
-                    featurePair.Value.FeatureId;
-                _featureLookupTable[group.GroupId][featurePair.Value.Name] =
-                    featurePair.Value.FeatureId;
-            }
+            _groups[snapshot.GroupId] = snapshot; _environmentAliases[snapshot.GroupId] = environments; _featureAliases[snapshot.GroupId] = features;
         }
-
-        public async Task SyncFlags(string groupNameOrId,
-            Func<string, Task<string>> fetch)
+        public async Task SyncFlags(string groupNameOrId, Func<string, Task<string>> fetch) { SetFlags(await GetFlags(groupNameOrId, fetch)); }
+        private Feature Lookup(string group, string feature)
         {
-            var flags = await GetFlags(groupNameOrId, fetch);
-            SetFlags(flags);
+            var id = GroupId(group);
+            if (!_groups.TryGetValue(id, out var installed) || !_environmentAliases[id].TryGetValue(_environment, out var env) || !_featureAliases[id].TryGetValue(feature, out var fid))
+            {
+                throw new ContractException("lookup", "Feature/environment is not installed");
+            }
+
+            return installed.Environments[env].RawFeatures[fid];
         }
-
-        public bool Should(string groupNameOrId, string featureNameOrId)
+        public bool Should(string groupNameOrId, string featureNameOrId) { return ShouldCustom(groupNameOrId, featureNameOrId, _instanceId); }
+        public bool ShouldCustomString(string groupNameOrId, string featureNameOrId, string customInstanceId) { return ShouldCustom(groupNameOrId, featureNameOrId, customInstanceId); }
+        public bool ShouldCustomLong(string groupNameOrId, string featureNameOrId, long customInstanceId) { return ShouldCustom(groupNameOrId, featureNameOrId, customInstanceId); }
+        public bool ShouldCustomDouble(string groupNameOrId, string featureNameOrId, double customInstanceId) { return ShouldCustom(groupNameOrId, featureNameOrId, customInstanceId); }
+        public bool ShouldCustom(string group, string feature, object instance)
         {
-            return ShouldCustomString(groupNameOrId,
-                featureNameOrId, _instanceId);
-        }
+            var f = Lookup(group, feature);
+            if (f.FeatureType == "value")
+            {
+                throw new ContractException("kind", "Value feature requires a value operation");
+            }
 
-        public bool ShouldCustomString(string groupNameOrId,
-            string featureNameOrId, string customInstanceId)
-        {
-            var realIds = GetRealIds(groupNameOrId, featureNameOrId);
+            string text = null;
+            if (f.FeatureType != "toggle")
+            {
+                text = VexillaHasher.InstanceText(instance);
+            }
 
-            var environment = _flagGroups[realIds.RealGroupId]
-                .Environments[realIds.RealEnvironmentId];
-
-            var rawFeature = environment
-                .RawFeatures[realIds.RealFeatureId];
-
-            if (!Scheduler.IsScheduleFeatureActive(rawFeature))
+            if (!Scheduler.IsScheduleFeatureActive(f))
             {
                 return false;
             }
 
-            switch (rawFeature.FeatureType)
+            if (f is ToggleFeature toggle)
             {
-                case FeatureType.Toggle:
-                    var toggleFeature =
-                        environment.ToggleFeatures[realIds.RealFeatureId];
-                    return toggleFeature.Value;
-                case FeatureType.Gradual:
-                    var gradualFeature =
-                        environment.GradualFeatures[realIds.RealFeatureId];
-                    return VexillaHasher.HashString(customInstanceId,
-                        gradualFeature.Seed) < gradualFeature.Value;
-                case FeatureType.Selective:
-                    var selectiveFeature =
-                        environment.SelectiveFeatures[realIds.RealFeatureId];
-                    switch (selectiveFeature.ValueType)
-                    {
-                        case ValueType.StringValueType:
-                            var selectiveStringFeature =
-                                environment.SelectiveStringFeatures[
-                                    realIds.RealFeatureId];
-                            return selectiveStringFeature.Value.Contains(
-                                customInstanceId);
-                        case ValueType.IntValueType:
-                        case ValueType.FloatValueType:
-                            throw new InvalidShouldFeatureValueTypeException(
-                                $"Selective Feature with id ({realIds.RealFeatureId}) is not 'string'.");
-                    }
-
-                    return false;
-                case FeatureType.Value:
-                    throw new InvalidShouldFeatureTypeException(
-                        "Value Features are not supported by Should functions. Try ValueString, ValueInt, or ValueFloat");
+                return toggle.Value;
             }
 
-            // We should not have been able to get here but we should send false anyway.
-            return false;
-        }
+            if (f is GradualFeature gradual)
+            {
+                return VexillaHasher.HashString(text, gradual.Seed) < gradual.Value;
+            }
 
-        public bool ShouldCustomLong(string groupNameOrId,
-            string featureNameOrId, long customInstanceId)
-        {
-            var realIds = GetRealIds(groupNameOrId, featureNameOrId);
+            if (f is SelectiveStringFeature strings)
+            {
+                return instance is string s && strings.Value.Contains(s, StringComparer.Ordinal);
+            }
 
-            var environment = _flagGroups[realIds.RealGroupId]
-                .Environments[realIds.RealEnvironmentId];
-
-            var rawFeature = environment
-                .RawFeatures[realIds.RealFeatureId];
-
-            if (!Scheduler.IsScheduleFeatureActive(rawFeature))
+            if (instance is string)
             {
                 return false;
             }
 
-            switch (rawFeature.FeatureType)
+            var number = Convert.ToDouble(instance, CultureInfo.InvariantCulture);
+            if (f is SelectiveIntFeature integers)
             {
-                case FeatureType.Toggle:
-                    var toggleFeature =
-                        environment.ToggleFeatures[realIds.RealFeatureId];
-                    return toggleFeature.Value;
-                case FeatureType.Gradual:
-                    var gradualFeature =
-                        environment.GradualFeatures[realIds.RealFeatureId];
-                    return VexillaHasher.HashInt(customInstanceId,
-                        gradualFeature.Seed) < gradualFeature.Value;
-                case FeatureType.Selective:
-                    var selectiveFeature =
-                        environment.SelectiveFeatures[realIds.RealFeatureId];
-                    switch (selectiveFeature.ValueType)
-                    {
-                        case ValueType.IntValueType:
-                            var selectiveIntFeature =
-                                environment.SelectiveIntFeatures[
-                                    realIds.RealFeatureId];
-                            return selectiveIntFeature.Value.Contains(
-                                customInstanceId);
-                        case ValueType.StringValueType:
-                        case ValueType.FloatValueType:
-                            throw new InvalidShouldFeatureValueTypeException(
-                                $"Selective Feature with id ({realIds.RealFeatureId}) is not 'int/long'.");
-                    }
-
-                    return false;
-                case FeatureType.Value:
-                    throw new InvalidShouldFeatureTypeException(
-                        "Value Features are not supported by Should functions. Try ValueString, ValueInt, or ValueFloat");
+                return integers.Value.Any(v => v == number);
             }
 
-            // We should not have been able to get here but we should send false anyway.
-            return false;
-        }
+            if (f is SelectiveFloatFeature floats)
+            {
+                return floats.Value.Contains(number);
+            }
 
-        public bool ShouldCustomDouble(string groupNameOrId,
-            string featureNameOrId, double customInstanceId)
+            throw new ContractException("kind", "Unsupported boolean operation");
+        }
+        public object Value(string group, string feature, object fallback)
         {
-            var realIds = GetRealIds(groupNameOrId, featureNameOrId);
-
-            var environment = _flagGroups[realIds.RealGroupId]
-                .Environments[realIds.RealEnvironmentId];
-
-            var rawFeature = environment
-                .RawFeatures[realIds.RealFeatureId];
-
-            if (!Scheduler.IsScheduleFeatureActive(rawFeature))
+            var f = Lookup(group, feature);
+            if (f.FeatureType != "value")
             {
-                return false;
+                throw new ContractException("kind", "Feature is not a value");
             }
 
-            switch (rawFeature.FeatureType)
-            {
-                case FeatureType.Toggle:
-                    var toggleFeature =
-                        environment.ToggleFeatures[realIds.RealFeatureId];
-                    return toggleFeature.Value;
-                case FeatureType.Gradual:
-                    var gradualFeature =
-                        environment.GradualFeatures[realIds.RealFeatureId];
-                    return VexillaHasher.HashFloat(customInstanceId,
-                        gradualFeature.Seed) < gradualFeature.Value;
-                case FeatureType.Selective:
-                    var selectiveFeature =
-                        environment.SelectiveFeatures[realIds.RealFeatureId];
-                    switch (selectiveFeature.ValueType)
-                    {
-                        case ValueType.FloatValueType:
-                            var selectiveFloatFeature =
-                                environment.SelectiveFloatFeatures[
-                                    realIds.RealFeatureId];
-                            return selectiveFloatFeature.Value.Contains(
-                                customInstanceId);
-                        case ValueType.StringValueType:
-                        case ValueType.IntValueType:
-                            throw new InvalidShouldFeatureValueTypeException(
-                                $"Selective Feature with id ({realIds.RealFeatureId}) is not 'int/long'.");
-                    }
-
-                    return false;
-                case FeatureType.Value:
-                    throw new InvalidShouldFeatureTypeException(
-                        "Value Features are not supported by Should functions. Try ValueString, ValueInt, or ValueFloat");
-            }
-
-
-            // We should not have been able to get here but we should send false anyway.
-            return false;
+            return Scheduler.IsScheduleFeatureActive(f) ? ValueData(f) : fallback;
         }
-
-        public string ValueString(string groupNameOrId, string featureNameOrId,
-            string defaultValue)
+        private static object ValueData(Feature f)
         {
-            var realIds = GetRealIds(groupNameOrId, featureNameOrId);
-
-            var environment = _flagGroups[realIds.RealGroupId]
-                .Environments[realIds.RealEnvironmentId];
-
-            var rawFeature = environment
-                .RawFeatures[realIds.RealFeatureId];
-
-            if (!Scheduler.IsScheduleFeatureActive(rawFeature))
+            if (f is ValueStringFeature s)
             {
-                return defaultValue;
+                return s.Value;
             }
 
-            if (rawFeature.FeatureType != FeatureType.Value)
+            if (f is ValueIntFeature i)
             {
-                throw new InvalidValueFeatureTypeException(
-                    $"feature ({featureNameOrId}) is not of type 'value'");
+                return i.Value;
             }
 
-            if (!environment.ValueStringFeatures.TryGetValue(
-                    realIds.RealFeatureId,
-                    out var valueStringFeature))
+            if (f is ValueFloatFeature d)
             {
-                throw new InvalidValueFeatureValueTypeException(
-                    $"valueFeature ({featureNameOrId}) is not of value type 'string'");
+                return d.Value;
             }
 
-            return valueStringFeature.Value;
+            throw new ContractException("kind", "Unsupported value subtype");
         }
-
-        public long ValueLong(string groupNameOrId, string featureNameOrId,
-            long defaultValue)
+        private T TypedValue<T>(string group, string feature, T fallback)
         {
-            var realIds = GetRealIds(groupNameOrId, featureNameOrId);
-
-            var environment = _flagGroups[realIds.RealGroupId]
-                .Environments[realIds.RealEnvironmentId];
-
-            var rawFeature = environment
-                .RawFeatures[realIds.RealFeatureId];
-
-            if (!Scheduler.IsScheduleFeatureActive(rawFeature))
+            var f = Lookup(group, feature); var value = ValueData(f);
+            if (!(value is T))
             {
-                return defaultValue;
+                throw new ContractException("kind", "Value subtype differs from accessor");
             }
 
-            if (rawFeature.FeatureType != FeatureType.Value)
-            {
-                throw new InvalidValueFeatureTypeException(
-                    $"feature ({featureNameOrId}) is not of type 'value'");
-            }
-
-            if (!environment.ValueIntFeatures.TryGetValue(
-                    realIds.RealFeatureId,
-                    out var valueIntFeature))
-            {
-                throw new InvalidValueFeatureValueTypeException(
-                    $"valueFeature ({featureNameOrId}) is not of value type 'int'");
-            }
-
-            return valueIntFeature.Value;
+            return Scheduler.IsScheduleFeatureActive(f) ? (T)value : fallback;
         }
-
-        public double ValueDouble(string groupNameOrId, string featureNameOrId,
-            double defaultValue)
-        {
-            var realIds = GetRealIds(groupNameOrId, featureNameOrId);
-
-            var environment = _flagGroups[realIds.RealGroupId]
-                .Environments[realIds.RealEnvironmentId];
-
-            var rawFeature = environment
-                .RawFeatures[realIds.RealFeatureId];
-
-            if (!Scheduler.IsScheduleFeatureActive(rawFeature))
-            {
-                return defaultValue;
-            }
-
-            if (rawFeature.FeatureType != FeatureType.Value)
-            {
-                throw new InvalidValueFeatureTypeException(
-                    $"feature ({featureNameOrId}) is not of type 'value'");
-            }
-
-            if (!environment.ValueFloatFeatures.TryGetValue(
-                    realIds.RealFeatureId,
-                    out var valueFloatFeature))
-            {
-                throw new InvalidValueFeatureValueTypeException(
-                    $"valueFeature ({featureNameOrId}) is not of value type 'float'");
-            }
-
-            return valueFloatFeature.Value;
-        }
-
-        private RealIds GetRealIds(string groupNameOrId, string featureNameOrId)
-        {
-            if (!_groupLookupTable.TryGetValue(groupNameOrId, out var groupId))
-            {
-                throw new GroupLookupKeyNotFoundException(
-                    $"No group found in GroupLookupTable for name or id: {groupNameOrId}");
-            }
-
-            if (!_featureLookupTable.TryGetValue(groupId,
-                    out var groupFeatures))
-            {
-                throw new FeatureLookupKeyNotFoundException(
-                    $"No group found in FeatureLookupTable for id: {groupId}");
-            }
-
-            if (!groupFeatures.TryGetValue(featureNameOrId, out var featureId))
-            {
-                throw new FeatureLookupKeyNotFoundException(
-                    $"No feature found in FeatureLookupTable for name or id: {featureNameOrId}");
-            }
-
-            if (!_environmentLookupTable.TryGetValue(groupId,
-                    out var groupEnvironments))
-            {
-                throw new EnvironmentLookupKeyNotFoundException(
-                    $"No group found in EnvironmentLookupTable for id: {groupId}");
-            }
-
-            if (!groupEnvironments.TryGetValue(_environment,
-                    out var environmentId))
-            {
-                throw new EnvironmentLookupKeyNotFoundException(
-                    $"No environment found in EnvironmentLookupTable for name or id: {_environment}");
-            }
-
-            return new RealIds
-            {
-                RealGroupId = groupId,
-                RealFeatureId = featureId,
-                RealEnvironmentId = environmentId
-            };
-        }
+        public string ValueString(string groupNameOrId, string featureNameOrId, string defaultValue) { return TypedValue(groupNameOrId, featureNameOrId, defaultValue); }
+        public long ValueLong(string groupNameOrId, string featureNameOrId, long defaultValue) { return TypedValue(groupNameOrId, featureNameOrId, defaultValue); }
+        public double ValueDouble(string groupNameOrId, string featureNameOrId, double defaultValue) { return TypedValue(groupNameOrId, featureNameOrId, defaultValue); }
     }
 }

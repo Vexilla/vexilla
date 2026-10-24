@@ -32,7 +32,7 @@ module Schedule = struct
     | _ -> Error "Invalid timezone"
   ;;
 
-  type time_type = None | Start_end | Daily [@@deriving of_yojson, show]
+  type time_type = None | Start_end | Daily [@@deriving of_yojson { strict = false }, show]
 
   let time_type_to_string = function
     | None -> "none"
@@ -62,6 +62,13 @@ module Schedule = struct
     end_time : int; [@key "endTime"]
   }
   [@@deriving make, show, of_yojson { strict = false }]
+  let generated_of_yojson = of_yojson
+  let of_yojson value =
+    Validation.result Validation.schedule (fun value ->
+      let fields = Yojson.Safe.Util.to_assoc value |> List.map (fun (k,v) ->
+        if List.mem k ["start";"end";"startTime";"endTime"] then k, `Int (int_of_float (Validation.number ~integer:true v)) else k,v) in
+      generated_of_yojson (`Assoc fields)) value
+  let to_yojson s = `Assoc ["start",`Int s.start;"end",`Int s.end';"timezone",`String(timezone_to_string s.timezone);"timeType",`String(time_type_to_string s.time_type);"startTime",`Int s.start_time;"endTime",`Int s.end_time]
 end
 
 module Feature = struct
@@ -153,7 +160,7 @@ module Feature = struct
       | `String, elements ->
           Ok (String_list (List.map Yojson.Safe.Util.to_string elements))
       | `Int, elements ->
-          Ok (Int_list (List.map Yojson.Safe.Util.to_int elements))
+          Ok (Int_list (List.map (fun v -> int_of_float (Validation.number ~integer:true v)) elements))
       | `Float, elements ->
           Ok (Float_list (List.map (function `Float f -> f | `Int i -> float_of_int i | _ -> failwith "Expected float") elements))
     with _ -> Error "Invalid value type"
@@ -223,6 +230,7 @@ module Feature = struct
                | `Int i -> Ok (Float (float_of_int i))
                | `Float f -> Ok (Float f)
                | _ -> Error "Invalid float value")
+          | `String "number" -> Ok (Int (int_of_float (Validation.number ~integer:true raw_value)))
           | _ -> scalar_value_of_yojson raw_value
         in
         Ok { attributes = { feature_id; name; schedule; schedule_type }; value }
@@ -248,12 +256,31 @@ module Feature = struct
     | _ -> failwith "Invalid feature type"
   ;;
 
+  let generated_of_yojson = of_yojson
+  let of_yojson value = Validation.result Validation.feature generated_of_yojson value
+
   let attributes = function
     | Toggle t -> t.attributes
     | Gradual g -> g.attributes
     | Selective s -> s.attributes
     | Value v -> v.attributes
   ;;
+  let to_yojson feature =
+    let a=attributes feature in
+    let common=["name",`String a.name;"featureId",`String a.feature_id;"schedule",Schedule.to_yojson a.schedule;"scheduleType",`String(Schedule.schedule_type_to_string a.schedule_type)] in
+    let fields=match feature with
+    | Toggle f->["featureType",`String "toggle";"value",`Bool f.value]
+    | Gradual f->["featureType",`String "gradual";"value",`Float f.value;"seed",`Float f.seed]
+    | Selective f->let subtype,value=match f.value with
+      | String_list xs->["valueType",`String "string"],`List(List.map(fun s->`String s)xs)
+      | Int_list xs->["valueType",`String "number";"numberType",`String "int"],`List(List.map(fun n->`Int n)xs)
+      | Float_list xs->["valueType",`String "number";"numberType",`String "float"],`List(List.map(fun n->`Float n)xs)in
+      ["featureType",`String "selective";"value",value]@subtype
+    | Value f->let subtype,value=match f.value with
+      | String s->["valueType",`String "string"],`String s
+      | Int n->["valueType",`String "number";"numberType",`String "int"],`Int n
+      | Float n->["valueType",`String "number";"numberType",`String "float"],`Float n in
+      ["featureType",`String "value";"value",value]@subtype in `Assoc(common@fields)
 end
 
 module Environment = struct
@@ -277,12 +304,13 @@ module Environment = struct
         [@of_yojson features_of_yojson]
   }
   [@@deriving of_yojson { strict = false }]
+  let to_yojson e = `Assoc ["name",`String e.name;"environmentId",`String e.id;"features",`Assoc(Hashtbl.fold(fun key f acc->match key with `Id id->(id,Feature.to_yojson f)::acc|`Name _->raise(Validation.Invalid "Native feature map key must be ID"))e.features [])]
 end
 
 module Group = struct
   type name = string [@@deriving of_yojson]
   type id = string [@@deriving of_yojson]
-  type meta = { version : string } [@@deriving of_yojson]
+  type meta = { version : string } [@@deriving of_yojson { strict = false }]
   type group_id_or_name = Id of id | Name of name
 
   let environments_of_yojson =
@@ -303,6 +331,9 @@ module Group = struct
         [@of_yojson environments_of_yojson]
   }
   [@@deriving make, of_yojson { strict = false }]
+  let generated_of_yojson = of_yojson
+  let of_yojson value = Validation.result Validation.group generated_of_yojson value
+  let to_yojson g = `Assoc ["name",`String g.name;"groupId",`String g.id;"meta",`Assoc["version",`String g.meta.version];"features",`Assoc(Hashtbl.fold(fun id f acc->(id,Feature.to_yojson f)::acc)g.features []);"environments",`Assoc(Hashtbl.fold(fun id e acc->(id,Environment.to_yojson e)::acc)g.environments [])]
 end
 
 module Manifest = struct
@@ -310,10 +341,13 @@ module Manifest = struct
   type group_id = Group.id [@@deriving of_yojson]
 
   type manifest_group = { name : string; group_id : string [@key "groupId"] }
-  [@@deriving of_yojson, show]
+  [@@deriving of_yojson { strict = false }, show]
 
   type t = { version : string; groups : manifest_group list }
-  [@@deriving of_yojson, show]
+  [@@deriving of_yojson { strict = false }, show]
 
+  let generated_of_yojson = of_yojson
+  let of_yojson value = Validation.result Validation.manifest generated_of_yojson value
+  let to_yojson m = `Assoc ["version",`String m.version;"groups",`List(List.map(fun g->`Assoc["name",`String g.name;"groupId",`String g.group_id])m.groups)]
   let empty = { version = ""; groups = [] }
 end

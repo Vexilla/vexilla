@@ -439,6 +439,9 @@ importers:
 
   clients/js:
     dependencies:
+      ajv:
+        specifier: 8.17.1
+        version: 8.17.1
       case:
         specifier: ^1.6.3
         version: 1.6.3

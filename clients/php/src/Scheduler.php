@@ -2,110 +2,49 @@
 
 namespace Vexilla;
 
-require 'vendor/autoload.php';
-
 use Carbon\Carbon;
 use Vexilla\Types\Feature;
 use Vexilla\Types\Schedule;
-use Vexilla\Types\ScheduleTimeType;
-use Vexilla\Types\ScheduleType;
-
 class Scheduler
 {
-
-    static function isScheduledFeatureActive(Feature $feature): bool
+    private const DAY = 86400000;
+    private static function day(int $n) : int
     {
-        return Scheduler::isScheduleActive($feature->schedule, $feature->scheduleType);
+        return (int) floor($n / self::DAY) * self::DAY;
     }
-
-    static function isScheduleActive(Schedule $schedule, string $scheduleType): bool
+    private static function mod(int $n) : int
     {
-        return Scheduler::isScheduleActiveWithNow($schedule, $scheduleType, Carbon::now("UTC"));
+        return ($n % self::DAY + self::DAY) % self::DAY;
     }
-
-    static function isScheduleActiveWithNow(Schedule $schedule, string $scheduleType, Carbon $now): bool
+    public static function isScheduledFeatureActive(Feature $feature) : bool
     {
-
-        switch ($scheduleType) {
-            case ScheduleType::EMPTY:
-                return true;
-
-            case ScheduleType::ENVIRONMENT:
-            case ScheduleType::GLOBAL:
-
-                $startDate = Carbon::createFromTimestampMsUTC($schedule->start);
-                $startOfStartDate = $startDate->clone();
-                $startOfStartDate->setHours(0);
-                $startOfStartDate->setMinutes(0);
-                $startOfStartDate->setSeconds(0);
-                $startOfStartDate->setMicroseconds(0);
-
-                $endDate = Carbon::createFromTimestampMsUTC($schedule->end);
-                $endOfEndDate = $endDate->clone()->endOfDay();
-
-                if (!$now->betweenIncluded($startOfStartDate, $endOfEndDate)) {
-                    return false;
-                }
-
-                return Scheduler::isScheduleTimeActive($schedule->timeType, $now, $startDate, $schedule->startTime, $endDate, $schedule->endTime);
-
-            default:
-                return false;
+        return self::isScheduleActive($feature->schedule, $feature->scheduleType);
+    }
+    public static function isScheduleActive(Schedule $schedule, string $scheduleType) : bool
+    {
+        return self::isScheduleActiveMillis($schedule, $scheduleType, (int) floor(microtime(true) * 1000));
+    }
+    public static function isScheduleActiveWithNow(Schedule $schedule, string $scheduleType, Carbon $now) : bool
+    {
+        return self::isScheduleActiveMillis($schedule, $scheduleType, $now->timestamp * 1000 + (int) floor($now->micro / 1000));
+    }
+    public static function isScheduleActiveMillis(Schedule $s, string $mode, int $now) : bool
+    {
+        if ($mode === '') {
+            return true;
         }
-    }
-
-    private static function isScheduleTimeActive(string $timeType, Carbon $now, Carbon $startDate, int $startTime, Carbon $endDate, int $endTime): bool
-    {
-        $nowMillis = $now->timestamp * 1000;
-
-        switch ($timeType) {
-
-            case ScheduleTimeType::NONE:
-                return true;
-
-            case ScheduleTimeType::START_END:
-
-                $startOfStartDate = $startDate->clone();
-                $startOfStartDate->setHours(0);
-                $startOfStartDate->setMinutes(0);
-                $startOfStartDate->setSeconds(0);
-                $startOfStartDate->setMicroseconds(0);
-
-                $startOfStartDateMillis = $startOfStartDate->timestamp * 1000;
-
-                $startOfEndDate = $endDate->clone();
-                $startOfEndDate->setHours(0);
-                $startOfEndDate->setMinutes(0);
-                $startOfEndDate->setSeconds(0);
-                $startOfEndDate->setMicroseconds(0);
-
-                $startOfEndDateMillis = $startOfEndDate->timestamp * 1000;
-
-                $startDateTimestampWithStartTime = $startOfStartDateMillis + $startTime;
-                $endDateTimestampWithEndTime = $startOfEndDateMillis + $endTime;
-
-                return $startDateTimestampWithStartTime <= $nowMillis && $nowMillis <= $endDateTimestampWithEndTime;
-
-            case ScheduleTimeType::DAILY:
-
-                $zeroDay = Carbon::createFromTimestampMsUTC(0);
-
-                $zeroDayWithNow = $zeroDay->clone()
-                    ->setHours($now->hour)
-                    ->setMinutes($now->minute)
-                    ->setSeconds($now->second)
-                    ->setMilliseconds($now->millisecond);
-
-                $zeroDayWithNowTimestamp = $zeroDayWithNow->timestamp * 1000;
-
-                if ($startTime > $endTime) {
-                    return $startTime <= $zeroDayWithNowTimestamp || $zeroDayWithNowTimestamp <= $endTime;
-                } else {
-                    return $startTime <= $zeroDayWithNowTimestamp && $zeroDayWithNowTimestamp <= $endTime;
-                }
-
-            default:
-                return false;
+        if ($now < self::day($s->start) || $now > self::day($s->end) + self::DAY - 1) {
+            return false;
         }
+        if ($s->timeType === 'none') {
+            return true;
+        }
+        if ($s->timeType === 'start/end') {
+            return $now >= self::day($s->start) + $s->startTime && $now <= self::day($s->end) + $s->endTime;
+        }
+        $clock = self::mod($now);
+        $start = self::mod($s->startTime);
+        $end = self::mod($s->endTime);
+        return $start <= $end ? $clock >= $start && $clock <= $end : $clock >= $start || $clock <= $end;
     }
 }
