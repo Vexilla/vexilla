@@ -37,6 +37,7 @@ export interface BitbucketGetRepositoriesResponse {
 }
 
 interface RepositoryValue {
+  slug?: string;
   type: string;
   links: Links;
   uuid: string;
@@ -60,7 +61,7 @@ interface RepositoryValue {
   has_wiki: boolean;
   fork_policy: string;
   project: Mainbranch;
-  mainbranch: Mainbranch;
+  mainbranch: Mainbranch | null;
 }
 
 interface Links {
@@ -190,6 +191,7 @@ interface UserLinks {
 }
 
 export interface BitbucketGetTreeResponse {
+  next?: string;
   pagelen: number;
   values: TreeValue[];
   page: number;

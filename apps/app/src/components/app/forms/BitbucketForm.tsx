@@ -1,10 +1,17 @@
-import _React, { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { Button, Timeline, Select, ActionIcon, Flex } from "@mantine/core";
 
-import { AppState, HostingProvider } from "../../../types";
+import { AppState } from "../../../types";
 
 import { Branch, Repository } from "./_GitForm.types";
-import { BitbucketFetcher } from "./BitbucketForm.fetchers";
+import {
+  BitbucketFetcher,
+  hasBitbucketAuthentication,
+  hasBitbucketRepository,
+  bitbucketDiscoveryKey,
+  canDiscoverBitbucketRepositories,
+} from "./BitbucketForm.fetchers";
+import { selectGitRepository, isGitUnauthorized } from "../../../utils/fetcher";
 
 import { GitForm } from "./_GitForm";
 import { TimelineItemTitle } from "../../TimelineItemTitle";
@@ -14,17 +21,13 @@ import { Icon } from "@iconify/react";
 import verifiedCheckBold from "@iconify/icons-solar/verified-check-bold";
 import closeCircleBroken from "@iconify/icons-solar/close-circle-broken";
 import refreshBroken from "@iconify/icons-solar/refresh-broken";
-import { fetchersMap } from "../../../utils/fetchers.map";
 import { useSnapshot } from "valtio";
-import { BitbucketBranchValue, WorkspaceValue } from "./BitbucketForm.types";
-import { defaultConfig } from "../../../stores/config-valtio";
-
+import { WorkspaceValue } from "./BitbucketForm.types";
 
 const bitbucketClientId = import.meta.env.VITE_BITBUCKET_CLIENT_ID;
 
 interface BitbucketFormProps {
   config: AppState;
-  updateConfig: (newConfig: AppState) => void;
 }
 
 const buttonStyling = {
@@ -45,55 +48,49 @@ export function BitbucketForm({ config }: BitbucketFormProps) {
   const configSnapshot = useSnapshot(config);
   const {
     accessToken,
-    workspaceId,
     repositoryId,
-    repositoryName,
-    owner,
     targetBranch,
-    provider,
-    providerType,
     branchIsValid,
+    workspaceId,
   } =
     configSnapshot.hosting.provider === "bitbucket"
       ? configSnapshot.hosting
       : {
           accessToken: "",
-          workspaceId: "",
           repositoryId: "",
-          repositoryName: "",
-          owner: "",
           targetBranch: "",
-          provider: "",
-          providerType: "",
           branchIsValid: false,
+          workspaceId: "",
         };
   const [workspaces, setWorkspaces] = useState<WorkspaceValue[]>([]);
   const [repositories, setRepositories] = useState<Repository[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now());
+  const [workspaceError, setWorkspaceError] = useState("");
+  const [repositoryError, setRepositoryError] = useState("");
+  const [branchError, setBranchError] = useState("");
+  const previousWorkspaceKey = useRef("");
+  const previousRepositoryKey = useRef("");
+  const previousBranchKey = useRef("");
 
   const bitbucketMethods = useMemo(() => {
     return new BitbucketFetcher();
-  }, [accessToken, owner, repositoryName]);
+  }, []);
 
   function refresh() {
-    setRefreshTimestamp(Date.now());
+    setRefreshTimestamp((value) => value + 1);
   }
 
   function clearHosting() {
     if (config.hosting.provider === "bitbucket") {
       config.hosting.accessToken = "";
       config.hosting.workspaceId = "";
-      config.hosting.repositoryId = "";
+      selectGitRepository(config.hosting);
     } else {
       console.error(
         `Wrong hosting provider in bitbucket form: ${configSnapshot.hosting.provider}`
       );
     }
-
-    // until we fix the mutability of config in child forms,
-    // this function is not needed
-    // updateConfig(config);
   }
 
   let activeElement = 0;
@@ -109,115 +106,170 @@ export function BitbucketForm({ config }: BitbucketFormProps) {
     activeElement = 3;
   }
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        if (accessToken && config.hosting.provider === "bitbucket") {
-          const workspacesResponse = await bitbucketMethods.fetchWorkspaces();
-          setWorkspaces(workspacesResponse.values);
-          if (workspacesResponse.values.length === 1) {
-            config.hosting.workspaceId = `${workspacesResponse.values[0].workspace.slug}`;
-          }
-          if (config.hosting.workspaceId) {
-            const repositoriesResponse =
-              await bitbucketMethods.fetchRepositories();
+  const discoveryKey = bitbucketDiscoveryKey(configSnapshot.hosting);
+  const contextKey = bitbucketMethods.getReadContextKey(configSnapshot.hosting);
+  const repositoryReady = hasBitbucketRepository(configSnapshot.hosting);
 
-            setRepositories(
-              repositoriesResponse.values.map((_repository) => ({
-                name: _repository.name,
-                id: `${_repository.name}`,
-                owner: `${_repository.owner}`,
-                defaultBranch: `${_repository.mainbranch.name}`,
-              }))
-            );
-            if (repositoriesResponse.values.length === 1) {
-              config.hosting.repositoryId = `${repositoriesResponse.values[0].name}`;
-              config.hosting.owner = `${repositoriesResponse.values[0].owner.username}`;
-              config.hosting.repositoryName = `${repositoriesResponse.values[0].name}`;
-              config.hosting.targetBranch = `${repositoriesResponse.values[0].mainbranch.name}`;
-            }
-          }
-        }
-      } catch (e: any) {
-        // this should probably only be modifying the snapshot, not the full state
-        clearHosting();
-      }
+  useEffect(() => {
+    let active = true;
+    const isCurrent = () =>
+      active && discoveryKey === bitbucketDiscoveryKey(config.hosting);
+    if (previousWorkspaceKey.current !== discoveryKey) {
+      setWorkspaces([]);
+      previousWorkspaceKey.current = discoveryKey;
     }
-    fetchData();
-  }, [accessToken, workspaceId, refreshTimestamp]);
-
-  useEffect(() => {
-    async function getBranches() {
-      if (accessToken && repositoryName && owner) {
-        const fetchedBranches = await bitbucketMethods
-          .fetchBranches()
-          .catch(() => [] as BitbucketBranchValue[]);
+    setWorkspaceError("");
+    async function discoverWorkspaces() {
+      if (!hasBitbucketAuthentication(config.hosting)) {
+        return;
+      }
+      try {
+        const response = await bitbucketMethods.fetchWorkspaces();
+        if (!isCurrent() || config.hosting.provider !== "bitbucket") {
+          return;
+        }
+        setWorkspaces(response.values);
+        if (!config.hosting.workspaceId && response.values.length === 1) {
+          selectGitRepository(config.hosting);
+          config.hosting.workspaceId = response.values[0].workspace.slug;
+        }
+      } catch (error) {
         if (
-          fetchedBranches.length === 1 &&
+          isCurrent() &&
+          isGitUnauthorized(error) &&
           config.hosting.provider === "bitbucket"
         ) {
-          config.hosting.targetBranch = fetchedBranches[0].name;
+          config.hosting.accessToken = "";
+        } else if (isCurrent()) {
+          setWorkspaceError("Could not load workspaces. Refresh to try again.");
         }
-
-        setBranches(
-          fetchedBranches.map((_branch) => ({
-            name: _branch.name,
-            id: `${_branch.name}`,
-          }))
-        );
-      } else {
-        console.log("One of these isn't what it should be", {
-          accessToken,
-          repositoryName,
-          owner,
-        });
       }
     }
-    getBranches();
-  }, [accessToken, owner, repositoryName]);
+    void discoverWorkspaces();
+    return () => {
+      active = false;
+    };
+  }, [config, discoveryKey, refreshTimestamp, bitbucketMethods]);
 
   useEffect(() => {
-    if (provider && providerType && accessToken && owner && repositoryName) {
-      async function fetchCurrentConfig() {
-        if (configSnapshot.hosting?.providerType === "git") {
-          const fetcher =
-            fetchersMap[configSnapshot.hosting.provider as HostingProvider]?.();
-
-          if (fetcher) {
-            await fetcher
-              .getCurrentConfig()
-              .catch(() => defaultConfig);
-          } else {
-            console.log("no fetcher");
-          }
-        } else {
-          console.log(
-            "Initial provider type was not git",
-            configSnapshot.hosting?.providerType
+    let active = true;
+    const isCurrent = () =>
+      active && discoveryKey === bitbucketDiscoveryKey(config.hosting);
+    if (previousRepositoryKey.current !== discoveryKey) {
+      setRepositories([]);
+      setBranches([]);
+      previousRepositoryKey.current = discoveryKey;
+    }
+    setRepositoryError("");
+    async function discoverRepositories() {
+      if (
+        !hasBitbucketAuthentication(config.hosting) ||
+        !canDiscoverBitbucketRepositories(config.hosting)
+      ) {
+        return;
+      }
+      const hosting = config.hosting;
+      try {
+        const response = await bitbucketMethods.fetchRepositories();
+        if (!isCurrent()) {
+          return;
+        }
+        const available = response.values.map((repository) => ({
+          id: repository.slug || repository.name,
+          name: repository.name,
+          path: repository.slug || repository.name,
+          legacyIds: [repository.name],
+          owner: hosting.workspaceId,
+          defaultBranch: repository.mainbranch?.name || "",
+        }));
+        setRepositories(available);
+        const selected = available.find(
+          (repository) =>
+            repository.id === hosting.repositoryId ||
+            repository.legacyIds.includes(hosting.repositoryId)
+        );
+        selectGitRepository(
+          hosting,
+          selected || (available.length === 1 ? available[0] : undefined)
+        );
+      } catch (error) {
+        if (isCurrent() && isGitUnauthorized(error)) {
+          hosting.accessToken = "";
+        } else if (isCurrent()) {
+          setRepositoryError(
+            "Could not load repositories. Refresh to try again."
           );
         }
       }
-
-      fetchCurrentConfig();
     }
-  }, [provider, providerType, accessToken, owner, repositoryName]);
+    void discoverRepositories();
+    return () => {
+      active = false;
+    };
+  }, [config, discoveryKey, refreshTimestamp, bitbucketMethods]);
+
+  useEffect(() => {
+    let active = true;
+    const isCurrent = () =>
+      active &&
+      contextKey === bitbucketMethods.getReadContextKey(config.hosting);
+    if (previousBranchKey.current !== contextKey) {
+      setBranches([]);
+      previousBranchKey.current = contextKey;
+    }
+    setBranchError("");
+    async function getBranches() {
+      if (!repositoryReady) {
+        return;
+      }
+      try {
+        const response = await bitbucketMethods.fetchBranches();
+        if (isCurrent()) {
+          setBranches(
+            response.map((branch) => ({ name: branch.name, id: branch.name }))
+          );
+        }
+      } catch (error) {
+        if (
+          isCurrent() &&
+          isGitUnauthorized(error) &&
+          config.hosting.provider === "bitbucket"
+        ) {
+          config.hosting.accessToken = "";
+        } else if (isCurrent()) {
+          setBranchError("Could not load branches. Refresh to try again.");
+        }
+      }
+    }
+    void getBranches();
+    return () => {
+      active = false;
+    };
+  }, [config, contextKey, repositoryReady, refreshTimestamp, bitbucketMethods]);
 
   return (
     <>
       <GitForm
         config={config}
-        updateConfig={() => {}}
         activeElement={activeElement}
-        totalElements={4}
         branches={branches}
         targetBranch={targetBranch}
         repositories={repositories}
         repositoryId={repositoryId}
         refresh={refresh}
-        isTargetBranchValid={async (branchName) => {
-          return bitbucketMethods.isBranchValid(branchName);
+        refreshTimestamp={refreshTimestamp}
+        fetcher={bitbucketMethods}
+        errors={[workspaceError, repositoryError, branchError].filter(Boolean)}
+        onRepositoryChange={(id) => {
+          if (config.hosting.provider === "bitbucket") {
+            setBranches([]);
+            selectGitRepository(
+              config.hosting,
+              repositories.find((repository) => repository.id === id)
+            );
+          }
         }}
-        initializeBranch={async (branchName: string) => {
+        initializeBranch={async (_repositoryId, branchName) => {
           await bitbucketMethods.initializeBranch(branchName);
         }}
       >
@@ -256,6 +308,7 @@ export function BitbucketForm({ config }: BitbucketFormProps) {
                 </Button>
 
                 <ActionIcon
+                  aria-label="Sign out of Bitbucket"
                   variant="subtle"
                   onClick={() => {
                     clearHosting();
@@ -276,19 +329,24 @@ export function BitbucketForm({ config }: BitbucketFormProps) {
           <Flex direction="row" align="center" gap="0.5rem">
             <Select
               w={"100%"}
-              value={workspaceId}
+              aria-label="Workspace"
+              value={workspaceId || null}
               data={workspaces.map((workspace) => ({
                 label: workspace.workspace.name,
                 value: `${workspace.workspace.slug}`,
               }))}
               onChange={(value) => {
                 if (config.hosting.provider === "bitbucket") {
+                  setRepositories([]);
+                  setBranches([]);
+                  selectGitRepository(config.hosting);
                   config.hosting.workspaceId = value || "";
                 }
               }}
             />
 
             <ActionIcon
+              aria-label="Refresh workspaces"
               variant="subtle"
               onClick={() => {
                 refresh();
