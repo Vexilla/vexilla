@@ -29,7 +29,7 @@ final class VexillaClientTests: XCTestCase {
     var vexillaClient = VexillaClient(environment: "dev", baseUrl: baseUrl, instanceId: "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a")
 
     let manifest: Manifest = try await vexillaClient.getManifest(fetch: callAPI)
-    vexillaClient.setManifest(manifest: manifest)
+    try vexillaClient.setManifest(manifest: manifest)
 
     try await vexillaClient.syncManifest(fetch: callAPI)
 

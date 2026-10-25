@@ -15,11 +15,11 @@ final class VexillaHashingTests: XCTestCase {
     XCTAssertGreaterThan(hashString(stringToHash: uuid, seed: seedB), 0.4)
   }
 
-  func testInt() {
-    XCTAssertGreaterThan(hashInt(intToHash: 42, seed: seedB), 0.4)
+  func testInt() throws {
+    XCTAssertGreaterThan(try hashInt(intToHash: 42, seed: seedB), 0.4)
   }
 
-  func testFloat() {
-    XCTAssertLessThanOrEqual(hashFloat(floatToHash: 42.42, seed: seedB), 0.4)
+  func testFloat() throws {
+    XCTAssertLessThanOrEqual(try hashFloat(floatToHash: 42.42, seed: seedB), 0.4)
   }
 }

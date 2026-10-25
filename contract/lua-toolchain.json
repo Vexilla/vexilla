@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "runtimes": [
+    {"id":"lua-5.1","version":"5.1.5","sha256":"2640fc56a795f29d28ef15e13c34a47e223960b0240e8cb0a82d9b0738695333"},
+    {"id":"lua-5.2","version":"5.2.4","sha256":"b9e2e4aad6789b3b63a056d442f7b39f0ecfca3ae0f1fc0ae4e9614401b69f4b"},
+    {"id":"lua-5.3","version":"5.3.6","sha256":"fc5fd69bb8736323f026672b1b7235da613d7177e72558893a0bdcd320466d60"},
+    {"id":"lua-5.4","version":"5.4.9","sha256":"2335b6c582a52654f94612bf10d2f4672805d05329aa6568b1d8cd9e5c6fb8e6"},
+    {"id":"lua-5.5","version":"5.5.1","sha256":"1c4b4068d67061f2a2231ad2b5422e77acea1487ea9890f6320af614f4373dce"},
+    {"id":"luajit-2.1","version":"2.1.1792527110","commit":"95f931cb1ee7ab14f249d61fb3734803429025f8","sha256":"284b59730849d399dfd6137c3d492e3d21ee6e32ee0f00d2dce7898ab54b270e"}
+  ],
+  "luasocket":{"version":"3.1.0","url":"https://github.com/lunarmodules/luasocket/archive/refs/tags/v3.1.0.tar.gz","sha256":"bf033aeb9e62bcaa8d007df68c119c966418e8c9ef7e4f2d7e96bddeca9cca6e"},
+  "dkjson":{"version":"2.11","url":"https://dkolf.de/dkjson-lua/dkjson-2.11.lua","sha256":"197cb50834c642f84b4cf99fe724932c50e6d9c92faec7ad89aa25e91df4d481"},
+  "luarocks":{"version":"3.13.0","url":"https://luarocks.org/releases/luarocks-3.13.0.tar.gz","sha256":"245bf6ec560c042cb8948e3d661189292587c5949104677f1eecddc54dbe7e37"}
+}

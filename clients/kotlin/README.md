@@ -55,7 +55,7 @@ dependencies {
 
 You will need to create a Client within your app. This optionally takes in the `instanceId` for use with gradual rollout as well as Selective features.
 
-After creation, call `syncFlags`. This can be chained from the constructor since it returns the client instance.
+Fetch and install the manifest first, then sync each group you need. Getters validate without installing; setters install owned snapshots, and sync methods combine those steps.
 
 **Important Note**: All methods that make HTTP requests take in a callback for the request itself. This allows you to use your existing dependencies or standard library methods to keep this bundle smaller and less opinionated.
 
@@ -87,7 +87,7 @@ runBlocking {
 Use the created client to check if a feature `should` be on.
 
 ```kotlin
-val shouldShowFeature = vexillaClient.should(GROUP_NAME_OR_ID, FEATURE_NAME_OR_ID)
+val shouldShowFeature = vexillaClient.should(GROUP_NAME_OR_ID, FEATURE_NAME_OR_ID).getOrThrow()
 ```
 
 
@@ -114,7 +114,7 @@ runBlocking {
     }
 }
 
-val shouldShowFeature = vexillaClient.should(GROUP_NAME_OR_ID, FEATURE_NAME_OR_ID)
+val shouldShowFeature = vexillaClient.should(GROUP_NAME_OR_ID, FEATURE_NAME_OR_ID).getOrThrow()
 
 if (shouldShowFeature) {
     // Show the feature

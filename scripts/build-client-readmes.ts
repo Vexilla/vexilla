@@ -9,7 +9,9 @@ const readmeTemplate = fs.readFileSync(
   { encoding: "utf8" }
 );
 
-const dir = fs.opendirSync(path.resolve(__dirname, "../clients"));
+const clientsDirectory = path.resolve(__dirname, "../clients");
+const dir = fs.opendirSync(clientsDirectory);
+const selected = new Set(process.argv.slice(2));
 
 let dirEntry = dir.readSync();
 
@@ -24,11 +26,15 @@ while (dirEntry) {
     dirEntry = dir.readSync();
     continue;
   }
+  if (selected.size && !selected.has(dirEntry.name)) {
+    dirEntry = dir.readSync();
+    continue;
+  }
 
   console.log("Starting README for:", dirEntry.name);
 
   const tomlData = fs.readFileSync(
-    path.resolve(dirEntry.path, dirEntry.name, "README.toml"),
+    path.resolve(clientsDirectory, dirEntry.name, "README.toml"),
     {
       encoding: "utf8",
     }
@@ -54,7 +60,7 @@ while (dirEntry) {
   console.log("Parsed template for:", dirEntry.name);
 
   fs.writeFileSync(
-    path.resolve(dirEntry.path, dirEntry.name, "README.md"),
+    path.resolve(clientsDirectory, dirEntry.name, "README.md"),
     templatedReadme
   );
 
@@ -62,3 +68,5 @@ while (dirEntry) {
 
   dirEntry = dir.readSync();
 }
+
+dir.closeSync();

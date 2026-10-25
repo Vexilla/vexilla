@@ -42,22 +42,21 @@ defmodule VexillaClientTest do
     value_string = VexillaClient.value!(config, "Value", "String", "bar")
     assert value_string == "foo"
 
-
-    assert_raise InvalidValueFeatureTypeError, fn  ->
+    assert_raise VexillaContractError, ~r/Lookup not found/, fn ->
       value_string_bad = VexillaClient.value!(config, "Value", "String_Bad", "bar")
     end
 
     value_int = VexillaClient.value!(config, "Value", "Integer", 0)
     assert value_int == 42
 
-    assert_raise InvalidValueFeatureTypeError, fn  ->
+    assert_raise VexillaContractError, ~r/Lookup not found/, fn ->
       value_int_bad = VexillaClient.value!(config, "Value", "Integer_Bad", 0)
     end
 
     value_float = VexillaClient.value!(config, "Value", "Float", 0)
     assert value_float == 42.42
 
-    assert_raise InvalidValueFeatureTypeError, fn  ->
+    assert_raise VexillaContractError, ~r/Lookup not found/, fn ->
       value_float_bad = VexillaClient.value!(config, "Value", "Float_Bad", 0)
     end
 

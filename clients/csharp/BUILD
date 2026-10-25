@@ -8,13 +8,16 @@ csharp_library(
     name = "lib",
     srcs = [
         "Vexilla.Client/Client.cs",
+        "Vexilla.Client/Compatibility.cs",
         "Vexilla.Client/EnvironmentJsonConverter.cs",
         "Vexilla.Client/Exception.cs",
         "Vexilla.Client/Group.cs",
         "Vexilla.Client/Hasher.cs",
         "Vexilla.Client/Scheduler.cs",
         "Vexilla.Client/Types.cs",
+        "Vexilla.Client/Validation.cs",
     ],
+    resources = ["Vexilla.Client/compatibility.json"],
     internals_visible_to = ["lib_test"],
     target_frameworks = ["netstandard2.0"],
     targeting_packs = [

@@ -1,6 +1,6 @@
-# Vexilla Client - JS/TS
+# Vexilla Client - PHP
 
-This is the JS/TS client library for Vexilla, a static file-based VCS-native feature flag system.
+This is the PHP client library for Vexilla, a static file-based VCS-native feature flag system.
 
 ## Table of Contents
 
@@ -22,19 +22,10 @@ To get started is easy. Follow these steps to get started with integration.
 
 ### Installation
 
-
-FOOOOOOO
-
-Using npm or yarn, install the package. Typescript types are shipped with it.
+Install with Composer on PHP 7.4:
 
 ```sh
-npm install --save @vexilla/client
-```
-
-or
-
-```sh
-yarn add @vexilla/client
+composer require vexilla/client
 ```
 
 
@@ -42,17 +33,14 @@ yarn add @vexilla/client
 
 You will need to create a Client within your app. This optionally takes in the `customInstanceHash` for use with gradual rollout as well as Selective features.
 
-After creation, call `fetchFlags`. This can be chained from the constructor since it returns the client instance.
+Fetch and install the manifest first, then sync each group you need. Getters validate without installing; setters install owned snapshots, and sync methods combine those steps.
 
 **Important Note**: All methods that make HTTP requests take in a callback for the request itself. This allows you to use your existing dependencies or standard library methods to keep this bundle smaller and less opinionated.
 
-```javascript
-this.client = new VexillaClient({
-  baseUrl: 'https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com',
-  environment: process.env.ENVIRONMENT,
-  customInstanceHash: userId
-});
-this.client.getFlags('features.json');
+```php
+$client = new \Vexilla\Client('https://flags.example.com', 'prod', 'user-123');
+$client->syncManifest($fetch);
+$client->syncFlags('Checkout', $fetch);
 ```
 
 
@@ -60,33 +48,32 @@ this.client.getFlags('features.json');
 
 Use the created client to check if a feature `should` be on.
 
-```javascript
-client.should(FEATURE_NAME)
+```php
+$enabled = $client->should('Checkout', 'New Checkout');
+$title = $client->valueString('Checkout', 'Title', 'Checkout');
 ```
 
 
 ### Full Example
 
-```javascript
-import { VexillaClient } from '@vexilla/client';
+```php
+require 'vendor/autoload.php';
 
-export class FeatureFlagsService {
-  private client;
-
-  constructor() {
-    this.client = new VexillaClient({
-      baseUrl: 'https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com',
-      environment: process.env.ENVIRONMENT,
-      customInstanceHash: userId
-    });
-    this.client.getFlags('features.json');
-  }
-
-  should(featureName) {
-    return this.client?.should(featureName);
-  }
-}
+$fetch = function (string $url): string {
+    $json = file_get_contents($url);
+    if ($json === false) {
+        throw new \RuntimeException('Unable to fetch flags');
+    }
+    return $json;
+};
+$client = new \Vexilla\Client('https://flags.example.com', 'prod', 'user-123');
+$client->syncManifest($fetch);
+$client->syncFlags('Checkout', $fetch);
+$enabled = $client->should('Checkout', 'New Checkout');
+$title = $client->valueString('Checkout', 'Title', 'Checkout');
 ```
+
+Callbacks may return original JSON text or decoded objects. Use `Codec::manifest` and `Codec::group` for direct JSON ingestion, then the native setters. All ingestion validates before installation and preserves the previous snapshot on failure. Numeric IDs use `shouldCustomInt`, `shouldCustomFloat`, or `shouldCustom`; active zero and empty-string values remain actual values. See `contract/MIGRATION.md` before upgrading.
 
 
 ## What are Feature Flags?
@@ -106,7 +93,6 @@ The process is simple but has several steps to get up and running. Please see ou
 
 ## API
 
-API
 
 
 ## Generate Types (Optional)
@@ -118,7 +104,7 @@ We have created a tool to generate types for usage in your code. It will crawl y
 To use the tool, you can run it directly from NPM.
 
 ```
-npx vexilla types js REMOTE_JSON_URL
+npx vexilla types php REMOTE_JSON_URL
 ```
 
 ### Automatic Install Script

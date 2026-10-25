@@ -2,23 +2,28 @@
 
 namespace Vexilla\Types;
 
-class Group {
-    public string $name;
-    public string $groupId;
+class Group
+{
+    /** @var string */
+    public $name;
+    /** @var string */
+    public $groupId;
     public GroupMeta $meta;
     public array $environments;
     public array $features;
-
-
-    function __construct(string $name, string $groupId, GroupMeta $meta, array $environments, array $features) {
+    function __construct($name, $groupId, GroupMeta $meta, array $environments, array $features)
+    {
+        \Vexilla\Validation::text($name);
+        \Vexilla\Validation::text($groupId, true);
+        \Vexilla\Validation::tree([$name, $groupId]);
         $this->name = $name;
         $this->groupId = $groupId;
         $this->meta = $meta;
         $this->environments = $environments;
         $this->features = $features;
     }
-
-    function getEnvironment(string $environmentId): ?Environment {
+    function getEnvironment(string $environmentId) : ?Environment
+    {
         $environment = $this->environments[$environmentId];
         if ($environment) {
             return $environment;
@@ -26,8 +31,8 @@ class Group {
             return null;
         }
     }
-
-    function getFeature(string $featureId): ?Feature {
+    function getFeature(string $featureId) : ?Feature
+    {
         $feature = $this->features[$featureId];
         if ($feature) {
             return $feature;

@@ -4,6 +4,7 @@ load("@rules_rust//crate_universe:defs.bzl", "crate", "crates_vendor", "render_c
 crates_vendor(
     name = "crates_vendor",
     mode = "remote",
+    cargo_lockfile = "Cargo.Bazel.lock",
     packages = {
         "reqwest": crate.spec(
             features = ["blocking"],
@@ -15,7 +16,9 @@ crates_vendor(
         ),
         "serde_json": crate.spec(
             version = "1.0",
+            features = ["float_roundtrip"],
         ),
+        "ryu-js": crate.spec(version = "=1.0.3"),
         "tokio": crate.spec(
             features = ["full"],
             version = "0.2",
@@ -39,8 +42,7 @@ crates_vendor(
             version = "0.8.3",
         ),
     },
-    # Demonstrate that `crates_vendor` can accept a render_config. To regen this target, simply
-    # navigate to this directory and run `bazel run //vendor_remote_pkgs:crates_vendor_pkgs`.
+    # Regenerate with: bazel run //clients/rust:crates_vendor
     render_config = render_config(
         regen_command = "See https://github.com/bazelbuild/rules_rust/blob/main/examples/crate_universe/vendor_local_pkgs/BUILD.bazel",
     ),
@@ -55,7 +57,10 @@ rust_library(
         "src/lib.rs",
         "src/scheduling.rs",
         "src/types.rs",
+        "src/compat.rs",
+        "src/validation.rs",
     ],
+    compile_data = ["src/compatibility.json"],
     edition = "2018",
     proc_macro_deps = [
         "@crates_vendor_pkgs//:strum_macros",
@@ -67,6 +72,7 @@ rust_library(
         "@crates_vendor_pkgs//:reqwest",
         "@crates_vendor_pkgs//:serde",
         "@crates_vendor_pkgs//:serde_json",
+        "@crates_vendor_pkgs//:ryu-js",
         "@crates_vendor_pkgs//:strum",
         "@crates_vendor_pkgs//:thiserror",
         "@crates_vendor_pkgs//:tokio",
@@ -77,6 +83,7 @@ rust_test(
     name = "unit_test",
     srcs = [
         "src/contract.rs",
+        "src/logging.rs",
         "src/hashing.rs",
         "src/lib.rs",
         "src/scheduling.rs",

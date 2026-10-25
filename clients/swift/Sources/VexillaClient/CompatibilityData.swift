@@ -1,0 +1,4666 @@
+// Generated from contract/compatibility.json; do not edit by hand.
+enum CompatibilityData {
+    static let json = #####"""
+{
+  "version": 1,
+  "publisher": {
+    "node": "22.15.0",
+    "icu": "76.1",
+    "case": "1.6.3"
+  },
+  "timezone": {
+    "identifiers": [
+      "Africa/Abidjan",
+      "Africa/Accra",
+      "Africa/Addis_Ababa",
+      "Africa/Algiers",
+      "Africa/Asmara",
+      "Africa/Asmera",
+      "Africa/Bamako",
+      "Africa/Bangui",
+      "Africa/Banjul",
+      "Africa/Bissau",
+      "Africa/Blantyre",
+      "Africa/Brazzaville",
+      "Africa/Bujumbura",
+      "Africa/Cairo",
+      "Africa/Casablanca",
+      "Africa/Ceuta",
+      "Africa/Conakry",
+      "Africa/Dakar",
+      "Africa/Dar_es_Salaam",
+      "Africa/Djibouti",
+      "Africa/Douala",
+      "Africa/El_Aaiun",
+      "Africa/Freetown",
+      "Africa/Gaborone",
+      "Africa/Harare",
+      "Africa/Johannesburg",
+      "Africa/Juba",
+      "Africa/Kampala",
+      "Africa/Khartoum",
+      "Africa/Kigali",
+      "Africa/Kinshasa",
+      "Africa/Lagos",
+      "Africa/Libreville",
+      "Africa/Lome",
+      "Africa/Luanda",
+      "Africa/Lubumbashi",
+      "Africa/Lusaka",
+      "Africa/Malabo",
+      "Africa/Maputo",
+      "Africa/Maseru",
+      "Africa/Mbabane",
+      "Africa/Mogadishu",
+      "Africa/Monrovia",
+      "Africa/Nairobi",
+      "Africa/Ndjamena",
+      "Africa/Niamey",
+      "Africa/Nouakchott",
+      "Africa/Ouagadougou",
+      "Africa/Porto-Novo",
+      "Africa/Sao_Tome",
+      "Africa/Timbuktu",
+      "Africa/Tripoli",
+      "Africa/Tunis",
+      "Africa/Windhoek",
+      "America/Adak",
+      "America/Anchorage",
+      "America/Anguilla",
+      "America/Antigua",
+      "America/Araguaina",
+      "America/Argentina/Buenos_Aires",
+      "America/Argentina/Catamarca",
+      "America/Argentina/ComodRivadavia",
+      "America/Argentina/Cordoba",
+      "America/Argentina/Jujuy",
+      "America/Argentina/La_Rioja",
+      "America/Argentina/Mendoza",
+      "America/Argentina/Rio_Gallegos",
+      "America/Argentina/Salta",
+      "America/Argentina/San_Juan",
+      "America/Argentina/San_Luis",
+      "America/Argentina/Tucuman",
+      "America/Argentina/Ushuaia",
+      "America/Aruba",
+      "America/Asuncion",
+      "America/Atikokan",
+      "America/Atka",
+      "America/Bahia",
+      "America/Bahia_Banderas",
+      "America/Barbados",
+      "America/Belem",
+      "America/Belize",
+      "America/Blanc-Sablon",
+      "America/Boa_Vista",
+      "America/Bogota",
+      "America/Boise",
+      "America/Buenos_Aires",
+      "America/Cambridge_Bay",
+      "America/Campo_Grande",
+      "America/Cancun",
+      "America/Caracas",
+      "America/Catamarca",
+      "America/Cayenne",
+      "America/Cayman",
+      "America/Chicago",
+      "America/Chihuahua",
+      "America/Ciudad_Juarez",
+      "America/Coral_Harbour",
+      "America/Cordoba",
+      "America/Costa_Rica",
+      "America/Creston",
+      "America/Cuiaba",
+      "America/Curacao",
+      "America/Danmarkshavn",
+      "America/Dawson",
+      "America/Dawson_Creek",
+      "America/Denver",
+      "America/Detroit",
+      "America/Dominica",
+      "America/Edmonton",
+      "America/Eirunepe",
+      "America/El_Salvador",
+      "America/Ensenada",
+      "America/Fort_Nelson",
+      "America/Fort_Wayne",
+      "America/Fortaleza",
+      "America/Glace_Bay",
+      "America/Godthab",
+      "America/Goose_Bay",
+      "America/Grand_Turk",
+      "America/Grenada",
+      "America/Guadeloupe",
+      "America/Guatemala",
+      "America/Guayaquil",
+      "America/Guyana",
+      "America/Halifax",
+      "America/Havana",
+      "America/Hermosillo",
+      "America/Indiana/Indianapolis",
+      "America/Indiana/Knox",
+      "America/Indiana/Marengo",
+      "America/Indiana/Petersburg",
+      "America/Indiana/Tell_City",
+      "America/Indiana/Vevay",
+      "America/Indiana/Vincennes",
+      "America/Indiana/Winamac",
+      "America/Indianapolis",
+      "America/Inuvik",
+      "America/Iqaluit",
+      "America/Jamaica",
+      "America/Jujuy",
+      "America/Juneau",
+      "America/Kentucky/Louisville",
+      "America/Kentucky/Monticello",
+      "America/Knox_IN",
+      "America/Kralendijk",
+      "America/La_Paz",
+      "America/Lima",
+      "America/Los_Angeles",
+      "America/Louisville",
+      "America/Lower_Princes",
+      "America/Maceio",
+      "America/Managua",
+      "America/Manaus",
+      "America/Marigot",
+      "America/Martinique",
+      "America/Matamoros",
+      "America/Mazatlan",
+      "America/Mendoza",
+      "America/Menominee",
+      "America/Merida",
+      "America/Metlakatla",
+      "America/Mexico_City",
+      "America/Miquelon",
+      "America/Moncton",
+      "America/Monterrey",
+      "America/Montevideo",
+      "America/Montreal",
+      "America/Montserrat",
+      "America/Nassau",
+      "America/New_York",
+      "America/Nipigon",
+      "America/Nome",
+      "America/Noronha",
+      "America/North_Dakota/Beulah",
+      "America/North_Dakota/Center",
+      "America/North_Dakota/New_Salem",
+      "America/Nuuk",
+      "America/Ojinaga",
+      "America/Panama",
+      "America/Pangnirtung",
+      "America/Paramaribo",
+      "America/Phoenix",
+      "America/Port-au-Prince",
+      "America/Port_of_Spain",
+      "America/Porto_Acre",
+      "America/Porto_Velho",
+      "America/Puerto_Rico",
+      "America/Punta_Arenas",
+      "America/Rainy_River",
+      "America/Rankin_Inlet",
+      "America/Recife",
+      "America/Regina",
+      "America/Resolute",
+      "America/Rio_Branco",
+      "America/Rosario",
+      "America/Santa_Isabel",
+      "America/Santarem",
+      "America/Santiago",
+      "America/Santo_Domingo",
+      "America/Sao_Paulo",
+      "America/Scoresbysund",
+      "America/Shiprock",
+      "America/Sitka",
+      "America/St_Barthelemy",
+      "America/St_Johns",
+      "America/St_Kitts",
+      "America/St_Lucia",
+      "America/St_Thomas",
+      "America/St_Vincent",
+      "America/Swift_Current",
+      "America/Tegucigalpa",
+      "America/Thule",
+      "America/Thunder_Bay",
+      "America/Tijuana",
+      "America/Toronto",
+      "America/Tortola",
+      "America/Vancouver",
+      "America/Virgin",
+      "America/Whitehorse",
+      "America/Winnipeg",
+      "America/Yakutat",
+      "America/Yellowknife",
+      "Antarctica/Casey",
+      "Antarctica/Davis",
+      "Antarctica/DumontDUrville",
+      "Antarctica/Macquarie",
+      "Antarctica/Mawson",
+      "Antarctica/McMurdo",
+      "Antarctica/Palmer",
+      "Antarctica/Rothera",
+      "Antarctica/South_Pole",
+      "Antarctica/Syowa",
+      "Antarctica/Troll",
+      "Antarctica/Vostok",
+      "Arctic/Longyearbyen",
+      "Asia/Aden",
+      "Asia/Almaty",
+      "Asia/Amman",
+      "Asia/Anadyr",
+      "Asia/Aqtau",
+      "Asia/Aqtobe",
+      "Asia/Ashgabat",
+      "Asia/Ashkhabad",
+      "Asia/Atyrau",
+      "Asia/Baghdad",
+      "Asia/Bahrain",
+      "Asia/Baku",
+      "Asia/Bangkok",
+      "Asia/Barnaul",
+      "Asia/Beirut",
+      "Asia/Bishkek",
+      "Asia/Brunei",
+      "Asia/Calcutta",
+      "Asia/Chita",
+      "Asia/Choibalsan",
+      "Asia/Chongqing",
+      "Asia/Chungking",
+      "Asia/Colombo",
+      "Asia/Dacca",
+      "Asia/Damascus",
+      "Asia/Dhaka",
+      "Asia/Dili",
+      "Asia/Dubai",
+      "Asia/Dushanbe",
+      "Asia/Famagusta",
+      "Asia/Gaza",
+      "Asia/Harbin",
+      "Asia/Hebron",
+      "Asia/Ho_Chi_Minh",
+      "Asia/Hong_Kong",
+      "Asia/Hovd",
+      "Asia/Irkutsk",
+      "Asia/Istanbul",
+      "Asia/Jakarta",
+      "Asia/Jayapura",
+      "Asia/Jerusalem",
+      "Asia/Kabul",
+      "Asia/Kamchatka",
+      "Asia/Karachi",
+      "Asia/Kashgar",
+      "Asia/Kathmandu",
+      "Asia/Katmandu",
+      "Asia/Khandyga",
+      "Asia/Kolkata",
+      "Asia/Krasnoyarsk",
+      "Asia/Kuala_Lumpur",
+      "Asia/Kuching",
+      "Asia/Kuwait",
+      "Asia/Macao",
+      "Asia/Macau",
+      "Asia/Magadan",
+      "Asia/Makassar",
+      "Asia/Manila",
+      "Asia/Muscat",
+      "Asia/Nicosia",
+      "Asia/Novokuznetsk",
+      "Asia/Novosibirsk",
+      "Asia/Omsk",
+      "Asia/Oral",
+      "Asia/Phnom_Penh",
+      "Asia/Pontianak",
+      "Asia/Pyongyang",
+      "Asia/Qatar",
+      "Asia/Qostanay",
+      "Asia/Qyzylorda",
+      "Asia/Rangoon",
+      "Asia/Riyadh",
+      "Asia/Saigon",
+      "Asia/Sakhalin",
+      "Asia/Samarkand",
+      "Asia/Seoul",
+      "Asia/Shanghai",
+      "Asia/Singapore",
+      "Asia/Srednekolymsk",
+      "Asia/Taipei",
+      "Asia/Tashkent",
+      "Asia/Tbilisi",
+      "Asia/Tehran",
+      "Asia/Tel_Aviv",
+      "Asia/Thimbu",
+      "Asia/Thimphu",
+      "Asia/Tokyo",
+      "Asia/Tomsk",
+      "Asia/Ujung_Pandang",
+      "Asia/Ulaanbaatar",
+      "Asia/Ulan_Bator",
+      "Asia/Urumqi",
+      "Asia/Ust-Nera",
+      "Asia/Vientiane",
+      "Asia/Vladivostok",
+      "Asia/Yakutsk",
+      "Asia/Yangon",
+      "Asia/Yekaterinburg",
+      "Asia/Yerevan",
+      "Atlantic/Azores",
+      "Atlantic/Bermuda",
+      "Atlantic/Canary",
+      "Atlantic/Cape_Verde",
+      "Atlantic/Faeroe",
+      "Atlantic/Faroe",
+      "Atlantic/Jan_Mayen",
+      "Atlantic/Madeira",
+      "Atlantic/Reykjavik",
+      "Atlantic/South_Georgia",
+      "Atlantic/St_Helena",
+      "Atlantic/Stanley",
+      "Australia/ACT",
+      "Australia/Adelaide",
+      "Australia/Brisbane",
+      "Australia/Broken_Hill",
+      "Australia/Canberra",
+      "Australia/Currie",
+      "Australia/Darwin",
+      "Australia/Eucla",
+      "Australia/Hobart",
+      "Australia/LHI",
+      "Australia/Lindeman",
+      "Australia/Lord_Howe",
+      "Australia/Melbourne",
+      "Australia/NSW",
+      "Australia/North",
+      "Australia/Perth",
+      "Australia/Queensland",
+      "Australia/South",
+      "Australia/Sydney",
+      "Australia/Tasmania",
+      "Australia/Victoria",
+      "Australia/West",
+      "Australia/Yancowinna",
+      "Brazil/Acre",
+      "Brazil/DeNoronha",
+      "Brazil/East",
+      "Brazil/West",
+      "CET",
+      "CST6CDT",
+      "Canada/Atlantic",
+      "Canada/Central",
+      "Canada/Eastern",
+      "Canada/Mountain",
+      "Canada/Newfoundland",
+      "Canada/Pacific",
+      "Canada/Saskatchewan",
+      "Canada/Yukon",
+      "Chile/Continental",
+      "Chile/EasterIsland",
+      "Cuba",
+      "EET",
+      "EST",
+      "EST5EDT",
+      "Egypt",
+      "Eire",
+      "Etc/GMT",
+      "Etc/GMT+0",
+      "Etc/GMT+1",
+      "Etc/GMT+10",
+      "Etc/GMT+11",
+      "Etc/GMT+12",
+      "Etc/GMT+2",
+      "Etc/GMT+3",
+      "Etc/GMT+4",
+      "Etc/GMT+5",
+      "Etc/GMT+6",
+      "Etc/GMT+7",
+      "Etc/GMT+8",
+      "Etc/GMT+9",
+      "Etc/GMT-0",
+      "Etc/GMT-1",
+      "Etc/GMT-10",
+      "Etc/GMT-11",
+      "Etc/GMT-12",
+      "Etc/GMT-13",
+      "Etc/GMT-14",
+      "Etc/GMT-2",
+      "Etc/GMT-3",
+      "Etc/GMT-4",
+      "Etc/GMT-5",
+      "Etc/GMT-6",
+      "Etc/GMT-7",
+      "Etc/GMT-8",
+      "Etc/GMT-9",
+      "Etc/GMT0",
+      "Etc/Greenwich",
+      "Etc/UCT",
+      "Etc/UTC",
+      "Etc/Universal",
+      "Etc/Zulu",
+      "Europe/Amsterdam",
+      "Europe/Andorra",
+      "Europe/Astrakhan",
+      "Europe/Athens",
+      "Europe/Belfast",
+      "Europe/Belgrade",
+      "Europe/Berlin",
+      "Europe/Bratislava",
+      "Europe/Brussels",
+      "Europe/Bucharest",
+      "Europe/Budapest",
+      "Europe/Busingen",
+      "Europe/Chisinau",
+      "Europe/Copenhagen",
+      "Europe/Dublin",
+      "Europe/Gibraltar",
+      "Europe/Guernsey",
+      "Europe/Helsinki",
+      "Europe/Isle_of_Man",
+      "Europe/Istanbul",
+      "Europe/Jersey",
+      "Europe/Kaliningrad",
+      "Europe/Kiev",
+      "Europe/Kirov",
+      "Europe/Kyiv",
+      "Europe/Lisbon",
+      "Europe/Ljubljana",
+      "Europe/London",
+      "Europe/Luxembourg",
+      "Europe/Madrid",
+      "Europe/Malta",
+      "Europe/Mariehamn",
+      "Europe/Minsk",
+      "Europe/Monaco",
+      "Europe/Moscow",
+      "Europe/Nicosia",
+      "Europe/Oslo",
+      "Europe/Paris",
+      "Europe/Podgorica",
+      "Europe/Prague",
+      "Europe/Riga",
+      "Europe/Rome",
+      "Europe/Samara",
+      "Europe/San_Marino",
+      "Europe/Sarajevo",
+      "Europe/Saratov",
+      "Europe/Simferopol",
+      "Europe/Skopje",
+      "Europe/Sofia",
+      "Europe/Stockholm",
+      "Europe/Tallinn",
+      "Europe/Tirane",
+      "Europe/Tiraspol",
+      "Europe/Ulyanovsk",
+      "Europe/Uzhgorod",
+      "Europe/Vaduz",
+      "Europe/Vatican",
+      "Europe/Vienna",
+      "Europe/Vilnius",
+      "Europe/Volgograd",
+      "Europe/Warsaw",
+      "Europe/Zagreb",
+      "Europe/Zaporozhye",
+      "Europe/Zurich",
+      "GB",
+      "GB-Eire",
+      "GMT",
+      "GMT+0",
+      "GMT-0",
+      "GMT0",
+      "Greenwich",
+      "HST",
+      "Hongkong",
+      "Iceland",
+      "Indian/Antananarivo",
+      "Indian/Chagos",
+      "Indian/Christmas",
+      "Indian/Cocos",
+      "Indian/Comoro",
+      "Indian/Kerguelen",
+      "Indian/Mahe",
+      "Indian/Maldives",
+      "Indian/Mauritius",
+      "Indian/Mayotte",
+      "Indian/Reunion",
+      "Iran",
+      "Israel",
+      "Jamaica",
+      "Japan",
+      "Kwajalein",
+      "Libya",
+      "MET",
+      "MST",
+      "MST7MDT",
+      "Mexico/BajaNorte",
+      "Mexico/BajaSur",
+      "Mexico/General",
+      "NZ",
+      "NZ-CHAT",
+      "Navajo",
+      "PRC",
+      "PST8PDT",
+      "Pacific/Apia",
+      "Pacific/Auckland",
+      "Pacific/Bougainville",
+      "Pacific/Chatham",
+      "Pacific/Chuuk",
+      "Pacific/Easter",
+      "Pacific/Efate",
+      "Pacific/Enderbury",
+      "Pacific/Fakaofo",
+      "Pacific/Fiji",
+      "Pacific/Funafuti",
+      "Pacific/Galapagos",
+      "Pacific/Gambier",
+      "Pacific/Guadalcanal",
+      "Pacific/Guam",
+      "Pacific/Honolulu",
+      "Pacific/Johnston",
+      "Pacific/Kanton",
+      "Pacific/Kiritimati",
+      "Pacific/Kosrae",
+      "Pacific/Kwajalein",
+      "Pacific/Majuro",
+      "Pacific/Marquesas",
+      "Pacific/Midway",
+      "Pacific/Nauru",
+      "Pacific/Niue",
+      "Pacific/Norfolk",
+      "Pacific/Noumea",
+      "Pacific/Pago_Pago",
+      "Pacific/Palau",
+      "Pacific/Pitcairn",
+      "Pacific/Pohnpei",
+      "Pacific/Ponape",
+      "Pacific/Port_Moresby",
+      "Pacific/Rarotonga",
+      "Pacific/Saipan",
+      "Pacific/Samoa",
+      "Pacific/Tahiti",
+      "Pacific/Tarawa",
+      "Pacific/Tongatapu",
+      "Pacific/Truk",
+      "Pacific/Wake",
+      "Pacific/Wallis",
+      "Pacific/Yap",
+      "Poland",
+      "Portugal",
+      "ROC",
+      "ROK",
+      "Singapore",
+      "Turkey",
+      "UCT",
+      "US/Alaska",
+      "US/Aleutian",
+      "US/Arizona",
+      "US/Central",
+      "US/East-Indiana",
+      "US/Eastern",
+      "US/Hawaii",
+      "US/Indiana-Starke",
+      "US/Michigan",
+      "US/Mountain",
+      "US/Pacific",
+      "US/Samoa",
+      "UTC",
+      "Universal",
+      "W-SU",
+      "WET",
+      "Zulu"
+    ],
+    "caseInsensitive": true,
+    "offsetPattern": "^[+-](?:[01][0-9]|2[0-3])(?::?[0-5][0-9])?$"
+  },
+  "aliases": [
+    {
+      "name": "Contract Group",
+      "alias": "contract-group"
+    },
+    {
+      "name": "HTTPServer ID",
+      "alias": "httpserver-id"
+    },
+    {
+      "name": "hello_world",
+      "alias": "hello-world"
+    },
+    {
+      "name": "foo.bar",
+      "alias": "foo-bar"
+    },
+    {
+      "name": "already-kebab",
+      "alias": "already-kebab"
+    },
+    {
+      "name": "café Name",
+      "alias": "café-name"
+    },
+    {
+      "name": "İstanbul",
+      "alias": "i̇stanbul"
+    },
+    {
+      "name": "straße",
+      "alias": "straße"
+    },
+    {
+      "name": "漢字 😀",
+      "alias": "漢字-😀"
+    },
+    {
+      "name": "déjà Vu",
+      "alias": "déjà-vu"
+    },
+    {
+      "name": "Ångström",
+      "alias": "ångström"
+    },
+    {
+      "name": "XMLHttpRequest",
+      "alias": "xmlhttp-request"
+    },
+    {
+      "name": "foo\u0000Bar",
+      "alias": "foo\u0000-bar"
+    },
+    {
+      "name": "__proto__",
+      "alias": "-proto"
+    },
+    {
+      "name": "constructor",
+      "alias": "constructor"
+    },
+    {
+      "name": "",
+      "alias": ""
+    }
+  ],
+  "unicode": {
+    "version": "17.0",
+    "lower": {
+      "A": "a",
+      "B": "b",
+      "C": "c",
+      "D": "d",
+      "E": "e",
+      "F": "f",
+      "G": "g",
+      "H": "h",
+      "I": "i",
+      "J": "j",
+      "K": "k",
+      "L": "l",
+      "M": "m",
+      "N": "n",
+      "O": "o",
+      "P": "p",
+      "Q": "q",
+      "R": "r",
+      "S": "s",
+      "T": "t",
+      "U": "u",
+      "V": "v",
+      "W": "w",
+      "X": "x",
+      "Y": "y",
+      "Z": "z",
+      "À": "à",
+      "Á": "á",
+      "Â": "â",
+      "Ã": "ã",
+      "Ä": "ä",
+      "Å": "å",
+      "Æ": "æ",
+      "Ç": "ç",
+      "È": "è",
+      "É": "é",
+      "Ê": "ê",
+      "Ë": "ë",
+      "Ì": "ì",
+      "Í": "í",
+      "Î": "î",
+      "Ï": "ï",
+      "Ð": "ð",
+      "Ñ": "ñ",
+      "Ò": "ò",
+      "Ó": "ó",
+      "Ô": "ô",
+      "Õ": "õ",
+      "Ö": "ö",
+      "Ø": "ø",
+      "Ù": "ù",
+      "Ú": "ú",
+      "Û": "û",
+      "Ü": "ü",
+      "Ý": "ý",
+      "Þ": "þ",
+      "Ā": "ā",
+      "Ă": "ă",
+      "Ą": "ą",
+      "Ć": "ć",
+      "Ĉ": "ĉ",
+      "Ċ": "ċ",
+      "Č": "č",
+      "Ď": "ď",
+      "Đ": "đ",
+      "Ē": "ē",
+      "Ĕ": "ĕ",
+      "Ė": "ė",
+      "Ę": "ę",
+      "Ě": "ě",
+      "Ĝ": "ĝ",
+      "Ğ": "ğ",
+      "Ġ": "ġ",
+      "Ģ": "ģ",
+      "Ĥ": "ĥ",
+      "Ħ": "ħ",
+      "Ĩ": "ĩ",
+      "Ī": "ī",
+      "Ĭ": "ĭ",
+      "Į": "į",
+      "İ": "i̇",
+      "Ĳ": "ĳ",
+      "Ĵ": "ĵ",
+      "Ķ": "ķ",
+      "Ĺ": "ĺ",
+      "Ļ": "ļ",
+      "Ľ": "ľ",
+      "Ŀ": "ŀ",
+      "Ł": "ł",
+      "Ń": "ń",
+      "Ņ": "ņ",
+      "Ň": "ň",
+      "Ŋ": "ŋ",
+      "Ō": "ō",
+      "Ŏ": "ŏ",
+      "Ő": "ő",
+      "Œ": "œ",
+      "Ŕ": "ŕ",
+      "Ŗ": "ŗ",
+      "Ř": "ř",
+      "Ś": "ś",
+      "Ŝ": "ŝ",
+      "Ş": "ş",
+      "Š": "š",
+      "Ţ": "ţ",
+      "Ť": "ť",
+      "Ŧ": "ŧ",
+      "Ũ": "ũ",
+      "Ū": "ū",
+      "Ŭ": "ŭ",
+      "Ů": "ů",
+      "Ű": "ű",
+      "Ų": "ų",
+      "Ŵ": "ŵ",
+      "Ŷ": "ŷ",
+      "Ÿ": "ÿ",
+      "Ź": "ź",
+      "Ż": "ż",
+      "Ž": "ž",
+      "Ɓ": "ɓ",
+      "Ƃ": "ƃ",
+      "Ƅ": "ƅ",
+      "Ɔ": "ɔ",
+      "Ƈ": "ƈ",
+      "Ɖ": "ɖ",
+      "Ɗ": "ɗ",
+      "Ƌ": "ƌ",
+      "Ǝ": "ǝ",
+      "Ə": "ə",
+      "Ɛ": "ɛ",
+      "Ƒ": "ƒ",
+      "Ɠ": "ɠ",
+      "Ɣ": "ɣ",
+      "Ɩ": "ɩ",
+      "Ɨ": "ɨ",
+      "Ƙ": "ƙ",
+      "Ɯ": "ɯ",
+      "Ɲ": "ɲ",
+      "Ɵ": "ɵ",
+      "Ơ": "ơ",
+      "Ƣ": "ƣ",
+      "Ƥ": "ƥ",
+      "Ʀ": "ʀ",
+      "Ƨ": "ƨ",
+      "Ʃ": "ʃ",
+      "Ƭ": "ƭ",
+      "Ʈ": "ʈ",
+      "Ư": "ư",
+      "Ʊ": "ʊ",
+      "Ʋ": "ʋ",
+      "Ƴ": "ƴ",
+      "Ƶ": "ƶ",
+      "Ʒ": "ʒ",
+      "Ƹ": "ƹ",
+      "Ƽ": "ƽ",
+      "Ǆ": "ǆ",
+      "ǅ": "ǆ",
+      "Ǉ": "ǉ",
+      "ǈ": "ǉ",
+      "Ǌ": "ǌ",
+      "ǋ": "ǌ",
+      "Ǎ": "ǎ",
+      "Ǐ": "ǐ",
+      "Ǒ": "ǒ",
+      "Ǔ": "ǔ",
+      "Ǖ": "ǖ",
+      "Ǘ": "ǘ",
+      "Ǚ": "ǚ",
+      "Ǜ": "ǜ",
+      "Ǟ": "ǟ",
+      "Ǡ": "ǡ",
+      "Ǣ": "ǣ",
+      "Ǥ": "ǥ",
+      "Ǧ": "ǧ",
+      "Ǩ": "ǩ",
+      "Ǫ": "ǫ",
+      "Ǭ": "ǭ",
+      "Ǯ": "ǯ",
+      "Ǳ": "ǳ",
+      "ǲ": "ǳ",
+      "Ǵ": "ǵ",
+      "Ƕ": "ƕ",
+      "Ƿ": "ƿ",
+      "Ǹ": "ǹ",
+      "Ǻ": "ǻ",
+      "Ǽ": "ǽ",
+      "Ǿ": "ǿ",
+      "Ȁ": "ȁ",
+      "Ȃ": "ȃ",
+      "Ȅ": "ȅ",
+      "Ȇ": "ȇ",
+      "Ȉ": "ȉ",
+      "Ȋ": "ȋ",
+      "Ȍ": "ȍ",
+      "Ȏ": "ȏ",
+      "Ȑ": "ȑ",
+      "Ȓ": "ȓ",
+      "Ȕ": "ȕ",
+      "Ȗ": "ȗ",
+      "Ș": "ș",
+      "Ț": "ț",
+      "Ȝ": "ȝ",
+      "Ȟ": "ȟ",
+      "Ƞ": "ƞ",
+      "Ȣ": "ȣ",
+      "Ȥ": "ȥ",
+      "Ȧ": "ȧ",
+      "Ȩ": "ȩ",
+      "Ȫ": "ȫ",
+      "Ȭ": "ȭ",
+      "Ȯ": "ȯ",
+      "Ȱ": "ȱ",
+      "Ȳ": "ȳ",
+      "Ⱥ": "ⱥ",
+      "Ȼ": "ȼ",
+      "Ƚ": "ƚ",
+      "Ⱦ": "ⱦ",
+      "Ɂ": "ɂ",
+      "Ƀ": "ƀ",
+      "Ʉ": "ʉ",
+      "Ʌ": "ʌ",
+      "Ɇ": "ɇ",
+      "Ɉ": "ɉ",
+      "Ɋ": "ɋ",
+      "Ɍ": "ɍ",
+      "Ɏ": "ɏ",
+      "Ͱ": "ͱ",
+      "Ͳ": "ͳ",
+      "Ͷ": "ͷ",
+      "Ϳ": "ϳ",
+      "Ά": "ά",
+      "Έ": "έ",
+      "Ή": "ή",
+      "Ί": "ί",
+      "Ό": "ό",
+      "Ύ": "ύ",
+      "Ώ": "ώ",
+      "Α": "α",
+      "Β": "β",
+      "Γ": "γ",
+      "Δ": "δ",
+      "Ε": "ε",
+      "Ζ": "ζ",
+      "Η": "η",
+      "Θ": "θ",
+      "Ι": "ι",
+      "Κ": "κ",
+      "Λ": "λ",
+      "Μ": "μ",
+      "Ν": "ν",
+      "Ξ": "ξ",
+      "Ο": "ο",
+      "Π": "π",
+      "Ρ": "ρ",
+      "Σ": "σ",
+      "Τ": "τ",
+      "Υ": "υ",
+      "Φ": "φ",
+      "Χ": "χ",
+      "Ψ": "ψ",
+      "Ω": "ω",
+      "Ϊ": "ϊ",
+      "Ϋ": "ϋ",
+      "Ϗ": "ϗ",
+      "Ϙ": "ϙ",
+      "Ϛ": "ϛ",
+      "Ϝ": "ϝ",
+      "Ϟ": "ϟ",
+      "Ϡ": "ϡ",
+      "Ϣ": "ϣ",
+      "Ϥ": "ϥ",
+      "Ϧ": "ϧ",
+      "Ϩ": "ϩ",
+      "Ϫ": "ϫ",
+      "Ϭ": "ϭ",
+      "Ϯ": "ϯ",
+      "ϴ": "θ",
+      "Ϸ": "ϸ",
+      "Ϲ": "ϲ",
+      "Ϻ": "ϻ",
+      "Ͻ": "ͻ",
+      "Ͼ": "ͼ",
+      "Ͽ": "ͽ",
+      "Ѐ": "ѐ",
+      "Ё": "ё",
+      "Ђ": "ђ",
+      "Ѓ": "ѓ",
+      "Є": "є",
+      "Ѕ": "ѕ",
+      "І": "і",
+      "Ї": "ї",
+      "Ј": "ј",
+      "Љ": "љ",
+      "Њ": "њ",
+      "Ћ": "ћ",
+      "Ќ": "ќ",
+      "Ѝ": "ѝ",
+      "Ў": "ў",
+      "Џ": "џ",
+      "А": "а",
+      "Б": "б",
+      "В": "в",
+      "Г": "г",
+      "Д": "д",
+      "Е": "е",
+      "Ж": "ж",
+      "З": "з",
+      "И": "и",
+      "Й": "й",
+      "К": "к",
+      "Л": "л",
+      "М": "м",
+      "Н": "н",
+      "О": "о",
+      "П": "п",
+      "Р": "р",
+      "С": "с",
+      "Т": "т",
+      "У": "у",
+      "Ф": "ф",
+      "Х": "х",
+      "Ц": "ц",
+      "Ч": "ч",
+      "Ш": "ш",
+      "Щ": "щ",
+      "Ъ": "ъ",
+      "Ы": "ы",
+      "Ь": "ь",
+      "Э": "э",
+      "Ю": "ю",
+      "Я": "я",
+      "Ѡ": "ѡ",
+      "Ѣ": "ѣ",
+      "Ѥ": "ѥ",
+      "Ѧ": "ѧ",
+      "Ѩ": "ѩ",
+      "Ѫ": "ѫ",
+      "Ѭ": "ѭ",
+      "Ѯ": "ѯ",
+      "Ѱ": "ѱ",
+      "Ѳ": "ѳ",
+      "Ѵ": "ѵ",
+      "Ѷ": "ѷ",
+      "Ѹ": "ѹ",
+      "Ѻ": "ѻ",
+      "Ѽ": "ѽ",
+      "Ѿ": "ѿ",
+      "Ҁ": "ҁ",
+      "Ҋ": "ҋ",
+      "Ҍ": "ҍ",
+      "Ҏ": "ҏ",
+      "Ґ": "ґ",
+      "Ғ": "ғ",
+      "Ҕ": "ҕ",
+      "Җ": "җ",
+      "Ҙ": "ҙ",
+      "Қ": "қ",
+      "Ҝ": "ҝ",
+      "Ҟ": "ҟ",
+      "Ҡ": "ҡ",
+      "Ң": "ң",
+      "Ҥ": "ҥ",
+      "Ҧ": "ҧ",
+      "Ҩ": "ҩ",
+      "Ҫ": "ҫ",
+      "Ҭ": "ҭ",
+      "Ү": "ү",
+      "Ұ": "ұ",
+      "Ҳ": "ҳ",
+      "Ҵ": "ҵ",
+      "Ҷ": "ҷ",
+      "Ҹ": "ҹ",
+      "Һ": "һ",
+      "Ҽ": "ҽ",
+      "Ҿ": "ҿ",
+      "Ӏ": "ӏ",
+      "Ӂ": "ӂ",
+      "Ӄ": "ӄ",
+      "Ӆ": "ӆ",
+      "Ӈ": "ӈ",
+      "Ӊ": "ӊ",
+      "Ӌ": "ӌ",
+      "Ӎ": "ӎ",
+      "Ӑ": "ӑ",
+      "Ӓ": "ӓ",
+      "Ӕ": "ӕ",
+      "Ӗ": "ӗ",
+      "Ә": "ә",
+      "Ӛ": "ӛ",
+      "Ӝ": "ӝ",
+      "Ӟ": "ӟ",
+      "Ӡ": "ӡ",
+      "Ӣ": "ӣ",
+      "Ӥ": "ӥ",
+      "Ӧ": "ӧ",
+      "Ө": "ө",
+      "Ӫ": "ӫ",
+      "Ӭ": "ӭ",
+      "Ӯ": "ӯ",
+      "Ӱ": "ӱ",
+      "Ӳ": "ӳ",
+      "Ӵ": "ӵ",
+      "Ӷ": "ӷ",
+      "Ӹ": "ӹ",
+      "Ӻ": "ӻ",
+      "Ӽ": "ӽ",
+      "Ӿ": "ӿ",
+      "Ԁ": "ԁ",
+      "Ԃ": "ԃ",
+      "Ԅ": "ԅ",
+      "Ԇ": "ԇ",
+      "Ԉ": "ԉ",
+      "Ԋ": "ԋ",
+      "Ԍ": "ԍ",
+      "Ԏ": "ԏ",
+      "Ԑ": "ԑ",
+      "Ԓ": "ԓ",
+      "Ԕ": "ԕ",
+      "Ԗ": "ԗ",
+      "Ԙ": "ԙ",
+      "Ԛ": "ԛ",
+      "Ԝ": "ԝ",
+      "Ԟ": "ԟ",
+      "Ԡ": "ԡ",
+      "Ԣ": "ԣ",
+      "Ԥ": "ԥ",
+      "Ԧ": "ԧ",
+      "Ԩ": "ԩ",
+      "Ԫ": "ԫ",
+      "Ԭ": "ԭ",
+      "Ԯ": "ԯ",
+      "Ա": "ա",
+      "Բ": "բ",
+      "Գ": "գ",
+      "Դ": "դ",
+      "Ե": "ե",
+      "Զ": "զ",
+      "Է": "է",
+      "Ը": "ը",
+      "Թ": "թ",
+      "Ժ": "ժ",
+      "Ի": "ի",
+      "Լ": "լ",
+      "Խ": "խ",
+      "Ծ": "ծ",
+      "Կ": "կ",
+      "Հ": "հ",
+      "Ձ": "ձ",
+      "Ղ": "ղ",
+      "Ճ": "ճ",
+      "Մ": "մ",
+      "Յ": "յ",
+      "Ն": "ն",
+      "Շ": "շ",
+      "Ո": "ո",
+      "Չ": "չ",
+      "Պ": "պ",
+      "Ջ": "ջ",
+      "Ռ": "ռ",
+      "Ս": "ս",
+      "Վ": "վ",
+      "Տ": "տ",
+      "Ր": "ր",
+      "Ց": "ց",
+      "Ւ": "ւ",
+      "Փ": "փ",
+      "Ք": "ք",
+      "Օ": "օ",
+      "Ֆ": "ֆ",
+      "Ⴀ": "ⴀ",
+      "Ⴁ": "ⴁ",
+      "Ⴂ": "ⴂ",
+      "Ⴃ": "ⴃ",
+      "Ⴄ": "ⴄ",
+      "Ⴅ": "ⴅ",
+      "Ⴆ": "ⴆ",
+      "Ⴇ": "ⴇ",
+      "Ⴈ": "ⴈ",
+      "Ⴉ": "ⴉ",
+      "Ⴊ": "ⴊ",
+      "Ⴋ": "ⴋ",
+      "Ⴌ": "ⴌ",
+      "Ⴍ": "ⴍ",
+      "Ⴎ": "ⴎ",
+      "Ⴏ": "ⴏ",
+      "Ⴐ": "ⴐ",
+      "Ⴑ": "ⴑ",
+      "Ⴒ": "ⴒ",
+      "Ⴓ": "ⴓ",
+      "Ⴔ": "ⴔ",
+      "Ⴕ": "ⴕ",
+      "Ⴖ": "ⴖ",
+      "Ⴗ": "ⴗ",
+      "Ⴘ": "ⴘ",
+      "Ⴙ": "ⴙ",
+      "Ⴚ": "ⴚ",
+      "Ⴛ": "ⴛ",
+      "Ⴜ": "ⴜ",
+      "Ⴝ": "ⴝ",
+      "Ⴞ": "ⴞ",
+      "Ⴟ": "ⴟ",
+      "Ⴠ": "ⴠ",
+      "Ⴡ": "ⴡ",
+      "Ⴢ": "ⴢ",
+      "Ⴣ": "ⴣ",
+      "Ⴤ": "ⴤ",
+      "Ⴥ": "ⴥ",
+      "Ⴧ": "ⴧ",
+      "Ⴭ": "ⴭ",
+      "Ꭰ": "ꭰ",
+      "Ꭱ": "ꭱ",
+      "Ꭲ": "ꭲ",
+      "Ꭳ": "ꭳ",
+      "Ꭴ": "ꭴ",
+      "Ꭵ": "ꭵ",
+      "Ꭶ": "ꭶ",
+      "Ꭷ": "ꭷ",
+      "Ꭸ": "ꭸ",
+      "Ꭹ": "ꭹ",
+      "Ꭺ": "ꭺ",
+      "Ꭻ": "ꭻ",
+      "Ꭼ": "ꭼ",
+      "Ꭽ": "ꭽ",
+      "Ꭾ": "ꭾ",
+      "Ꭿ": "ꭿ",
+      "Ꮀ": "ꮀ",
+      "Ꮁ": "ꮁ",
+      "Ꮂ": "ꮂ",
+      "Ꮃ": "ꮃ",
+      "Ꮄ": "ꮄ",
+      "Ꮅ": "ꮅ",
+      "Ꮆ": "ꮆ",
+      "Ꮇ": "ꮇ",
+      "Ꮈ": "ꮈ",
+      "Ꮉ": "ꮉ",
+      "Ꮊ": "ꮊ",
+      "Ꮋ": "ꮋ",
+      "Ꮌ": "ꮌ",
+      "Ꮍ": "ꮍ",
+      "Ꮎ": "ꮎ",
+      "Ꮏ": "ꮏ",
+      "Ꮐ": "ꮐ",
+      "Ꮑ": "ꮑ",
+      "Ꮒ": "ꮒ",
+      "Ꮓ": "ꮓ",
+      "Ꮔ": "ꮔ",
+      "Ꮕ": "ꮕ",
+      "Ꮖ": "ꮖ",
+      "Ꮗ": "ꮗ",
+      "Ꮘ": "ꮘ",
+      "Ꮙ": "ꮙ",
+      "Ꮚ": "ꮚ",
+      "Ꮛ": "ꮛ",
+      "Ꮜ": "ꮜ",
+      "Ꮝ": "ꮝ",
+      "Ꮞ": "ꮞ",
+      "Ꮟ": "ꮟ",
+      "Ꮠ": "ꮠ",
+      "Ꮡ": "ꮡ",
+      "Ꮢ": "ꮢ",
+      "Ꮣ": "ꮣ",
+      "Ꮤ": "ꮤ",
+      "Ꮥ": "ꮥ",
+      "Ꮦ": "ꮦ",
+      "Ꮧ": "ꮧ",
+      "Ꮨ": "ꮨ",
+      "Ꮩ": "ꮩ",
+      "Ꮪ": "ꮪ",
+      "Ꮫ": "ꮫ",
+      "Ꮬ": "ꮬ",
+      "Ꮭ": "ꮭ",
+      "Ꮮ": "ꮮ",
+      "Ꮯ": "ꮯ",
+      "Ꮰ": "ꮰ",
+      "Ꮱ": "ꮱ",
+      "Ꮲ": "ꮲ",
+      "Ꮳ": "ꮳ",
+      "Ꮴ": "ꮴ",
+      "Ꮵ": "ꮵ",
+      "Ꮶ": "ꮶ",
+      "Ꮷ": "ꮷ",
+      "Ꮸ": "ꮸ",
+      "Ꮹ": "ꮹ",
+      "Ꮺ": "ꮺ",
+      "Ꮻ": "ꮻ",
+      "Ꮼ": "ꮼ",
+      "Ꮽ": "ꮽ",
+      "Ꮾ": "ꮾ",
+      "Ꮿ": "ꮿ",
+      "Ᏸ": "ᏸ",
+      "Ᏹ": "ᏹ",
+      "Ᏺ": "ᏺ",
+      "Ᏻ": "ᏻ",
+      "Ᏼ": "ᏼ",
+      "Ᏽ": "ᏽ",
+      "Ᲊ": "ᲊ",
+      "Ა": "ა",
+      "Ბ": "ბ",
+      "Გ": "გ",
+      "Დ": "დ",
+      "Ე": "ე",
+      "Ვ": "ვ",
+      "Ზ": "ზ",
+      "Თ": "თ",
+      "Ი": "ი",
+      "Კ": "კ",
+      "Ლ": "ლ",
+      "Მ": "მ",
+      "Ნ": "ნ",
+      "Ო": "ო",
+      "Პ": "პ",
+      "Ჟ": "ჟ",
+      "Რ": "რ",
+      "Ს": "ს",
+      "Ტ": "ტ",
+      "Უ": "უ",
+      "Ფ": "ფ",
+      "Ქ": "ქ",
+      "Ღ": "ღ",
+      "Ყ": "ყ",
+      "Შ": "შ",
+      "Ჩ": "ჩ",
+      "Ც": "ც",
+      "Ძ": "ძ",
+      "Წ": "წ",
+      "Ჭ": "ჭ",
+      "Ხ": "ხ",
+      "Ჯ": "ჯ",
+      "Ჰ": "ჰ",
+      "Ჱ": "ჱ",
+      "Ჲ": "ჲ",
+      "Ჳ": "ჳ",
+      "Ჴ": "ჴ",
+      "Ჵ": "ჵ",
+      "Ჶ": "ჶ",
+      "Ჷ": "ჷ",
+      "Ჸ": "ჸ",
+      "Ჹ": "ჹ",
+      "Ჺ": "ჺ",
+      "Ჽ": "ჽ",
+      "Ჾ": "ჾ",
+      "Ჿ": "ჿ",
+      "Ḁ": "ḁ",
+      "Ḃ": "ḃ",
+      "Ḅ": "ḅ",
+      "Ḇ": "ḇ",
+      "Ḉ": "ḉ",
+      "Ḋ": "ḋ",
+      "Ḍ": "ḍ",
+      "Ḏ": "ḏ",
+      "Ḑ": "ḑ",
+      "Ḓ": "ḓ",
+      "Ḕ": "ḕ",
+      "Ḗ": "ḗ",
+      "Ḙ": "ḙ",
+      "Ḛ": "ḛ",
+      "Ḝ": "ḝ",
+      "Ḟ": "ḟ",
+      "Ḡ": "ḡ",
+      "Ḣ": "ḣ",
+      "Ḥ": "ḥ",
+      "Ḧ": "ḧ",
+      "Ḩ": "ḩ",
+      "Ḫ": "ḫ",
+      "Ḭ": "ḭ",
+      "Ḯ": "ḯ",
+      "Ḱ": "ḱ",
+      "Ḳ": "ḳ",
+      "Ḵ": "ḵ",
+      "Ḷ": "ḷ",
+      "Ḹ": "ḹ",
+      "Ḻ": "ḻ",
+      "Ḽ": "ḽ",
+      "Ḿ": "ḿ",
+      "Ṁ": "ṁ",
+      "Ṃ": "ṃ",
+      "Ṅ": "ṅ",
+      "Ṇ": "ṇ",
+      "Ṉ": "ṉ",
+      "Ṋ": "ṋ",
+      "Ṍ": "ṍ",
+      "Ṏ": "ṏ",
+      "Ṑ": "ṑ",
+      "Ṓ": "ṓ",
+      "Ṕ": "ṕ",
+      "Ṗ": "ṗ",
+      "Ṙ": "ṙ",
+      "Ṛ": "ṛ",
+      "Ṝ": "ṝ",
+      "Ṟ": "ṟ",
+      "Ṡ": "ṡ",
+      "Ṣ": "ṣ",
+      "Ṥ": "ṥ",
+      "Ṧ": "ṧ",
+      "Ṩ": "ṩ",
+      "Ṫ": "ṫ",
+      "Ṭ": "ṭ",
+      "Ṯ": "ṯ",
+      "Ṱ": "ṱ",
+      "Ṳ": "ṳ",
+      "Ṵ": "ṵ",
+      "Ṷ": "ṷ",
+      "Ṹ": "ṹ",
+      "Ṻ": "ṻ",
+      "Ṽ": "ṽ",
+      "Ṿ": "ṿ",
+      "Ẁ": "ẁ",
+      "Ẃ": "ẃ",
+      "Ẅ": "ẅ",
+      "Ẇ": "ẇ",
+      "Ẉ": "ẉ",
+      "Ẋ": "ẋ",
+      "Ẍ": "ẍ",
+      "Ẏ": "ẏ",
+      "Ẑ": "ẑ",
+      "Ẓ": "ẓ",
+      "Ẕ": "ẕ",
+      "ẞ": "ß",
+      "Ạ": "ạ",
+      "Ả": "ả",
+      "Ấ": "ấ",
+      "Ầ": "ầ",
+      "Ẩ": "ẩ",
+      "Ẫ": "ẫ",
+      "Ậ": "ậ",
+      "Ắ": "ắ",
+      "Ằ": "ằ",
+      "Ẳ": "ẳ",
+      "Ẵ": "ẵ",
+      "Ặ": "ặ",
+      "Ẹ": "ẹ",
+      "Ẻ": "ẻ",
+      "Ẽ": "ẽ",
+      "Ế": "ế",
+      "Ề": "ề",
+      "Ể": "ể",
+      "Ễ": "ễ",
+      "Ệ": "ệ",
+      "Ỉ": "ỉ",
+      "Ị": "ị",
+      "Ọ": "ọ",
+      "Ỏ": "ỏ",
+      "Ố": "ố",
+      "Ồ": "ồ",
+      "Ổ": "ổ",
+      "Ỗ": "ỗ",
+      "Ộ": "ộ",
+      "Ớ": "ớ",
+      "Ờ": "ờ",
+      "Ở": "ở",
+      "Ỡ": "ỡ",
+      "Ợ": "ợ",
+      "Ụ": "ụ",
+      "Ủ": "ủ",
+      "Ứ": "ứ",
+      "Ừ": "ừ",
+      "Ử": "ử",
+      "Ữ": "ữ",
+      "Ự": "ự",
+      "Ỳ": "ỳ",
+      "Ỵ": "ỵ",
+      "Ỷ": "ỷ",
+      "Ỹ": "ỹ",
+      "Ỻ": "ỻ",
+      "Ỽ": "ỽ",
+      "Ỿ": "ỿ",
+      "Ἀ": "ἀ",
+      "Ἁ": "ἁ",
+      "Ἂ": "ἂ",
+      "Ἃ": "ἃ",
+      "Ἄ": "ἄ",
+      "Ἅ": "ἅ",
+      "Ἆ": "ἆ",
+      "Ἇ": "ἇ",
+      "Ἐ": "ἐ",
+      "Ἑ": "ἑ",
+      "Ἒ": "ἒ",
+      "Ἓ": "ἓ",
+      "Ἔ": "ἔ",
+      "Ἕ": "ἕ",
+      "Ἠ": "ἠ",
+      "Ἡ": "ἡ",
+      "Ἢ": "ἢ",
+      "Ἣ": "ἣ",
+      "Ἤ": "ἤ",
+      "Ἥ": "ἥ",
+      "Ἦ": "ἦ",
+      "Ἧ": "ἧ",
+      "Ἰ": "ἰ",
+      "Ἱ": "ἱ",
+      "Ἲ": "ἲ",
+      "Ἳ": "ἳ",
+      "Ἴ": "ἴ",
+      "Ἵ": "ἵ",
+      "Ἶ": "ἶ",
+      "Ἷ": "ἷ",
+      "Ὀ": "ὀ",
+      "Ὁ": "ὁ",
+      "Ὂ": "ὂ",
+      "Ὃ": "ὃ",
+      "Ὄ": "ὄ",
+      "Ὅ": "ὅ",
+      "Ὑ": "ὑ",
+      "Ὓ": "ὓ",
+      "Ὕ": "ὕ",
+      "Ὗ": "ὗ",
+      "Ὠ": "ὠ",
+      "Ὡ": "ὡ",
+      "Ὢ": "ὢ",
+      "Ὣ": "ὣ",
+      "Ὤ": "ὤ",
+      "Ὥ": "ὥ",
+      "Ὦ": "ὦ",
+      "Ὧ": "ὧ",
+      "ᾈ": "ᾀ",
+      "ᾉ": "ᾁ",
+      "ᾊ": "ᾂ",
+      "ᾋ": "ᾃ",
+      "ᾌ": "ᾄ",
+      "ᾍ": "ᾅ",
+      "ᾎ": "ᾆ",
+      "ᾏ": "ᾇ",
+      "ᾘ": "ᾐ",
+      "ᾙ": "ᾑ",
+      "ᾚ": "ᾒ",
+      "ᾛ": "ᾓ",
+      "ᾜ": "ᾔ",
+      "ᾝ": "ᾕ",
+      "ᾞ": "ᾖ",
+      "ᾟ": "ᾗ",
+      "ᾨ": "ᾠ",
+      "ᾩ": "ᾡ",
+      "ᾪ": "ᾢ",
+      "ᾫ": "ᾣ",
+      "ᾬ": "ᾤ",
+      "ᾭ": "ᾥ",
+      "ᾮ": "ᾦ",
+      "ᾯ": "ᾧ",
+      "Ᾰ": "ᾰ",
+      "Ᾱ": "ᾱ",
+      "Ὰ": "ὰ",
+      "Ά": "ά",
+      "ᾼ": "ᾳ",
+      "Ὲ": "ὲ",
+      "Έ": "έ",
+      "Ὴ": "ὴ",
+      "Ή": "ή",
+      "ῌ": "ῃ",
+      "Ῐ": "ῐ",
+      "Ῑ": "ῑ",
+      "Ὶ": "ὶ",
+      "Ί": "ί",
+      "Ῠ": "ῠ",
+      "Ῡ": "ῡ",
+      "Ὺ": "ὺ",
+      "Ύ": "ύ",
+      "Ῥ": "ῥ",
+      "Ὸ": "ὸ",
+      "Ό": "ό",
+      "Ὼ": "ὼ",
+      "Ώ": "ώ",
+      "ῼ": "ῳ",
+      "Ω": "ω",
+      "K": "k",
+      "Å": "å",
+      "Ⅎ": "ⅎ",
+      "Ⅰ": "ⅰ",
+      "Ⅱ": "ⅱ",
+      "Ⅲ": "ⅲ",
+      "Ⅳ": "ⅳ",
+      "Ⅴ": "ⅴ",
+      "Ⅵ": "ⅵ",
+      "Ⅶ": "ⅶ",
+      "Ⅷ": "ⅷ",
+      "Ⅸ": "ⅸ",
+      "Ⅹ": "ⅹ",
+      "Ⅺ": "ⅺ",
+      "Ⅻ": "ⅻ",
+      "Ⅼ": "ⅼ",
+      "Ⅽ": "ⅽ",
+      "Ⅾ": "ⅾ",
+      "Ⅿ": "ⅿ",
+      "Ↄ": "ↄ",
+      "Ⓐ": "ⓐ",
+      "Ⓑ": "ⓑ",
+      "Ⓒ": "ⓒ",
+      "Ⓓ": "ⓓ",
+      "Ⓔ": "ⓔ",
+      "Ⓕ": "ⓕ",
+      "Ⓖ": "ⓖ",
+      "Ⓗ": "ⓗ",
+      "Ⓘ": "ⓘ",
+      "Ⓙ": "ⓙ",
+      "Ⓚ": "ⓚ",
+      "Ⓛ": "ⓛ",
+      "Ⓜ": "ⓜ",
+      "Ⓝ": "ⓝ",
+      "Ⓞ": "ⓞ",
+      "Ⓟ": "ⓟ",
+      "Ⓠ": "ⓠ",
+      "Ⓡ": "ⓡ",
+      "Ⓢ": "ⓢ",
+      "Ⓣ": "ⓣ",
+      "Ⓤ": "ⓤ",
+      "Ⓥ": "ⓥ",
+      "Ⓦ": "ⓦ",
+      "Ⓧ": "ⓧ",
+      "Ⓨ": "ⓨ",
+      "Ⓩ": "ⓩ",
+      "Ⰰ": "ⰰ",
+      "Ⰱ": "ⰱ",
+      "Ⰲ": "ⰲ",
+      "Ⰳ": "ⰳ",
+      "Ⰴ": "ⰴ",
+      "Ⰵ": "ⰵ",
+      "Ⰶ": "ⰶ",
+      "Ⰷ": "ⰷ",
+      "Ⰸ": "ⰸ",
+      "Ⰹ": "ⰹ",
+      "Ⰺ": "ⰺ",
+      "Ⰻ": "ⰻ",
+      "Ⰼ": "ⰼ",
+      "Ⰽ": "ⰽ",
+      "Ⰾ": "ⰾ",
+      "Ⰿ": "ⰿ",
+      "Ⱀ": "ⱀ",
+      "Ⱁ": "ⱁ",
+      "Ⱂ": "ⱂ",
+      "Ⱃ": "ⱃ",
+      "Ⱄ": "ⱄ",
+      "Ⱅ": "ⱅ",
+      "Ⱆ": "ⱆ",
+      "Ⱇ": "ⱇ",
+      "Ⱈ": "ⱈ",
+      "Ⱉ": "ⱉ",
+      "Ⱊ": "ⱊ",
+      "Ⱋ": "ⱋ",
+      "Ⱌ": "ⱌ",
+      "Ⱍ": "ⱍ",
+      "Ⱎ": "ⱎ",
+      "Ⱏ": "ⱏ",
+      "Ⱐ": "ⱐ",
+      "Ⱑ": "ⱑ",
+      "Ⱒ": "ⱒ",
+      "Ⱓ": "ⱓ",
+      "Ⱔ": "ⱔ",
+      "Ⱕ": "ⱕ",
+      "Ⱖ": "ⱖ",
+      "Ⱗ": "ⱗ",
+      "Ⱘ": "ⱘ",
+      "Ⱙ": "ⱙ",
+      "Ⱚ": "ⱚ",
+      "Ⱛ": "ⱛ",
+      "Ⱜ": "ⱜ",
+      "Ⱝ": "ⱝ",
+      "Ⱞ": "ⱞ",
+      "Ⱟ": "ⱟ",
+      "Ⱡ": "ⱡ",
+      "Ɫ": "ɫ",
+      "Ᵽ": "ᵽ",
+      "Ɽ": "ɽ",
+      "Ⱨ": "ⱨ",
+      "Ⱪ": "ⱪ",
+      "Ⱬ": "ⱬ",
+      "Ɑ": "ɑ",
+      "Ɱ": "ɱ",
+      "Ɐ": "ɐ",
+      "Ɒ": "ɒ",
+      "Ⱳ": "ⱳ",
+      "Ⱶ": "ⱶ",
+      "Ȿ": "ȿ",
+      "Ɀ": "ɀ",
+      "Ⲁ": "ⲁ",
+      "Ⲃ": "ⲃ",
+      "Ⲅ": "ⲅ",
+      "Ⲇ": "ⲇ",
+      "Ⲉ": "ⲉ",
+      "Ⲋ": "ⲋ",
+      "Ⲍ": "ⲍ",
+      "Ⲏ": "ⲏ",
+      "Ⲑ": "ⲑ",
+      "Ⲓ": "ⲓ",
+      "Ⲕ": "ⲕ",
+      "Ⲗ": "ⲗ",
+      "Ⲙ": "ⲙ",
+      "Ⲛ": "ⲛ",
+      "Ⲝ": "ⲝ",
+      "Ⲟ": "ⲟ",
+      "Ⲡ": "ⲡ",
+      "Ⲣ": "ⲣ",
+      "Ⲥ": "ⲥ",
+      "Ⲧ": "ⲧ",
+      "Ⲩ": "ⲩ",
+      "Ⲫ": "ⲫ",
+      "Ⲭ": "ⲭ",
+      "Ⲯ": "ⲯ",
+      "Ⲱ": "ⲱ",
+      "Ⲳ": "ⲳ",
+      "Ⲵ": "ⲵ",
+      "Ⲷ": "ⲷ",
+      "Ⲹ": "ⲹ",
+      "Ⲻ": "ⲻ",
+      "Ⲽ": "ⲽ",
+      "Ⲿ": "ⲿ",
+      "Ⳁ": "ⳁ",
+      "Ⳃ": "ⳃ",
+      "Ⳅ": "ⳅ",
+      "Ⳇ": "ⳇ",
+      "Ⳉ": "ⳉ",
+      "Ⳋ": "ⳋ",
+      "Ⳍ": "ⳍ",
+      "Ⳏ": "ⳏ",
+      "Ⳑ": "ⳑ",
+      "Ⳓ": "ⳓ",
+      "Ⳕ": "ⳕ",
+      "Ⳗ": "ⳗ",
+      "Ⳙ": "ⳙ",
+      "Ⳛ": "ⳛ",
+      "Ⳝ": "ⳝ",
+      "Ⳟ": "ⳟ",
+      "Ⳡ": "ⳡ",
+      "Ⳣ": "ⳣ",
+      "Ⳬ": "ⳬ",
+      "Ⳮ": "ⳮ",
+      "Ⳳ": "ⳳ",
+      "Ꙁ": "ꙁ",
+      "Ꙃ": "ꙃ",
+      "Ꙅ": "ꙅ",
+      "Ꙇ": "ꙇ",
+      "Ꙉ": "ꙉ",
+      "Ꙋ": "ꙋ",
+      "Ꙍ": "ꙍ",
+      "Ꙏ": "ꙏ",
+      "Ꙑ": "ꙑ",
+      "Ꙓ": "ꙓ",
+      "Ꙕ": "ꙕ",
+      "Ꙗ": "ꙗ",
+      "Ꙙ": "ꙙ",
+      "Ꙛ": "ꙛ",
+      "Ꙝ": "ꙝ",
+      "Ꙟ": "ꙟ",
+      "Ꙡ": "ꙡ",
+      "Ꙣ": "ꙣ",
+      "Ꙥ": "ꙥ",
+      "Ꙧ": "ꙧ",
+      "Ꙩ": "ꙩ",
+      "Ꙫ": "ꙫ",
+      "Ꙭ": "ꙭ",
+      "Ꚁ": "ꚁ",
+      "Ꚃ": "ꚃ",
+      "Ꚅ": "ꚅ",
+      "Ꚇ": "ꚇ",
+      "Ꚉ": "ꚉ",
+      "Ꚋ": "ꚋ",
+      "Ꚍ": "ꚍ",
+      "Ꚏ": "ꚏ",
+      "Ꚑ": "ꚑ",
+      "Ꚓ": "ꚓ",
+      "Ꚕ": "ꚕ",
+      "Ꚗ": "ꚗ",
+      "Ꚙ": "ꚙ",
+      "Ꚛ": "ꚛ",
+      "Ꜣ": "ꜣ",
+      "Ꜥ": "ꜥ",
+      "Ꜧ": "ꜧ",
+      "Ꜩ": "ꜩ",
+      "Ꜫ": "ꜫ",
+      "Ꜭ": "ꜭ",
+      "Ꜯ": "ꜯ",
+      "Ꜳ": "ꜳ",
+      "Ꜵ": "ꜵ",
+      "Ꜷ": "ꜷ",
+      "Ꜹ": "ꜹ",
+      "Ꜻ": "ꜻ",
+      "Ꜽ": "ꜽ",
+      "Ꜿ": "ꜿ",
+      "Ꝁ": "ꝁ",
+      "Ꝃ": "ꝃ",
+      "Ꝅ": "ꝅ",
+      "Ꝇ": "ꝇ",
+      "Ꝉ": "ꝉ",
+      "Ꝋ": "ꝋ",
+      "Ꝍ": "ꝍ",
+      "Ꝏ": "ꝏ",
+      "Ꝑ": "ꝑ",
+      "Ꝓ": "ꝓ",
+      "Ꝕ": "ꝕ",
+      "Ꝗ": "ꝗ",
+      "Ꝙ": "ꝙ",
+      "Ꝛ": "ꝛ",
+      "Ꝝ": "ꝝ",
+      "Ꝟ": "ꝟ",
+      "Ꝡ": "ꝡ",
+      "Ꝣ": "ꝣ",
+      "Ꝥ": "ꝥ",
+      "Ꝧ": "ꝧ",
+      "Ꝩ": "ꝩ",
+      "Ꝫ": "ꝫ",
+      "Ꝭ": "ꝭ",
+      "Ꝯ": "ꝯ",
+      "Ꝺ": "ꝺ",
+      "Ꝼ": "ꝼ",
+      "Ᵹ": "ᵹ",
+      "Ꝿ": "ꝿ",
+      "Ꞁ": "ꞁ",
+      "Ꞃ": "ꞃ",
+      "Ꞅ": "ꞅ",
+      "Ꞇ": "ꞇ",
+      "Ꞌ": "ꞌ",
+      "Ɥ": "ɥ",
+      "Ꞑ": "ꞑ",
+      "Ꞓ": "ꞓ",
+      "Ꞗ": "ꞗ",
+      "Ꞙ": "ꞙ",
+      "Ꞛ": "ꞛ",
+      "Ꞝ": "ꞝ",
+      "Ꞟ": "ꞟ",
+      "Ꞡ": "ꞡ",
+      "Ꞣ": "ꞣ",
+      "Ꞥ": "ꞥ",
+      "Ꞧ": "ꞧ",
+      "Ꞩ": "ꞩ",
+      "Ɦ": "ɦ",
+      "Ɜ": "ɜ",
+      "Ɡ": "ɡ",
+      "Ɬ": "ɬ",
+      "Ɪ": "ɪ",
+      "Ʞ": "ʞ",
+      "Ʇ": "ʇ",
+      "Ʝ": "ʝ",
+      "Ꭓ": "ꭓ",
+      "Ꞵ": "ꞵ",
+      "Ꞷ": "ꞷ",
+      "Ꞹ": "ꞹ",
+      "Ꞻ": "ꞻ",
+      "Ꞽ": "ꞽ",
+      "Ꞿ": "ꞿ",
+      "Ꟁ": "ꟁ",
+      "Ꟃ": "ꟃ",
+      "Ꞔ": "ꞔ",
+      "Ʂ": "ʂ",
+      "Ᶎ": "ᶎ",
+      "Ꟈ": "ꟈ",
+      "Ꟊ": "ꟊ",
+      "Ɤ": "ɤ",
+      "Ꟍ": "ꟍ",
+      "꟎": "꟏",
+      "Ꟑ": "ꟑ",
+      "꟒": "ꟓ",
+      "꟔": "ꟕ",
+      "Ꟗ": "ꟗ",
+      "Ꟙ": "ꟙ",
+      "Ꟛ": "ꟛ",
+      "Ƛ": "ƛ",
+      "Ꟶ": "ꟶ",
+      "Ａ": "ａ",
+      "Ｂ": "ｂ",
+      "Ｃ": "ｃ",
+      "Ｄ": "ｄ",
+      "Ｅ": "ｅ",
+      "Ｆ": "ｆ",
+      "Ｇ": "ｇ",
+      "Ｈ": "ｈ",
+      "Ｉ": "ｉ",
+      "Ｊ": "ｊ",
+      "Ｋ": "ｋ",
+      "Ｌ": "ｌ",
+      "Ｍ": "ｍ",
+      "Ｎ": "ｎ",
+      "Ｏ": "ｏ",
+      "Ｐ": "ｐ",
+      "Ｑ": "ｑ",
+      "Ｒ": "ｒ",
+      "Ｓ": "ｓ",
+      "Ｔ": "ｔ",
+      "Ｕ": "ｕ",
+      "Ｖ": "ｖ",
+      "Ｗ": "ｗ",
+      "Ｘ": "ｘ",
+      "Ｙ": "ｙ",
+      "Ｚ": "ｚ",
+      "𐐀": "𐐨",
+      "𐐁": "𐐩",
+      "𐐂": "𐐪",
+      "𐐃": "𐐫",
+      "𐐄": "𐐬",
+      "𐐅": "𐐭",
+      "𐐆": "𐐮",
+      "𐐇": "𐐯",
+      "𐐈": "𐐰",
+      "𐐉": "𐐱",
+      "𐐊": "𐐲",
+      "𐐋": "𐐳",
+      "𐐌": "𐐴",
+      "𐐍": "𐐵",
+      "𐐎": "𐐶",
+      "𐐏": "𐐷",
+      "𐐐": "𐐸",
+      "𐐑": "𐐹",
+      "𐐒": "𐐺",
+      "𐐓": "𐐻",
+      "𐐔": "𐐼",
+      "𐐕": "𐐽",
+      "𐐖": "𐐾",
+      "𐐗": "𐐿",
+      "𐐘": "𐑀",
+      "𐐙": "𐑁",
+      "𐐚": "𐑂",
+      "𐐛": "𐑃",
+      "𐐜": "𐑄",
+      "𐐝": "𐑅",
+      "𐐞": "𐑆",
+      "𐐟": "𐑇",
+      "𐐠": "𐑈",
+      "𐐡": "𐑉",
+      "𐐢": "𐑊",
+      "𐐣": "𐑋",
+      "𐐤": "𐑌",
+      "𐐥": "𐑍",
+      "𐐦": "𐑎",
+      "𐐧": "𐑏",
+      "𐒰": "𐓘",
+      "𐒱": "𐓙",
+      "𐒲": "𐓚",
+      "𐒳": "𐓛",
+      "𐒴": "𐓜",
+      "𐒵": "𐓝",
+      "𐒶": "𐓞",
+      "𐒷": "𐓟",
+      "𐒸": "𐓠",
+      "𐒹": "𐓡",
+      "𐒺": "𐓢",
+      "𐒻": "𐓣",
+      "𐒼": "𐓤",
+      "𐒽": "𐓥",
+      "𐒾": "𐓦",
+      "𐒿": "𐓧",
+      "𐓀": "𐓨",
+      "𐓁": "𐓩",
+      "𐓂": "𐓪",
+      "𐓃": "𐓫",
+      "𐓄": "𐓬",
+      "𐓅": "𐓭",
+      "𐓆": "𐓮",
+      "𐓇": "𐓯",
+      "𐓈": "𐓰",
+      "𐓉": "𐓱",
+      "𐓊": "𐓲",
+      "𐓋": "𐓳",
+      "𐓌": "𐓴",
+      "𐓍": "𐓵",
+      "𐓎": "𐓶",
+      "𐓏": "𐓷",
+      "𐓐": "𐓸",
+      "𐓑": "𐓹",
+      "𐓒": "𐓺",
+      "𐓓": "𐓻",
+      "𐕰": "𐖗",
+      "𐕱": "𐖘",
+      "𐕲": "𐖙",
+      "𐕳": "𐖚",
+      "𐕴": "𐖛",
+      "𐕵": "𐖜",
+      "𐕶": "𐖝",
+      "𐕷": "𐖞",
+      "𐕸": "𐖟",
+      "𐕹": "𐖠",
+      "𐕺": "𐖡",
+      "𐕼": "𐖣",
+      "𐕽": "𐖤",
+      "𐕾": "𐖥",
+      "𐕿": "𐖦",
+      "𐖀": "𐖧",
+      "𐖁": "𐖨",
+      "𐖂": "𐖩",
+      "𐖃": "𐖪",
+      "𐖄": "𐖫",
+      "𐖅": "𐖬",
+      "𐖆": "𐖭",
+      "𐖇": "𐖮",
+      "𐖈": "𐖯",
+      "𐖉": "𐖰",
+      "𐖊": "𐖱",
+      "𐖌": "𐖳",
+      "𐖍": "𐖴",
+      "𐖎": "𐖵",
+      "𐖏": "𐖶",
+      "𐖐": "𐖷",
+      "𐖑": "𐖸",
+      "𐖒": "𐖹",
+      "𐖔": "𐖻",
+      "𐖕": "𐖼",
+      "𐲀": "𐳀",
+      "𐲁": "𐳁",
+      "𐲂": "𐳂",
+      "𐲃": "𐳃",
+      "𐲄": "𐳄",
+      "𐲅": "𐳅",
+      "𐲆": "𐳆",
+      "𐲇": "𐳇",
+      "𐲈": "𐳈",
+      "𐲉": "𐳉",
+      "𐲊": "𐳊",
+      "𐲋": "𐳋",
+      "𐲌": "𐳌",
+      "𐲍": "𐳍",
+      "𐲎": "𐳎",
+      "𐲏": "𐳏",
+      "𐲐": "𐳐",
+      "𐲑": "𐳑",
+      "𐲒": "𐳒",
+      "𐲓": "𐳓",
+      "𐲔": "𐳔",
+      "𐲕": "𐳕",
+      "𐲖": "𐳖",
+      "𐲗": "𐳗",
+      "𐲘": "𐳘",
+      "𐲙": "𐳙",
+      "𐲚": "𐳚",
+      "𐲛": "𐳛",
+      "𐲜": "𐳜",
+      "𐲝": "𐳝",
+      "𐲞": "𐳞",
+      "𐲟": "𐳟",
+      "𐲠": "𐳠",
+      "𐲡": "𐳡",
+      "𐲢": "𐳢",
+      "𐲣": "𐳣",
+      "𐲤": "𐳤",
+      "𐲥": "𐳥",
+      "𐲦": "𐳦",
+      "𐲧": "𐳧",
+      "𐲨": "𐳨",
+      "𐲩": "𐳩",
+      "𐲪": "𐳪",
+      "𐲫": "𐳫",
+      "𐲬": "𐳬",
+      "𐲭": "𐳭",
+      "𐲮": "𐳮",
+      "𐲯": "𐳯",
+      "𐲰": "𐳰",
+      "𐲱": "𐳱",
+      "𐲲": "𐳲",
+      "𐵐": "𐵰",
+      "𐵑": "𐵱",
+      "𐵒": "𐵲",
+      "𐵓": "𐵳",
+      "𐵔": "𐵴",
+      "𐵕": "𐵵",
+      "𐵖": "𐵶",
+      "𐵗": "𐵷",
+      "𐵘": "𐵸",
+      "𐵙": "𐵹",
+      "𐵚": "𐵺",
+      "𐵛": "𐵻",
+      "𐵜": "𐵼",
+      "𐵝": "𐵽",
+      "𐵞": "𐵾",
+      "𐵟": "𐵿",
+      "𐵠": "𐶀",
+      "𐵡": "𐶁",
+      "𐵢": "𐶂",
+      "𐵣": "𐶃",
+      "𐵤": "𐶄",
+      "𐵥": "𐶅",
+      "𑢠": "𑣀",
+      "𑢡": "𑣁",
+      "𑢢": "𑣂",
+      "𑢣": "𑣃",
+      "𑢤": "𑣄",
+      "𑢥": "𑣅",
+      "𑢦": "𑣆",
+      "𑢧": "𑣇",
+      "𑢨": "𑣈",
+      "𑢩": "𑣉",
+      "𑢪": "𑣊",
+      "𑢫": "𑣋",
+      "𑢬": "𑣌",
+      "𑢭": "𑣍",
+      "𑢮": "𑣎",
+      "𑢯": "𑣏",
+      "𑢰": "𑣐",
+      "𑢱": "𑣑",
+      "𑢲": "𑣒",
+      "𑢳": "𑣓",
+      "𑢴": "𑣔",
+      "𑢵": "𑣕",
+      "𑢶": "𑣖",
+      "𑢷": "𑣗",
+      "𑢸": "𑣘",
+      "𑢹": "𑣙",
+      "𑢺": "𑣚",
+      "𑢻": "𑣛",
+      "𑢼": "𑣜",
+      "𑢽": "𑣝",
+      "𑢾": "𑣞",
+      "𑢿": "𑣟",
+      "𖹀": "𖹠",
+      "𖹁": "𖹡",
+      "𖹂": "𖹢",
+      "𖹃": "𖹣",
+      "𖹄": "𖹤",
+      "𖹅": "𖹥",
+      "𖹆": "𖹦",
+      "𖹇": "𖹧",
+      "𖹈": "𖹨",
+      "𖹉": "𖹩",
+      "𖹊": "𖹪",
+      "𖹋": "𖹫",
+      "𖹌": "𖹬",
+      "𖹍": "𖹭",
+      "𖹎": "𖹮",
+      "𖹏": "𖹯",
+      "𖹐": "𖹰",
+      "𖹑": "𖹱",
+      "𖹒": "𖹲",
+      "𖹓": "𖹳",
+      "𖹔": "𖹴",
+      "𖹕": "𖹵",
+      "𖹖": "𖹶",
+      "𖹗": "𖹷",
+      "𖹘": "𖹸",
+      "𖹙": "𖹹",
+      "𖹚": "𖹺",
+      "𖹛": "𖹻",
+      "𖹜": "𖹼",
+      "𖹝": "𖹽",
+      "𖹞": "𖹾",
+      "𖹟": "𖹿",
+      "𖺠": "𖺻",
+      "𖺡": "𖺼",
+      "𖺢": "𖺽",
+      "𖺣": "𖺾",
+      "𖺤": "𖺿",
+      "𖺥": "𖻀",
+      "𖺦": "𖻁",
+      "𖺧": "𖻂",
+      "𖺨": "𖻃",
+      "𖺩": "𖻄",
+      "𖺪": "𖻅",
+      "𖺫": "𖻆",
+      "𖺬": "𖻇",
+      "𖺭": "𖻈",
+      "𖺮": "𖻉",
+      "𖺯": "𖻊",
+      "𖺰": "𖻋",
+      "𖺱": "𖻌",
+      "𖺲": "𖻍",
+      "𖺳": "𖻎",
+      "𖺴": "𖻏",
+      "𖺵": "𖻐",
+      "𖺶": "𖻑",
+      "𖺷": "𖻒",
+      "𖺸": "𖻓",
+      "𞤀": "𞤢",
+      "𞤁": "𞤣",
+      "𞤂": "𞤤",
+      "𞤃": "𞤥",
+      "𞤄": "𞤦",
+      "𞤅": "𞤧",
+      "𞤆": "𞤨",
+      "𞤇": "𞤩",
+      "𞤈": "𞤪",
+      "𞤉": "𞤫",
+      "𞤊": "𞤬",
+      "𞤋": "𞤭",
+      "𞤌": "𞤮",
+      "𞤍": "𞤯",
+      "𞤎": "𞤰",
+      "𞤏": "𞤱",
+      "𞤐": "𞤲",
+      "𞤑": "𞤳",
+      "𞤒": "𞤴",
+      "𞤓": "𞤵",
+      "𞤔": "𞤶",
+      "𞤕": "𞤷",
+      "𞤖": "𞤸",
+      "𞤗": "𞤹",
+      "𞤘": "𞤺",
+      "𞤙": "𞤻",
+      "𞤚": "𞤼",
+      "𞤛": "𞤽",
+      "𞤜": "𞤾",
+      "𞤝": "𞤿",
+      "𞤞": "𞥀",
+      "𞤟": "𞥁",
+      "𞤠": "𞥂",
+      "𞤡": "𞥃"
+    },
+    "casedRanges": [
+      [
+        65,
+        90
+      ],
+      [
+        97,
+        122
+      ],
+      [
+        170,
+        170
+      ],
+      [
+        181,
+        181
+      ],
+      [
+        186,
+        186
+      ],
+      [
+        192,
+        214
+      ],
+      [
+        216,
+        246
+      ],
+      [
+        248,
+        442
+      ],
+      [
+        444,
+        447
+      ],
+      [
+        452,
+        659
+      ],
+      [
+        662,
+        696
+      ],
+      [
+        704,
+        705
+      ],
+      [
+        736,
+        740
+      ],
+      [
+        837,
+        837
+      ],
+      [
+        880,
+        883
+      ],
+      [
+        886,
+        887
+      ],
+      [
+        890,
+        893
+      ],
+      [
+        895,
+        895
+      ],
+      [
+        902,
+        902
+      ],
+      [
+        904,
+        906
+      ],
+      [
+        908,
+        908
+      ],
+      [
+        910,
+        929
+      ],
+      [
+        931,
+        1013
+      ],
+      [
+        1015,
+        1153
+      ],
+      [
+        1162,
+        1327
+      ],
+      [
+        1329,
+        1366
+      ],
+      [
+        1376,
+        1416
+      ],
+      [
+        4256,
+        4293
+      ],
+      [
+        4295,
+        4295
+      ],
+      [
+        4301,
+        4301
+      ],
+      [
+        4304,
+        4346
+      ],
+      [
+        4348,
+        4351
+      ],
+      [
+        5024,
+        5109
+      ],
+      [
+        5112,
+        5117
+      ],
+      [
+        7296,
+        7306
+      ],
+      [
+        7312,
+        7354
+      ],
+      [
+        7357,
+        7359
+      ],
+      [
+        7424,
+        7615
+      ],
+      [
+        7680,
+        7957
+      ],
+      [
+        7960,
+        7965
+      ],
+      [
+        7968,
+        8005
+      ],
+      [
+        8008,
+        8013
+      ],
+      [
+        8016,
+        8023
+      ],
+      [
+        8025,
+        8025
+      ],
+      [
+        8027,
+        8027
+      ],
+      [
+        8029,
+        8029
+      ],
+      [
+        8031,
+        8061
+      ],
+      [
+        8064,
+        8116
+      ],
+      [
+        8118,
+        8124
+      ],
+      [
+        8126,
+        8126
+      ],
+      [
+        8130,
+        8132
+      ],
+      [
+        8134,
+        8140
+      ],
+      [
+        8144,
+        8147
+      ],
+      [
+        8150,
+        8155
+      ],
+      [
+        8160,
+        8172
+      ],
+      [
+        8178,
+        8180
+      ],
+      [
+        8182,
+        8188
+      ],
+      [
+        8305,
+        8305
+      ],
+      [
+        8319,
+        8319
+      ],
+      [
+        8336,
+        8348
+      ],
+      [
+        8450,
+        8450
+      ],
+      [
+        8455,
+        8455
+      ],
+      [
+        8458,
+        8467
+      ],
+      [
+        8469,
+        8469
+      ],
+      [
+        8473,
+        8477
+      ],
+      [
+        8484,
+        8484
+      ],
+      [
+        8486,
+        8486
+      ],
+      [
+        8488,
+        8488
+      ],
+      [
+        8490,
+        8493
+      ],
+      [
+        8495,
+        8500
+      ],
+      [
+        8505,
+        8505
+      ],
+      [
+        8508,
+        8511
+      ],
+      [
+        8517,
+        8521
+      ],
+      [
+        8526,
+        8526
+      ],
+      [
+        8544,
+        8575
+      ],
+      [
+        8579,
+        8580
+      ],
+      [
+        9398,
+        9449
+      ],
+      [
+        11264,
+        11492
+      ],
+      [
+        11499,
+        11502
+      ],
+      [
+        11506,
+        11507
+      ],
+      [
+        11520,
+        11557
+      ],
+      [
+        11559,
+        11559
+      ],
+      [
+        11565,
+        11565
+      ],
+      [
+        42560,
+        42605
+      ],
+      [
+        42624,
+        42653
+      ],
+      [
+        42786,
+        42887
+      ],
+      [
+        42891,
+        42894
+      ],
+      [
+        42896,
+        42972
+      ],
+      [
+        42993,
+        42998
+      ],
+      [
+        43000,
+        43002
+      ],
+      [
+        43824,
+        43866
+      ],
+      [
+        43868,
+        43881
+      ],
+      [
+        43888,
+        43967
+      ],
+      [
+        64256,
+        64262
+      ],
+      [
+        64275,
+        64279
+      ],
+      [
+        65313,
+        65338
+      ],
+      [
+        65345,
+        65370
+      ],
+      [
+        66560,
+        66639
+      ],
+      [
+        66736,
+        66771
+      ],
+      [
+        66776,
+        66811
+      ],
+      [
+        66928,
+        66938
+      ],
+      [
+        66940,
+        66954
+      ],
+      [
+        66956,
+        66962
+      ],
+      [
+        66964,
+        66965
+      ],
+      [
+        66967,
+        66977
+      ],
+      [
+        66979,
+        66993
+      ],
+      [
+        66995,
+        67001
+      ],
+      [
+        67003,
+        67004
+      ],
+      [
+        67456,
+        67456
+      ],
+      [
+        67459,
+        67461
+      ],
+      [
+        67463,
+        67504
+      ],
+      [
+        67506,
+        67514
+      ],
+      [
+        68736,
+        68786
+      ],
+      [
+        68800,
+        68850
+      ],
+      [
+        68944,
+        68965
+      ],
+      [
+        68976,
+        68997
+      ],
+      [
+        71840,
+        71903
+      ],
+      [
+        93760,
+        93823
+      ],
+      [
+        93856,
+        93880
+      ],
+      [
+        93883,
+        93907
+      ],
+      [
+        119808,
+        119892
+      ],
+      [
+        119894,
+        119964
+      ],
+      [
+        119966,
+        119967
+      ],
+      [
+        119970,
+        119970
+      ],
+      [
+        119973,
+        119974
+      ],
+      [
+        119977,
+        119980
+      ],
+      [
+        119982,
+        119993
+      ],
+      [
+        119995,
+        119995
+      ],
+      [
+        119997,
+        120003
+      ],
+      [
+        120005,
+        120069
+      ],
+      [
+        120071,
+        120074
+      ],
+      [
+        120077,
+        120084
+      ],
+      [
+        120086,
+        120092
+      ],
+      [
+        120094,
+        120121
+      ],
+      [
+        120123,
+        120126
+      ],
+      [
+        120128,
+        120132
+      ],
+      [
+        120134,
+        120134
+      ],
+      [
+        120138,
+        120144
+      ],
+      [
+        120146,
+        120485
+      ],
+      [
+        120488,
+        120512
+      ],
+      [
+        120514,
+        120538
+      ],
+      [
+        120540,
+        120570
+      ],
+      [
+        120572,
+        120596
+      ],
+      [
+        120598,
+        120628
+      ],
+      [
+        120630,
+        120654
+      ],
+      [
+        120656,
+        120686
+      ],
+      [
+        120688,
+        120712
+      ],
+      [
+        120714,
+        120744
+      ],
+      [
+        120746,
+        120770
+      ],
+      [
+        120772,
+        120779
+      ],
+      [
+        122624,
+        122633
+      ],
+      [
+        122635,
+        122654
+      ],
+      [
+        122661,
+        122666
+      ],
+      [
+        122928,
+        122989
+      ],
+      [
+        125184,
+        125251
+      ],
+      [
+        127280,
+        127305
+      ],
+      [
+        127312,
+        127337
+      ],
+      [
+        127344,
+        127369
+      ]
+    ],
+    "ignorableRanges": [
+      [
+        39,
+        39
+      ],
+      [
+        46,
+        46
+      ],
+      [
+        58,
+        58
+      ],
+      [
+        94,
+        94
+      ],
+      [
+        96,
+        96
+      ],
+      [
+        168,
+        168
+      ],
+      [
+        173,
+        173
+      ],
+      [
+        175,
+        175
+      ],
+      [
+        180,
+        180
+      ],
+      [
+        183,
+        184
+      ],
+      [
+        688,
+        879
+      ],
+      [
+        884,
+        885
+      ],
+      [
+        890,
+        890
+      ],
+      [
+        900,
+        901
+      ],
+      [
+        903,
+        903
+      ],
+      [
+        1155,
+        1161
+      ],
+      [
+        1369,
+        1369
+      ],
+      [
+        1375,
+        1375
+      ],
+      [
+        1425,
+        1469
+      ],
+      [
+        1471,
+        1471
+      ],
+      [
+        1473,
+        1474
+      ],
+      [
+        1476,
+        1477
+      ],
+      [
+        1479,
+        1479
+      ],
+      [
+        1524,
+        1524
+      ],
+      [
+        1536,
+        1541
+      ],
+      [
+        1552,
+        1562
+      ],
+      [
+        1564,
+        1564
+      ],
+      [
+        1600,
+        1600
+      ],
+      [
+        1611,
+        1631
+      ],
+      [
+        1648,
+        1648
+      ],
+      [
+        1750,
+        1757
+      ],
+      [
+        1759,
+        1768
+      ],
+      [
+        1770,
+        1773
+      ],
+      [
+        1807,
+        1807
+      ],
+      [
+        1809,
+        1809
+      ],
+      [
+        1840,
+        1866
+      ],
+      [
+        1958,
+        1968
+      ],
+      [
+        2027,
+        2037
+      ],
+      [
+        2042,
+        2042
+      ],
+      [
+        2045,
+        2045
+      ],
+      [
+        2070,
+        2093
+      ],
+      [
+        2137,
+        2139
+      ],
+      [
+        2184,
+        2184
+      ],
+      [
+        2192,
+        2193
+      ],
+      [
+        2199,
+        2207
+      ],
+      [
+        2249,
+        2306
+      ],
+      [
+        2362,
+        2362
+      ],
+      [
+        2364,
+        2364
+      ],
+      [
+        2369,
+        2376
+      ],
+      [
+        2381,
+        2381
+      ],
+      [
+        2385,
+        2391
+      ],
+      [
+        2402,
+        2403
+      ],
+      [
+        2417,
+        2417
+      ],
+      [
+        2433,
+        2433
+      ],
+      [
+        2492,
+        2492
+      ],
+      [
+        2497,
+        2500
+      ],
+      [
+        2509,
+        2509
+      ],
+      [
+        2530,
+        2531
+      ],
+      [
+        2558,
+        2558
+      ],
+      [
+        2561,
+        2562
+      ],
+      [
+        2620,
+        2620
+      ],
+      [
+        2625,
+        2626
+      ],
+      [
+        2631,
+        2632
+      ],
+      [
+        2635,
+        2637
+      ],
+      [
+        2641,
+        2641
+      ],
+      [
+        2672,
+        2673
+      ],
+      [
+        2677,
+        2677
+      ],
+      [
+        2689,
+        2690
+      ],
+      [
+        2748,
+        2748
+      ],
+      [
+        2753,
+        2757
+      ],
+      [
+        2759,
+        2760
+      ],
+      [
+        2765,
+        2765
+      ],
+      [
+        2786,
+        2787
+      ],
+      [
+        2810,
+        2815
+      ],
+      [
+        2817,
+        2817
+      ],
+      [
+        2876,
+        2876
+      ],
+      [
+        2879,
+        2879
+      ],
+      [
+        2881,
+        2884
+      ],
+      [
+        2893,
+        2893
+      ],
+      [
+        2901,
+        2902
+      ],
+      [
+        2914,
+        2915
+      ],
+      [
+        2946,
+        2946
+      ],
+      [
+        3008,
+        3008
+      ],
+      [
+        3021,
+        3021
+      ],
+      [
+        3072,
+        3072
+      ],
+      [
+        3076,
+        3076
+      ],
+      [
+        3132,
+        3132
+      ],
+      [
+        3134,
+        3136
+      ],
+      [
+        3142,
+        3144
+      ],
+      [
+        3146,
+        3149
+      ],
+      [
+        3157,
+        3158
+      ],
+      [
+        3170,
+        3171
+      ],
+      [
+        3201,
+        3201
+      ],
+      [
+        3260,
+        3260
+      ],
+      [
+        3263,
+        3263
+      ],
+      [
+        3270,
+        3270
+      ],
+      [
+        3276,
+        3277
+      ],
+      [
+        3298,
+        3299
+      ],
+      [
+        3328,
+        3329
+      ],
+      [
+        3387,
+        3388
+      ],
+      [
+        3393,
+        3396
+      ],
+      [
+        3405,
+        3405
+      ],
+      [
+        3426,
+        3427
+      ],
+      [
+        3457,
+        3457
+      ],
+      [
+        3530,
+        3530
+      ],
+      [
+        3538,
+        3540
+      ],
+      [
+        3542,
+        3542
+      ],
+      [
+        3633,
+        3633
+      ],
+      [
+        3636,
+        3642
+      ],
+      [
+        3654,
+        3662
+      ],
+      [
+        3761,
+        3761
+      ],
+      [
+        3764,
+        3772
+      ],
+      [
+        3782,
+        3782
+      ],
+      [
+        3784,
+        3790
+      ],
+      [
+        3864,
+        3865
+      ],
+      [
+        3893,
+        3893
+      ],
+      [
+        3895,
+        3895
+      ],
+      [
+        3897,
+        3897
+      ],
+      [
+        3953,
+        3966
+      ],
+      [
+        3968,
+        3972
+      ],
+      [
+        3974,
+        3975
+      ],
+      [
+        3981,
+        3991
+      ],
+      [
+        3993,
+        4028
+      ],
+      [
+        4038,
+        4038
+      ],
+      [
+        4141,
+        4144
+      ],
+      [
+        4146,
+        4151
+      ],
+      [
+        4153,
+        4154
+      ],
+      [
+        4157,
+        4158
+      ],
+      [
+        4184,
+        4185
+      ],
+      [
+        4190,
+        4192
+      ],
+      [
+        4209,
+        4212
+      ],
+      [
+        4226,
+        4226
+      ],
+      [
+        4229,
+        4230
+      ],
+      [
+        4237,
+        4237
+      ],
+      [
+        4253,
+        4253
+      ],
+      [
+        4348,
+        4348
+      ],
+      [
+        4957,
+        4959
+      ],
+      [
+        5906,
+        5908
+      ],
+      [
+        5938,
+        5939
+      ],
+      [
+        5970,
+        5971
+      ],
+      [
+        6002,
+        6003
+      ],
+      [
+        6068,
+        6069
+      ],
+      [
+        6071,
+        6077
+      ],
+      [
+        6086,
+        6086
+      ],
+      [
+        6089,
+        6099
+      ],
+      [
+        6103,
+        6103
+      ],
+      [
+        6109,
+        6109
+      ],
+      [
+        6155,
+        6159
+      ],
+      [
+        6211,
+        6211
+      ],
+      [
+        6277,
+        6278
+      ],
+      [
+        6313,
+        6313
+      ],
+      [
+        6432,
+        6434
+      ],
+      [
+        6439,
+        6440
+      ],
+      [
+        6450,
+        6450
+      ],
+      [
+        6457,
+        6459
+      ],
+      [
+        6679,
+        6680
+      ],
+      [
+        6683,
+        6683
+      ],
+      [
+        6742,
+        6742
+      ],
+      [
+        6744,
+        6750
+      ],
+      [
+        6752,
+        6752
+      ],
+      [
+        6754,
+        6754
+      ],
+      [
+        6757,
+        6764
+      ],
+      [
+        6771,
+        6780
+      ],
+      [
+        6783,
+        6783
+      ],
+      [
+        6823,
+        6823
+      ],
+      [
+        6832,
+        6877
+      ],
+      [
+        6880,
+        6891
+      ],
+      [
+        6912,
+        6915
+      ],
+      [
+        6964,
+        6964
+      ],
+      [
+        6966,
+        6970
+      ],
+      [
+        6972,
+        6972
+      ],
+      [
+        6978,
+        6978
+      ],
+      [
+        7019,
+        7027
+      ],
+      [
+        7040,
+        7041
+      ],
+      [
+        7074,
+        7077
+      ],
+      [
+        7080,
+        7081
+      ],
+      [
+        7083,
+        7085
+      ],
+      [
+        7142,
+        7142
+      ],
+      [
+        7144,
+        7145
+      ],
+      [
+        7149,
+        7149
+      ],
+      [
+        7151,
+        7153
+      ],
+      [
+        7212,
+        7219
+      ],
+      [
+        7222,
+        7223
+      ],
+      [
+        7288,
+        7293
+      ],
+      [
+        7376,
+        7378
+      ],
+      [
+        7380,
+        7392
+      ],
+      [
+        7394,
+        7400
+      ],
+      [
+        7405,
+        7405
+      ],
+      [
+        7412,
+        7412
+      ],
+      [
+        7416,
+        7417
+      ],
+      [
+        7468,
+        7530
+      ],
+      [
+        7544,
+        7544
+      ],
+      [
+        7579,
+        7679
+      ],
+      [
+        8125,
+        8125
+      ],
+      [
+        8127,
+        8129
+      ],
+      [
+        8141,
+        8143
+      ],
+      [
+        8157,
+        8159
+      ],
+      [
+        8173,
+        8175
+      ],
+      [
+        8189,
+        8190
+      ],
+      [
+        8203,
+        8207
+      ],
+      [
+        8216,
+        8217
+      ],
+      [
+        8228,
+        8228
+      ],
+      [
+        8231,
+        8231
+      ],
+      [
+        8234,
+        8238
+      ],
+      [
+        8288,
+        8292
+      ],
+      [
+        8294,
+        8303
+      ],
+      [
+        8305,
+        8305
+      ],
+      [
+        8319,
+        8319
+      ],
+      [
+        8336,
+        8348
+      ],
+      [
+        8400,
+        8432
+      ],
+      [
+        11388,
+        11389
+      ],
+      [
+        11503,
+        11505
+      ],
+      [
+        11631,
+        11631
+      ],
+      [
+        11647,
+        11647
+      ],
+      [
+        11744,
+        11775
+      ],
+      [
+        11823,
+        11823
+      ],
+      [
+        12293,
+        12293
+      ],
+      [
+        12330,
+        12333
+      ],
+      [
+        12337,
+        12341
+      ],
+      [
+        12347,
+        12347
+      ],
+      [
+        12441,
+        12446
+      ],
+      [
+        12540,
+        12542
+      ],
+      [
+        40981,
+        40981
+      ],
+      [
+        42232,
+        42237
+      ],
+      [
+        42508,
+        42508
+      ],
+      [
+        42607,
+        42610
+      ],
+      [
+        42612,
+        42621
+      ],
+      [
+        42623,
+        42623
+      ],
+      [
+        42652,
+        42655
+      ],
+      [
+        42736,
+        42737
+      ],
+      [
+        42752,
+        42785
+      ],
+      [
+        42864,
+        42864
+      ],
+      [
+        42888,
+        42890
+      ],
+      [
+        42993,
+        42996
+      ],
+      [
+        43000,
+        43001
+      ],
+      [
+        43010,
+        43010
+      ],
+      [
+        43014,
+        43014
+      ],
+      [
+        43019,
+        43019
+      ],
+      [
+        43045,
+        43046
+      ],
+      [
+        43052,
+        43052
+      ],
+      [
+        43204,
+        43205
+      ],
+      [
+        43232,
+        43249
+      ],
+      [
+        43263,
+        43263
+      ],
+      [
+        43302,
+        43309
+      ],
+      [
+        43335,
+        43345
+      ],
+      [
+        43392,
+        43394
+      ],
+      [
+        43443,
+        43443
+      ],
+      [
+        43446,
+        43449
+      ],
+      [
+        43452,
+        43453
+      ],
+      [
+        43471,
+        43471
+      ],
+      [
+        43493,
+        43494
+      ],
+      [
+        43561,
+        43566
+      ],
+      [
+        43569,
+        43570
+      ],
+      [
+        43573,
+        43574
+      ],
+      [
+        43587,
+        43587
+      ],
+      [
+        43596,
+        43596
+      ],
+      [
+        43632,
+        43632
+      ],
+      [
+        43644,
+        43644
+      ],
+      [
+        43696,
+        43696
+      ],
+      [
+        43698,
+        43700
+      ],
+      [
+        43703,
+        43704
+      ],
+      [
+        43710,
+        43711
+      ],
+      [
+        43713,
+        43713
+      ],
+      [
+        43741,
+        43741
+      ],
+      [
+        43756,
+        43757
+      ],
+      [
+        43763,
+        43764
+      ],
+      [
+        43766,
+        43766
+      ],
+      [
+        43867,
+        43871
+      ],
+      [
+        43881,
+        43883
+      ],
+      [
+        44005,
+        44005
+      ],
+      [
+        44008,
+        44008
+      ],
+      [
+        44013,
+        44013
+      ],
+      [
+        64286,
+        64286
+      ],
+      [
+        64434,
+        64450
+      ],
+      [
+        65024,
+        65039
+      ],
+      [
+        65043,
+        65043
+      ],
+      [
+        65056,
+        65071
+      ],
+      [
+        65106,
+        65106
+      ],
+      [
+        65109,
+        65109
+      ],
+      [
+        65279,
+        65279
+      ],
+      [
+        65287,
+        65287
+      ],
+      [
+        65294,
+        65294
+      ],
+      [
+        65306,
+        65306
+      ],
+      [
+        65342,
+        65342
+      ],
+      [
+        65344,
+        65344
+      ],
+      [
+        65392,
+        65392
+      ],
+      [
+        65438,
+        65439
+      ],
+      [
+        65507,
+        65507
+      ],
+      [
+        65529,
+        65531
+      ],
+      [
+        66045,
+        66045
+      ],
+      [
+        66272,
+        66272
+      ],
+      [
+        66422,
+        66426
+      ],
+      [
+        67456,
+        67461
+      ],
+      [
+        67463,
+        67504
+      ],
+      [
+        67506,
+        67514
+      ],
+      [
+        68097,
+        68099
+      ],
+      [
+        68101,
+        68102
+      ],
+      [
+        68108,
+        68111
+      ],
+      [
+        68152,
+        68154
+      ],
+      [
+        68159,
+        68159
+      ],
+      [
+        68325,
+        68326
+      ],
+      [
+        68900,
+        68903
+      ],
+      [
+        68942,
+        68942
+      ],
+      [
+        68969,
+        68973
+      ],
+      [
+        68975,
+        68975
+      ],
+      [
+        69291,
+        69292
+      ],
+      [
+        69317,
+        69317
+      ],
+      [
+        69370,
+        69375
+      ],
+      [
+        69446,
+        69456
+      ],
+      [
+        69506,
+        69509
+      ],
+      [
+        69633,
+        69633
+      ],
+      [
+        69688,
+        69702
+      ],
+      [
+        69744,
+        69744
+      ],
+      [
+        69747,
+        69748
+      ],
+      [
+        69759,
+        69761
+      ],
+      [
+        69811,
+        69814
+      ],
+      [
+        69817,
+        69818
+      ],
+      [
+        69821,
+        69821
+      ],
+      [
+        69826,
+        69826
+      ],
+      [
+        69837,
+        69837
+      ],
+      [
+        69888,
+        69890
+      ],
+      [
+        69927,
+        69931
+      ],
+      [
+        69933,
+        69940
+      ],
+      [
+        70003,
+        70003
+      ],
+      [
+        70016,
+        70017
+      ],
+      [
+        70070,
+        70078
+      ],
+      [
+        70089,
+        70092
+      ],
+      [
+        70095,
+        70095
+      ],
+      [
+        70191,
+        70193
+      ],
+      [
+        70196,
+        70196
+      ],
+      [
+        70198,
+        70199
+      ],
+      [
+        70206,
+        70206
+      ],
+      [
+        70209,
+        70209
+      ],
+      [
+        70367,
+        70367
+      ],
+      [
+        70371,
+        70378
+      ],
+      [
+        70400,
+        70401
+      ],
+      [
+        70459,
+        70460
+      ],
+      [
+        70464,
+        70464
+      ],
+      [
+        70502,
+        70508
+      ],
+      [
+        70512,
+        70516
+      ],
+      [
+        70587,
+        70592
+      ],
+      [
+        70606,
+        70606
+      ],
+      [
+        70608,
+        70608
+      ],
+      [
+        70610,
+        70610
+      ],
+      [
+        70625,
+        70626
+      ],
+      [
+        70712,
+        70719
+      ],
+      [
+        70722,
+        70724
+      ],
+      [
+        70726,
+        70726
+      ],
+      [
+        70750,
+        70750
+      ],
+      [
+        70835,
+        70840
+      ],
+      [
+        70842,
+        70842
+      ],
+      [
+        70847,
+        70848
+      ],
+      [
+        70850,
+        70851
+      ],
+      [
+        71090,
+        71093
+      ],
+      [
+        71100,
+        71101
+      ],
+      [
+        71103,
+        71104
+      ],
+      [
+        71132,
+        71133
+      ],
+      [
+        71219,
+        71226
+      ],
+      [
+        71229,
+        71229
+      ],
+      [
+        71231,
+        71232
+      ],
+      [
+        71339,
+        71339
+      ],
+      [
+        71341,
+        71341
+      ],
+      [
+        71344,
+        71349
+      ],
+      [
+        71351,
+        71351
+      ],
+      [
+        71453,
+        71453
+      ],
+      [
+        71455,
+        71455
+      ],
+      [
+        71458,
+        71461
+      ],
+      [
+        71463,
+        71467
+      ],
+      [
+        71727,
+        71735
+      ],
+      [
+        71737,
+        71738
+      ],
+      [
+        71995,
+        71996
+      ],
+      [
+        71998,
+        71998
+      ],
+      [
+        72003,
+        72003
+      ],
+      [
+        72148,
+        72151
+      ],
+      [
+        72154,
+        72155
+      ],
+      [
+        72160,
+        72160
+      ],
+      [
+        72193,
+        72202
+      ],
+      [
+        72243,
+        72248
+      ],
+      [
+        72251,
+        72254
+      ],
+      [
+        72263,
+        72263
+      ],
+      [
+        72273,
+        72278
+      ],
+      [
+        72281,
+        72283
+      ],
+      [
+        72330,
+        72342
+      ],
+      [
+        72344,
+        72345
+      ],
+      [
+        72544,
+        72544
+      ],
+      [
+        72546,
+        72548
+      ],
+      [
+        72550,
+        72550
+      ],
+      [
+        72752,
+        72758
+      ],
+      [
+        72760,
+        72765
+      ],
+      [
+        72767,
+        72767
+      ],
+      [
+        72850,
+        72871
+      ],
+      [
+        72874,
+        72880
+      ],
+      [
+        72882,
+        72883
+      ],
+      [
+        72885,
+        72886
+      ],
+      [
+        73009,
+        73014
+      ],
+      [
+        73018,
+        73018
+      ],
+      [
+        73020,
+        73021
+      ],
+      [
+        73023,
+        73029
+      ],
+      [
+        73031,
+        73031
+      ],
+      [
+        73104,
+        73105
+      ],
+      [
+        73109,
+        73109
+      ],
+      [
+        73111,
+        73111
+      ],
+      [
+        73177,
+        73177
+      ],
+      [
+        73459,
+        73460
+      ],
+      [
+        73472,
+        73473
+      ],
+      [
+        73526,
+        73530
+      ],
+      [
+        73536,
+        73536
+      ],
+      [
+        73538,
+        73538
+      ],
+      [
+        73562,
+        73562
+      ],
+      [
+        78896,
+        78912
+      ],
+      [
+        78919,
+        78933
+      ],
+      [
+        90398,
+        90409
+      ],
+      [
+        90413,
+        90415
+      ],
+      [
+        92912,
+        92916
+      ],
+      [
+        92976,
+        92982
+      ],
+      [
+        92992,
+        92995
+      ],
+      [
+        93504,
+        93506
+      ],
+      [
+        93547,
+        93548
+      ],
+      [
+        94031,
+        94031
+      ],
+      [
+        94095,
+        94111
+      ],
+      [
+        94176,
+        94177
+      ],
+      [
+        94179,
+        94180
+      ],
+      [
+        94194,
+        94195
+      ],
+      [
+        110576,
+        110579
+      ],
+      [
+        110581,
+        110587
+      ],
+      [
+        110589,
+        110590
+      ],
+      [
+        113821,
+        113822
+      ],
+      [
+        113824,
+        113827
+      ],
+      [
+        118528,
+        118573
+      ],
+      [
+        118576,
+        118598
+      ],
+      [
+        119143,
+        119145
+      ],
+      [
+        119155,
+        119170
+      ],
+      [
+        119173,
+        119179
+      ],
+      [
+        119210,
+        119213
+      ],
+      [
+        119362,
+        119364
+      ],
+      [
+        121344,
+        121398
+      ],
+      [
+        121403,
+        121452
+      ],
+      [
+        121461,
+        121461
+      ],
+      [
+        121476,
+        121476
+      ],
+      [
+        121499,
+        121503
+      ],
+      [
+        121505,
+        121519
+      ],
+      [
+        122880,
+        122886
+      ],
+      [
+        122888,
+        122904
+      ],
+      [
+        122907,
+        122913
+      ],
+      [
+        122915,
+        122916
+      ],
+      [
+        122918,
+        122922
+      ],
+      [
+        122928,
+        122989
+      ],
+      [
+        123023,
+        123023
+      ],
+      [
+        123184,
+        123197
+      ],
+      [
+        123566,
+        123566
+      ],
+      [
+        123628,
+        123631
+      ],
+      [
+        124139,
+        124143
+      ],
+      [
+        124398,
+        124399
+      ],
+      [
+        124643,
+        124643
+      ],
+      [
+        124646,
+        124646
+      ],
+      [
+        124654,
+        124655
+      ],
+      [
+        124661,
+        124661
+      ],
+      [
+        124671,
+        124671
+      ],
+      [
+        125136,
+        125142
+      ],
+      [
+        125252,
+        125259
+      ],
+      [
+        127995,
+        127999
+      ],
+      [
+        917505,
+        917505
+      ],
+      [
+        917536,
+        917631
+      ],
+      [
+        917760,
+        917999
+      ]
+    ]
+  }
+}
+"""#####
+}

@@ -31,6 +31,7 @@ dependencies {
 '''
 CustomInstanceHash = "instanceId"
 SyncFlags = "syncFlags"
+SetupDescription = '''Fetch and install the manifest first, then sync each group you need. Getters validate without installing; setters install owned snapshots, and sync methods combine those steps.'''
 SetupSnippet = '''
 ```kotlin
 val httpClient = HttpClient(CIO)
@@ -57,7 +58,7 @@ runBlocking {
 Should = "should"
 UsageSnippet = '''
 ```kotlin
-val shouldShowFeature = vexillaClient.should(GROUP_NAME_OR_ID, FEATURE_NAME_OR_ID)
+val shouldShowFeature = vexillaClient.should(GROUP_NAME_OR_ID, FEATURE_NAME_OR_ID).getOrThrow()
 ```
 '''
 Example = '''
@@ -82,7 +83,7 @@ runBlocking {
     }
 }
 
-val shouldShowFeature = vexillaClient.should(GROUP_NAME_OR_ID, FEATURE_NAME_OR_ID)
+val shouldShowFeature = vexillaClient.should(GROUP_NAME_OR_ID, FEATURE_NAME_OR_ID).getOrThrow()
 
 if (shouldShowFeature) {
     // Show the feature

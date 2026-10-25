@@ -1,150 +1,96 @@
 use crate::types::*;
 use chrono::prelude::*;
 
-pub fn is_scheduled_feature_active(feature: Feature) -> bool {
-    match feature {
-        Feature::Toggle(feature) => {
-            safe_is_schedule_active(feature.schedule, feature.schedule_type)
-        }
-        Feature::Gradual(feature) => {
-            safe_is_schedule_active(feature.schedule, feature.schedule_type)
-        }
-        Feature::Selective(feature) => match feature {
-            SelectiveFeature::String {
-                schedule,
-                schedule_type,
-                ..
-            } => safe_is_schedule_active(schedule, schedule_type),
-            SelectiveFeature::Number(feature) => match feature {
-                SelectiveFeatureNumber::Int {
-                    schedule,
-                    schedule_type,
-                    ..
-                } => safe_is_schedule_active(schedule, schedule_type),
-
-                SelectiveFeatureNumber::Float {
-                    schedule,
-                    schedule_type,
-                    ..
-                } => safe_is_schedule_active(schedule, schedule_type),
-            },
-        },
-        Feature::Value(feature) => match feature {
-            ValueFeature::String {
-                schedule,
-                schedule_type,
-                ..
-            } => safe_is_schedule_active(schedule, schedule_type),
-            ValueFeature::Number(feature) => match feature {
-                ValueFeatureNumber::Int {
-                    schedule,
-                    schedule_type,
-                    ..
-                } => safe_is_schedule_active(schedule, schedule_type),
-
-                ValueFeatureNumber::Float {
-                    schedule,
-                    schedule_type,
-                    ..
-                } => safe_is_schedule_active(schedule, schedule_type),
-            },
-        },
-    }
+pub fn is_scheduled_feature_active(feature: &Feature) -> bool {
+    let (schedule, kind) = match feature {
+        Feature::Toggle(f) => (&f.schedule, &f.schedule_type),
+        Feature::Gradual(f) => (&f.schedule, &f.schedule_type),
+        Feature::Selective(SelectiveFeature::String {
+            schedule,
+            schedule_type,
+            ..
+        })
+        | Feature::Selective(SelectiveFeature::Number(SelectiveFeatureNumber::Int {
+            schedule,
+            schedule_type,
+            ..
+        }))
+        | Feature::Selective(SelectiveFeature::Number(SelectiveFeatureNumber::Float {
+            schedule,
+            schedule_type,
+            ..
+        }))
+        | Feature::Value(ValueFeature::String {
+            schedule,
+            schedule_type,
+            ..
+        })
+        | Feature::Value(ValueFeature::Number(ValueFeatureNumber::Int {
+            schedule,
+            schedule_type,
+            ..
+        }))
+        | Feature::Value(ValueFeature::Number(ValueFeatureNumber::Float {
+            schedule,
+            schedule_type,
+            ..
+        })) => (schedule, schedule_type),
+    };
+    is_schedule_active_millis(schedule, kind, Utc::now().timestamp_millis())
 }
-
+#[cfg(test)]
 pub fn safe_is_schedule_active(schedule: VexillaSchedule, schedule_type: ScheduleType) -> bool {
-    let now = Utc::now();
-    safe_is_schedule_active_with_now(schedule, schedule_type, now)
+    is_schedule_active_millis(&schedule, &schedule_type, Utc::now().timestamp_millis())
 }
-
+#[cfg(test)]
 pub fn safe_is_schedule_active_with_now(
     schedule: VexillaSchedule,
     schedule_type: ScheduleType,
     now: DateTime<Utc>,
 ) -> bool {
-    match is_schedule_active_with_now(schedule, schedule_type, now) {
-        Some(result) => result,
-        _ => false,
-    }
+    is_schedule_active_with_now(schedule, schedule_type, now).unwrap_or(false)
 }
-
+#[cfg(test)]
 pub fn is_schedule_active_with_now(
     schedule: VexillaSchedule,
     schedule_type: ScheduleType,
     now: DateTime<Utc>,
 ) -> Option<bool> {
-    let now_millis = now.timestamp_millis();
-
-    match (schedule_type, schedule.time_type) {
-        (ScheduleType::Empty, _) => Some(true),
-        (ScheduleType::Global, _) | (ScheduleType::Environment, _) => {
-            let start_date = Utc.timestamp_millis_opt(schedule.start).earliest()?;
-
-            let start_of_start_date = start_date
-                .with_hour(0)?
-                .with_minute(0)?
-                .with_second(0)?
-                .with_nanosecond(0)?;
-
-            let end_date = Utc.timestamp_millis_opt(schedule.end).latest()?;
-
-            let end_of_end_date = end_date
-                .with_hour(23)?
-                .with_minute(59)?
-                .with_second(59)?
-                .with_nanosecond(999_999_999)?;
-
-            let is_active_date = match (now.ge(&start_of_start_date), now.le(&end_of_end_date)) {
-                (true, true) => true,
-                (_, _) => false,
-            };
-
-            if !is_active_date {
-                return Some(false);
-            }
-
-            match schedule.time_type {
-                ScheduleTimeType::None => Some(true),
-                ScheduleTimeType::StartEnd => {
-                    let start_of_end_date = end_date
-                        .with_hour(0)?
-                        .with_minute(0)?
-                        .with_second(0)?
-                        .with_nanosecond(0)?;
-
-                    let start_date_timestamp_with_start_time =
-                        start_of_start_date.timestamp_millis() + schedule.start_time;
-
-                    let end_date_timestamp_with_end_time =
-                        start_of_end_date.timestamp_millis() + schedule.end_time;
-
-                    Some(
-                        start_date_timestamp_with_start_time <= now_millis
-                            && end_date_timestamp_with_end_time >= now_millis,
-                    )
-                }
-                ScheduleTimeType::Daily => {
-                    let zero_day_with_now_time = Utc
-                        .timestamp_millis_opt(0)
-                        .earliest()?
-                        .with_hour(now.hour())?
-                        .with_minute(now.minute())?
-                        .with_second(now.second())?
-                        .with_nanosecond(now.nanosecond())?
-                        .timestamp_millis();
-
-                    if schedule.start_time > schedule.end_time {
-                        Some(
-                            schedule.start_time <= zero_day_with_now_time
-                                || schedule.end_time >= zero_day_with_now_time,
-                        )
-                    } else {
-                        Some(
-                            schedule.start_time <= zero_day_with_now_time
-                                && schedule.end_time >= zero_day_with_now_time,
-                        )
-                    }
-                }
+    Some(is_schedule_active_millis(
+        &schedule,
+        &schedule_type,
+        now.timestamp_millis(),
+    ))
+}
+pub fn is_schedule_active_millis(
+    schedule: &VexillaSchedule,
+    schedule_type: &ScheduleType,
+    now: i64,
+) -> bool {
+    const DAY: i64 = 86400000;
+    if matches!(schedule_type, ScheduleType::Empty) {
+        return true;
+    }
+    let start = schedule.start.div_euclid(DAY) * DAY;
+    let end = schedule.end.div_euclid(DAY) * DAY;
+    if now < start || now > end + DAY - 1 {
+        return false;
+    }
+    match schedule.time_type {
+        ScheduleTimeType::None => true,
+        ScheduleTimeType::StartEnd => {
+            start + schedule.start_time <= now && now <= end + schedule.end_time
+        }
+        ScheduleTimeType::Daily => {
+            let (start, end, time) = (
+                schedule.start_time.rem_euclid(DAY),
+                schedule.end_time.rem_euclid(DAY),
+                now.rem_euclid(DAY),
+            );
+            if start <= end {
+                start <= time && time <= end
+            } else {
+                start <= time || time <= end
             }
         }
     }

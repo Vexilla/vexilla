@@ -4,9 +4,12 @@ namespace Vexilla\Types;
 
 class GroupMeta
 {
-    public string $version;
-
-    function __construct(string $version = '1.0') {
+    /** @var string */
+    public $version;
+    function __construct($version = '1.0')
+    {
+        \Vexilla\Validation::text($version);
+        \Vexilla\Validation::tree($version);
         $this->version = $version;
     }
 }

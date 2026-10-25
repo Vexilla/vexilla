@@ -25,6 +25,8 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    // Contract observations depend on external immutable artifacts and a fresh output path.
+    outputs.upToDateWhen { false }
     finalizedBy(tasks.jacocoTestReport)
 }
 

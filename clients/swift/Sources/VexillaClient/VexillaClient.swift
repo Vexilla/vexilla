@@ -4,267 +4,298 @@ import Foundation
 public struct VexillaClient {
     private let environment: String
     private let baseUrl: String
-    private let instanceId: String
-
+    private let instanceId: InstanceId
+    private let showLogs: Bool
     private var manifest: Manifest?
-    private var flagGroups: [String: Group] = [:]
+    private var flagGroups = StringMap<Group>()
+    private var groupAliases = StringMap<String>()
+    private var environmentAliases = StringMap<StringMap<String>>()
+    private var featureAliases = StringMap<StringMap<String>>()
 
-    private var groupLookupTable: [String: String] = [:]
-    private var environmentLookupTable: [String: [String: String]] = [:]
-    private var featureLookupTable: [String: [String: String]] = [:]
-
-    public init(environment: String, baseUrl: String, instanceId: String) {
+    public init(environment: String, baseUrl: String, instanceId: String, showLogs: Bool = false) {
+        self.init(
+            environment: environment, baseUrl: baseUrl, instanceId: .string(instanceId),
+            showLogs: showLogs)
+    }
+    public init(
+        environment: String, baseUrl: String, instanceId: InstanceId, showLogs: Bool = false
+    ) {
         self.environment = environment
         self.baseUrl = baseUrl
         self.instanceId = instanceId
+        self.showLogs = showLogs
+    }
+    private func reportOperation(_ operationName: String, succeeded: Bool) {
+        guard showLogs else { return }
+        let outcome = succeeded ? "success" : "failure"
+        let diagnostic = "vexilla operation=\(operationName) outcome=\(outcome)\n"
+        FileHandle.standardError.write(Data(diagnostic.utf8))
+    }
+    private func diagnoseAsyncOperation<T>(
+        _ operationName: String, _ operation: () async throws -> T
+    )
+        async rethrows -> T
+    {
+        do {
+            let result = try await operation()
+            reportOperation(operationName, succeeded: true)
+            return result
+        } catch {
+            reportOperation(operationName, succeeded: false)
+            throw error
+        }
     }
 
+    private func request(_ path: String, _ fetch: (URL) async throws -> Data) async throws -> Data {
+        guard let url = URL(string: "\(baseUrl)/\(path)") else {
+            throw VexillaError("fetch", "Could not construct URL")
+        }
+        do { return try await fetch(url) } catch {
+            throw VexillaError("fetch", "Failed to fetch \(path): \(error)")
+        }
+    }
     public func getManifest(fetch: (URL) async throws -> Data) async throws -> Manifest {
-        guard let url = URL(string: "\(baseUrl)/manifest.json") else {
-            throw VexillaClientError.couldNotConstructUrl
+        return try await diagnoseAsyncOperation("manifest.fetch") {
+            try Manifest.decode(data: await request("manifest.json", fetch))
         }
-        let response = try await fetch(url)
-
-        return try JSONDecoder().decode(Manifest.self, from: response)
     }
+    public mutating func setManifest(manifest: Manifest) throws {
+        do {
+            try Validation.manifest(manifest.wire)
+            var aliases = StringMap<String>()
+            for entry in manifest.groups {
+                try Validation.addAlias(&aliases, entry.groupId, entry.name)
+            }
+            for entry in flagGroups {
+                if !manifest.groups.contains(where: {
+                    exact($0.groupId, entry.key) && exact($0.name, entry.value.name)
+                }) {
+                    flagGroups[entry.key] = nil
+                    environmentAliases[entry.key] = nil
+                    featureAliases[entry.key] = nil
+                }
+            }
+            self.manifest = manifest
+            groupAliases = aliases
 
-    public mutating func setManifest(manifest: Manifest) {
-        self.manifest = manifest
-
-        var _groupLookupTable: [String: String] = [:]
-        for group in manifest.groups {
-            _groupLookupTable[group.name] = group.groupId
-            _groupLookupTable[group.groupId] = group.groupId
+            reportOperation("manifest.install", succeeded: true)
+        } catch {
+            reportOperation("manifest.install", succeeded: false)
+            throw error
         }
-
-        groupLookupTable = _groupLookupTable
     }
-
     public mutating func syncManifest(fetch: (URL) async throws -> Data) async throws {
-        let manifest = try await getManifest(fetch: fetch)
-        setManifest(manifest: manifest)
+        try setManifest(manifest: await getManifest(fetch: fetch))
     }
-
-    public func getFlags(groupNameOrId: String, fetch: (URL) async throws -> Data) async throws -> Group {
-        guard let groupId = groupLookupTable[groupNameOrId] else {
-            throw VexillaClientError.couldNotFindKeyInLookupTable(tableName: "Group", nameOrId: groupNameOrId)
+    private func groupID(_ groupNameOrId: String) throws -> String {
+        guard let groupId = groupAliases[groupNameOrId] else {
+            throw VexillaError("lookup", "Group not found: \(groupNameOrId)")
         }
-        let url = "\(baseUrl)/\(groupId).json"
-        guard let url = URL(string: url) else {
-            throw VexillaClientError.couldNotConstructUrl
-        }
-        let response = try await fetch(url)
-        return try JSONDecoder().decode(Group.self, from: response)
+        return groupId
     }
-
+    private func match(_ group: Group) throws {
+        guard let manifest = manifest else {
+            throw VexillaError("lookup", "Manifest not installed")
+        }
+        try Validation.require(
+            manifest.groups.contains(where: {
+                exact($0.groupId, group.groupId) && exact($0.name, group.name)
+            }), "Group differs from manifest ID/name")
+    }
+    public func getFlags(groupNameOrId: String, fetch: (URL) async throws -> Data) async throws
+        -> Group
+    {
+        return try await diagnoseAsyncOperation("group.fetch") {
+            let groupId = try groupID(groupNameOrId)
+            let fetchedGroup = try Group.decode(data: await request("\(groupId).json", fetch))
+            try match(fetchedGroup)
+            try Validation.require(
+                exact(fetchedGroup.groupId, groupId),
+                "Fetched group differs from requested fetchedGroup")
+            return fetchedGroup
+        }
+    }
     public mutating func setFlags(group: Group) throws {
-        guard let groupId = groupLookupTable[group.groupId] else {
-            throw VexillaClientError.couldNotFindKeyInLookupTable(tableName: "Group", nameOrId: group.groupId)
-        }
-
-        flagGroups[groupId] = group
-
-        if environmentLookupTable[groupId] == nil {
-            environmentLookupTable[groupId] = [:]
-        }
-        for (_, environment) in group.environments {
-            environmentLookupTable[groupId]?[environment.name] = environment.environmentId
-            environmentLookupTable[groupId]?[environment.environmentId] = environment.environmentId
-        }
-
-        if featureLookupTable[groupId] == nil {
-            featureLookupTable[groupId] = [:]
-        }
-        for (_, feature) in group.features {
-            featureLookupTable[groupId]?[feature.name] = feature.featureId
-            featureLookupTable[groupId]?[feature.featureId] = feature.featureId
-        }
-    }
-
-    public mutating func syncFlags(groupNameOrId: String, fetch: (URL) async throws -> Data) async throws {
-        let group = try await getFlags(groupNameOrId: groupNameOrId, fetch: fetch)
-        try setFlags(group: group)
-    }
-
-    public func should(groupNameOrId: String, featureNameOrId: String) throws -> Bool {
-        return try shouldCustomString(groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId, instanceId: instanceId)
-    }
-
-    public func shouldCustomString(groupNameOrId: String, featureNameOrId: String, instanceId: String) throws -> Bool {
-        let feature = try getFeature(groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId)
-
-        guard try isScheduledFeatureActive(feature: feature) else {
-            return false
-        }
-
-        switch feature {
-        case let .toggle(toggleFeature):
-            return toggleFeature.value
-        case let .gradual(gradualFeature):
-            return hashString(stringToHash: instanceId, seed: gradualFeature.seed) <= gradualFeature.value
-        case let .selective(selectiveFeature):
-            switch selectiveFeature.value {
-            case let .string(values):
-                return values.contains(instanceId)
-            default:
-                throw VexillaClientError.invalidFeatureValueTypeError(functionName: #function, valueType: "string", otherFunctionsString: "should or shouldCustomString")
+        do {
+            try Validation.group(group.wire)
+            try match(group)
+            var environments = StringMap<String>()
+            var features = StringMap<String>()
+            for env in group.environments {
+                try Validation.addAlias(&environments, env.key, env.value.name)
             }
-        case .value:
-            throw VexillaClientError.invalidFeatureTypeError(functionName: #function, featureType: "toggle, gradual, or selective")
-        }
-    }
-
-    public func shouldCustomInt(groupNameOrId: String, featureNameOrId: String, instanceId: Int32) throws -> Bool {
-        return try shouldCustomInt64(groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId, instanceId: Int64(instanceId))
-    }
-
-    public func shouldCustomInt64(groupNameOrId: String, featureNameOrId: String, instanceId: Int64) throws -> Bool {
-        let feature = try getFeature(groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId)
-
-        guard try isScheduledFeatureActive(feature: feature) else {
-            return false
-        }
-
-        switch feature {
-        case let .toggle(toggleFeature):
-            return toggleFeature.value
-        case let .gradual(gradualFeature):
-            return hashInt64(intToHash: instanceId, seed: gradualFeature.seed) > gradualFeature.value
-        case let .selective(selectiveFeature):
-            switch selectiveFeature.value {
-            case let .int(values):
-                return values.contains(instanceId)
-            default:
-                throw VexillaClientError.invalidFeatureNumberTypeError(functionName: #function, numberType: "int", otherFunctionsString: "should, shouldCustomString, shouldCustomFloat or shouldCustomFloat64")
+            for feature in group.features {
+                try Validation.addAlias(&features, feature.key, feature.value.name)
             }
-        case .value:
-            throw VexillaClientError.invalidFeatureTypeError(functionName: #function, featureType: "toggle, gradual, or selective")
+            flagGroups[group.groupId] = group
+            environmentAliases[group.groupId] = environments
+            featureAliases[group.groupId] = features
+
+            reportOperation("group.install", succeeded: true)
+        } catch {
+            reportOperation("group.install", succeeded: false)
+            throw error
         }
     }
-
-    public func shouldCustomFloat(groupNameOrId: String, featureNameOrId: String, instanceId: Float32) throws -> Bool {
-        return try shouldCustomFloat64(groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId, instanceId: Float64(instanceId))
+    public mutating func syncFlags(groupNameOrId: String, fetch: (URL) async throws -> Data)
+        async throws
+    {
+        try setFlags(group: await getFlags(groupNameOrId: groupNameOrId, fetch: fetch))
     }
-
-    public func shouldCustomFloat64(groupNameOrId: String, featureNameOrId: String, instanceId: Float64) throws -> Bool {
-        let feature = try getFeature(groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId)
-
-        guard try isScheduledFeatureActive(feature: feature) else {
-            return false
+    private func getFeature(_ groupNameOrId: String, _ featureNameOrId: String) throws -> Feature {
+        let groupId = try groupID(groupNameOrId)
+        guard let installedGroup = flagGroups[groupId],
+            let environmentId = environmentAliases[groupId]?[environment],
+            let featureId = featureAliases[groupId]?[featureNameOrId],
+            let feature = installedGroup.environments[environmentId]?.features[featureId]
+        else {
+            throw VexillaError("lookup", "Feature/environment not installed")
         }
-
-        switch feature {
-        case let .toggle(toggleFeature):
-            return toggleFeature.value
-        case let .gradual(gradualFeature):
-            return hashFloat64(floatToHash: instanceId, seed: gradualFeature.seed) > gradualFeature.value
-        case let .selective(selectiveFeature):
-            switch selectiveFeature.value {
-            case let .float(values):
-                return values.contains(instanceId)
-            default:
-                throw VexillaClientError.invalidFeatureNumberTypeError(functionName: #function, numberType: "float", otherFunctionsString: "should, shouldCustomString, shouldCustomInt or shouldCustomInt64")
-            }
-        case .value:
-            throw VexillaClientError.invalidFeatureTypeError(functionName: #function, featureType: "toggle, gradual, or selective")
-        }
-    }
-
-    public func valueString(groupNameOrId: String, featureNameOrId: String, defaultString: String) throws -> String {
-        let feature = try getFeature(groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId)
-
-        guard try isScheduledFeatureActive(feature: feature) else {
-            return defaultString
-        }
-
-        guard case let .value(valueFeature) = feature else {
-            throw VexillaClientError.invalidFeatureTypeError(functionName: #function, featureType: "value")
-        }
-
-        guard case let .string(string) = valueFeature.value else {
-            throw VexillaClientError.invalidFeatureValueTypeError(functionName: #function, valueType: "string", otherFunctionsString: "valueInt, valueInt64, valueFloat, or valueFloat64")
-        }
-
-        return string
-    }
-
-    public func valueInt32(groupNameOrId: String, featureNameOrId: String, defaultInt32: Int32) throws -> Int32 {
-        return try Int32(valueInt64(groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId, defaultInt64: Int64(defaultInt32)))
-    }
-
-    public func valueInt64(groupNameOrId: String, featureNameOrId: String, defaultInt64: Int64) throws -> Int64 {
-        let feature = try getFeature(groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId)
-
-        guard try isScheduledFeatureActive(feature: feature) else {
-            return defaultInt64
-        }
-
-        guard case let .value(valueFeature) = feature else {
-            throw VexillaClientError.invalidFeatureTypeError(functionName: #function, featureType: "value")
-        }
-
-        guard case let .int(int) = valueFeature.value else {
-            throw VexillaClientError.invalidFeatureValueTypeError(functionName: #function, valueType: "int", otherFunctionsString: "valueString, valueFloat, or valueFloat64")
-        }
-
-        return int
-    }
-
-    public func valueFloat(groupNameOrId: String, featureNameOrId: String, defaultFloat32: Float32) throws -> Float32 {
-        return try Float32(valueFloat64(groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId, defaultFloat64: Float64(defaultFloat32)))
-    }
-
-    public func valueFloat64(groupNameOrId: String, featureNameOrId: String, defaultFloat64: Float64) throws -> Float64 {
-        let feature = try getFeature(groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId)
-
-        guard try isScheduledFeatureActive(feature: feature) else {
-            return defaultFloat64
-        }
-
-        guard case let .value(valueFeature) = feature else {
-            throw VexillaClientError.invalidFeatureTypeError(functionName: #function, featureType: "value")
-        }
-
-        guard case let .float(float) = valueFeature.value else {
-            throw VexillaClientError.invalidFeatureValueTypeError(functionName: #function, valueType: "float", otherFunctionsString: "valueString, valueInt, or valueInt64")
-        }
-
-        return float
-    }
-
-    private func getFeature(groupNameOrId: String, featureNameOrId: String) throws -> Feature {
-        guard let groupId = groupLookupTable[groupNameOrId] else {
-            throw VexillaClientError.couldNotFindKeyInLookupTable(tableName: "Group", nameOrId: groupNameOrId)
-        }
-
-        guard let groupEnvironmentLookupTable = environmentLookupTable[groupId] else {
-            throw VexillaClientError.couldNotFindKeyInLookupTable(tableName: "Environment", nameOrId: groupId)
-        }
-
-        guard let environmentId = groupEnvironmentLookupTable[environment] else {
-            throw VexillaClientError.couldNotFindKeyInLookupTable(tableName: "Environment", nameOrId: environment)
-        }
-
-        guard let featureLookupTable = featureLookupTable[groupId] else {
-            throw VexillaClientError.couldNotFindKeyInNestedLookupTable(tableName: "Feature", groupId: groupId, nameOrId: featureNameOrId)
-        }
-
-        guard let featureId = featureLookupTable[featureNameOrId] else {
-            throw VexillaClientError.couldNotFindKeyInLookupTable(tableName: "Feature", nameOrId: featureNameOrId)
-        }
-
-        guard let group = flagGroups[groupId] else {
-            throw VexillaClientError.couldNotFindKeyInLookupTable(tableName: "Group", nameOrId: groupId)
-        }
-
-        guard let environment = group.environments[environmentId] else {
-            throw VexillaClientError.couldNotFindKeyInNestedLookupTable(tableName: "Environment", groupId: groupId, nameOrId: environment)
-        }
-
-        guard let feature = environment.features[featureId] else {
-            throw VexillaClientError.couldNotFindKeyInNestedLookupTable(tableName: "Environment", groupId: groupId, nameOrId: featureId)
-        }
-
         return feature
+    }
+    public func should(groupNameOrId: String, featureNameOrId: String) throws -> Bool {
+        try shouldCustom(
+            groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId, instanceId: instanceId)
+    }
+    public func shouldCustomString(
+        groupNameOrId: String, featureNameOrId: String, instanceId: String
+    )
+        throws -> Bool
+    {
+        try shouldCustom(
+            groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId,
+            instanceId: .string(instanceId))
+    }
+    public func shouldCustomInt(groupNameOrId: String, featureNameOrId: String, instanceId: Int32)
+        throws -> Bool
+    {
+        try shouldCustomInt64(
+            groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId,
+            instanceId: Int64(instanceId))
+    }
+    public func shouldCustomInt64(groupNameOrId: String, featureNameOrId: String, instanceId: Int64)
+        throws -> Bool
+    {
+        try shouldCustom(
+            groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId,
+            instanceId: .integer(instanceId))
+    }
+    public func shouldCustomFloat(groupNameOrId: String, featureNameOrId: String, instanceId: Float)
+        throws -> Bool
+    {
+        try shouldCustomFloat64(
+            groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId,
+            instanceId: Double(instanceId)
+        )
+    }
+    public func shouldCustomFloat64(
+        groupNameOrId: String, featureNameOrId: String, instanceId: Double
+    ) throws -> Bool {
+        try shouldCustom(
+            groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId,
+            instanceId: .number(instanceId))
+    }
+    public func shouldCustom(groupNameOrId: String, featureNameOrId: String, instanceId: InstanceId)
+        throws -> Bool
+    {
+        let feature = try getFeature(groupNameOrId, featureNameOrId)
+        if case .value = feature {
+            throw VexillaError("kind", "Value feature requires a value operation")
+        }
+        if case let .toggle(toggle) = feature {
+            return try isScheduledFeatureActive(feature: feature) && toggle.value
+        }
+        let text = try instanceText(instanceId)
+        guard try isScheduledFeatureActive(feature: feature) else { return false }
+        if case let .gradual(featureDetails) = feature {
+            return hashString(stringToHash: text, seed: featureDetails.seed) < featureDetails.value
+        }
+        guard case let .selective(featureDetails) = feature else {
+            throw VexillaError("kind", "Unsupported boolean operation")
+        }
+        switch featureDetails.value {
+        case let .string(values):
+            guard case let .string(id) = instanceId else { return false }
+            return values.contains(where: { exact($0, id) })
+        case let .int(values):
+            if case .string = instanceId { return false }
+            let number: Double
+            switch instanceId {
+            case let .integer(v): number = Double(v)
+            case let .number(v): number = v
+            default: return false
+            }
+            return values.contains(where: { Double($0) == number })
+        case let .float(values):
+            if case .string = instanceId { return false }
+            let number: Double
+            switch instanceId {
+            case let .integer(v): number = Double(v)
+            case let .number(v): number = v
+            default: return false
+            }
+            return values.contains(number)
+        }
+    }
+    public func value(groupNameOrId: String, featureNameOrId: String, defaultValue: Any) throws
+        -> Any
+    {
+        let feature = try getFeature(groupNameOrId, featureNameOrId)
+        guard case let .value(featureDetails) = feature else {
+            throw VexillaError("kind", "Feature is not a value")
+        }
+        guard try isScheduledFeatureActive(feature: feature) else { return defaultValue }
+        switch featureDetails.value {
+        case let .string(v): return v
+        case let .int(v): return v
+        case let .float(v): return v
+        }
+    }
+    public func valueString(groupNameOrId: String, featureNameOrId: String, defaultString: String)
+        throws -> String
+    {
+        let feature = try getFeature(groupNameOrId, featureNameOrId)
+        guard case let .value(featureDetails) = feature, case let .string(v) = featureDetails.value
+        else { throw VexillaError("kind", "Expected string value feature") }
+        return try isScheduledFeatureActive(feature: feature) ? v : defaultString
+    }
+    public func valueInt32(groupNameOrId: String, featureNameOrId: String, defaultInt32: Int32)
+        throws
+        -> Int32
+    {
+        let value = try valueInt64(
+            groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId,
+            defaultInt64: Int64(defaultInt32))
+        guard let result = Int32(exactly: value) else {
+            throw VexillaError("kind", "Value is outside Int32")
+        }
+        return result
+    }
+    public func valueInt64(groupNameOrId: String, featureNameOrId: String, defaultInt64: Int64)
+        throws
+        -> Int64
+    {
+        let feature = try getFeature(groupNameOrId, featureNameOrId)
+        guard case let .value(featureDetails) = feature, case let .int(v) = featureDetails.value
+        else {
+            throw VexillaError("kind", "Expected integer value feature")
+        }
+        return try isScheduledFeatureActive(feature: feature) ? v : defaultInt64
+    }
+    public func valueFloat(groupNameOrId: String, featureNameOrId: String, defaultFloat32: Float)
+        throws -> Float
+    {
+        Float(
+            try valueFloat64(
+                groupNameOrId: groupNameOrId, featureNameOrId: featureNameOrId,
+                defaultFloat64: Double(defaultFloat32)))
+    }
+    public func valueFloat64(groupNameOrId: String, featureNameOrId: String, defaultFloat64: Double)
+        throws -> Double
+    {
+        let feature = try getFeature(groupNameOrId, featureNameOrId)
+        guard case let .value(featureDetails) = feature, case let .float(v) = featureDetails.value
+        else { throw VexillaError("kind", "Expected float value feature") }
+        return try isScheduledFeatureActive(feature: feature) ? v : defaultFloat64
     }
 }

@@ -43,7 +43,7 @@ defmodule VexillaClient.MixProject do
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:timex, "~> 3.0"},
       {:httpoison, "~> 2.0", only: [:dev, :test]},
-      {:jason, "~> 1.4", only: [:dev, :test]},
+      {:jason, "~> 1.4"},
       {:fnv1a, "~> 0.1.0"}
     ]
   end
