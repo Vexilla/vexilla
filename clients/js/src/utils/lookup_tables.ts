@@ -3,7 +3,7 @@ import type {
   VexillaEnvironment,
   VexillaFeature,
 } from "../types";
-import Case from "case";
+import { normalizeName } from "@vexilla/types";
 
 export function createGroupLookupTable(groups: VexillaManifestGroup[]) {
   const lookupTable: Record<string, string> = Object.create(null);
@@ -11,7 +11,7 @@ export function createGroupLookupTable(groups: VexillaManifestGroup[]) {
   groups.forEach(({ name, groupId }) => {
     lookupTable[groupId] = groupId;
     lookupTable[name] = groupId;
-    lookupTable[Case.kebab(name)] = groupId;
+    lookupTable[normalizeName(name)] = groupId;
   });
 
   return lookupTable;
@@ -25,7 +25,7 @@ export function createEnvironmentLookupTable(
   Object.values(environments).forEach(({ name, environmentId }) => {
     lookupTable[environmentId] = environmentId;
     lookupTable[name] = environmentId;
-    lookupTable[Case.kebab(name)] = environmentId;
+    lookupTable[normalizeName(name)] = environmentId;
   });
 
   return lookupTable;
@@ -39,7 +39,7 @@ export function createFeatureLookupTable(
   Object.values(features).forEach(({ name, featureId }) => {
     lookupTable[featureId] = featureId;
     lookupTable[name] = featureId;
-    lookupTable[Case.kebab(name)] = featureId;
+    lookupTable[normalizeName(name)] = featureId;
   });
 
   return lookupTable;

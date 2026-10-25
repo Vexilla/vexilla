@@ -51,11 +51,11 @@ Source License 1.1 text. This follows the existing native manifest, root license
 and published registry metadata; it makes no new license selection. No runtime
 source or native version was changed.
 
-Rust's archive allowlist includes Rust source, native manifest/lockfile, README,
-license and changelog. Cargo adds its normalized manifest and VCS information.
+Rust's archive allowlist includes Rust source, `src/compatibility.json`, native
+manifest/lockfile, README, license and changelog. Cargo adds its normalized manifest and VCS information.
 Generated Bazel `crates/` integration, BUILD files, temporary targets and unrelated
-repository files are excluded. Elixir packages only `lib`, `mix.exs`, README,
-license and changelog.
+repository files are excluded. Elixir packages only `lib`,
+`priv/compatibility.json`, `mix.exs`, README, license and changelog.
 
 ## Credential-free package verification
 

@@ -33,7 +33,7 @@ enum class NumberType(val typeName: String) {
     FLOAT("float")
 }
 
-@Serializable
+@Serializable(with = ScheduleSerializer::class)
 data class Schedule(
     val start: Long,
     val end: Long,
@@ -75,8 +75,8 @@ class GradualFeature(
     val seed: Double
 ) : Feature(name, featureId, featureType, scheduleType, schedule) {
     init {
-        require(seed.isFinite() && seed > 0.0 && seed <= 1.0) {
-            "seed must be a finite number greater than 0 and less than or equal to 1"
+        if (!seed.isFinite() || seed <= 0.0 || seed > 1.0) {
+            throw ContractException("validation", "seed must be a finite number greater than 0 and less than or equal to 1")
         }
     }
 }
@@ -169,7 +169,7 @@ data class ManifestGroup(
     val groupId: String
 )
 
-@Serializable
+@Serializable(with = ManifestSerializer::class)
 data class Manifest(
     val version: String,
     val groups: List<ManifestGroup>

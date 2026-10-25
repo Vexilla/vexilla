@@ -2,7 +2,7 @@
 
 Maintainers approve stable SDK publication by reviewing and merging a Release Please PR. There is no automatic PR merge or second routine environment approval. The merged PR creates a component tag and GitHub Release, then directly calls verification and publication in the same Actions run. A GitHub Release records intent; the Actions summary records the registry outcome.
 
-JS and internal contract types share a release PR/version. Elixir and Rust have separate PRs and independent versions. Only `@vexilla/client` (npm), `vexilla_client` (Hex), and `vexilla_client` (crates.io) publish. `@vexilla/types` remains internal. Publication-disabled SDKs still participate in the required ten-SDK contract gate.
+JS and internal contract types share a release PR/version. Elixir and Rust have separate PRs and independent versions. Only `@vexilla/client` (npm), `vexilla_client` (Hex), and `vexilla_client` (crates.io) publish. `@vexilla/types` remains internal. Publication-disabled SDKs still participate in the required eleven-SDK contract gate.
 
 ## Current rollout state
 
@@ -14,7 +14,7 @@ The JS SDK uses schema-derived public models named `VexillaFeature`, `VexillaSch
 
 The maintainer confirmed BUSL-1.1 for the JS SDK. Its npm license identifier and bundled LICENSE now match the repository license, including its existing parameters; the inventory records that decision. Historical npm 1.0.3 license observations remain in the baseline evidence.
 
-The first hosted verification and first generated release PRs require these changes on GitHub. Local fixture and package checks do not substitute for the hosted ten-language receipts.
+The first hosted verification and first generated release PRs require these changes on GitHub. Local fixture and package checks do not substitute for the hosted eleven-language receipts.
 
 ## Maintainer and contributor workflow
 
@@ -27,7 +27,7 @@ Use a Conventional Commit PR title, then squash merge so that title becomes the 
 
 Use `!` in the title for a breaking change. A `BREAKING CHANGE:` footer in a PR description must be copied into the squash commit body; a PR description is not itself a git commit. The title check enforces this convention. Enable squash merges in repository settings and use PR titles for default squash subjects. Do not squash away breaking markers.
 
-Review each release PR's changelog, version, grouped components, package identity, and required checks. Later applicable commits update an open release PR. App/publishing-only changes do not request SDK versions. Do not use `Release-As`, prerelease versions, manually moved tags, or automatic release-PR merging.
+Review each release PR's changelog, version, grouped components, package identity, and required checks. Later applicable commits update an open release PR. The JS SDK bundles `packages/publishing/src/validation.ts`; changes to that file use the same Conventional Commit and linked JS/types version rules as changes under `clients/js`. App, publication serialization, and editing changes do not request SDK versions. Do not use `Release-As`, prerelease versions, manually moved tags, or automatic release-PR merging.
 
 ## One-time setup and activation
 

@@ -56,7 +56,7 @@ export type TelemetryHook = (
 
 export interface VexillaClientConfig {
   baseUrl: string;
-  environment: string;
-  customInstanceId?: string;
+  environment?: string;
+  customInstanceId?: string | number;
   experimental?: { telemetryHook: TelemetryHook };
 }

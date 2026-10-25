@@ -1,6 +1,9 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const crypto = require("node:crypto");
+const { isDeepStrictEqual } = require("node:util");
+const { readVectors } = require("./vectors.cjs");
+const { checkCoverage } = require("./observations.cjs");
 const required = [
   "js",
   "python",
@@ -12,6 +15,7 @@ const required = [
   "php",
   "elixir",
   "ocaml",
+  "lua",
 ];
 function checkInventory(inventory) {
   const ids = inventory.map((s) => s.id);
@@ -31,6 +35,8 @@ function verifyArtifacts(dir) {
     "manifest.json",
     "contract-group.json",
     "expected.json",
+    "parity.json",
+    "compatibility.json",
   ]) {
     if (!metadata.hashes[requiredFile]) {
       throw Error("Missing hash: " + requiredFile);
@@ -48,6 +54,12 @@ function verifyArtifacts(dir) {
       throw Error("Artifact hash mismatch: " + file);
     }
   }
+  const caseIds = readVectors(dir)
+    .map((sample) => sample.id)
+    .sort();
+  if (!isDeepStrictEqual(metadata.requiredCaseIds, caseIds)) {
+    throw Error("Artifact case inventory mismatch");
+  }
   return metadata;
 }
 function checkGate(inventory, metadata, receipts, producer, consumers, expectedRevision) {
@@ -60,6 +72,12 @@ function checkGate(inventory, metadata, receipts, producer, consumers, expectedR
       `Required jobs did not succeed: producer=${producer}, consumers=${consumers}`
     );
   }
+  if (
+    receipts.length !== required.length ||
+    receipts.some((receipt) => !required.includes(receipt.sdk))
+  ) {
+    throw Error("Unexpected or duplicate consumer receipts");
+  }
   for (const id of required) {
     const matches = receipts.filter((r) => r.sdk === id);
     if (matches.length !== 1) {
@@ -69,10 +87,12 @@ function checkGate(inventory, metadata, receipts, producer, consumers, expectedR
     if (
       r.status !== "success" ||
       r.revision !== metadata.revision ||
-      JSON.stringify(r.hashes) !== JSON.stringify(metadata.hashes)
+      !isDeepStrictEqual(r.hashes, metadata.hashes) ||
+      !isDeepStrictEqual(r.requiredCaseIds, metadata.requiredCaseIds)
     ) {
       throw Error("Incompatible or unsuccessful consumer: " + id);
     }
+    checkCoverage(id, metadata.requiredCaseIds, r.coverage);
   }
   return true;
 }
@@ -83,6 +103,15 @@ if (require.main === module) {
     process.env.VEXILLA_CONTRACT_DIR || path.join(root, ".contract-artifacts")
   );
   const metadata = verifyArtifacts(dir);
+  const revision = require("node:child_process")
+    .execFileSync("git", ["rev-parse", "HEAD"], {
+      cwd: root,
+      encoding: "utf8",
+    })
+    .trim();
+  if (metadata.revision !== revision) {
+    throw Error("Artifact source revision does not match this checkout");
+  }
   const receiptDir = path.resolve(
     process.env.VEXILLA_RECEIPT_DIR || path.join(dir, "receipts")
   );
@@ -101,7 +130,7 @@ if (require.main === module) {
     process.env.EXPECTED_REVISION
   );
   console.log(
-    "Required producer and all ten SDK contracts passed for " +
+    "Required producer and all eleven SDK contracts passed for " +
       metadata.revision
   );
 }

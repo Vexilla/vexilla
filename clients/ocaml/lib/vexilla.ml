@@ -20,3 +20,11 @@ module Private = struct
   module Syntax = Syntax
   module Date_time = Date_time
 end
+
+let get_manifest = Manifest.get
+let set_manifest = Manifest.set
+let get_flags = Flags.get
+let set_flags = Flags.set
+module Compatibility = Compatibility
+module Validation = Validation
+module Unicode = Unicode

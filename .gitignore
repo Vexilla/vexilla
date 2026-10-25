@@ -41,6 +41,7 @@ bazel-*
 
 # Generated SDK contract artifacts
 .contract-artifacts/
+.contract-toolchains/
 packages/types/dist/
 packages/publishing/dist/
 clients/csharp/Contract/bin/

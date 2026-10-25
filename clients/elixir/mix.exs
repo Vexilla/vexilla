@@ -15,7 +15,7 @@ defmodule VexillaClient.MixProject do
       docs: [main: "readme", extras: ["README.md", "LICENSE"], source_ref: System.get_env("RELEASE_REVISION", "main")],
       package: %{
         name: "vexilla_client",
-        files: ["lib", "mix.exs", "README.md", "LICENSE", "CHANGELOG.md"],
+        files: ["lib", "priv/compatibility.json", "mix.exs", "README.md", "LICENSE", "CHANGELOG.md"],
         licenses: [
           "BUSL-1.1"
         ],

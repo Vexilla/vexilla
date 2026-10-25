@@ -34,6 +34,7 @@ jobs:
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: pnpm --filter @vexilla/types check:generated
       - run: pnpm contract:generate
+      - run: node contract/scripts/check-compat.cjs
       - run: pnpm contract:test:producer
       - run: pnpm contract:test:gate
       - run: pnpm --filter app exec playwright install --with-deps chromium
@@ -68,14 +69,24 @@ jobs:
         with:
           name: ${{ inputs.artifact-prefix }}-contract
           path: .contract-artifacts
-      - if: matrix.id == 'js'
+      - if: matrix.id == 'js' || matrix.id == 'lua'
         uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with:
           version: 10.24.0
       - if: matrix.id == 'js'
         run: pnpm install --frozen-lockfile --ignore-scripts --filter @vexilla/client...
       - if: matrix.id == 'js'
-        run: pnpm --filter @vexilla/types build
+        run: pnpm --filter @vexilla/types build && pnpm --filter @vexilla/publishing build
+      - if: matrix.id == 'lua'
+        run: pnpm install --frozen-lockfile --ignore-scripts --filter @vexilla/cli...
+      - if: matrix.id == 'lua'
+        run: pnpm --filter @vexilla/types build && pnpm --filter @vexilla/cli build
+      - if: matrix.id == 'lua'
+        name: Build pinned Lua runtimes, clock, decoder, and LuaRocks
+        run: node contract/scripts/setup-lua.cjs
+      - if: matrix.id == 'lua'
+        name: Verify Lua constants under every advertised runtime
+        run: node --test packages/cli/test/lua.test.cjs
       - if: matrix.id == 'python'
         uses: actions/setup-python@v5
         with:
@@ -105,7 +116,7 @@ jobs:
           extensions: mbstring, pcov
           tools: composer:2.2
       - if: matrix.id == 'php'
-        run: composer install --no-interaction --prefer-dist --no-dev --working-dir=clients/php
+        run: composer install --no-interaction --prefer-dist --working-dir=clients/php
       - if: matrix.id == 'elixir'
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
@@ -124,6 +135,30 @@ jobs:
       - run: node contract/scripts/run.cjs "$SDK"
         env:
           SDK: ${{ matrix.id }}
+      - uses: ./.github/actions/test-server
+      - name: Run native regression suite
+        shell: bash
+        env:
+          SDK: ${{ matrix.id }}
+          VEXILLA_CONTRACT_DIR: ${{ github.workspace }}/.contract-artifacts
+          TEST_SERVER_HOST: localhost:3000
+        run: |
+          case "$SDK" in
+            js) pnpm --filter @vexilla/client test ;;
+            python) cd clients/python && python -m pytest tests -q ;;
+            go) cd clients/go && go test ./... -count=1 ;;
+            rust) cd clients/rust && cargo test --locked --lib ;;
+            csharp) dotnet test clients/csharp/Native.Tests/Native.Tests.csproj -p:RestoreLockedMode=true ;;
+            swift) swift test ;;
+            kotlin) cd clients/kotlin && TEST_SERVER_HOST=http://localhost:3000 ./gradlew test --no-daemon ;;
+            php) cd clients/php && php vendor/bin/phpunit --do-not-cache-result --bootstrap vendor/autoload.php tests ;;
+            elixir) cd clients/elixir && mix test ;;
+            ocaml) cd clients/ocaml && opam exec -- dune runtest ;;
+            lua) echo "Lua's contract command already ran the full native suite and installed example on every advertised runtime." ;;
+            *) echo "Unknown SDK: $SDK" >&2; exit 1 ;;
+          esac
+      - name: Verify native suites kept the shared artifacts unchanged
+        run: node -e 'require("./contract/scripts/gate.cjs").verifyArtifacts(".contract-artifacts")'
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ${{ inputs.artifact-prefix }}-receipt-${{ matrix.id }}

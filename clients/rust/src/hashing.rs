@@ -1,16 +1,19 @@
 const FNV32_OFFSET_BASIS: u32 = 2166136261;
 const FNV32_PRIME: u32 = 16777619;
 
+pub fn hash_fnv32a(value: &str) -> u32 {
+    value.bytes().fold(FNV32_OFFSET_BASIS, |hash, byte| {
+        (hash ^ u32::from(byte)).wrapping_mul(FNV32_PRIME)
+    })
+}
 pub fn hash_value(value: &str, seed: f64) -> f64 {
-    let hash_result = value
-        .chars()
-        .fold(FNV32_OFFSET_BASIS, |hash_result, character| {
-            // hash_result + character as u32
-            let xord = hash_result ^ u32::from(character);
-            (xord.wrapping_mul(FNV32_PRIME)).to_owned()
-        });
-
-    f64::from(hash_result.to_owned()) * seed % 1000.0 / 1000.0
+    f64::from(hash_fnv32a(value)) * seed % 1000.0 / 1000.0
+}
+pub fn numeric_text(value: f64) -> Result<String, crate::types::VexillaError> {
+    if !value.is_finite() {
+        return Err(crate::types::VexillaError::InvalidInstanceId);
+    }
+    Ok(ryu_js::Buffer::new().format(value).to_owned())
 }
 
 #[cfg(test)]

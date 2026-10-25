@@ -11,6 +11,7 @@ const {
   validateConfig,
 } = require("./check-release-config.cjs");
 const { validatePullRequest } = require("./pr-title.cjs");
+const { applyReleaseInputs } = require("./release-inputs.cjs");
 const {
   assertStablePullRequests,
   assertReleaseCandidates,
@@ -82,7 +83,7 @@ function mockScm(commits, config = state.config, versions = baseline) {
 }
 
 async function propose(commits, config = state.config) {
-  const scm = mockScm(commits, config);
+  const scm = applyReleaseInputs(mockScm(commits, config));
   const manifest = await Manifest.fromManifest(
     scm,
     "main",
@@ -167,6 +168,23 @@ test("JS-only patch links types and updates both native package versions", async
   }
 });
 
+test("shared validator fixes and breaking changes request linked JS/types releases", async () => {
+  for (const [message, expected] of [
+    ["fix(validation): reject invalid group data", "1.2.4"],
+    ["feat(validation)!: change accepted wire data", "2.0.0"],
+  ]) {
+    const files = Object.freeze(["packages/publishing/src/validation.ts"]);
+    const prs = await propose([Object.freeze({ message, files })]);
+    assert.equal(prs.length, 1);
+    assert.deepEqual(versionsIn(prs[0]), {
+      "client-js": expected,
+      "client-types": expected,
+    });
+    assert.match(prs[0].headRefName, /groups--js-types/);
+    assert.deepEqual(files, ["packages/publishing/src/validation.ts"]);
+  }
+});
+
 test("highest impact in either linked component selects the shared version", async () => {
   const prs = await propose([
     { message: "fix(js): repair fetch", files: ["clients/js/src/index.ts"] },
@@ -246,13 +264,14 @@ test("simultaneous changes make three independent PRs with four unique component
   assert.equal(new Set(prs.map((pr) => pr.headRefName)).size, 3);
 });
 
-test("app/publishing-only commits and dormant SDKs do not request releases", async () => {
+test("app/serialization-only commits and dormant SDKs do not request releases", async () => {
   for (const files of [
     ["apps/app/src/App.tsx", "packages/publishing/src/index.ts"],
+    ["packages/publishing/src/editing.ts", "packages/publishing/src/types.ts"],
     state.inventory.clients
       .filter((client) => !client.enabled)
       .map((client) => `${client.directory}/README.md`),
-    ["clients/client-lua/src/main.lua", "clients/client-dart/lib/main.dart"],
+    ["clients/lua/vexilla_client.lua", "clients/client-dart/lib/main.dart"],
   ]) {
     assert.equal(
       (await propose([{ message: "feat!: change implementation", files }]))
@@ -285,7 +304,7 @@ test("later commits update the open group PR without merging or publishing", asy
   const commits = [
     { message: "fix(js): repair fetch", files: ["clients/js/src/index.ts"] },
   ];
-  const scm = mockScm(commits);
+  const scm = applyReleaseInputs(mockScm(commits));
   let open;
   let creations = 0;
   let updates = 0;
@@ -584,6 +603,25 @@ test("relevant PR squash titles preserve release intent and reject unsafe overri
     validatePullRequest({
       title: "Application change",
       files: ["apps/app/src/App.tsx"],
+    }).relevant,
+    false
+  );
+  const shared = ["packages/publishing/src/validation.ts"];
+  assert.equal(
+    validatePullRequest({
+      title: "feat(validation)!: change accepted wire data",
+      files: shared,
+    }).breaking,
+    true
+  );
+  assert.throws(
+    () => validatePullRequest({ title: "Change validation", files: shared }),
+    /Conventional Commits/
+  );
+  assert.equal(
+    validatePullRequest({
+      title: "Update publication editor",
+      files: ["packages/publishing/src/index.ts", "packages/publishing/src/editing.ts"],
     }).relevant,
     false
   );

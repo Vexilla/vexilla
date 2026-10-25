@@ -42,6 +42,10 @@ leaks, compiles with strict TypeScript checking, and executes both CommonJS and
 ESM runtime imports. It does not publish or change a version. Build and pack the
 candidate first so that publication can use the identical verified file.
 
+The client validates incoming data using Ajv, a declared production dependency.
+Shared schema data and validators are bundled from the private workspace
+packages; the installed SDK must not import either private package at runtime.
+
 The maintainer confirmed Business Source License 1.1 (`BUSL-1.1`) for future JS
 SDK releases. The candidate package metadata and bundled license now use that
 confirmed license, with the license text copied from the repository root.

@@ -1,6 +1,8 @@
 import type { VexillaSchedule } from "./types";
 import { isScheduleActive, isScheduleActiveWithNow } from "./scheduling";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+dayjs.extend(utc);
 import { labelledAssert } from "./utils/testing";
 
 const now = dayjs.utc();

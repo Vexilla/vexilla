@@ -1,6 +1,7 @@
-import Case from "case";
 import Ajv, { ErrorObject, ValidateFunction } from "ajv";
 import {
+  normalizeName,
+  isCompatibleTimezone,
   manifestSchema,
   groupSchema,
   featureSchema,
@@ -26,14 +27,7 @@ const ajv = new Ajv({
   discriminator: true,
   verbose: true,
 });
-ajv.addFormat("iana-time-zone", (value) => {
-  try {
-    new Intl.DateTimeFormat("en", { timeZone: value }).format();
-    return true;
-  } catch {
-    return false;
-  }
-});
+ajv.addFormat("iana-time-zone", isCompatibleTimezone);
 ajv.addSchema([scheduleSchema, featureSchema, groupSchema, manifestSchema]);
 const checkManifest = ajv.getSchema(manifestSchema.$id)!;
 const checkGroup = ajv.getSchema(groupSchema.$id)!;
@@ -58,6 +52,10 @@ function schemaIssues(
   value: unknown,
   prefix: string
 ): ContractIssue[] {
+  const unicode = unicodeIssues(value, prefix);
+  if (unicode.length) {
+    return unicode;
+  }
   if (check(value)) {
     return [];
   }
@@ -89,6 +87,35 @@ function schemaIssues(
     return issue(path, expected);
   });
 }
+/** JSON strings and keys must contain Unicode scalar values, including extras. */
+export function isWellFormedUnicode(value: string): boolean {
+  for (let i = 0; i < value.length; i++) {
+    const code = value.charCodeAt(i);
+    if (code >= 0xd800 && code <= 0xdbff) {
+      const next = value.charCodeAt(++i);
+      if (!(next >= 0xdc00 && next <= 0xdfff)) {
+        return false;
+      }
+    } else if (code >= 0xdc00 && code <= 0xdfff) {
+      return false;
+    }
+  }
+  return true;
+}
+function unicodeIssues(value: unknown, path: string): ContractIssue[] {
+  if (typeof value === "string") {
+    return isWellFormedUnicode(value)
+      ? []
+      : [issue(path, "a Unicode string without unpaired surrogates")];
+  }
+  if (value && typeof value === "object") {
+    return Object.entries(value).flatMap(([key, item]) => [
+      ...unicodeIssues(key, path + "/" + pointer(key)),
+      ...unicodeIssues(item, path + "/" + pointer(key)),
+    ]);
+  }
+  return [];
+}
 export const validateFeature = (value: unknown, path = "") =>
   schemaIssues(checkFeature, value, path);
 export const validateGroup = (value: unknown, path = "") =>
@@ -102,7 +129,7 @@ function lookupIssues(
   const owners = new Map<string, string>();
   const issues: ContractIssue[] = [];
   for (const item of items) {
-    for (const key of new Set([item.id, item.name, Case.kebab(item.name)])) {
+    for (const key of new Set([item.id, item.name, normalizeName(item.name)])) {
       if (owners.has(key) && owners.get(key) !== item.path) {
         issues.push(
           issue(

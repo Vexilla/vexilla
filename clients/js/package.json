@@ -10,7 +10,7 @@
     "test:client": "node --import tsx src/test_client.ts",
     "test": "pnpm run \"/^test:.*/\"",
     "compile": "tsup",
-    "test:contract": "node --import tsx --test test/contract.test.ts",
+    "test:contract": "node --import tsx --test test/*.test.ts",
     "check:package": "node scripts/check-package.cjs"
   },
   "author": {
@@ -21,6 +21,7 @@
   "license": "BUSL-1.1",
   "devDependencies": {
     "@types/node": "^14.14.13",
+    "@vexilla/publishing": "workspace:*",
     "@vexilla/types": "workspace:*",
     "axios": "^0.21.0",
     "husky": "^4.3.8",
@@ -28,12 +29,13 @@
     "ts-loader": "^8.0.11",
     "ts-node": "^10.9.1",
     "tsup": "^8.0.2",
+    "tsx": "4.20.5",
     "typescript": "^5.0.4",
     "uuid": "^8.3.2",
-    "xxhashjs": "^0.2.2",
-    "tsx": "4.20.5"
+    "xxhashjs": "^0.2.2"
   },
   "dependencies": {
+    "ajv": "8.17.1",
     "case": "^1.6.3",
     "dayjs": "^1.11.7"
   },
@@ -56,7 +58,8 @@
       "resolve": true
     },
     "noExternal": [
-      "@vexilla/types"
+      "@vexilla/types",
+      "@vexilla/publishing"
     ]
   },
   "repository": {

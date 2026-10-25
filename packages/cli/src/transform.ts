@@ -3,6 +3,7 @@ import mustache from "mustache";
 import type { Language } from "./types";
 import type { PublishedGroup } from "@vexilla/types";
 import { templates } from "./templates";
+import { luaGroups } from "./lua";
 
 const disclaimerText = `This file has been generated from your remote Vexilla Feature Flags file.
 
@@ -14,6 +15,12 @@ const languageTransformers: Record<
   Language,
   (groups: PublishedGroup[], typePrefix?: string, typeSuffix?: string) => string
 > = {
+  lua: function (groups: PublishedGroup[], typePrefix = "", typeSuffix = "") {
+    return mustache.render(templates.lua, {
+      disclaimerText,
+      groups: luaGroups(groups, typePrefix, typeSuffix),
+    });
+  },
   js: function (groups: PublishedGroup[], typePrefix = "", typeSuffix = "") {
     const groupsOutput = groups.map(
       parseGroup(typePrefix, typeSuffix, Case.camel, Case.pascal)
@@ -282,7 +289,7 @@ const languageAliases: Record<string, Language> = {
   rs: "rust",
   rust: "rust",
   swift: "swift",
-  // lua: "lua",
+  lua: "lua",
   // flutter: "dart",
   // dart: "dart",
   kotlin: "kotlin",

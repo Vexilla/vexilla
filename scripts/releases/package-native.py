@@ -49,11 +49,13 @@ def unpack(archive, destination):
 
 
 def inspect_files(files, sdk):
+    compatibility = "priv/compatibility.json" if sdk == "elixir" else "src/compatibility.json"
     required = {"mix.exs", "README.md", "LICENSE"} if sdk == "elixir" else {
         "Cargo.toml", "Cargo.toml.orig", "Cargo.lock", "README.md", "LICENSE", "src/lib.rs"}
+    required.add(compatibility)
     if not required.issubset(files):
         raise ValueError(f"Missing required package files: {sorted(required - set(files))}")
-    allowed = {"README.md", "LICENSE", "CHANGELOG.md"}
+    allowed = {"README.md", "LICENSE", "CHANGELOG.md", compatibility}
     allowed |= {"mix.exs"} if sdk == "elixir" else {
         "Cargo.toml", "Cargo.toml.orig", "Cargo.lock", ".cargo_vcs_info.json"}
     source = "lib/" if sdk == "elixir" else "src/"

@@ -30,7 +30,15 @@ test("every contract checkout and final evidence gate bind the requested revisio
   assert.equal(gate.env.PRODUCER_RESULT, "${{ needs.producer.result }}");
   assert.equal(gate.env.CONSUMERS_RESULT, "${{ needs.consumers.result }}");
   const inventory = require("../../contract/inventory.json");
-  assert.equal(inventory.length, 10);
+  const {
+    required,
+    checkInventory,
+  } = require("../../contract/scripts/gate.cjs");
+  checkInventory(inventory);
+  assert.equal(inventory.length, required.length);
+  assert(inventory.some((sdk) => sdk.id === "lua"));
+  const releases = require("../../.github/sdk-release-inventory.json");
+  assert(!releases.clients.some((sdk) => ["lua", "dart"].includes(sdk.id)));
 });
 
 test("only final publisher can request registry identity; native jobs consume inspected payloads", () => {

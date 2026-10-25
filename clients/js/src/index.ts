@@ -9,3 +9,4 @@ export type {
   UpdatePayload,
   DefaultValuesPayload,
 } from "./compatibility";
+export { VexillaError } from "./errors";

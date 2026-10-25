@@ -8,4 +8,5 @@ export type Language =
   | "php"
   | "python"
   | "kotlin"
-  | "swift";
+  | "swift"
+  | "lua";

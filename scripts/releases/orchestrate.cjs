@@ -3,6 +3,7 @@
 
 const fs = require("node:fs");
 const assert = require("node:assert/strict");
+const { applyReleaseInputs } = require("./release-inputs.cjs");
 const {
   ROOT,
   STABLE,
@@ -133,7 +134,7 @@ async function orchestrate({ github, state, Manifest }) {
   // Read configuration from the same reviewed checkout as the inventory. Native
   // manifests are read at the workflow revision so a later main push cannot
   // replace the version/package content used by this invocation.
-  const scm = Object.create(github);
+  const scm = applyReleaseInputs(github);
   scm.getFileJson = async (name, ref) => {
     if (ref === "main" && name === "release-please-config.json") {
       return state.config;

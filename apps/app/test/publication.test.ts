@@ -118,7 +118,7 @@ test("direct-provider credentials are also scrubbed from authoring backups", asy
   assert.equal(c.hosting.secretAccessKey, "secret");
 });
 
-test("publication uses the reviewed target branch while retaining the local draft", async () => {
+test("review choices cannot redirect publication to an unloaded branch", async () => {
   const c = config();
   c.hosting.targetBranch = "draft";
   let target: string | undefined;
@@ -130,15 +130,45 @@ test("publication uses the reviewed target branch while retaining the local draf
       oldValue: "main",
     },
   ];
-  const r = await publishApprovedChanges(
-    c,
-    changes,
-    {},
-    async (_files, branch) => {
-      target = branch;
-    }
+  await assert.rejects(
+    () =>
+      publishApprovedChanges(c, changes, {}, async (_files, branch) => {
+        target = branch;
+      }),
+    /Select and load/
   );
-  assert.equal(r.success, true);
-  assert.equal(target, "main");
+  assert.equal(target, undefined);
   assert.equal(c.hosting.targetBranch, "draft");
+});
+
+test("review choices cannot replace the verified Bitbucket workspace", async () => {
+  const c = config();
+  c.hosting = {
+    provider: "bitbucket",
+    providerType: "git",
+    accessToken: "private",
+    repositoryId: "flags",
+    owner: "work-b",
+    repositoryName: "flags",
+    workspaceId: "work-b",
+    targetBranch: "main",
+  };
+  const changes: any[] = [
+    {
+      type: "CHANGE",
+      path: ["hosting", "workspaceId"],
+      oldValue: "work-a",
+      value: "work-b",
+    },
+  ];
+  let writes = 0;
+  await assert.rejects(
+    () =>
+      publishApprovedChanges(c, changes, {}, async () => {
+        writes++;
+      }),
+    /Select and load/
+  );
+  assert.equal(writes, 0);
+  assert.equal(c.hosting.workspaceId, "work-b");
 });

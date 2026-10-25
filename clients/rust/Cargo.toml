@@ -9,12 +9,12 @@ repository = "https://github.com/Vexilla/vexilla"
 homepage = "https://vexilla.dev"
 documentation = "https://docs.rs/vexilla_client"
 readme = "README.md"
-include = ["src/**/*.rs", "Cargo.toml", "Cargo.lock", "README.md", "LICENSE", "CHANGELOG.md"]
+include = ["src/**/*.rs", "src/compatibility.json", "Cargo.toml", "Cargo.lock", "README.md", "LICENSE", "CHANGELOG.md"]
 
 
 [dependencies]
 reqwest = { version = "0.10", features = ["blocking"] }
-serde_json = "1.0"
+serde_json = { version = "1.0", features = ["float_roundtrip"] }
 serde = { version = "1.0", features = ["derive"] }
 tokio = { version = "0.2", features = ["full"] }
 strum = "0.25"
@@ -24,3 +24,4 @@ thiserror = "1.0"
 chrono = { version = "0.4.26" }
 chrono-tz = "0.8.3"
 log = "0.4.21"
+ryu-js = "=1.0.3"

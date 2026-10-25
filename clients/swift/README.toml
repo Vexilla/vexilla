@@ -1,57 +1,60 @@
 LanguageName = 'swift'
 LanguageDisplayName = "Swift"
-Warning='''
+Warning = '''
 
-Warning: This library is currently written to work with Apple operating systems only. If you are using server-side swift, you will likely run into issues with our use of Foundation and async/await.
+The SDK is tested with Swift 5.5 and 6.1.2 on Linux. Foundation is required; the example uses FoundationNetworking where available.
 '''
 InstallInstructions = '''
-Add VexillaClient as a dependency via SwiftPM or CocoaPods
-[https://developer.apple.com/documentation/xcode/adding_package_dependencies_to_your_app](https://developer.apple.com/documentation/xcode/adding_package_dependencies_to_your_app)
-
+Add the repository as a Swift Package dependency and select the `VexillaClient` library product.
 '''
 CustomInstanceHash = "instanceId"
 SyncFlags = "syncFlags"
+SetupDescription = '''Fetch and install the manifest first, then sync each group you need. Getters validate without installing; setters install owned snapshots, and sync methods combine those steps.'''
 SetupSnippet = '''
 ```swift
-let client = VexillaClient(environment: "dev", baseUrl: "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com", instanceId: "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a")
-
-try await vexillaClient.syncFlags(groupNameOrId: "Gradual") { urlString -> String in
-    let url = URL(string: urlString)!
-    let request = URLRequest(url: url)
-
-    return try await withCheckedThrowingContinuation { continuation in
-        URLSession.shared.dataTask(with: request) { data, _, error in
-            if error != nil {
-                return continuation.resume(throwing: "could not fetch gradual group")
-            }
-            return continuation.resume(returning: String(decoding: data!, as: UTF8.self))
-        }.resume()
-    }
-}
+var client = VexillaClient(
+    environment: "prod",
+    baseUrl: "https://flags.example.com",
+    instanceId: "user-123"
+)
+try await client.syncManifest(fetch: fetch)
+try await client.syncFlags(groupNameOrId: "Checkout", fetch: fetch)
 ```
 '''
-Should = "Should"
+Should = "should"
 UsageSnippet = '''
 ```swift
-let shouldGradual = client.should(FEATURE_NAME)
+let enabled = try client.should(groupNameOrId: "Checkout", featureNameOrId: "New Checkout")
+let title = try client.valueString(groupNameOrId: "Checkout", featureNameOrId: "Title", defaultString: "Checkout")
 ```
 '''
 Example = '''
 ```swift
-var client = VexillaClient(environment: "dev", baseUrl: "https://streamparrot-feature-flags.s3.amazonaws.com", instanceId: "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a")
+import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
+import VexillaClient
 
-try await vexillaClient.syncFlags(groupNameOrId: "Gradual") { urlString -> String in
-    let url = URL(string: urlString)!
-    let request = URLRequest(url: url)
-
-    return try await withCheckedThrowingContinuation { continuation in
-        URLSession.shared.dataTask(with: request) { data, _, error in
-            if error != nil {
-                return continuation.resume(throwing: "could not fetch gradual group")
+func fetch(url: URL) async throws -> Data {
+    try await withCheckedThrowingContinuation { continuation in
+        URLSession.shared.dataTask(with: url) { data, _, error in
+            if let error = error {
+                continuation.resume(throwing: error)
+            } else if let data = data {
+                continuation.resume(returning: data)
+            } else {
+                continuation.resume(throwing: URLError(.badServerResponse))
             }
-            return continuation.resume(returning: String(decoding: data!, as: UTF8.self))
         }.resume()
     }
 }
+
+var client = VexillaClient(environment: "prod", baseUrl: "https://flags.example.com", instanceId: "user-123")
+try await client.syncManifest(fetch: fetch)
+try await client.syncFlags(groupNameOrId: "Checkout", fetch: fetch)
+let enabled = try client.should(groupNameOrId: "Checkout", featureNameOrId: "New Checkout")
 ```
+
+Callbacks return original JSON bytes. For direct ingestion use `try Manifest.decode(data:)` and `try Group.decode(data:)`, then the throwing setters. `StringMap` keeps canonically equivalent but byte-distinct IDs separate. Invalid refreshes preserve installed snapshots. See the repository's `contract/MIGRATION.md` before upgrading.
 '''

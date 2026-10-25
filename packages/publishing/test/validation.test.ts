@@ -6,6 +6,25 @@ import {
   validateFeature,
 } from "../src/validation";
 import { readFileSync } from "node:fs";
+
+test("Unicode validation covers object keys and extra fields without replacing text", () => {
+  for (const invalid of ["\ud800", "\udfff", "\ud800x", "\udc00\ud800"]) {
+    assert.ok(
+      validateManifest({ version: "v1", groups: [], extra: { [invalid]: "ok" } })
+        .length
+    );
+    assert.ok(
+      validateManifest({ version: "v1", groups: [], extra: [invalid] }).length
+    );
+  }
+  for (const valid of ["😀", "\ufffd", "\\ud800"]) {
+    assert.deepEqual(
+      validateManifest({ version: "v1", groups: [], extra: { [valid]: valid } }),
+      []
+    );
+  }
+});
+
 test("missing top-level fields report stable JSON pointers", () => {
   assert.ok(
     validateManifest({ version: "v1" }, "/manifest").some(

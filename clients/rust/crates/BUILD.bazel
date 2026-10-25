@@ -50,6 +50,12 @@ alias(
 )
 
 alias(
+    name = "ryu-js",
+    actual = "@crates_vendor_pkgs__ryu-js-1.0.3//:ryu_js",
+    tags = ["manual"],
+)
+
+alias(
     name = "serde",
     actual = "@crates_vendor_pkgs__serde-1.0.190//:serde",
     tags = ["manual"],

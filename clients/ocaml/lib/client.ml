@@ -5,6 +5,9 @@ type t = {
   environment : [ `Id of string | `Name of string ];
   base_url : Uri.t;
   instance_id : string;
+  custom_instance_id :
+    [ `String of string | `Int of int | `Float of float | `Missing | `Invalid ]
+    option;
   show_logs : bool;
   manifest : Types.Manifest.t;
   flag_groups : (Types.Group.id, Types.Group.t) Hashtbl.t;
@@ -13,11 +16,13 @@ type t = {
   composite_feature_table : Lookup.Composite_feature_table.t;
 }
 
-let make ?(show_logs = false) ~environment ~base_url ~instance_id () =
+let make ?custom_instance_id ?(show_logs = false) ~environment ~base_url
+    ~instance_id () =
   {
     environment;
     base_url;
     instance_id;
+    custom_instance_id;
     show_logs;
     manifest = Types.Manifest.empty;
     flag_groups = Hashtbl.create 10;
@@ -25,6 +30,15 @@ let make ?(show_logs = false) ~environment ~base_url ~instance_id () =
     composite_environment_table = Lookup.Composite_environment_table.make ();
     composite_feature_table = Lookup.Composite_feature_table.make ();
   }
+;;
+
+let report_operation ~client ~operation result =
+  (if client.show_logs then
+     let outcome =
+       match result with Ok _ -> "success" | Error _ -> "failure"
+     in
+     Format.eprintf "vexilla operation=%s outcome=%s@." operation outcome);
+  result
 ;;
 
 let get_real_group_id ~client group_id_or_name =
@@ -79,54 +93,51 @@ let get_feature ~client group_id_or_name feature_name_or_id =
 let should ~client ?instance_id group_id_or_name feature_name_or_id =
   let open Types.Feature in
   let@ feature = get_feature ~client group_id_or_name feature_name_or_id in
-  let@ is_active = Schedule.is_schedule_feature_active feature in
-  if not is_active then begin
-    Ok false
-  end else begin
-    match feature with
-    | Toggle toggle -> Ok toggle.value
-    | Gradual gradual ->
-        let@ instance = match instance_id with
-          | None -> Ok client.instance_id
-          | Some (`String id) -> Ok id
-          | Some _ -> Error `Invalid_instance_id
-        in
-        let hash =
-          Hash.hash_instance_id ~seed:gradual.seed instance
-        in
-        Ok (hash <= gradual.value)
-    | Selective selective -> (
-        let instance_id' =
-          instance_id |> Option.value ~default:(`String client.instance_id)
-        in
-        match (selective.value, instance_id') with
-        | String_list strings, `String id ->
-            strings
-            |> List.find_opt (fun str -> String.equal str id)
-            |> Option.is_some |> Result.ok
-        | Int_list ints, `Int id ->
-            ints
-            |> List.find_opt (fun str -> Int.equal str id)
-            |> Option.is_some |> Result.ok
-        | Float_list floats, `Float id ->
-            floats
-            |> List.find_opt (fun str -> Float.equal str id)
-            |> Option.is_some |> Result.ok
-        | _ -> Result.error `Invalid_instance_id)
-    | Value _ -> Result.error (`Unsupported_should_feature_type "feature")
-  end
+  match feature with
+  | Value _ -> Error (`Unsupported_should_feature_type "feature")
+  | _ -> (
+      let effective_instance_id =
+        Option.value instance_id
+          ~default:
+            (Option.value client.custom_instance_id
+               ~default:(`String client.instance_id))
+      in
+      let@ instance_text =
+        match feature with
+        | Toggle _ -> Ok ""
+        | _ -> Hash.instance_text effective_instance_id
+      in
+      let@ is_active = Schedule.is_schedule_feature_active feature in
+      if not is_active then Ok false
+      else
+        match feature with
+        | Toggle toggle_feature -> Ok toggle_feature.value
+        | Gradual gradual_feature ->
+            Ok
+              (Hash.hash_instance_id ~seed:gradual_feature.seed instance_text
+              < gradual_feature.value)
+        | Selective selective_feature ->
+            Ok
+              (match (selective_feature.value, effective_instance_id) with
+              | String_list members, `String instance ->
+                  List.mem instance members
+              | Int_list members, `Int instance -> List.mem instance members
+              | Int_list members, `Float instance ->
+                  List.exists
+                    (fun member -> float_of_int member = instance)
+                    members
+              | Float_list members, `Int instance ->
+                  List.mem (float_of_int instance) members
+              | Float_list members, `Float instance -> List.mem instance members
+              | _ -> false)
+        | Value _ -> assert false)
 ;;
 
-let value ~client ~default ~group_key:group_id_or_name
-    ~feature_key:feature_name_or_id =
-  let open Types.Feature in
-  let@ feature = get_feature ~client group_id_or_name feature_name_or_id in
-  let@ is_active = Schedule.is_schedule_feature_active feature in
-  if not is_active then begin
-    Ok default
-  end else begin
-    match feature with
-    | Value { value; _ } -> Result.ok value
-    | _ -> Result.error `Unsupported_value_feature_type
-  end
+let value ~client ~default ~group_key ~feature_key =
+  let@ feature = get_feature ~client group_key feature_key in
+  match feature with
+  | Types.Feature.Value value_feature ->
+      let@ is_active = Schedule.is_schedule_feature_active feature in
+      Ok (if is_active then value_feature.value else default)
+  | _ -> Error `Unsupported_value_feature_type
 ;;

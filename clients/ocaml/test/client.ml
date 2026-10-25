@@ -12,7 +12,8 @@ let fetch_hook uri =
 
 let make_client () =
   let uuid = "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a" in
-  let uri = Uri.of_string "http://localhost:3000" in
+  let host = Option.value (Sys.getenv_opt "TEST_SERVER_HOST") ~default:"localhost:3000" in
+  let uri = Uri.of_string ("http://" ^ host) in
   Vexilla.make_client ~environment:(`Name "dev") ~instance_id:uuid ~base_url:uri
     ()
 ;;
@@ -29,6 +30,7 @@ let () =
 
                  (* Test that we can successfully sync the manifest *)
                  let* result = Vexilla.sync_manifest ~client ~fetch_hook in
+                 let client = Result.get_ok result in
                  let not_error = Result.is_ok result in
                  Alcotest.(
                    check bool "sync_manifest is not an error" true not_error);
@@ -37,6 +39,7 @@ let () =
                  let* result =
                    Vexilla.sync_flags ~client ~fetch_hook (Name "Gradual")
                  in
+                 let client = Result.get_ok result in
 
                  let not_error = Result.is_ok result in
 
@@ -72,6 +75,7 @@ let () =
                  let* selective_group_result =
                    Vexilla.sync_flags ~client ~fetch_hook (Name "Selective")
                  in
+                 let client = Result.get_ok selective_group_result in
 
                  let not_error = Result.is_ok selective_group_result in
 
@@ -141,6 +145,7 @@ let () =
                  let* value_group_result =
                    Vexilla.sync_flags ~client ~fetch_hook (Name "Value")
                  in
+                 let client = Result.get_ok value_group_result in
 
                  let not_error = Result.is_ok value_group_result in
 
@@ -207,6 +212,7 @@ let () =
                  let* scheduled_group_result =
                    Vexilla.sync_flags ~client ~fetch_hook (Name "Scheduled")
                  in
+                 let client = Result.get_ok scheduled_group_result in
 
                  let not_error = Result.is_ok scheduled_group_result in
 

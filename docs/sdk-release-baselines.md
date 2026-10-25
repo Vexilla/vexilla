@@ -30,18 +30,19 @@ These source observations do not choose the initial automated history boundary. 
 
 Both production orchestration and offline fixtures load the exact npm package `release-please@17.11.2`, pinned in `scripts/releases/package.json` and `package-lock.json`. This is a [published release](https://github.com/googleapis/release-please/releases/tag/v17.11.2), rather than unreleased repository source. Its npm integrity is `sha512-we0+NgyHjvczxrilD6aujnRNuASd65Jem0dY5evevxSZvz8BnKnB/QRN3UzGA229fcV09lKCYbqeE9HgkXzGmA==`. The build requires Node >=22; this repository runs it on Node 24.
 
-`release-config.test.cjs` feeds an offline fake SCM into the published `Manifest.fromManifest` and `buildPullRequests`/`createPullRequests` APIs. It uses the repository's actual release configuration and native manifest updaters. The fake SCM offers no registry client, automatic merge, or real network writes. Its version numbers are deliberately synthetic and are never production baseline seeds.
+`release-config.test.cjs` feeds an offline fake SCM into the published `Manifest.fromManifest` and `buildPullRequests`/`createPullRequests` APIs. It uses the repository's actual release configuration, native manifest updaters, and production release-input adapter. That adapter counts `packages/publishing/src/validation.ts`, which the SDK bundles, as JS input without versioning the publishing package. The fake SCM offers no registry client, automatic merge, or real network writes. Its version numbers are deliberately synthetic and are never production baseline seeds.
 
 | Commit fixture                                      | Synthetic starting versions | Observed result                                               |
 | --------------------------------------------------- | --------------------------- | ------------------------------------------------------------- |
 | Types-only `feat(types)!`                           | JS/types 1.2.3              | One PR; JS/types both 2.0.0                                   |
 | JS-only `fix(js)`                                   | JS/types 1.2.3              | One PR; JS/types both 1.2.4; both package manifests updated   |
+| Shared validator `fix` / breaking `feat!`             | JS/types 1.2.3              | One linked PR; JS/types both 1.2.4 / 2.0.0                   |
 | JS patch plus types feature                         | JS/types 1.2.3              | One PR; highest impact selects 1.3.0 for both                 |
 | Elixir-only `fix(elixir)`                           | Elixir 2.3.4                | One Elixir PR; `mix.exs` updates to 2.3.5                     |
 | Rust-only `feat(rust)`                              | Rust 3.4.5                  | One Rust PR; `Cargo.toml`/`Cargo.lock` updates to 3.5.0       |
 | Simultaneous JS, Elixir, Rust features              | Independent versions above  | Three PRs; linked JS/types plus independent Elixir and Rust   |
 | Later releasable commit while JS/types PR is open   | Existing synthetic patch PR | Existing group PR updated; no merge or publication            |
-| App/publishing-only or dormant/excluded SDK changes | Any fixture baseline        | No SDK release PR                                             |
+| App/serialization/editing or dormant/excluded SDK changes | Any fixture baseline    | No SDK release PR                                             |
 | Ordinary docs/chore commits                         | Any fixture baseline        | No independent SDK release PR                                 |
 | `Release-As: 2.0.0-beta.1` trailer                  | JS/types 1.2.3              | Stable-version guard rejects the candidate before PR creation |
 

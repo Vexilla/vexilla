@@ -3,6 +3,7 @@
 
 const fs = require("node:fs");
 const { readReleaseState } = require("./check-release-config.cjs");
+const { hasSharedJsReleaseInput } = require("./release-inputs.cjs");
 
 function validatePullRequest(
   { title, body = "", files },
@@ -12,7 +13,10 @@ function validatePullRequest(
     ...inventory.clients.filter((c) => c.enabled),
     ...inventory.internalComponents,
   ].map((c) => `${c.directory}/`);
-  if (!files.some((file) => directories.some((dir) => file.startsWith(dir)))) {
+  if (
+    !hasSharedJsReleaseInput(files) &&
+    !files.some((file) => directories.some((dir) => file.startsWith(dir)))
+  ) {
     return { relevant: false };
   }
   const match =

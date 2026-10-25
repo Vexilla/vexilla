@@ -24,15 +24,16 @@ SOFTWARE.
 */
 
 const FNV32_OFFSET_BASIS = 2166136261;
+import { isWellFormedUnicode } from "@vexilla/publishing/dist/validation";
+import { VexillaError } from "./errors";
 
 export function hashFnv32a(str: string): number {
+  if (!isWellFormedUnicode(str)) {
+    throw new VexillaError("instance", "Instance ID must contain Unicode scalar values");
+  }
   let hval = FNV32_OFFSET_BASIS;
-  const l = str.length;
-
-  for (let i = 0; i < l; i++) {
-    hval ^= str.charCodeAt(i);
-    hval +=
-      (hval << 1) + (hval << 4) + (hval << 7) + (hval << 8) + (hval << 24);
+  for (const byte of new TextEncoder().encode(str)) {
+    hval = Math.imul(hval ^ byte, 16777619);
   }
   return hval >>> 0;
 }

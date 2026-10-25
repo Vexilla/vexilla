@@ -1,10 +1,18 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::convert::TryFrom;
 use strum_macros::EnumString;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum VexillaError {
+    #[error("Invalid v1 data: {0}")]
+    Validation(String),
+    #[error("Fetch failed: {0}")]
+    Fetch(String),
+    #[error("A finite, exactly representable numeric or string instance ID is required")]
+    InvalidInstanceId,
+
     #[error("should only supports toggle, gradual, and selective feature types. tried type: {0}")]
     InvalidShouldFeatureType(&'static str),
 
@@ -57,7 +65,7 @@ pub enum VexillaError {
     Unknown,
 }
 
-#[derive(Clone, Debug, EnumString, Deserialize)]
+#[derive(Clone, Debug, EnumString, Deserialize, Serialize)]
 #[serde(tag = "featureType")]
 #[strum(serialize_all = "camelCase")]
 pub enum Feature {
@@ -81,6 +89,36 @@ impl Default for Feature {
 }
 
 impl Feature {
+    pub fn identity(&self) -> (&str, &str) {
+        match self {
+            Self::Toggle(f) => (&f.feature_id, &f.name),
+            Self::Gradual(f) => (&f.feature_id, &f.name),
+            Self::Selective(SelectiveFeature::String {
+                feature_id, name, ..
+            })
+            | Self::Selective(SelectiveFeature::Number(SelectiveFeatureNumber::Int {
+                feature_id,
+                name,
+                ..
+            }))
+            | Self::Selective(SelectiveFeature::Number(SelectiveFeatureNumber::Float {
+                feature_id,
+                name,
+                ..
+            }))
+            | Self::Value(ValueFeature::String {
+                feature_id, name, ..
+            })
+            | Self::Value(ValueFeature::Number(ValueFeatureNumber::Int {
+                feature_id, name, ..
+            }))
+            | Self::Value(ValueFeature::Number(ValueFeatureNumber::Float {
+                feature_id,
+                name,
+                ..
+            })) => (feature_id, name),
+        }
+    }
     pub fn feature_type(&self) -> &'static str {
         match &self {
             Feature::Toggle(_feature) => "toggle",
@@ -91,7 +129,7 @@ impl Feature {
     }
 }
 
-#[derive(Clone, Debug, EnumString, Deserialize, Default)]
+#[derive(Clone, Debug, EnumString, Deserialize, Serialize, Default)]
 #[strum(serialize_all = "camelCase")]
 pub enum ScheduleType {
     #[default]
@@ -103,7 +141,7 @@ pub enum ScheduleType {
     Environment,
 }
 
-#[derive(Clone, Debug, Deserialize, Default)]
+#[derive(Clone, Debug, Deserialize, Serialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct GroupFeature {
     pub name: String,
@@ -113,7 +151,7 @@ pub struct GroupFeature {
     pub schedule: VexillaSchedule,
 }
 
-#[derive(Clone, Debug, Deserialize, Default)]
+#[derive(Clone, Debug, Deserialize, Serialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct ToggleFeature {
     pub name: String,
@@ -123,7 +161,7 @@ pub struct ToggleFeature {
     pub value: bool,
 }
 
-#[derive(Clone, Debug, Deserialize, Default)]
+#[derive(Clone, Debug, Deserialize, Serialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct GradualFeature {
     pub name: String,
@@ -145,7 +183,7 @@ fn deserialize_seed<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result
     Ok(seed)
 }
 
-#[derive(Clone, Debug, EnumString, Deserialize)]
+#[derive(Clone, Debug, EnumString, Deserialize, Serialize)]
 #[serde(tag = "valueType")]
 #[strum(serialize_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
@@ -187,7 +225,7 @@ impl ValueFeature {
     }
 }
 
-#[derive(Clone, Debug, EnumString, Deserialize)]
+#[derive(Clone, Debug, EnumString, Deserialize, Serialize)]
 #[serde(tag = "numberType")]
 #[strum(serialize_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
@@ -198,6 +236,7 @@ pub enum ValueFeatureNumber {
         feature_id: String,
         schedule_type: ScheduleType,
         schedule: VexillaSchedule,
+        #[serde(deserialize_with = "deserialize_integer")]
         value: i64,
     },
 
@@ -223,7 +262,7 @@ impl Default for ValueFeatureNumber {
     }
 }
 
-#[derive(Clone, Debug, EnumString, Deserialize)]
+#[derive(Clone, Debug, EnumString, Deserialize, Serialize)]
 #[serde(tag = "numberType")]
 #[strum(serialize_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
@@ -234,6 +273,7 @@ pub enum SelectiveFeatureNumber {
         feature_id: String,
         schedule_type: ScheduleType,
         schedule: VexillaSchedule,
+        #[serde(deserialize_with = "deserialize_integers")]
         value: Vec<i64>,
     },
 
@@ -259,7 +299,7 @@ impl Default for SelectiveFeatureNumber {
     }
 }
 
-#[derive(Clone, Debug, EnumString, Deserialize)]
+#[derive(Clone, Debug, EnumString, Deserialize, Serialize)]
 #[serde(tag = "valueType")]
 #[serde(rename_all = "camelCase")]
 #[strum(serialize_all = "camelCase")]
@@ -300,7 +340,9 @@ impl SelectiveFeature {
     }
 }
 
-#[derive(Clone, Copy, Debug, EnumString, Deserialize, Default, strum_macros::Display)]
+#[derive(
+    Clone, Copy, Debug, EnumString, Deserialize, Serialize, Default, strum_macros::Display,
+)]
 #[strum(serialize_all = "camelCase")]
 pub enum ScheduleTimeType {
     #[default]
@@ -312,31 +354,35 @@ pub enum ScheduleTimeType {
     Daily,
 }
 
-#[derive(Clone, Debug, Deserialize, Default)]
+#[derive(Clone, Debug, Deserialize, Serialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct VexillaSchedule {
+    #[serde(deserialize_with = "deserialize_integer")]
     pub start: i64,
+    #[serde(deserialize_with = "deserialize_integer")]
     pub end: i64,
     pub timezone: String, // TODO: default to UTC when needed
     pub time_type: ScheduleTimeType,
+    #[serde(deserialize_with = "deserialize_integer")]
     pub start_time: i64,
+    #[serde(deserialize_with = "deserialize_integer")]
     pub end_time: i64,
 }
 
-#[derive(Clone, Debug, Deserialize, Default)]
+#[derive(Clone, Debug, Deserialize, Serialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct ManifestGroup {
     pub name: String,
     pub group_id: String,
 }
 
-#[derive(Clone, Debug, Deserialize, Default)]
+#[derive(Clone, Debug, Deserialize, Serialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct PublishedGroupMeta {
     pub version: String,
 }
 
-#[derive(Clone, Debug, Deserialize, Default)]
+#[derive(Clone, Debug, Deserialize, Serialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct DefaultFeatureValues {
     pub toggle: ToggleFeature,
@@ -345,7 +391,7 @@ pub struct DefaultFeatureValues {
     pub value: ValueFeature,
 }
 
-#[derive(Clone, Debug, Deserialize, Default)]
+#[derive(Clone, Debug, Deserialize, Serialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct PublishedEnvironment {
     pub name: String,
@@ -353,27 +399,140 @@ pub struct PublishedEnvironment {
     pub features: HashMap<String, Feature>,
 }
 
-#[derive(Clone, Debug, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Deserialize, Serialize, Default)]
+#[serde(rename_all = "camelCase", try_from = "serde_json::Value")]
 pub struct Manifest {
     pub version: String,
     pub groups: Vec<ManifestGroup>,
 }
 
-#[derive(Clone, Debug, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Deserialize, Serialize, Default)]
+#[serde(rename_all = "camelCase", try_from = "serde_json::Value")]
 pub struct FlagGroup {
     pub name: String,
     pub group_id: String,
     pub environments: HashMap<String, PublishedEnvironment>,
-    pub features: HashMap<String, GroupFeature>,
+    pub features: HashMap<String, Feature>,
     pub meta: PublishedGroupMeta,
 }
 
-#[derive(Clone, Debug, Deserialize, Default)]
+#[derive(Clone, Debug, Deserialize, Serialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct RealIds {
     pub real_group_id: String,
     pub real_feature_id: String,
     pub real_environment_id: String,
+}
+
+fn deserialize_integer<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<i64, D::Error> {
+    let value = f64::deserialize(deserializer)?;
+    if !value.is_finite() || value.fract() != 0.0 || value.abs() > 9007199254740991.0 {
+        return Err(serde::de::Error::custom(
+            "a mathematical integer in the safe range is required",
+        ));
+    }
+    Ok(value as i64)
+}
+fn deserialize_integers<'de, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> Result<Vec<i64>, D::Error> {
+    let values = Vec::<f64>::deserialize(deserializer)?;
+    values
+        .into_iter()
+        .map(|value| {
+            if !value.is_finite() || value.fract() != 0.0 || value.abs() > 9007199254740991.0 {
+                Err(serde::de::Error::custom(
+                    "a mathematical integer in the safe range is required",
+                ))
+            } else {
+                Ok(value as i64)
+            }
+        })
+        .collect()
+}
+
+/// Supported instance representations shared by default and per-call IDs.
+#[derive(Clone, Debug, Default)]
+pub enum InstanceId {
+    #[default]
+    Missing,
+    Text(String),
+    Integer(i64),
+    Float(f64),
+    Invalid,
+}
+impl From<&str> for InstanceId {
+    fn from(value: &str) -> Self {
+        Self::Text(value.to_owned())
+    }
+}
+impl From<String> for InstanceId {
+    fn from(value: String) -> Self {
+        Self::Text(value)
+    }
+}
+impl From<i64> for InstanceId {
+    fn from(value: i64) -> Self {
+        Self::Integer(value)
+    }
+}
+impl From<f64> for InstanceId {
+    fn from(value: f64) -> Self {
+        Self::Float(value)
+    }
+}
+impl From<Option<String>> for InstanceId {
+    fn from(value: Option<String>) -> Self {
+        value.map_or(Self::Missing, Self::Text)
+    }
+}
+impl From<bool> for InstanceId {
+    fn from(_: bool) -> Self {
+        Self::Invalid
+    }
+}
+
+// Capture the original object before native decoding can discard compatible
+// properties needed by identity/subtype validation.
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ManifestWire {
+    version: String,
+    groups: Vec<ManifestGroup>,
+}
+impl TryFrom<serde_json::Value> for Manifest {
+    type Error = VexillaError;
+    fn try_from(value: serde_json::Value) -> Result<Self, Self::Error> {
+        crate::validation::manifest(&value)?;
+        let wire: ManifestWire =
+            serde_json::from_value(value).map_err(|e| VexillaError::Validation(e.to_string()))?;
+        Ok(Self {
+            version: wire.version,
+            groups: wire.groups,
+        })
+    }
+}
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct FlagGroupWire {
+    name: String,
+    group_id: String,
+    environments: HashMap<String, PublishedEnvironment>,
+    features: HashMap<String, Feature>,
+    meta: PublishedGroupMeta,
+}
+impl TryFrom<serde_json::Value> for FlagGroup {
+    type Error = VexillaError;
+    fn try_from(value: serde_json::Value) -> Result<Self, Self::Error> {
+        crate::validation::group(&value)?;
+        let wire: FlagGroupWire =
+            serde_json::from_value(value).map_err(|e| VexillaError::Validation(e.to_string()))?;
+        Ok(Self {
+            name: wire.name,
+            group_id: wire.group_id,
+            environments: wire.environments,
+            features: wire.features,
+            meta: wire.meta,
+        })
+    }
 }

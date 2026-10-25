@@ -622,6 +622,8 @@ export interface GitHubBranch {
   commit: {
     sha: string;
     url: string;
+    // The single-branch endpoint includes the commit's Git tree.
+    commit?: { tree: { sha: string; url?: string } };
     [k: string]: unknown;
   };
   protected: boolean;
