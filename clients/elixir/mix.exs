@@ -2,6 +2,8 @@ defmodule VexillaClient.MixProject do
   use Mix.Project
 
   def project do
+    source_ref = System.get_env("RELEASE_REVISION", "main")
+
     [
       app: :vexilla_client,
       version: "1.0.1",
@@ -12,7 +14,13 @@ defmodule VexillaClient.MixProject do
       name: "Vexilla Client",
       source_url: "https://github.com/Vexilla/vexilla",
       homepage_url: "https://vexilla.dev",
-      docs: [main: "readme", extras: ["README.md", "LICENSE"], source_ref: System.get_env("RELEASE_REVISION", "main")],
+      docs: [
+        main: "readme",
+        extras: ["README.md", "LICENSE"],
+        source_ref: source_ref,
+        source_url_pattern:
+          "https://github.com/Vexilla/vexilla/blob/#{source_ref}/clients/elixir/%{path}#L%{line}"
+      ],
       package: %{
         name: "vexilla_client",
         files: ["lib", "priv/compatibility.json", "mix.exs", "README.md", "LICENSE", "CHANGELOG.md"],

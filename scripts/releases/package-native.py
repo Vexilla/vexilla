@@ -8,6 +8,7 @@ checks succeed. Work and consumer directories live outside the checkout.
 import argparse
 import gzip
 import hashlib
+from html.parser import HTMLParser
 import io
 import json
 import os
@@ -17,6 +18,7 @@ import shutil
 import subprocess
 import tarfile
 import tempfile
+from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[2]
 PACKAGE = "vexilla_client"
@@ -63,6 +65,45 @@ def inspect_files(files, sdk):
         if file not in allowed and not (file.startswith(source) and
                 file.endswith(".ex" if sdk == "elixir" else ".rs")):
             raise ValueError(f"Unexpected {sdk} package file: {file}")
+
+
+def inspect_docs_links(directory, source, revision):
+    """Check generated source links against this release's actual client files."""
+    class SourceLinks(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.links = []
+
+        def handle_starttag(self, tag, attrs):
+            attrs = dict(attrs)
+            if tag == "a" and attrs.get("title") == "View Source":
+                self.links.append(attrs.get("href", ""))
+
+    links = []
+    for file in directory.rglob("*.html"):
+        parser = SourceLinks()
+        parser.feed(file.read_text())
+        links.extend((file.name, link) for link in parser.links)
+    prefix = f"/Vexilla/vexilla/blob/{revision}/clients/elixir/"
+    referenced = set()
+    for page, link in links:
+        # ExDoc's API overview links to the project, rather than a source file.
+        if page == "api-reference.html" and link == "https://github.com/Vexilla/vexilla":
+            continue
+        url = urlsplit(link)
+        if (url.scheme != "https" or url.netloc != "github.com" or url.query or
+                not url.path.startswith(prefix)):
+            raise ValueError(f"Docs source link must use the release revision and client directory: {link}")
+        relative = PurePosixPath(unquote(url.path[len(prefix):]))
+        file = source.joinpath(*relative.parts)
+        line = re.fullmatch(r"L([1-9][0-9]*)", url.fragment)
+        if (relative.is_absolute() or ".." in relative.parts or not file.is_file() or
+                not line or int(line[1]) > len(file.read_text().splitlines())):
+            raise ValueError(f"Docs source link does not identify an existing source line: {link}")
+        referenced.add(relative.as_posix())
+    if (not {"README.md", "LICENSE"}.issubset(referenced) or
+            not any(file.startswith("lib/") and file.endswith(".ex") for file in referenced)):
+        raise ValueError("Generated docs must include client module and README/LICENSE source links")
 
 
 def docs_archive(directory, output):
@@ -124,6 +165,7 @@ true = Code.ensure_loaded?(Jason)
 %{environment: "production"} = VexillaClient.create_config("https://example.invalid", "production", "consumer")
 '''], consumer, prod)
     run(["mix", "docs"], source, env)
+    inspect_docs_links(source / "doc", source, revision)
     docs = output / f"{PACKAGE}-{version}-docs.tar.gz"
     docs_archive(source / "doc", docs)
     return {"files": files, "innerChecksum": actual,

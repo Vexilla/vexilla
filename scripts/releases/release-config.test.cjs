@@ -362,6 +362,9 @@ test("prerelease Release-As trailer is rejected before release PR creation", asy
 });
 
 test("configuration excludes dormant clients and rejects overrides/downgrades", () => {
+  const unparseable = structuredClone(state);
+  delete unparseable.config["group-pull-request-title-pattern"];
+  assert.throws(() => validateConfig(unparseable), /titles must roundtrip/);
   const invalid = structuredClone(state);
   invalid.config.packages["clients/go"] = {
     "release-type": "go",
@@ -522,7 +525,7 @@ test("approved tags require the current manifest version and the JS automated fl
       sha: boundary,
       pullRequest: {
         baseBranchName: "main",
-        mergeCommitOid: boundary,
+        sha: boundary,
         number: 42,
       },
     };
@@ -621,7 +624,10 @@ test("relevant PR squash titles preserve release intent and reject unsafe overri
   assert.equal(
     validatePullRequest({
       title: "Update publication editor",
-      files: ["packages/publishing/src/index.ts", "packages/publishing/src/editing.ts"],
+      files: [
+        "packages/publishing/src/index.ts",
+        "packages/publishing/src/editing.ts",
+      ],
     }).relevant,
     false
   );

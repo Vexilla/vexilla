@@ -82,8 +82,10 @@ The Elixir route builds a Hex tarball and checks its identity, file allowlist an
 inner checksum. A new production Mix project consumes only the extracted tarball,
 installs its production dependencies against the reviewed lock and starts the
 application, verifies Jason/HTTPoison, and constructs the client. ExDoc generates
-`doc/index.html` with source links pinned to the release SHA; a deterministic
-gzip tar captures those generated docs.
+`doc/index.html` with source links pinned to the release SHA and the
+`clients/elixir` directory. Packaging checks generated source links against the
+actual client files and line numbers before archiving the docs in a deterministic
+gzip tar.
 
 The Rust route runs `cargo package --locked`, including Cargo's extracted-package
 build verification. A separate temporary consumer outside the checkout depends

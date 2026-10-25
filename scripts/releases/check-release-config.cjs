@@ -56,6 +56,11 @@ function validateConfig({ inventory, config, manifest, requireReady = false }) {
   assert.equal(config["tag-separator"], "-");
   assert.equal(config.prerelease, false);
   assert.equal(
+    config["group-pull-request-title-pattern"],
+    "chore${scope}: release js-types libraries",
+    "Linked JS/types release titles must roundtrip through the release parser"
+  );
+  assert.equal(
     config["release-as"],
     undefined,
     "Version overrides must not bypass Conventional Commits"

@@ -5,6 +5,10 @@ const fs = require("node:fs");
 const assert = require("node:assert/strict");
 const { applyReleaseInputs } = require("./release-inputs.cjs");
 const {
+  releaseSnapshot,
+  SupersededSnapshot,
+} = require("./release-snapshot.cjs");
+const {
   ROOT,
   STABLE,
   SHA,
@@ -95,7 +99,7 @@ function assertReleaseCandidates(releases, inventory, manifestVersions) {
     );
     assert.equal(release.pullRequest.baseBranchName, "main");
     assert.equal(
-      release.pullRequest.mergeCommitOid,
+      release.pullRequest.sha,
       release.sha,
       "Release revision must be the merged approval PR"
     );
@@ -134,7 +138,9 @@ async function orchestrate({ github, state, Manifest }) {
   // Read configuration from the same reviewed checkout as the inventory. Native
   // manifests are read at the workflow revision so a later main push cannot
   // replace the version/package content used by this invocation.
-  const scm = applyReleaseInputs(github);
+  const scm = applyReleaseInputs(
+    releaseSnapshot(github, process.env.GITHUB_SHA)
+  );
   scm.getFileJson = async (name, ref) => {
     if (ref === "main" && name === "release-please-config.json") {
       return state.config;
@@ -144,14 +150,16 @@ async function orchestrate({ github, state, Manifest }) {
     }
     return github.getFileJson(name, ref);
   };
-  scm.getFileContentsOnBranch = (name, ref) =>
-    github.getFileContentsOnBranch(
-      name,
-      ref === "main" && SHA.test(process.env.GITHUB_SHA || "")
-        ? process.env.GITHUB_SHA
-        : ref
-    );
-  const manifest = await Manifest.fromManifest(scm, "main");
+  const manifest = await Manifest.fromManifest(
+    scm,
+    "main",
+    undefined,
+    undefined,
+    {
+      // A deferred refresh must not leave another PR mutation running in parallel.
+      sequentialCalls: true,
+    }
+  );
   const releases = await manifest.buildReleases();
   assertReleaseCandidates(releases, state.inventory, state.manifest);
   // Freeze checked candidates: createReleases must not re-read an unchecked
@@ -165,10 +173,19 @@ async function orchestrate({ github, state, Manifest }) {
       `candidates=${JSON.stringify(candidates)}\n`
     );
   }
-  const pullRequests = await manifest.buildPullRequests();
-  assertStablePullRequests(pullRequests, state);
-  manifest.buildPullRequests = async () => pullRequests;
-  await manifest.createPullRequests();
+  try {
+    const pullRequests = await manifest.buildPullRequests();
+    assertStablePullRequests(pullRequests, state);
+    manifest.buildPullRequests = async () => pullRequests;
+    await manifest.createPullRequests();
+  } catch (error) {
+    if (!(error instanceof SupersededSnapshot)) {
+      throw error;
+    }
+    // Already-created tags still need publication even when their following PR
+    // refresh was superseded. A failed job would discard these candidates.
+    console.log(error.message);
+  }
   return candidates;
 }
 
