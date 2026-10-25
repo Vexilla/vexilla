@@ -83,6 +83,7 @@ rust_test(
     name = "unit_test",
     srcs = [
         "src/contract.rs",
+        "src/logging.rs",
         "src/hashing.rs",
         "src/lib.rs",
         "src/scheduling.rs",

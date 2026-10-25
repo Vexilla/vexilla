@@ -13,6 +13,8 @@ Depending on the kind of language you are implementing for, the process will fee
 
 Your client should maintain lookup tables that allow consumers to use the exact ID, exact name, or publisher-normalized name alias without changing any functionality. If using the CLI to generate types, your users will likely pass ID values obfsucated behind contants or enums.
 
+Use the shared, pinned normalization rules for lookup aliases. The `normalizeName` implementation reproduces the publisher's `case` conventions across SDK languages without depending on the host Unicode version or locale. It replaces the JS client's direct use of `case` for aliases; other uses, including CLI identifier generation, still need the package.
+
 ## Constructor
 
 The constructor needs to take in a few arguments to set up the rest of the functionality.
@@ -20,8 +22,10 @@ The constructor needs to take in a few arguments to set up the rest of the funct
 - config: This contains the main configuration values.
   - baseUrl: string: The URL where your flags live without a file path. The file path will be appended internally when fetching the manifest and flags.
   - environment: string: This corresponds to the environment you want to use to determine flag functionality. Can be the name value or environmentId value.
-  - customInstanceHash: an optional finite numeric or string instance ID for gradual and selective flags. Toggles and values do not require an ID.
-- suppressLogs: boolean: You may want to log or warn about various things during usage of the client SDK. A consumer of the SDK should be able to disable this.
+  - customInstanceId: an optional finite numeric or string instance ID for gradual and selective flags. Toggles and values do not require an ID. Use the language's native naming convention, such as Lua's `custom_instance_id`.
+- showLogs: optional boolean, disabled by default. Use the language's native naming convention, such as `show_logs`. Report successful and failed manifest/group fetching and installation through the native logger or standard error. Preserve the original return value or error. Do not log instance IDs, flag values, credentials, full URLs, or raw callback errors. Avoid logging every flag evaluation.
+
+Use descriptive domain names in the implementation. Prefer `groupId`, `environmentId`, `feature`, and `manifestSnapshot` to ambiguous identifiers such as `id`, `env`, `f`, and `s`. Expand compressed branches and multiple statements into ordinary, readable control flow. A small algorithm's local loop index can stay short when its meaning is clear.
 
 ## Methods
 

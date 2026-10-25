@@ -10,39 +10,39 @@ class Validation
             throw new ContractException('validation', $message);
         }
     }
-    public static function obj($v) : object
+    public static function obj($value) : object
     {
-        self::check($v instanceof \stdClass, 'Expected a JSON object');
-        return $v;
+        self::check($value instanceof \stdClass, 'Expected a JSON object');
+        return $value;
     }
-    public static function text($v, bool $nonempty = false) : string
+    public static function text($value, bool $nonempty = false) : string
     {
-        self::check(is_string($v) && (!$nonempty || $v !== ''), 'Expected a string');
-        return $v;
+        self::check(is_string($value) && (!$nonempty || $value !== ''), 'Expected a string');
+        return $value;
     }
-    public static function number($v, bool $integer = false) : float
+    public static function number($value, bool $integer = false) : float
     {
-        self::check((is_int($v) || is_float($v)) && is_finite((float) $v) && (!$integer || floor($v) == $v && abs($v) <= 9007199254740991), 'Expected finite number in integer bounds');
-        return (float) $v;
+        self::check((is_int($value) || is_float($value)) && is_finite((float) $value) && (!$integer || floor($value) == $value && abs($value) <= 9007199254740991), 'Expected finite number in integer bounds');
+        return (float) $value;
     }
-    public static function tree($v) : void
+    public static function tree($value) : void
     {
-        if (is_string($v)) {
-            self::check(Compatibility::unicode($v), 'Malformed Unicode string');
-        } elseif (is_array($v) || is_object($v)) {
-            foreach ($v as $key => $item) {
+        if (is_string($value)) {
+            self::check(Compatibility::unicode($value), 'Malformed Unicode string');
+        } elseif (is_array($value) || is_object($value)) {
+            foreach ($value as $key => $item) {
                 self::check(Compatibility::unicode((string) $key), 'Malformed Unicode key');
                 self::tree($item);
             }
         }
     }
-    private static function member($v, array $allowed) : void
+    private static function member($value, array $allowed) : void
     {
-        self::check(is_string($v) && in_array($v, $allowed, true), 'Unsupported enum');
+        self::check(is_string($value) && in_array($value, $allowed, true), 'Unsupported enum');
     }
-    private static function safeId($v) : string
+    private static function safeId($value) : string
     {
-        $id = self::text($v, true);
+        $id = self::text($value, true);
         self::check(!in_array($id, ['manifest', 'config', '.', '..'], true) && strpos($id, '/') === false && strpos($id, '\\') === false && strpos($id, "\x00") === false, 'Unsafe group ID');
         return $id;
     }
@@ -66,38 +66,38 @@ class Validation
     public static function feature($value) : void
     {
         self::tree($value);
-        $f = self::obj($value);
-        self::text($f->name ?? null);
-        self::text($f->featureId ?? null, true);
-        self::member($f->scheduleType ?? null, ['', 'global', 'environment']);
-        self::schedule($f->schedule ?? null);
-        $kind = $f->featureType ?? null;
+        $feature = self::obj($value);
+        self::text($feature->name ?? null);
+        self::text($feature->featureId ?? null, true);
+        self::member($feature->scheduleType ?? null, ['', 'global', 'environment']);
+        self::schedule($feature->schedule ?? null);
+        $kind = $feature->featureType ?? null;
         if ($kind === 'toggle') {
-            self::check(isset($f->value) && is_bool($f->value), 'Toggle must be boolean');
+            self::check(isset($feature->value) && is_bool($feature->value), 'Toggle must be boolean');
         } elseif ($kind === 'gradual') {
-            self::number($f->value ?? null);
-            $seed = self::number($f->seed ?? null);
+            self::number($feature->value ?? null);
+            $seed = self::number($feature->seed ?? null);
             self::check($seed > 0 && $seed <= 1, 'Seed must satisfy 0 < seed <= 1');
         } elseif ($kind === 'selective' || $kind === 'value') {
-            self::member($f->valueType ?? null, ['string', 'number']);
-            $numeric = $f->valueType === 'number';
+            self::member($feature->valueType ?? null, ['string', 'number']);
+            $numeric = $feature->valueType === 'number';
             if ($numeric) {
-                self::member($f->numberType ?? null, ['int', 'float']);
+                self::member($feature->numberType ?? null, ['int', 'float']);
             }
-            $item = function ($v) use($f, $numeric) {
+            $item = function ($value) use($feature, $numeric) {
                 if ($numeric) {
-                    self::number($v, $f->numberType === 'int');
+                    self::number($value, $feature->numberType === 'int');
                 } else {
-                    self::text($v);
+                    self::text($value);
                 }
             };
             if ($kind === 'selective') {
-                self::check(isset($f->value) && is_array($f->value), 'Selective must be array');
-                foreach ($f->value as $v) {
-                    $item($v);
+                self::check(isset($feature->value) && is_array($feature->value), 'Selective must be array');
+                foreach ($feature->value as $value) {
+                    $item($value);
                 }
             } else {
-                $item($f->value ?? null);
+                $item($feature->value ?? null);
             }
         } else {
             self::check(false, 'Unsupported featureType');
@@ -107,69 +107,69 @@ class Validation
     {
         $fields = self::obj($value);
         $aliases = [];
-        foreach ($fields as $id => $f) {
-            self::feature($f);
-            self::check($f->featureId === (string) $id, 'Feature map ID mismatch');
-            self::alias($aliases, (string) $id, $f->name);
+        foreach ($fields as $id => $feature) {
+            self::feature($feature);
+            self::check($feature->featureId === (string) $id, 'Feature map ID mismatch');
+            self::alias($aliases, (string) $id, $feature->name);
         }
         return $fields;
     }
     public static function manifest($value) : void
     {
         self::tree($value);
-        $m = self::obj($value);
-        self::check(($m->version ?? null) === 'v1', 'Manifest version must be v1');
-        self::check(isset($m->groups) && is_array($m->groups), 'Groups must be array');
+        $manifest = self::obj($value);
+        self::check(($manifest->version ?? null) === 'v1', 'Manifest version must be v1');
+        self::check(isset($manifest->groups) && is_array($manifest->groups), 'Groups must be array');
         $ids = [];
         $aliases = [];
-        foreach ($m->groups as $raw) {
-            $g = self::obj($raw);
-            $id = self::safeId($g->groupId ?? null);
+        foreach ($manifest->groups as $raw) {
+            $group = self::obj($raw);
+            $id = self::safeId($group->groupId ?? null);
             self::check(!isset($ids[$id]), 'Duplicate group ID');
             $ids[$id] = true;
-            self::alias($aliases, $id, self::text($g->name ?? null));
+            self::alias($aliases, $id, self::text($group->name ?? null));
         }
     }
-    private static function same(object $a, object $b, string $key) : bool
+    private static function same(object $environmentFeature, object $groupFeature, string $key) : bool
     {
-        $pa = property_exists($a, $key);
-        $pb = property_exists($b, $key);
-        if (!$pa || !$pb) {
-            return $pa === $pb;
+        $hasEnvironmentProperty = property_exists($environmentFeature, $key);
+        $hasGroupProperty = property_exists($groupFeature, $key);
+        if (!$hasEnvironmentProperty || !$hasGroupProperty) {
+            return $hasEnvironmentProperty === $hasGroupProperty;
         }
-        $x = $a->{$key};
-        $y = $b->{$key};
-        if (is_array($x) || is_object($x) || is_array($y) || is_object($y)) {
+        $environmentValue = $environmentFeature->{$key};
+        $groupValue = $groupFeature->{$key};
+        if (is_array($environmentValue) || is_object($environmentValue) || is_array($groupValue) || is_object($groupValue)) {
             return false;
         }
-        if ((is_int($x) || is_float($x)) && (is_int($y) || is_float($y))) {
-            return (float) $x === (float) $y;
+        if ((is_int($environmentValue) || is_float($environmentValue)) && (is_int($groupValue) || is_float($groupValue))) {
+            return (float) $environmentValue === (float) $groupValue;
         }
-        return $x === $y;
+        return $environmentValue === $groupValue;
     }
     public static function group($value) : void
     {
         self::tree($value);
-        $g = self::obj($value);
-        self::safeId($g->groupId ?? null);
-        self::text($g->name ?? null);
-        self::check((self::obj($g->meta ?? null)->version ?? null) === 'v1', 'Group version must be v1');
-        $defaults = self::features($g->features ?? null);
-        $envs = self::obj($g->environments ?? null);
+        $group = self::obj($value);
+        self::safeId($group->groupId ?? null);
+        self::text($group->name ?? null);
+        self::check((self::obj($group->meta ?? null)->version ?? null) === 'v1', 'Group version must be v1');
+        $defaults = self::features($group->features ?? null);
+        $envs = self::obj($group->environments ?? null);
         $aliases = [];
         foreach ($envs as $id => $raw) {
-            $e = self::obj($raw);
-            self::check(self::text($e->environmentId ?? null, true) === (string) $id, 'Environment map ID mismatch');
-            self::alias($aliases, (string) $id, self::text($e->name ?? null));
-            $features = self::features($e->features ?? null);
-            $a = array_keys(get_object_vars($features));
-            $b = array_keys(get_object_vars($defaults));
-            sort($a);
-            sort($b);
-            self::check($a === $b, 'Incomplete environment feature set');
-            foreach ($features as $fid => $f) {
+            $environment = self::obj($raw);
+            self::check(self::text($environment->environmentId ?? null, true) === (string) $id, 'Environment map ID mismatch');
+            self::alias($aliases, (string) $id, self::text($environment->name ?? null));
+            $features = self::features($environment->features ?? null);
+            $environmentFeatureIds = array_keys(get_object_vars($features));
+            $groupFeatureIds = array_keys(get_object_vars($defaults));
+            sort($environmentFeatureIds);
+            sort($groupFeatureIds);
+            self::check($environmentFeatureIds === $groupFeatureIds, 'Incomplete environment feature set');
+            foreach ($features as $featureId => $feature) {
                 foreach (['name', 'featureType', 'valueType', 'numberType'] as $key) {
-                    self::check(self::same($f, $defaults->{$fid}, $key), 'Environment feature identity/subtype mismatch');
+                    self::check(self::same($feature, $defaults->{$featureId}, $key), 'Environment feature identity/subtype mismatch');
                 }
             }
         }

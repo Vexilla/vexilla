@@ -11,6 +11,7 @@ namespace Vexilla.Client
         private readonly string _baseUrl;
         private readonly object _instanceId;
         private readonly string _environment;
+        private readonly bool _showLogs;
         private Manifest _manifest;
         private Dictionary<string, string> _groupAliases = new Dictionary<string, string>();
         private readonly Dictionary<string, Group> _groups = new Dictionary<string, Group>();
@@ -18,42 +19,108 @@ namespace Vexilla.Client
         private readonly Dictionary<string, Dictionary<string, string>> _featureAliases = new Dictionary<string, Dictionary<string, string>>();
 
         public VexillaClientBase(string baseUrl, string environment, object instanceId, bool showLogs = false)
-        { _baseUrl = baseUrl.TrimEnd('/'); _environment = environment; _instanceId = instanceId; }
+        {
+            _baseUrl = baseUrl.TrimEnd('/');
+            _environment = environment;
+            _instanceId = instanceId;
+            _showLogs = showLogs;
+        }
         public VexillaClientBase(string baseUrl, string environment, string instanceId, bool showLogs = false)
             : this(baseUrl, environment, (object)instanceId, showLogs) { }
 
+        private void ReportOperation(string operationName, bool succeeded)
+        {
+            if (_showLogs)
+            {
+                var outcome = succeeded ? "success" : "failure";
+                Console.Error.WriteLine("vexilla operation=" + operationName + " outcome=" + outcome);
+            }
+        }
+        private T DiagnoseOperation<T>(string operationName, Func<T> operation)
+        {
+            try
+            {
+                var result = operation();
+                ReportOperation(operationName, true);
+                return result;
+            }
+            catch
+            {
+                ReportOperation(operationName, false);
+                throw;
+            }
+        }
+        private async Task<T> DiagnoseAsyncOperation<T>(string operationName, Func<Task<T>> operation)
+        {
+            try
+            {
+                var result = await operation();
+                ReportOperation(operationName, true);
+                return result;
+            }
+            catch
+            {
+                ReportOperation(operationName, false);
+                throw;
+            }
+        }
+
         private async Task<string> Fetch(Func<string, Task<string>> fetch, string path)
         {
-            try { return await fetch(_baseUrl + "/" + path); }
-            catch (Exception e) { throw new ContractException("fetch", "Failed to fetch " + path + ": " + e.Message); }
+            try
+            {
+                return await fetch(_baseUrl + "/" + path);
+            }
+            catch (Exception fetchError)
+            {
+                throw new ContractException("fetch", "Failed to fetch " + path + ": " + fetchError.Message);
+            }
         }
         public async Task<Manifest> GetManifest(Func<string, Task<string>> fetch)
-        { return GroupConverter.DeserializeManifest(await Fetch(fetch, "manifest.json")); }
+        {
+            return await DiagnoseAsyncOperation("manifest.fetch", async () =>
+            {
+                return GroupConverter.DeserializeManifest(await Fetch(fetch, "manifest.json"));
+            });
+        }
         public void SetManifest(Manifest manifest)
         {
-            var snapshot = GroupConverter.DeserializeManifest(GroupConverter.Serialize(manifest));
-            var aliases = new Dictionary<string, string>();
-            foreach (var entry in snapshot.Groups)
+            DiagnoseOperation("manifest.install", () =>
             {
-                Validation.AddAlias(aliases, entry.GroupId, entry.Name);
-            }
+                var manifestSnapshot = GroupConverter.DeserializeManifest(GroupConverter.Serialize(manifest));
+                var groupAliases = new Dictionary<string, string>();
+                foreach (var manifestEntry in manifestSnapshot.Groups)
+                {
+                    Validation.AddAlias(groupAliases, manifestEntry.GroupId, manifestEntry.Name);
+                }
 
-            foreach (var id in _groups.Keys.ToArray())
-            {
-                if (!snapshot.Groups.Any(e => e.GroupId == id && e.Name == _groups[id].Name))
-                { _groups.Remove(id); _featureAliases.Remove(id); _environmentAliases.Remove(id); }
-            }
-            _manifest = snapshot; _groupAliases = aliases;
+                foreach (var groupId in _groups.Keys.ToArray())
+                {
+                    if (!manifestSnapshot.Groups.Any(manifestEntry => manifestEntry.GroupId == groupId && manifestEntry.Name == _groups[groupId].Name))
+                    {
+                        _groups.Remove(groupId);
+                        _featureAliases.Remove(groupId);
+                        _environmentAliases.Remove(groupId);
+                    }
+                }
+                _manifest = manifestSnapshot;
+                _groupAliases = groupAliases;
+
+                return true;
+            });
         }
-        public async Task SyncManifest(Func<string, Task<string>> fetch) { SetManifest(await GetManifest(fetch)); }
+        public async Task SyncManifest(Func<string, Task<string>> fetch)
+        {
+            SetManifest(await GetManifest(fetch));
+        }
         private string GroupId(string name)
         {
-            if (!_groupAliases.TryGetValue(name, out var id))
+            if (!_groupAliases.TryGetValue(name, out var groupId))
             {
                 throw new ContractException("lookup", "Group not found: " + name);
             }
 
-            return id;
+            return groupId;
         }
         private void MatchManifest(Group group)
         {
@@ -62,78 +129,106 @@ namespace Vexilla.Client
                 throw new ContractException("lookup", "Manifest is not installed");
             }
 
-            Validation.Require(_manifest.Groups.Any(g => g.GroupId == group.GroupId && g.Name == group.Name), "Group does not match its manifest ID/name");
+            Validation.Require(_manifest.Groups.Any(manifestGroup => manifestGroup.GroupId == group.GroupId && manifestGroup.Name == group.Name), "Group does not match its manifest ID/name");
         }
         public async Task<Group> GetFlags(string groupNameOrId, Func<string, Task<string>> fetch)
         {
-            var id = GroupId(groupNameOrId);
-            var group = GroupConverter.Deserialize(await Fetch(fetch, id + ".json"));
-            MatchManifest(group); Validation.Require(group.GroupId == id, "Fetched group differs from requested group");
-            return group;
+            return await DiagnoseAsyncOperation("group.fetch", async () =>
+            {
+                var groupId = GroupId(groupNameOrId);
+                var group = GroupConverter.Deserialize(await Fetch(fetch, groupId + ".json"));
+                MatchManifest(group);
+                Validation.Require(group.GroupId == groupId, "Fetched group differs from requested group");
+                return group;
+            });
         }
         public void SetFlags(Group group)
         {
-            var snapshot = GroupConverter.Deserialize(GroupConverter.Serialize(group)); MatchManifest(snapshot);
-            var environments = new Dictionary<string, string>(); var features = new Dictionary<string, string>();
-            foreach (var env in snapshot.Environments)
+            DiagnoseOperation("group.install", () =>
             {
-                Validation.AddAlias(environments, env.Key, env.Value.Name);
-            }
+                var groupSnapshot = GroupConverter.Deserialize(GroupConverter.Serialize(group));
+                MatchManifest(groupSnapshot);
+                var environmentAliases = new Dictionary<string, string>();
+                var featureAliases = new Dictionary<string, string>();
+                foreach (var environmentEntry in groupSnapshot.Environments)
+                {
+                    Validation.AddAlias(environmentAliases, environmentEntry.Key, environmentEntry.Value.Name);
+                }
 
-            foreach (var feature in snapshot.Features)
-            {
-                Validation.AddAlias(features, feature.Key, feature.Value.Name);
-            }
+                foreach (var feature in groupSnapshot.Features)
+                {
+                    Validation.AddAlias(featureAliases, feature.Key, feature.Value.Name);
+                }
 
-            _groups[snapshot.GroupId] = snapshot; _environmentAliases[snapshot.GroupId] = environments; _featureAliases[snapshot.GroupId] = features;
+                _groups[groupSnapshot.GroupId] = groupSnapshot;
+                _environmentAliases[groupSnapshot.GroupId] = environmentAliases;
+                _featureAliases[groupSnapshot.GroupId] = featureAliases;
+
+                return true;
+            });
         }
-        public async Task SyncFlags(string groupNameOrId, Func<string, Task<string>> fetch) { SetFlags(await GetFlags(groupNameOrId, fetch)); }
-        private Feature Lookup(string group, string feature)
+        public async Task SyncFlags(string groupNameOrId, Func<string, Task<string>> fetch)
         {
-            var id = GroupId(group);
-            if (!_groups.TryGetValue(id, out var installed) || !_environmentAliases[id].TryGetValue(_environment, out var env) || !_featureAliases[id].TryGetValue(feature, out var fid))
+            SetFlags(await GetFlags(groupNameOrId, fetch));
+        }
+        private Feature Lookup(string groupNameOrId, string featureNameOrId)
+        {
+            var groupId = GroupId(groupNameOrId);
+            if (!_groups.TryGetValue(groupId, out var installedGroup) || !_environmentAliases[groupId].TryGetValue(_environment, out var environmentId) || !_featureAliases[groupId].TryGetValue(featureNameOrId, out var featureId))
             {
                 throw new ContractException("lookup", "Feature/environment is not installed");
             }
 
-            return installed.Environments[env].RawFeatures[fid];
+            return installedGroup.Environments[environmentId].RawFeatures[featureId];
         }
-        public bool Should(string groupNameOrId, string featureNameOrId) { return ShouldCustom(groupNameOrId, featureNameOrId, _instanceId); }
-        public bool ShouldCustomString(string groupNameOrId, string featureNameOrId, string customInstanceId) { return ShouldCustom(groupNameOrId, featureNameOrId, customInstanceId); }
-        public bool ShouldCustomLong(string groupNameOrId, string featureNameOrId, long customInstanceId) { return ShouldCustom(groupNameOrId, featureNameOrId, customInstanceId); }
-        public bool ShouldCustomDouble(string groupNameOrId, string featureNameOrId, double customInstanceId) { return ShouldCustom(groupNameOrId, featureNameOrId, customInstanceId); }
-        public bool ShouldCustom(string group, string feature, object instance)
+        public bool Should(string groupNameOrId, string featureNameOrId)
         {
-            var f = Lookup(group, feature);
-            if (f.FeatureType == "value")
+            return ShouldCustom(groupNameOrId, featureNameOrId, _instanceId);
+        }
+        public bool ShouldCustomString(string groupNameOrId, string featureNameOrId, string customInstanceId)
+        {
+            return ShouldCustom(groupNameOrId, featureNameOrId, customInstanceId);
+        }
+        public bool ShouldCustomLong(string groupNameOrId, string featureNameOrId, long customInstanceId)
+        {
+            return ShouldCustom(groupNameOrId, featureNameOrId, customInstanceId);
+        }
+        public bool ShouldCustomDouble(string groupNameOrId, string featureNameOrId, double customInstanceId)
+        {
+            return ShouldCustom(groupNameOrId, featureNameOrId, customInstanceId);
+        }
+        public bool ShouldCustom(string groupNameOrId, string featureNameOrId, object instance)
+        {
+            var feature = Lookup(groupNameOrId, featureNameOrId);
+            if (feature.FeatureType == "value")
             {
                 throw new ContractException("kind", "Value feature requires a value operation");
             }
 
-            string text = null;
-            if (f.FeatureType != "toggle")
+            string instanceText = null;
+            if (feature.FeatureType != "toggle")
             {
-                text = VexillaHasher.InstanceText(instance);
+                instanceText = VexillaHasher.InstanceText(instance);
             }
 
-            if (!Scheduler.IsScheduleFeatureActive(f))
+            if (!Scheduler.IsScheduleFeatureActive(feature))
             {
                 return false;
             }
 
-            if (f is ToggleFeature toggle)
+            if (feature is ToggleFeature toggle)
             {
                 return toggle.Value;
             }
 
-            if (f is GradualFeature gradual)
+            if (feature is GradualFeature gradual)
             {
-                return VexillaHasher.HashString(text, gradual.Seed) < gradual.Value;
+                return VexillaHasher.HashString(instanceText, gradual.Seed) < gradual.Value;
             }
 
-            if (f is SelectiveStringFeature strings)
+            if (feature is SelectiveStringFeature selectiveStringFeature)
             {
-                return instance is string s && strings.Value.Contains(s, StringComparer.Ordinal);
+                return instance is string stringInstanceId && selectiveStringFeature.Value.Contains(stringInstanceId, StringComparer.Ordinal);
             }
 
             if (instance is string)
@@ -141,60 +236,70 @@ namespace Vexilla.Client
                 return false;
             }
 
-            var number = Convert.ToDouble(instance, CultureInfo.InvariantCulture);
-            if (f is SelectiveIntFeature integers)
+            var numericInstanceId = Convert.ToDouble(instance, CultureInfo.InvariantCulture);
+            if (feature is SelectiveIntFeature selectiveIntegerFeature)
             {
-                return integers.Value.Any(v => v == number);
+                return selectiveIntegerFeature.Value.Any(v => v == numericInstanceId);
             }
 
-            if (f is SelectiveFloatFeature floats)
+            if (feature is SelectiveFloatFeature selectiveFloatFeature)
             {
-                return floats.Value.Contains(number);
+                return selectiveFloatFeature.Value.Contains(numericInstanceId);
             }
 
             throw new ContractException("kind", "Unsupported boolean operation");
         }
-        public object Value(string group, string feature, object fallback)
+        public object Value(string groupNameOrId, string featureNameOrId, object fallback)
         {
-            var f = Lookup(group, feature);
-            if (f.FeatureType != "value")
+            var feature = Lookup(groupNameOrId, featureNameOrId);
+            if (feature.FeatureType != "value")
             {
                 throw new ContractException("kind", "Feature is not a value");
             }
 
-            return Scheduler.IsScheduleFeatureActive(f) ? ValueData(f) : fallback;
+            return Scheduler.IsScheduleFeatureActive(feature) ? ValueData(feature) : fallback;
         }
-        private static object ValueData(Feature f)
+        private static object ValueData(Feature feature)
         {
-            if (f is ValueStringFeature s)
+            if (feature is ValueStringFeature stringFeature)
             {
-                return s.Value;
+                return stringFeature.Value;
             }
 
-            if (f is ValueIntFeature i)
+            if (feature is ValueIntFeature integerFeature)
             {
-                return i.Value;
+                return integerFeature.Value;
             }
 
-            if (f is ValueFloatFeature d)
+            if (feature is ValueFloatFeature floatFeature)
             {
-                return d.Value;
+                return floatFeature.Value;
             }
 
             throw new ContractException("kind", "Unsupported value subtype");
         }
-        private T TypedValue<T>(string group, string feature, T fallback)
+        private T TypedValue<T>(string groupNameOrId, string featureNameOrId, T fallback)
         {
-            var f = Lookup(group, feature); var value = ValueData(f);
+            var feature = Lookup(groupNameOrId, featureNameOrId);
+            var value = ValueData(feature);
             if (!(value is T))
             {
                 throw new ContractException("kind", "Value subtype differs from accessor");
             }
 
-            return Scheduler.IsScheduleFeatureActive(f) ? (T)value : fallback;
+            return Scheduler.IsScheduleFeatureActive(feature) ? (T)value : fallback;
         }
-        public string ValueString(string groupNameOrId, string featureNameOrId, string defaultValue) { return TypedValue(groupNameOrId, featureNameOrId, defaultValue); }
-        public long ValueLong(string groupNameOrId, string featureNameOrId, long defaultValue) { return TypedValue(groupNameOrId, featureNameOrId, defaultValue); }
-        public double ValueDouble(string groupNameOrId, string featureNameOrId, double defaultValue) { return TypedValue(groupNameOrId, featureNameOrId, defaultValue); }
+        public string ValueString(string groupNameOrId, string featureNameOrId, string defaultValue)
+        {
+            return TypedValue(groupNameOrId, featureNameOrId, defaultValue);
+        }
+        public long ValueLong(string groupNameOrId, string featureNameOrId, long defaultValue)
+        {
+            return TypedValue(groupNameOrId, featureNameOrId, defaultValue);
+        }
+        public double ValueDouble(string groupNameOrId, string featureNameOrId, double defaultValue)
+        {
+            return TypedValue(groupNameOrId, featureNameOrId, defaultValue);
+        }
     }
 }

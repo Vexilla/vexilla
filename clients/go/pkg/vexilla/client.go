@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 
 	. "github.com/vexilla/vexilla/clients/go/pkg/internal"
@@ -44,8 +45,21 @@ func NewClient(environment string, baseURL string, customInstanceHash interface{
 	}
 }
 
+// reportOperation records outcomes without exposing publication or instance data.
+func (client Client) reportOperation(operation string, operationError error) {
+	if !client.ShowLogs {
+		return
+	}
+	outcome := "success"
+	if operationError != nil {
+		outcome = "failure"
+	}
+	log.Printf("vexilla operation=%s outcome=%s", operation, outcome)
+}
+
 // Fetches the manifest file for facilitating name->id lookups. Does not set the value on the client. You would need to call `SetManifest` after. Alternatively, you can use `SyncManifest` to do both steps with less code.
-func (client Client) GetManifest(fetch func(url string) (*http.Response, error)) (Manifest, error) {
+func (client Client) GetManifest(fetch func(url string) (*http.Response, error)) (result Manifest, err error) {
+	defer func() { client.reportOperation("manifest.fetch", err) }()
 	url := fmt.Sprintf("%s/manifest.json", client.BaseURL)
 	response, fetchErr := fetch(url)
 
@@ -77,7 +91,8 @@ func (client Client) GetManifest(fetch func(url string) (*http.Response, error))
 }
 
 // Sets a fetched manifest within the Client instance. It can also be useful for mocking flags for testing.
-func (client *Client) SetManifest(manifest Manifest) error {
+func (client *Client) SetManifest(manifest Manifest) (err error) {
+	defer func() { client.reportOperation("manifest.install", err) }()
 	if err := ValidateUnicode(manifest); err != nil {
 		return err
 	}
@@ -126,7 +141,8 @@ func (client *Client) SyncManifest(fetch func(url string) (*http.Response, error
 }
 
 // Fetches the flags for a specific flag group. Can use the ID or the name of the group for the lookup.
-func (client *Client) GetFlags(groupNameOrId string, fetch func(url string) (*http.Response, error)) (Group, error) {
+func (client *Client) GetFlags(groupNameOrId string, fetch func(url string) (*http.Response, error)) (result Group, err error) {
+	defer func() { client.reportOperation("group.fetch", err) }()
 
 	groupId := client.groupLookupTable[groupNameOrId]
 
@@ -171,7 +187,8 @@ func (client *Client) GetFlags(groupNameOrId string, fetch func(url string) (*ht
 }
 
 // Sets a fetched flag group within the Client instance.
-func (client *Client) SetFlags(group Group) error {
+func (client *Client) SetFlags(group Group) (err error) {
+	defer func() { client.reportOperation("group.install", err) }()
 	if client.installedManifest.Version == "" {
 		return NewGroupLookupError(string(group.GroupId))
 	}
@@ -269,18 +286,18 @@ func (client Client) shouldInstance(groupNameOrId, featureNameOrId string, insta
 	env := client.installedGroups[ids.RealGroupId].Environments[ids.RealEnvironmentId]
 	switch raw.FeatureType {
 	case ToggleFeatureType:
-		f := env.ToggleFeatures[ids.RealFeatureId]
-		return IsScheduleActive(f.Schedule, f.ScheduleType) && f.Value, nil
+		toggleFeature := env.ToggleFeatures[ids.RealFeatureId]
+		return IsScheduleActive(toggleFeature.Schedule, toggleFeature.ScheduleType) && toggleFeature.Value, nil
 	case GradualFeatureType:
-		f := env.GradualFeatures[ids.RealFeatureId]
-		return IsScheduleActive(f.Schedule, f.ScheduleType) && HashStringInstanceID(text, f.Seed) < f.Value, nil
+		gradualFeature := env.GradualFeatures[ids.RealFeatureId]
+		return IsScheduleActive(gradualFeature.Schedule, gradualFeature.ScheduleType) && HashStringInstanceID(text, gradualFeature.Seed) < gradualFeature.Value, nil
 	case SelectiveFeatureType:
-		f := env.SelectiveFeatures[ids.RealFeatureId]
-		if !IsScheduleActive(f.Schedule, f.ScheduleType) {
+		selectiveFeature := env.SelectiveFeatures[ids.RealFeatureId]
+		if !IsScheduleActive(selectiveFeature.Schedule, selectiveFeature.ScheduleType) {
 			return false, nil
 		}
 		if value, ok := instance.(string); ok {
-			if f.ValueType != StringValueType {
+			if selectiveFeature.ValueType != StringValueType {
 				return false, nil
 			}
 			for _, member := range env.SelectiveStringFeatures[ids.RealFeatureId].Value {
@@ -299,10 +316,10 @@ func (client Client) shouldInstance(groupNameOrId, featureNameOrId string, insta
 		case float64:
 			numeric = value
 		}
-		if f.ValueType != NumberValueType {
+		if selectiveFeature.ValueType != NumberValueType {
 			return false, nil
 		}
-		if f.NumberType == IntNumberType {
+		if selectiveFeature.NumberType == IntNumberType {
 			for _, member := range env.SelectiveIntFeatures[ids.RealFeatureId].Value {
 				if float64(member) == numeric {
 					return true, nil

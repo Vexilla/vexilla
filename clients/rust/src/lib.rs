@@ -21,6 +21,7 @@ pub struct VexillaClient {
     environment: &'static str,
     base_url: &'static str,
     instance_id: InstanceId,
+    show_logs: bool,
     manifest: Manifest,
     flag_groups: HashMap<String, FlagGroup>,
     group_lookup_table: HashMap<String, String>,
@@ -41,36 +42,55 @@ impl VexillaClient {
             ..Self::default()
         }
     }
+    /// Enable or disable diagnostic events for fetching and installing data.
+    pub fn with_show_logs(mut self, show_logs: bool) -> Self {
+        self.show_logs = show_logs;
+        self
+    }
+    fn report_operation<T>(&self, operation: &str, result: &VexillaResult<T>) {
+        if self.show_logs {
+            let outcome = if result.is_ok() { "success" } else { "failure" };
+            eprintln!("vexilla operation={operation} outcome={outcome}");
+        }
+    }
     /// Fetch and validate a manifest without installing it.
     pub fn get_manifest(
         &self,
         fetch: impl FnOnce(&str) -> VexillaResult<String>,
     ) -> VexillaResult<Manifest> {
-        let text = fetch(&format!("{}/manifest.json", self.base_url))
-            .map_err(|error| VexillaError::Fetch(error.to_string()))?;
-        validation::parsed_manifest(&text)
+        let operation_result = (|| {
+            let text = fetch(&format!("{}/manifest.json", self.base_url))
+                .map_err(|error| VexillaError::Fetch(error.to_string()))?;
+            validation::parsed_manifest(&text)
+        })();
+        self.report_operation("manifest.fetch", &operation_result);
+        operation_result
     }
     /// Atomically replace the manifest and remove groups whose identity changed.
     pub fn set_manifest(&mut self, manifest: Manifest) -> VexillaResult<()> {
-        validation::manifest(
-            &serde_json::to_value(&manifest)
-                .map_err(|error| VexillaError::Validation(error.to_string()))?,
-        )?;
-        let lookup = create_group_lookup_table(&manifest)?;
-        self.flag_groups.retain(|id, group| {
-            manifest
-                .groups
-                .iter()
-                .any(|entry| &entry.group_id == id && entry.name == group.name)
-        });
-        let installed = &self.flag_groups;
-        self.flag_lookup_table
-            .retain(|id, _| installed.contains_key(id));
-        self.environment_lookup_table
-            .retain(|id, _| installed.contains_key(id));
-        self.manifest = manifest;
-        self.group_lookup_table = lookup;
-        Ok(())
+        let operation_result = (|| {
+            validation::manifest(
+                &serde_json::to_value(&manifest)
+                    .map_err(|error| VexillaError::Validation(error.to_string()))?,
+            )?;
+            let lookup = create_group_lookup_table(&manifest)?;
+            self.flag_groups.retain(|id, group| {
+                manifest
+                    .groups
+                    .iter()
+                    .any(|entry| &entry.group_id == id && entry.name == group.name)
+            });
+            let installed = &self.flag_groups;
+            self.flag_lookup_table
+                .retain(|id, _| installed.contains_key(id));
+            self.environment_lookup_table
+                .retain(|id, _| installed.contains_key(id));
+            self.manifest = manifest;
+            self.group_lookup_table = lookup;
+            Ok(())
+        })();
+        self.report_operation("manifest.install", &operation_result);
+        operation_result
     }
     /// Fetch and install a validated manifest.
     pub fn sync_manifest(
@@ -86,35 +106,43 @@ impl VexillaClient {
         group: &str,
         fetch: impl FnOnce(&str) -> VexillaResult<String>,
     ) -> VexillaResult<FlagGroup> {
-        let id = self
-            .group_lookup_table
-            .get(group)
-            .ok_or(VexillaError::GroupLookupKeyNotFound)?;
-        let text = fetch(&format!("{}/{}.json", self.base_url, id))
-            .map_err(|error| VexillaError::Fetch(error.to_string()))?;
-        let flags = validation::parsed_group(&text)?;
-        validation::installed_group(&flags, &self.manifest)?;
-        if &flags.group_id != id {
-            return Err(VexillaError::Validation(
-                "Fetched group differs from requested group".to_owned(),
-            ));
-        }
-        Ok(flags)
+        let operation_result = (|| {
+            let id = self
+                .group_lookup_table
+                .get(group)
+                .ok_or(VexillaError::GroupLookupKeyNotFound)?;
+            let text = fetch(&format!("{}/{}.json", self.base_url, id))
+                .map_err(|error| VexillaError::Fetch(error.to_string()))?;
+            let flags = validation::parsed_group(&text)?;
+            validation::installed_group(&flags, &self.manifest)?;
+            if &flags.group_id != id {
+                return Err(VexillaError::Validation(
+                    "Fetched group differs from requested group".to_owned(),
+                ));
+            }
+            Ok(flags)
+        })();
+        self.report_operation("group.fetch", &operation_result);
+        operation_result
     }
     /// Validate and install an owned group, replacing its lookup aliases.
     pub fn set_flags(&mut self, flags: FlagGroup) -> VexillaResult<bool> {
-        if self.manifest.version.is_empty() {
-            return Err(VexillaError::GroupLookupKeyNotFound);
-        }
-        validation::installed_group(&flags, &self.manifest)?;
-        let features = create_feature_lookup_table(&flags)?;
-        let environments = create_environment_lookup_table(&flags)?;
-        self.flag_lookup_table
-            .insert(flags.group_id.clone(), features);
-        self.environment_lookup_table
-            .insert(flags.group_id.clone(), environments);
-        self.flag_groups.insert(flags.group_id.clone(), flags);
-        Ok(true)
+        let operation_result = (|| {
+            if self.manifest.version.is_empty() {
+                return Err(VexillaError::GroupLookupKeyNotFound);
+            }
+            validation::installed_group(&flags, &self.manifest)?;
+            let features = create_feature_lookup_table(&flags)?;
+            let environments = create_environment_lookup_table(&flags)?;
+            self.flag_lookup_table
+                .insert(flags.group_id.clone(), features);
+            self.environment_lookup_table
+                .insert(flags.group_id.clone(), environments);
+            self.flag_groups.insert(flags.group_id.clone(), flags);
+            Ok(true)
+        })();
+        self.report_operation("group.install", &operation_result);
+        operation_result
     }
     /// Fetch and install a validated group.
     pub fn sync_flags(
@@ -205,8 +233,10 @@ impl VexillaClient {
             return Ok(false);
         }
         match feature {
-            Feature::Toggle(f) => Ok(f.value),
-            Feature::Gradual(f) => Ok(hash_value(&text, f.seed) < f.value),
+            Feature::Toggle(feature_details) => Ok(feature_details.value),
+            Feature::Gradual(feature_details) => {
+                Ok(hash_value(&text, feature_details.seed) < feature_details.value)
+            }
             Feature::Selective(SelectiveFeature::String { value, .. }) => {
                 Ok(matches!(instance, InstanceId::Text(_)) && value.contains(&text))
             }
@@ -237,7 +267,9 @@ impl VexillaClient {
                     default.to_owned()
                 })
             }
-            Feature::Value(f) => Err(VexillaError::InvalidValueStringType(f.value_type())),
+            Feature::Value(feature_details) => Err(VexillaError::InvalidValueStringType(
+                feature_details.value_type(),
+            )),
             _ => Err(VexillaError::InvalidValueFeatureType(
                 feature.feature_type(),
             )),
@@ -259,7 +291,9 @@ impl VexillaClient {
                     default
                 })
             }
-            Feature::Value(f) => Err(VexillaError::InvalidValueI64Type(f.value_type())),
+            Feature::Value(feature_details) => Err(VexillaError::InvalidValueI64Type(
+                feature_details.value_type(),
+            )),
             _ => Err(VexillaError::InvalidValueFeatureType(
                 feature.feature_type(),
             )),
@@ -281,7 +315,9 @@ impl VexillaClient {
                     default
                 })
             }
-            Feature::Value(f) => Err(VexillaError::InvalidValueF64Type(f.value_type())),
+            Feature::Value(feature_details) => Err(VexillaError::InvalidValueF64Type(
+                feature_details.value_type(),
+            )),
             _ => Err(VexillaError::InvalidValueFeatureType(
                 feature.feature_type(),
             )),
@@ -522,3 +558,6 @@ mod tests {
 
 #[cfg(test)]
 mod contract;
+
+#[cfg(test)]
+mod logging;

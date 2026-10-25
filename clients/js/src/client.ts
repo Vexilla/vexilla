@@ -33,10 +33,10 @@ function validInstance(value: unknown): asserts value is string | number {
 }
 
 export class VexillaClient {
-  protected showLogs;
+  protected showLogs: boolean;
   protected baseUrl: string;
   protected environment: string;
-  protected customInstanceHash = "";
+  protected defaultInstanceId: string | number | undefined;
 
   protected manifest: VexillaManifest | undefined;
   protected flagGroups: Record<string, PublishedGroup> = Object.create(null);
@@ -56,42 +56,58 @@ export class VexillaClient {
     this.showLogs = showLogs;
     this.baseUrl = config.baseUrl;
     this.environment = config.environment ?? "prod";
-    this.customInstanceHash = config.customInstanceId;
+    this.defaultInstanceId = config.customInstanceId;
   }
 
   async getManifest(
     fetchHook: FetchHook<VexillaManifest>
   ): Promise<VexillaManifest> {
-    let result: unknown;
+    let operationSucceeded = false;
     try {
-      result = await fetchHook(`${this.baseUrl}/manifest.json`);
-    } catch (error) {
-      throw new VexillaError(
-        "fetch",
-        "Failed to fetch manifest: " + String(error)
-      );
+      let result: unknown;
+      try {
+        result = await fetchHook(`${this.baseUrl}/manifest.json`);
+      } catch (error) {
+        throw new VexillaError(
+          "fetch",
+          "Failed to fetch manifest: " + String(error)
+        );
+      }
+      validateManifestData(result);
+      const manifestSnapshot = structuredClone(result);
+      operationSucceeded = true;
+      return manifestSnapshot;
+    } finally {
+      const outcome = operationSucceeded ? "success" : "failure";
+      this.log(`vexilla operation=manifest.fetch outcome=${outcome}`);
     }
-    validateManifestData(result);
-    return structuredClone(result);
   }
 
   async setManifest(manifest: VexillaManifest) {
-    validateManifestData(manifest);
-    const snapshot = structuredClone(manifest);
-    const lookup = createGroupLookupTable(snapshot.groups);
-    for (const [id, group] of Object.entries(this.flagGroups)) {
-      if (
-        !snapshot.groups.some(
-          (entry) => entry.groupId === id && entry.name === group.name
-        )
-      ) {
-        delete this.flagGroups[id];
-        delete this.featureLookupTable[id];
-        delete this.environmentLookupTable[id];
+    let operationSucceeded = false;
+    try {
+      validateManifestData(manifest);
+      const snapshot = structuredClone(manifest);
+      const groupLookupTable = createGroupLookupTable(snapshot.groups);
+      for (const [groupId, group] of Object.entries(this.flagGroups)) {
+        if (
+          !snapshot.groups.some(
+            (entry) => entry.groupId === groupId && entry.name === group.name
+          )
+        ) {
+          delete this.flagGroups[groupId];
+          delete this.featureLookupTable[groupId];
+          delete this.environmentLookupTable[groupId];
+        }
       }
+      this.manifest = snapshot;
+      this.groupLookupTable = groupLookupTable;
+
+      operationSucceeded = true;
+    } finally {
+      const outcome = operationSucceeded ? "success" : "failure";
+      this.log(`vexilla operation=manifest.install outcome=${outcome}`);
     }
-    this.manifest = snapshot;
-    this.groupLookupTable = lookup;
   }
 
   async syncManifest(fetchHook: FetchHook<VexillaManifest>) {
@@ -102,44 +118,62 @@ export class VexillaClient {
     groupNameOrId: string,
     fetchHook: FetchHook<PublishedGroup>
   ): Promise<PublishedGroup> {
-    if (!this.manifest) {
-      throw new VexillaError("lookup", "Manifest is not fetched");
-    }
-    const id = this.groupLookupTable[groupNameOrId];
-    if (!id) {
-      throw new VexillaError("lookup", "FlagGroup not found in manifest");
-    }
-    let flags: unknown;
+    let operationSucceeded = false;
     try {
-      flags = await fetchHook(`${this.baseUrl}/${id}.json`);
-    } catch (error) {
-      throw new VexillaError(
-        "fetch",
-        "Failed to fetch group: " + String(error)
-      );
+      if (!this.manifest) {
+        throw new VexillaError("lookup", "Manifest is not fetched");
+      }
+      const groupId = this.groupLookupTable[groupNameOrId];
+      if (!groupId) {
+        throw new VexillaError("lookup", "FlagGroup not found in manifest");
+      }
+      let flags: unknown;
+      try {
+        flags = await fetchHook(`${this.baseUrl}/${groupId}.json`);
+      } catch (error) {
+        throw new VexillaError(
+          "fetch",
+          "Failed to fetch group: " + String(error)
+        );
+      }
+      validateGroupData(flags, this.manifest);
+      if (flags.groupId !== groupId) {
+        throw new VexillaError(
+          "validation",
+          "Fetched group does not match the requested group"
+        );
+      }
+      const groupSnapshot = structuredClone(flags);
+      operationSucceeded = true;
+      return groupSnapshot;
+    } finally {
+      const outcome = operationSucceeded ? "success" : "failure";
+      this.log(`vexilla operation=group.fetch outcome=${outcome}`);
     }
-    validateGroupData(flags, this.manifest);
-    if (flags.groupId !== id) {
-      throw new VexillaError(
-        "validation",
-        "Fetched group does not match the requested group"
-      );
-    }
-    return structuredClone(flags);
   }
 
   setFlags(flags: PublishedGroup) {
-    if (!this.manifest) {
-      throw new VexillaError("lookup", "Manifest is not fetched");
+    let operationSucceeded = false;
+    try {
+      if (!this.manifest) {
+        throw new VexillaError("lookup", "Manifest is not fetched");
+      }
+      validateGroupData(flags, this.manifest);
+      const snapshot = structuredClone(flags);
+      const groupId = snapshot.groupId;
+      const featureLookupTable = createFeatureLookupTable(snapshot.features);
+      const environmentLookupTable = createEnvironmentLookupTable(
+        snapshot.environments
+      );
+      this.featureLookupTable[groupId] = featureLookupTable;
+      this.environmentLookupTable[groupId] = environmentLookupTable;
+      this.flagGroups[groupId] = snapshot;
+
+      operationSucceeded = true;
+    } finally {
+      const outcome = operationSucceeded ? "success" : "failure";
+      this.log(`vexilla operation=group.install outcome=${outcome}`);
     }
-    validateGroupData(flags, this.manifest);
-    const snapshot = structuredClone(flags);
-    const groupId = snapshot.groupId;
-    const features = createFeatureLookupTable(snapshot.features);
-    const environments = createEnvironmentLookupTable(snapshot.environments);
-    this.featureLookupTable[groupId] = features;
-    this.environmentLookupTable[groupId] = environments;
-    this.flagGroups[groupId] = snapshot;
   }
 
   async syncFlags(groupNameOrId: string, fetchHook: FetchHook<PublishedGroup>) {
@@ -149,13 +183,13 @@ export class VexillaClient {
   should(
     groupNameOrId: string,
     featureName: string,
-    customInstanceHash?: string | number
+    customInstanceId?: string | number
   ): boolean {
     const { feature } = this.getActualItems(groupNameOrId, featureName);
     if (feature.featureType === "value") {
       throw new VexillaError("kind", "Tried calling should on a value feature");
     }
-    const instance = customInstanceHash ?? this.customInstanceHash;
+    const instance = customInstanceId ?? this.defaultInstanceId;
     if (
       feature.featureType === "gradual" ||
       feature.featureType === "selective"
@@ -178,12 +212,12 @@ export class VexillaClient {
   safeShould(
     groupNameOrId: string,
     featureName: string,
-    customInstanceHash?: string | number
+    customInstanceId?: string | number
   ) {
     try {
-      return this.should(groupNameOrId, featureName, customInstanceHash);
-    } catch (e: unknown) {
-      console.warn(e);
+      return this.should(groupNameOrId, featureName, customInstanceId);
+    } catch {
+      this.warn("vexilla operation=should outcome=fallback");
       return false;
     }
   }
@@ -216,8 +250,8 @@ export class VexillaClient {
   ) {
     try {
       return this.value(groupNameOrId, featureName, defaultValue);
-    } catch (e: unknown) {
-      console.warn(e);
+    } catch {
+      this.warn("vexilla operation=value outcome=fallback");
       return defaultValue;
     }
   }

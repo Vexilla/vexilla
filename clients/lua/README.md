@@ -56,6 +56,8 @@ client:sync_flags("Checkout", fetch)
 
 `fetch(url)` must return a decoded v1 manifest or group table and raise an error on transport failure. Preserve JSON nulls and array/object identity when decoding, for example with `dkjson.decode(text, 1, dkjson.null)`. Plain empty tables are interpreted according to their field; explicit decoder array/object tags are validated. Fetch failures and invalid refreshes preserve the installed snapshot.
 
+Set `show_logs = true` to write manifest/group fetch and installation outcomes to standard error. Logging is disabled by default, includes failures without swallowing them, and excludes instance IDs, feature values, URLs, and raw callback errors. Each event identifies its operation and outcome, for example `vexilla operation=manifest.install outcome=success`.
+
 
 ### Usage
 

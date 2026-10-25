@@ -86,43 +86,43 @@ object Validation {
 
     fun feature(value: JsonElement) {
         unicode(value)
-        val f = obj(value)
-        text(f["name"])
-        text(f["featureId"], true)
-        member(f["scheduleType"], "", "global", "environment")
-        schedule(f["schedule"] ?: JsonNull)
-        when (text(f["featureType"])) {
+        val feature = obj(value)
+        text(feature["name"])
+        text(feature["featureId"], true)
+        member(feature["scheduleType"], "", "global", "environment")
+        schedule(feature["schedule"] ?: JsonNull)
+        when (text(feature["featureType"])) {
             "toggle" ->
                 check(
-                    (f["value"] as? JsonPrimitive)?.let {
+                    (feature["value"] as? JsonPrimitive)?.let {
                         !it.isString && it.booleanOrNull != null
                     } == true,
                     "Toggle value must be boolean",
                 )
             "gradual" -> {
-                number(f["value"])
-                val seed = number(f["seed"])
+                number(feature["value"])
+                val seed = number(feature["seed"])
                 check(seed > 0 && seed <= 1, "seed must satisfy 0 < seed <= 1")
             }
             "selective",
             "value" -> {
-                member(f["valueType"], "string", "number")
-                val numeric = text(f["valueType"]) == "number"
+                member(feature["valueType"], "string", "number")
+                val numeric = text(feature["valueType"]) == "number"
                 if (numeric) {
-                    member(f["numberType"], "int", "float")
+                    member(feature["numberType"], "int", "float")
                 }
-                val integer = numeric && text(f["numberType"]) == "int"
-                fun item(v: JsonElement?) {
+                val integer = numeric && text(feature["numberType"]) == "int"
+                fun item(value: JsonElement?) {
                     if (numeric) {
-                        number(v, integer)
+                        number(value, integer)
                     } else {
-                        text(v)
+                        text(value)
                     }
                 }
-                if (text(f["featureType"]) == "selective") {
-                    array(f["value"]).forEach(::item)
+                if (text(feature["featureType"]) == "selective") {
+                    array(feature["value"]).forEach(::item)
                 } else {
-                    item(f["value"])
+                    item(feature["value"])
                 }
             }
             else -> throw ContractException("validation", "Unsupported featureType")
@@ -134,20 +134,20 @@ object Validation {
         val aliases = mutableMapOf<String, String>()
         for ((id, raw) in fields) {
             feature(raw)
-            val f = obj(raw)
-            check(text(f["featureId"], true) == id, "featureId differs from map key")
-            addAlias(aliases, id, text(f["name"]))
+            val feature = obj(raw)
+            check(text(feature["featureId"], true) == id, "featureId differs from map key")
+            addAlias(aliases, id, text(feature["name"]))
         }
         return fields
     }
 
     fun manifest(value: JsonElement) {
         unicode(value)
-        val m = obj(value)
-        check(text(m["version"]) == "v1", "Manifest version must be v1")
+        val manifest = obj(value)
+        check(text(manifest["version"]) == "v1", "Manifest version must be v1")
         val ids = mutableSetOf<String>()
         val aliases = mutableMapOf<String, String>()
-        for (raw in array(m["groups"])) {
+        for (raw in array(manifest["groups"])) {
             val group = obj(raw)
             val id = safeID(group["groupId"])
             check(ids.add(id), "Duplicate group ID")
@@ -155,44 +155,47 @@ object Validation {
         }
     }
 
-    private fun same(a: JsonElement?, b: JsonElement?): Boolean {
-        if (a == null || b == null) {
-            return a == null && b == null
+    private fun same(left: JsonElement?, right: JsonElement?): Boolean {
+        if (left == null || right == null) {
+            return left == null && right == null
         }
-        if (a is JsonNull || b is JsonNull) {
-            return a is JsonNull && b is JsonNull
+        if (left is JsonNull || right is JsonNull) {
+            return left is JsonNull && right is JsonNull
         }
-        if (a !is JsonPrimitive || b !is JsonPrimitive || a.isString != b.isString) {
+        if (left !is JsonPrimitive || right !is JsonPrimitive || left.isString != right.isString) {
             return false
         }
-        if (a.isString) {
-            return a.content == b.content
+        if (left.isString) {
+            return left.content == right.content
         }
-        if (a.booleanOrNull != null || b.booleanOrNull != null) {
-            return a.booleanOrNull != null && a.booleanOrNull == b.booleanOrNull
+        if (left.booleanOrNull != null || right.booleanOrNull != null) {
+            return left.booleanOrNull != null && left.booleanOrNull == right.booleanOrNull
         }
-        return a.doubleOrNull == b.doubleOrNull
+        return left.doubleOrNull == right.doubleOrNull
     }
 
     fun group(value: JsonElement) {
         unicode(value)
-        val g = obj(value)
-        safeID(g["groupId"])
-        text(g["name"])
-        check(text(obj(g["meta"])["version"]) == "v1", "Group version must be v1")
-        val defaults = features(g["features"])
+        val group = obj(value)
+        safeID(group["groupId"])
+        text(group["name"])
+        check(text(obj(group["meta"])["version"]) == "v1", "Group version must be v1")
+        val defaults = features(group["features"])
         val aliases = mutableMapOf<String, String>()
-        for ((id, raw) in obj(g["environments"])) {
+        for ((id, raw) in obj(group["environments"])) {
             val env = obj(raw)
             check(text(env["environmentId"], true) == id, "environmentId differs from map key")
             addAlias(aliases, id, text(env["name"]))
             val values = features(env["features"])
             check(values.keys == defaults.keys, "Environment feature set differs")
-            for ((fid, feature) in values) {
-                val a = obj(feature)
-                val b = obj(defaults.getValue(fid))
+            for ((featureId, feature) in values) {
+                val left = obj(feature)
+                val right = obj(defaults.getValue(featureId))
                 for (key in listOf("name", "featureType", "valueType", "numberType")) {
-                    check(same(a[key], b[key]), "Environment feature identity/subtype differs")
+                    check(
+                        same(left[key], right[key]),
+                        "Environment feature identity/subtype differs",
+                    )
                 }
             }
         }

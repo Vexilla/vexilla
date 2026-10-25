@@ -1,4 +1,5 @@
 """Noncoercing v1 boundary checks. Additional JSON properties remain compatible."""
+
 import math
 from enum import Enum
 from .compat import normalize, timezone
@@ -29,12 +30,20 @@ def require(condition, path, expected):
 
 def object_(value, path):
     unicode_tree(value, path)
-    require(isinstance(value, dict) and all(isinstance(key, str) for key in value), path, "an object")
+    require(
+        isinstance(value, dict) and all(isinstance(key, str) for key in value),
+        path,
+        "an object",
+    )
 
 
 def unicode_tree(value, path=""):
     if isinstance(value, str):
-        require(not any(0xd800 <= ord(char) <= 0xdfff for char in value), path, "Unicode without unpaired surrogates")
+        require(
+            not any(0xD800 <= ord(char) <= 0xDFFF for char in value),
+            path,
+            "Unicode without unpaired surrogates",
+        )
     elif isinstance(value, dict):
         for key, item in value.items():
             unicode_tree(key, path)
@@ -45,7 +54,11 @@ def unicode_tree(value, path=""):
 
 
 def text(value, path, nonempty=False):
-    require(isinstance(value, str) and (not nonempty or bool(value)), path, "a nonempty string" if nonempty else "a string")
+    require(
+        isinstance(value, str) and (not nonempty or bool(value)),
+        path,
+        "a nonempty string" if nonempty else "a string",
+    )
 
 
 def number(value, path, integer=False):
@@ -56,12 +69,21 @@ def number(value, path, integer=False):
         finite = False
     require(finite, path, "a finite number")
     if integer:
-        require(-9007199254740991 <= value <= 9007199254740991 and value % 1 == 0, path, "a safe integer")
+        require(
+            -9007199254740991 <= value <= 9007199254740991 and value % 1 == 0,
+            path,
+            "a safe integer",
+        )
 
 
 def safe_id(value):
     text(value, "groupId", True)
-    require(value not in ("manifest", "config", ".", "..") and not any(char in value for char in ("/", "\\", "\0")), "groupId", "a safe group file identifier")
+    require(
+        value not in ("manifest", "config", ".", "..")
+        and not any(char in value for char in ("/", "\\", "\0")),
+        "groupId",
+        "a safe group file identifier",
+    )
 
 
 def same_identity_field(a, b, field):
@@ -81,7 +103,11 @@ def aliases(items):
     result = {}
     for identifier, name in items:
         for key in (identifier, name, normalize(name)):
-            require(key not in result or result[key] == identifier, "name", "an unambiguous alias")
+            require(
+                key not in result or result[key] == identifier,
+                "name",
+                "an unambiguous alias",
+            )
             result[key] = identifier
     return result
 
@@ -90,18 +116,34 @@ def schedule(value):
     object_(value, "schedule")
     for field in ("start", "end", "startTime", "endTime"):
         number(value.get(field), "schedule/" + field, True)
-    require(value.get("timeType") in ("none", "start/end", "daily"), "schedule/timeType", "a supported time type")
-    require(timezone(value.get("timezone")), "schedule/timezone", "a compatible timezone identifier")
+    require(
+        value.get("timeType") in ("none", "start/end", "daily"),
+        "schedule/timeType",
+        "a supported time type",
+    )
+    require(
+        timezone(value.get("timezone")),
+        "schedule/timezone",
+        "a compatible timezone identifier",
+    )
 
 
 def feature(value):
     object_(value, "feature")
     text(value.get("name"), "feature/name")
     text(value.get("featureId"), "feature/featureId", True)
-    require(value.get("scheduleType") in ("", "global", "environment"), "scheduleType", "a supported schedule type")
+    require(
+        value.get("scheduleType") in ("", "global", "environment"),
+        "scheduleType",
+        "a supported schedule type",
+    )
     schedule(value.get("schedule"))
     kind = value.get("featureType")
-    require(kind in ("toggle", "gradual", "selective", "value"), "featureType", "an existing feature type")
+    require(
+        kind in ("toggle", "gradual", "selective", "value"),
+        "featureType",
+        "an existing feature type",
+    )
     if kind == "toggle":
         require(type(value.get("value")) is bool, "value", "a boolean")
     elif kind == "gradual":
@@ -109,9 +151,17 @@ def feature(value):
         number(value.get("seed"), "seed")
         require(0 < value["seed"] <= 1, "seed", "0 < seed <= 1")
     else:
-        require(value.get("valueType") in ("string", "number"), "valueType", "string or number")
+        require(
+            value.get("valueType") in ("string", "number"),
+            "valueType",
+            "string or number",
+        )
         if value["valueType"] == "number":
-            require(value.get("numberType") in ("int", "float"), "numberType", "int or float")
+            require(
+                value.get("numberType") in ("int", "float"),
+                "numberType",
+                "int or float",
+            )
         values = [value.get("value")]
         if kind == "selective":
             require(isinstance(value.get("value"), list), "value", "an array")
@@ -154,7 +204,14 @@ def group(value, entries=None):
     object_(value.get("meta"), "meta")
     require(value["meta"].get("version") == "v1", "meta/version", "v1")
     if entries is not None:
-        require(any(item["groupId"] == value["groupId"] and item["name"] == value["name"] for item in entries), "group", "the manifest ID and name")
+        require(
+            any(
+                item["groupId"] == value["groupId"] and item["name"] == value["name"]
+                for item in entries
+            ),
+            "group",
+            "the manifest ID and name",
+        )
     feature_aliases = features(value.get("features"))
     object_(value.get("environments"), "environments")
     envs = value["environments"]
@@ -164,7 +221,20 @@ def group(value, entries=None):
         text(env.get("environmentId"), "environmentId", True)
         require(env["environmentId"] == identifier, "environmentId", "the map key")
         features(env.get("features"))
-        require(env["features"].keys() == value["features"].keys(), "environment/features", "the exact group feature set")
+        require(
+            env["features"].keys() == value["features"].keys(),
+            "environment/features",
+            "the exact group feature set",
+        )
         for fid, item in env["features"].items():
-            require(all(same_identity_field(item, value["features"][fid], field) for field in ("name", "featureType", "valueType", "numberType")), "feature", "the group feature name and subtype")
-    return feature_aliases, aliases((identifier, env["name"]) for identifier, env in envs.items())
+            require(
+                all(
+                    same_identity_field(item, value["features"][fid], field)
+                    for field in ("name", "featureType", "valueType", "numberType")
+                ),
+                "feature",
+                "the group feature name and subtype",
+            )
+    return feature_aliases, aliases(
+        (identifier, env["name"]) for identifier, env in envs.items()
+    )

@@ -21,38 +21,46 @@ object VexillaCodec {
 
     fun manifest(value: JsonElement): Manifest {
         Validation.manifest(value)
-        val m = value.jsonObject
+        val manifestProperties = value.jsonObject
         return Manifest(
-            Validation.text(m["version"]),
-            m.getValue("groups").jsonArray.map {
-                val g = it.jsonObject
-                ManifestGroup(Validation.text(g["name"]), Validation.text(g["groupId"]))
+            Validation.text(manifestProperties["version"]),
+            manifestProperties.getValue("groups").jsonArray.map {
+                val groupProperties = it.jsonObject
+                ManifestGroup(
+                    Validation.text(groupProperties["name"]),
+                    Validation.text(groupProperties["groupId"]),
+                )
             },
         )
     }
 
     fun schedule(value: JsonElement): Schedule {
         Validation.schedule(value)
-        val s = value.jsonObject
+        val scheduleProperties = value.jsonObject
         return Schedule(
-            Validation.number(s["start"], true).toLong(),
-            Validation.number(s["end"], true).toLong(),
-            Validation.text(s["timezone"]),
-            ScheduleTimeType.values().first { it.typeName == Validation.text(s["timeType"]) },
-            Validation.number(s["startTime"], true).toLong(),
-            Validation.number(s["endTime"], true).toLong(),
+            Validation.number(scheduleProperties["start"], true).toLong(),
+            Validation.number(scheduleProperties["end"], true).toLong(),
+            Validation.text(scheduleProperties["timezone"]),
+            ScheduleTimeType.values().first {
+                it.typeName == Validation.text(scheduleProperties["timeType"])
+            },
+            Validation.number(scheduleProperties["startTime"], true).toLong(),
+            Validation.number(scheduleProperties["endTime"], true).toLong(),
         )
     }
 
     fun feature(value: JsonElement): Feature {
         Validation.feature(value)
-        val f = value.jsonObject
-        val name = Validation.text(f["name"])
-        val id = Validation.text(f["featureId"])
-        val mode = ScheduleType.values().first { it.typeName == Validation.text(f["scheduleType"]) }
-        val schedule = schedule(f.getValue("schedule"))
-        val data = f.getValue("value")
-        return when (Validation.text(f["featureType"])) {
+        val featureProperties = value.jsonObject
+        val name = Validation.text(featureProperties["name"])
+        val id = Validation.text(featureProperties["featureId"])
+        val mode =
+            ScheduleType.values().first {
+                it.typeName == Validation.text(featureProperties["scheduleType"])
+            }
+        val schedule = schedule(featureProperties.getValue("schedule"))
+        val data = featureProperties.getValue("value")
+        return when (Validation.text(featureProperties["featureType"])) {
             "toggle" ->
                 ToggleFeature(
                     name,
@@ -68,10 +76,10 @@ object VexillaCodec {
                     scheduleType = mode,
                     schedule = schedule,
                     value = Validation.number(data),
-                    seed = Validation.number(f["seed"]),
+                    seed = Validation.number(featureProperties["seed"]),
                 )
             "selective" ->
-                when (Validation.text(f["valueType"])) {
+                when (Validation.text(featureProperties["valueType"])) {
                     "string" ->
                         SelectiveStringFeature(
                             name,
@@ -81,7 +89,7 @@ object VexillaCodec {
                             value = data.jsonArray.map { Validation.text(it) },
                         )
                     else ->
-                        if (Validation.text(f["numberType"]) == "int") {
+                        if (Validation.text(featureProperties["numberType"]) == "int") {
                             SelectiveIntFeature(
                                 name,
                                 id,
@@ -100,7 +108,7 @@ object VexillaCodec {
                         }
                 }
             else ->
-                when (Validation.text(f["valueType"])) {
+                when (Validation.text(featureProperties["valueType"])) {
                     "string" ->
                         ValueStringFeature(
                             name,
@@ -110,7 +118,7 @@ object VexillaCodec {
                             value = Validation.text(data),
                         )
                     else ->
-                        if (Validation.text(f["numberType"]) == "int") {
+                        if (Validation.text(featureProperties["numberType"]) == "int") {
                             ValueIntFeature(
                                 name,
                                 id,
@@ -135,20 +143,20 @@ object VexillaCodec {
 
     fun group(value: JsonElement): Group {
         Validation.group(value)
-        val g = value.jsonObject
+        val groupProperties = value.jsonObject
         return Group(
-            Validation.text(g["name"]),
-            Validation.text(g["groupId"]),
+            Validation.text(groupProperties["name"]),
+            Validation.text(groupProperties["groupId"]),
             GroupMeta("v1"),
-            g.getValue("environments").jsonObject.mapValues { (_, raw) ->
-                val env = raw.jsonObject
+            groupProperties.getValue("environments").jsonObject.mapValues { (_, raw) ->
+                val environmentProperties = raw.jsonObject
                 Environment(
-                    Validation.text(env["name"]),
-                    Validation.text(env["environmentId"]),
-                    features(env.getValue("features")),
+                    Validation.text(environmentProperties["name"]),
+                    Validation.text(environmentProperties["environmentId"]),
+                    features(environmentProperties.getValue("features")),
                 )
             },
-            features(g.getValue("features")),
+            features(groupProperties.getValue("features")),
         )
     }
 
@@ -166,10 +174,10 @@ object VexillaCodec {
         put(
             "groups",
             JsonArray(
-                value.groups.map { g ->
+                value.groups.map { groupProperties ->
                     buildJsonObject {
-                        put("name", g.name)
-                        put("groupId", g.groupId)
+                        put("name", groupProperties.name)
+                        put("groupId", groupProperties.groupId)
                     }
                 }
             ),
@@ -258,11 +266,14 @@ object VexillaCodec {
         put(
             "environments",
             JsonObject(
-                value.environments.mapValues { (_, env) ->
+                value.environments.mapValues { (_, environmentProperties) ->
                     buildJsonObject {
-                        put("name", env.name)
-                        put("environmentId", env.environmentId)
-                        put("features", JsonObject(env.features.mapValues { json(it.value) }))
+                        put("name", environmentProperties.name)
+                        put("environmentId", environmentProperties.environmentId)
+                        put(
+                            "features",
+                            JsonObject(environmentProperties.features.mapValues { json(it.value) }),
+                        )
                     }
                 }
             ),

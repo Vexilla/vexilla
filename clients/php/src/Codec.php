@@ -12,60 +12,60 @@ class Codec
         }
         try {
             return json_decode($value, false, 512, JSON_THROW_ON_ERROR);
-        } catch (\JsonException $e) {
-            throw new ContractException('validation', 'Invalid JSON: ' . $e->getMessage());
+        } catch (\JsonException $error) {
+            throw new ContractException('validation', 'Invalid JSON: ' . $error->getMessage());
         }
     }
     public static function manifest($value) : Manifest
     {
-        $m = self::parse($value);
-        Validation::manifest($m);
-        return new Manifest($m->version, array_map(function ($g) {
-            return new ManifestGroup($g->name, $g->groupId);
-        }, $m->groups));
+        $manifest = self::parse($value);
+        Validation::manifest($manifest);
+        return new Manifest($manifest->version, array_map(function ($group) {
+            return new ManifestGroup($group->name, $group->groupId);
+        }, $manifest->groups));
     }
-    public static function feature(object $raw) : Feature
+    public static function feature(object $sourceData) : Feature
     {
-        Validation::feature($raw);
-        switch ($raw->featureType) {
+        Validation::feature($sourceData);
+        switch ($sourceData->featureType) {
             case 'toggle':
-                return ToggleFeature::fromRaw($raw);
+                return ToggleFeature::fromRaw($sourceData);
             case 'gradual':
-                return GradualFeature::fromRaw($raw);
+                return GradualFeature::fromRaw($sourceData);
             case 'selective':
-                return SelectiveFeature::fromRaw($raw);
+                return SelectiveFeature::fromRaw($sourceData);
             default:
-                if ($raw->valueType === 'string') {
-                    return ValueStringFeature::fromRaw($raw);
+                if ($sourceData->valueType === 'string') {
+                    return ValueStringFeature::fromRaw($sourceData);
                 }
-                if ($raw->numberType === 'int') {
-                    return ValueIntFeature::fromRaw($raw);
+                if ($sourceData->numberType === 'int') {
+                    return ValueIntFeature::fromRaw($sourceData);
                 }
-                return ValueFloatFeature::fromRaw($raw);
+                return ValueFloatFeature::fromRaw($sourceData);
         }
     }
-    private static function features(object $raw) : array
+    private static function features(object $sourceData) : array
     {
         $out = [];
-        foreach ($raw as $id => $f) {
-            $out[$id] = self::feature($f);
+        foreach ($sourceData as $id => $feature) {
+            $out[$id] = self::feature($feature);
         }
         return $out;
     }
     public static function group($value) : Group
     {
-        $g = self::parse($value);
-        Validation::group($g);
+        $group = self::parse($value);
+        Validation::group($group);
         $environments = [];
-        foreach ($g->environments as $id => $e) {
-            $environments[$id] = new Environment($e->name, $e->environmentId, self::features($e->features));
+        foreach ($group->environments as $id => $environment) {
+            $environments[$id] = new Environment($environment->name, $environment->environmentId, self::features($environment->features));
         }
-        return new Group($g->name, $g->groupId, new GroupMeta($g->meta->version), $environments, self::features($g->features));
+        return new Group($group->name, $group->groupId, new GroupMeta($group->meta->version), $environments, self::features($group->features));
     }
-    private static function featureWire(Feature $f) : object
+    private static function featureWire(Feature $feature) : object
     {
-        $kind = $f instanceof ToggleFeature ? 'toggle' : ($f instanceof GradualFeature ? 'gradual' : ($f instanceof SelectiveFeature ? 'selective' : ($f instanceof ValueStringFeature || $f instanceof ValueIntFeature || $f instanceof ValueFloatFeature ? 'value' : null)));
-        $fields = get_object_vars($f);
+        $kind = $feature instanceof ToggleFeature ? 'toggle' : ($feature instanceof GradualFeature ? 'gradual' : ($feature instanceof SelectiveFeature ? 'selective' : ($feature instanceof ValueStringFeature || $feature instanceof ValueIntFeature || $feature instanceof ValueFloatFeature ? 'value' : null)));
+        $fields = get_object_vars($feature);
         Validation::check($kind !== null && $kind === ($fields['featureType'] ?? null), 'Native feature subtype mismatch');
         Validation::check(($fields['schedule'] ?? null) instanceof \Vexilla\Types\Schedule, 'Native Schedule required');
         // Preserve native extras until full group validation has compared subtype identities.
@@ -74,16 +74,16 @@ class Codec
         if ($kind === 'value') {
             $type = $fields['valueType'] ?? null;
             $number = $fields['numberType'] ?? null;
-            Validation::check($f instanceof ValueStringFeature && $type === 'string' || $f instanceof ValueIntFeature && $type === 'number' && $number === 'int' || $f instanceof ValueFloatFeature && $type === 'number' && $number === 'float', 'Native value subtype mismatch');
+            Validation::check($feature instanceof ValueStringFeature && $type === 'string' || $feature instanceof ValueIntFeature && $type === 'number' && $number === 'int' || $feature instanceof ValueFloatFeature && $type === 'number' && $number === 'float', 'Native value subtype mismatch');
         }
         return $wire;
     }
     private static function featureMap(array $features) : object
     {
         $out = new \stdClass();
-        foreach ($features as $id => $f) {
-            Validation::check($f instanceof Feature, 'Native Feature required');
-            $out->{(string) $id} = self::featureWire($f);
+        foreach ($features as $id => $feature) {
+            Validation::check($feature instanceof Feature, 'Native Feature required');
+            $out->{(string) $id} = self::featureWire($feature);
         }
         return $out;
     }
@@ -93,9 +93,9 @@ class Codec
         if ($value instanceof Manifest) {
             Validation::check(isset($fields['groups']) && is_array($fields['groups']), 'Native manifest groups required');
             $groups = [];
-            foreach ($fields['groups'] as $g) {
-                Validation::check($g instanceof ManifestGroup, 'Native ManifestGroup required');
-                $groups[] = (object) get_object_vars($g);
+            foreach ($fields['groups'] as $group) {
+                Validation::check($group instanceof ManifestGroup, 'Native ManifestGroup required');
+                $groups[] = (object) get_object_vars($group);
             }
             $fields['groups'] = $groups;
             return (object) $fields;
@@ -104,9 +104,9 @@ class Codec
             Validation::check(($fields['meta'] ?? null) instanceof GroupMeta, 'Native GroupMeta required');
             Validation::check(isset($fields['features'], $fields['environments']) && is_array($fields['features']) && is_array($fields['environments']), 'Native group maps required');
             $envs = new \stdClass();
-            foreach ($fields['environments'] as $id => $e) {
-                Validation::check($e instanceof Environment, 'Native Environment required');
-                $env = get_object_vars($e);
+            foreach ($fields['environments'] as $id => $environment) {
+                Validation::check($environment instanceof Environment, 'Native Environment required');
+                $env = get_object_vars($environment);
                 Validation::check(isset($env['features']) && is_array($env['features']), 'Native environment features required');
                 $env['features'] = self::featureMap($env['features']);
                 $envs->{(string) $id} = (object) $env;

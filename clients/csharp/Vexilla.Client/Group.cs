@@ -20,14 +20,16 @@ namespace Vexilla.Client
                 Timezone = value.GetProperty("timezone").GetString()
             };
         }
-        public static Feature ReadFeature(JsonElement f)
+        public static Feature ReadFeature(JsonElement sourceFeature)
         {
-            Validation.Feature(f);
-            var kind = f.GetProperty("featureType").GetString(); var value = f.GetProperty("value"); Feature feature;
-            var subtype = kind == "selective" || kind == "value" ? f.GetProperty("valueType").GetString() : "";
+            Validation.Feature(sourceFeature);
+            var kind = sourceFeature.GetProperty("featureType").GetString();
+            var value = sourceFeature.GetProperty("value");
+            Feature feature;
+            var subtype = kind == "selective" || kind == "value" ? sourceFeature.GetProperty("valueType").GetString() : "";
             if (subtype == "number")
             {
-                subtype = f.GetProperty("numberType").GetString() == "int" ? "int" : "double";
+                subtype = sourceFeature.GetProperty("numberType").GetString() == "int" ? "int" : "double";
             }
 
             if (kind == "toggle")
@@ -36,7 +38,7 @@ namespace Vexilla.Client
             }
             else if (kind == "gradual")
             {
-                feature = new GradualFeature { Value = value.GetDouble(), Seed = f.GetProperty("seed").GetDouble() };
+                feature = new GradualFeature { Value = value.GetDouble(), Seed = sourceFeature.GetProperty("seed").GetDouble() };
             }
             else if (kind == "value" && subtype == "string")
             {
@@ -52,36 +54,42 @@ namespace Vexilla.Client
             }
             else if (subtype == "string")
             {
-                feature = new SelectiveStringFeature { ValueType = subtype, Value = value.EnumerateArray().Select(v => v.GetString()).ToArray() };
+                feature = new SelectiveStringFeature { ValueType = subtype, Value = value.EnumerateArray().Select(item => item.GetString()).ToArray() };
             }
             else if (subtype == "int")
             {
-                feature = new SelectiveIntFeature { ValueType = subtype, Value = value.EnumerateArray().Select(v => (long)Validation.Number(v, true)).ToArray() };
+                feature = new SelectiveIntFeature { ValueType = subtype, Value = value.EnumerateArray().Select(item => (long)Validation.Number(item, true)).ToArray() };
             }
             else
             {
-                feature = new SelectiveFloatFeature { ValueType = subtype, Value = value.EnumerateArray().Select(v => v.GetDouble()).ToArray() };
+                feature = new SelectiveFloatFeature { ValueType = subtype, Value = value.EnumerateArray().Select(item => item.GetDouble()).ToArray() };
             }
 
-            feature.FeatureType = kind; feature.FeatureId = f.GetProperty("featureId").GetString(); feature.Name = f.GetProperty("name").GetString();
-            feature.ScheduleType = f.GetProperty("scheduleType").GetString(); feature.Schedule = ReadSchedule(f.GetProperty("schedule")); return feature;
+            feature.FeatureType = kind;
+            feature.FeatureId = sourceFeature.GetProperty("featureId").GetString();
+            feature.Name = sourceFeature.GetProperty("name").GetString();
+            feature.ScheduleType = sourceFeature.GetProperty("scheduleType").GetString();
+            feature.Schedule = ReadSchedule(sourceFeature.GetProperty("schedule"));
+            return feature;
         }
         public static Dictionary<string, Feature> ReadFeatures(JsonElement value)
-        { return value.EnumerateObject().ToDictionary(p => p.Name, p => ReadFeature(p.Value)); }
+        {
+            return value.EnumerateObject().ToDictionary(property => property.Name, property => ReadFeature(property.Value));
+        }
         public static Environment ReadEnvironment(JsonElement value)
         {
-            var env = new Environment { Name = value.GetProperty("name").GetString(), EnvironmentId = value.GetProperty("environmentId").GetString(), RawFeatures = ReadFeatures(value.GetProperty("features")) };
-            env.ToggleFeatures = env.RawFeatures.Where(p => p.Value is ToggleFeature).ToDictionary(p => p.Key, p => (ToggleFeature)p.Value);
-            env.GradualFeatures = env.RawFeatures.Where(p => p.Value is GradualFeature).ToDictionary(p => p.Key, p => (GradualFeature)p.Value);
-            env.SelectiveFeatures = env.RawFeatures.Where(p => p.Value is SelectiveFeature).ToDictionary(p => p.Key, p => (SelectiveFeature)p.Value);
-            env.SelectiveStringFeatures = env.RawFeatures.Where(p => p.Value is SelectiveStringFeature).ToDictionary(p => p.Key, p => (SelectiveStringFeature)p.Value);
-            env.SelectiveIntFeatures = env.RawFeatures.Where(p => p.Value is SelectiveIntFeature).ToDictionary(p => p.Key, p => (SelectiveIntFeature)p.Value);
-            env.SelectiveFloatFeatures = env.RawFeatures.Where(p => p.Value is SelectiveFloatFeature).ToDictionary(p => p.Key, p => (SelectiveFloatFeature)p.Value);
-            env.ValueFeatures = env.RawFeatures.Where(p => p.Value is ValueFeature).ToDictionary(p => p.Key, p => (ValueFeature)p.Value);
-            env.ValueStringFeatures = env.RawFeatures.Where(p => p.Value is ValueStringFeature).ToDictionary(p => p.Key, p => (ValueStringFeature)p.Value);
-            env.ValueIntFeatures = env.RawFeatures.Where(p => p.Value is ValueIntFeature).ToDictionary(p => p.Key, p => (ValueIntFeature)p.Value);
-            env.ValueFloatFeatures = env.RawFeatures.Where(p => p.Value is ValueFloatFeature).ToDictionary(p => p.Key, p => (ValueFloatFeature)p.Value);
-            return env;
+            var environment = new Environment { Name = value.GetProperty("name").GetString(), EnvironmentId = value.GetProperty("environmentId").GetString(), RawFeatures = ReadFeatures(value.GetProperty("features")) };
+            environment.ToggleFeatures = environment.RawFeatures.Where(property => property.Value is ToggleFeature).ToDictionary(property => property.Key, property => (ToggleFeature)property.Value);
+            environment.GradualFeatures = environment.RawFeatures.Where(property => property.Value is GradualFeature).ToDictionary(property => property.Key, property => (GradualFeature)property.Value);
+            environment.SelectiveFeatures = environment.RawFeatures.Where(property => property.Value is SelectiveFeature).ToDictionary(property => property.Key, property => (SelectiveFeature)property.Value);
+            environment.SelectiveStringFeatures = environment.RawFeatures.Where(property => property.Value is SelectiveStringFeature).ToDictionary(property => property.Key, property => (SelectiveStringFeature)property.Value);
+            environment.SelectiveIntFeatures = environment.RawFeatures.Where(property => property.Value is SelectiveIntFeature).ToDictionary(property => property.Key, property => (SelectiveIntFeature)property.Value);
+            environment.SelectiveFloatFeatures = environment.RawFeatures.Where(property => property.Value is SelectiveFloatFeature).ToDictionary(property => property.Key, property => (SelectiveFloatFeature)property.Value);
+            environment.ValueFeatures = environment.RawFeatures.Where(property => property.Value is ValueFeature).ToDictionary(property => property.Key, property => (ValueFeature)property.Value);
+            environment.ValueStringFeatures = environment.RawFeatures.Where(property => property.Value is ValueStringFeature).ToDictionary(property => property.Key, property => (ValueStringFeature)property.Value);
+            environment.ValueIntFeatures = environment.RawFeatures.Where(property => property.Value is ValueIntFeature).ToDictionary(property => property.Key, property => (ValueIntFeature)property.Value);
+            environment.ValueFloatFeatures = environment.RawFeatures.Where(property => property.Value is ValueFloatFeature).ToDictionary(property => property.Key, property => (ValueFloatFeature)property.Value);
+            return environment;
         }
         public static Group Deserialize(string jsonString)
         {
@@ -92,38 +100,88 @@ namespace Vexilla.Client
                 GroupId = value.GetProperty("groupId").GetString(),
                 Meta = new GroupMeta { Version = "v1" },
                 Features = ReadFeatures(value.GetProperty("features")),
-                Environments = value.GetProperty("environments").EnumerateObject().ToDictionary(p => p.Name, p => ReadEnvironment(p.Value))
+                Environments = value.GetProperty("environments").EnumerateObject().ToDictionary(property => property.Name, property => ReadEnvironment(property.Value))
             };
         }
         public static Manifest DeserializeManifest(string json)
         {
             var value = Validation.Parse(json, Validation.Manifest);
-            return new Manifest { Version = "v1", Groups = value.GetProperty("groups").EnumerateArray().Select(g => new ManifestGroup { GroupId = g.GetProperty("groupId").GetString(), Name = g.GetProperty("name").GetString() }).ToArray() };
+            return new Manifest { Version = "v1", Groups = value.GetProperty("groups").EnumerateArray().Select(manifestEntry => new ManifestGroup { GroupId = manifestEntry.GetProperty("groupId").GetString(), Name = manifestEntry.GetProperty("name").GetString() }).ToArray() };
         }
-        public static object ScheduleWire(Schedule s)
-        { return s == null ? null : new { start = s.Start, end = s.End, startTime = s.StartTime, endTime = s.EndTime, timeType = s.TimeType, timezone = s.Timezone }; }
-        public static Dictionary<string, object> FeatureWire(Feature f)
+        public static object ScheduleWire(Schedule schedule)
         {
-            Validation.Require(f != null, "Missing feature");
-            var data = new Dictionary<string, object> { { "name", f.Name }, { "featureId", f.FeatureId }, { "featureType", f.FeatureType }, { "scheduleType", f.ScheduleType }, { "schedule", ScheduleWire(f.Schedule) } };
-            string kind, subtype = null; object value;
-            if (f is ToggleFeature t) { kind = "toggle"; value = t.Value; }
-            else if (f is GradualFeature g) { kind = "gradual"; value = g.Value; data["seed"] = g.Seed; }
-            else if (f is SelectiveStringFeature ss) { kind = "selective"; subtype = "string"; value = ss.Value; }
-            else if (f is SelectiveIntFeature si) { kind = "selective"; subtype = "int"; value = si.Value; }
-            else if (f is SelectiveFloatFeature sf) { kind = "selective"; subtype = "double"; value = sf.Value; }
-            else if (f is ValueStringFeature vs) { kind = "value"; subtype = "string"; value = vs.Value; }
-            else if (f is ValueIntFeature vi) { kind = "value"; subtype = "int"; value = vi.Value; }
-            else if (f is ValueFloatFeature vf) { kind = "value"; subtype = "double"; value = vf.Value; }
+            return schedule == null ? null : new
+            {
+                start = schedule.Start,
+                end = schedule.End,
+                startTime = schedule.StartTime,
+                endTime = schedule.EndTime,
+                timeType = schedule.TimeType,
+                timezone = schedule.Timezone
+            };
+        }
+        public static Dictionary<string, object> FeatureWire(Feature sourceFeature)
+        {
+            Validation.Require(sourceFeature != null, "Missing feature");
+            var data = new Dictionary<string, object> { { "name", sourceFeature.Name }, { "featureId", sourceFeature.FeatureId }, { "featureType", sourceFeature.FeatureType }, { "scheduleType", sourceFeature.ScheduleType }, { "schedule", ScheduleWire(sourceFeature.Schedule) } };
+            string kind, subtype = null;
+            object value;
+            if (sourceFeature is ToggleFeature toggleFeature)
+            {
+                kind = "toggle";
+                value = toggleFeature.Value;
+            }
+            else if (sourceFeature is GradualFeature gradualFeature)
+            {
+                kind = "gradual";
+                value = gradualFeature.Value;
+                data["seed"] = gradualFeature.Seed;
+            }
+            else if (sourceFeature is SelectiveStringFeature selectiveStringFeature)
+            {
+                kind = "selective";
+                subtype = "string";
+                value = selectiveStringFeature.Value;
+            }
+            else if (sourceFeature is SelectiveIntFeature selectiveIntFeature)
+            {
+                kind = "selective";
+                subtype = "int";
+                value = selectiveIntFeature.Value;
+            }
+            else if (sourceFeature is SelectiveFloatFeature selectiveFloatFeature)
+            {
+                kind = "selective";
+                subtype = "double";
+                value = selectiveFloatFeature.Value;
+            }
+            else if (sourceFeature is ValueStringFeature valueStringFeature)
+            {
+                kind = "value";
+                subtype = "string";
+                value = valueStringFeature.Value;
+            }
+            else if (sourceFeature is ValueIntFeature valueIntFeature)
+            {
+                kind = "value";
+                subtype = "int";
+                value = valueIntFeature.Value;
+            }
+            else if (sourceFeature is ValueFloatFeature valueFloatFeature)
+            {
+                kind = "value";
+                subtype = "double";
+                value = valueFloatFeature.Value;
+            }
             else
             {
                 throw new ContractException("validation", "Full feature subtype required");
             }
 
-            Validation.Require(f.FeatureType == kind, "Native feature discriminator differs from subtype");
+            Validation.Require(sourceFeature.FeatureType == kind, "Native feature discriminator differs from subtype");
             if (subtype != null)
             {
-                var declared = f is ValueFeature v ? v.ValueType : ((SelectiveFeature)f).ValueType;
+                var declared = sourceFeature is ValueFeature valueFeature ? valueFeature.ValueType : ((SelectiveFeature)sourceFeature).ValueType;
                 Validation.Require(declared == subtype, "Native value subtype mismatch");
                 data["valueType"] = subtype == "string" ? "string" : "number";
                 if (subtype != "string")
@@ -131,31 +189,39 @@ namespace Vexilla.Client
                     data["numberType"] = subtype == "int" ? "int" : "float";
                 }
             }
-            data["value"] = value; return data;
+            data["value"] = value;
+            return data;
         }
         private static Dictionary<string, object> FeaturesWire(Dictionary<string, Feature> features)
-        { return features == null ? null : features.ToDictionary(p => p.Key, p => (object)FeatureWire(p.Value)); }
-        private static object EnvironmentWire(Environment env)
         {
-            Validation.Require(env != null, "Missing environment");
-            var features = FeaturesWire(env.RawFeatures);
+            return features == null ? null : features.ToDictionary(property => property.Key, property => (object)FeatureWire(property.Value));
+        }
+        private static object EnvironmentWire(Environment environment)
+        {
+            Validation.Require(environment != null, "Missing environment");
+            var features = FeaturesWire(environment.RawFeatures);
             // Parallel public typed maps may not bypass validation by diverging
             // from RawFeatures after a caller mutates or replaces an entry.
-            foreach (var field in typeof(Environment).GetFields().Where(f => f.Name.EndsWith("Features") && f.Name != "RawFeatures"))
+            foreach (var field in typeof(Environment).GetFields().Where(field => field.Name.EndsWith("Features") && field.Name != "RawFeatures"))
             {
-                var map = field.GetValue(env) as System.Collections.IDictionary;
+                var map = field.GetValue(environment) as System.Collections.IDictionary;
                 if (map == null)
                 {
                     continue;
                 }
 
-                foreach (System.Collections.DictionaryEntry p in map)
+                foreach (System.Collections.DictionaryEntry property in map)
                 {
-                    var wire = FeatureWire((Feature)p.Value);
-                    Validation.Require(features != null && features.TryGetValue((string)p.Key, out var original) && JsonSerializer.Serialize(wire) == JsonSerializer.Serialize(original), "Conflicting native environment feature maps");
+                    var wire = FeatureWire((Feature)property.Value);
+                    Validation.Require(features != null && features.TryGetValue((string)property.Key, out var original) && JsonSerializer.Serialize(wire) == JsonSerializer.Serialize(original), "Conflicting native environment feature maps");
                 }
             }
-            return new { name = env.Name, environmentId = env.EnvironmentId, features };
+            return new
+            {
+                name = environment.Name,
+                environmentId = environment.EnvironmentId,
+                features
+            };
         }
         public static string Serialize(Group group)
         {
@@ -167,17 +233,25 @@ namespace Vexilla.Client
                 {
                     groupId = group.GroupId,
                     name = group.Name,
-                    meta = group.Meta == null ? null : new { version = group.Meta.Version },
+                    meta = group.Meta == null ? null : new
+                    {
+                        version = group.Meta.Version
+                    },
                     features = FeaturesWire(group.Features),
-                    environments = group.Environments == null ? null : group.Environments.ToDictionary(p => p.Key, p => EnvironmentWire(p.Value))
+                    environments = group.Environments == null ? null : group.Environments.ToDictionary(property => property.Key, property => EnvironmentWire(property.Value))
                 });
             }
             catch (ArgumentException e) { throw new ContractException("validation", e.Message); }
         }
         public static string Serialize(Manifest manifest)
         {
-            Validation.NativeUnicode(manifest); Validation.Require(manifest != null, "Missing manifest");
-            return JsonSerializer.Serialize(new { version = manifest.Version, groups = manifest.Groups == null ? null : manifest.Groups.Select(g => { Validation.Require(g != null, "Missing manifest group"); return new { groupId = g.GroupId, name = g.Name }; }).ToArray() });
+            Validation.NativeUnicode(manifest);
+            Validation.Require(manifest != null, "Missing manifest");
+            return JsonSerializer.Serialize(new
+            {
+                version = manifest.Version,
+                groups = manifest.Groups == null ? null : manifest.Groups.Select(manifestEntry => { Validation.Require(manifestEntry != null, "Missing manifest group"); return new { groupId = manifestEntry.GroupId, name = manifestEntry.Name }; }).ToArray()
+            });
         }
     }
 }

@@ -5,7 +5,9 @@ type t = {
   environment : [ `Id of string | `Name of string ];
   base_url : Uri.t;
   instance_id : string;
-  custom_instance_id : [ `String of string | `Int of int | `Float of float | `Missing | `Invalid ] option;
+  custom_instance_id :
+    [ `String of string | `Int of int | `Float of float | `Missing | `Invalid ]
+    option;
   show_logs : bool;
   manifest : Types.Manifest.t;
   flag_groups : (Types.Group.id, Types.Group.t) Hashtbl.t;
@@ -14,7 +16,8 @@ type t = {
   composite_feature_table : Lookup.Composite_feature_table.t;
 }
 
-let make ?custom_instance_id ?(show_logs = false) ~environment ~base_url ~instance_id () =
+let make ?custom_instance_id ?(show_logs = false) ~environment ~base_url
+    ~instance_id () =
   {
     environment;
     base_url;
@@ -27,6 +30,15 @@ let make ?custom_instance_id ?(show_logs = false) ~environment ~base_url ~instan
     composite_environment_table = Lookup.Composite_environment_table.make ();
     composite_feature_table = Lookup.Composite_feature_table.make ();
   }
+;;
+
+let report_operation ~client ~operation result =
+  (if client.show_logs then
+     let outcome =
+       match result with Ok _ -> "success" | Error _ -> "failure"
+     in
+     Format.eprintf "vexilla operation=%s outcome=%s@." operation outcome);
+  result
 ;;
 
 let get_real_group_id ~client group_id_or_name =
@@ -83,24 +95,49 @@ let should ~client ?instance_id group_id_or_name feature_name_or_id =
   let@ feature = get_feature ~client group_id_or_name feature_name_or_id in
   match feature with
   | Value _ -> Error (`Unsupported_should_feature_type "feature")
-  | _ ->
-    let instance=Option.value instance_id ~default:(Option.value client.custom_instance_id ~default:(`String client.instance_id)) in
-    let@ text=match feature with Toggle _->Ok ""|_->Hash.instance_text instance in
-    let@ active=Schedule.is_schedule_feature_active feature in
-    if not active then Ok false else
-    match feature with
-    | Toggle f->Ok f.value
-    | Gradual f->Ok(Hash.hash_instance_id ~seed:f.seed text < f.value)
-    | Selective f->Ok(match f.value,instance with
-      | String_list xs,`String id->List.mem id xs
-      | Int_list xs,`Int n->List.mem n xs
-      | Int_list xs,`Float n->List.exists(fun v->float_of_int v=n)xs
-      | Float_list xs,`Int n->List.mem(float_of_int n)xs
-      | Float_list xs,`Float n->List.mem n xs
-      | _->false)
-    | Value _->assert false
+  | _ -> (
+      let effective_instance_id =
+        Option.value instance_id
+          ~default:
+            (Option.value client.custom_instance_id
+               ~default:(`String client.instance_id))
+      in
+      let@ instance_text =
+        match feature with
+        | Toggle _ -> Ok ""
+        | _ -> Hash.instance_text effective_instance_id
+      in
+      let@ is_active = Schedule.is_schedule_feature_active feature in
+      if not is_active then Ok false
+      else
+        match feature with
+        | Toggle toggle_feature -> Ok toggle_feature.value
+        | Gradual gradual_feature ->
+            Ok
+              (Hash.hash_instance_id ~seed:gradual_feature.seed instance_text
+              < gradual_feature.value)
+        | Selective selective_feature ->
+            Ok
+              (match (selective_feature.value, effective_instance_id) with
+              | String_list members, `String instance ->
+                  List.mem instance members
+              | Int_list members, `Int instance -> List.mem instance members
+              | Int_list members, `Float instance ->
+                  List.exists
+                    (fun member -> float_of_int member = instance)
+                    members
+              | Float_list members, `Int instance ->
+                  List.mem (float_of_int instance) members
+              | Float_list members, `Float instance -> List.mem instance members
+              | _ -> false)
+        | Value _ -> assert false)
+;;
+
 let value ~client ~default ~group_key ~feature_key =
-  let@ feature=get_feature ~client group_key feature_key in
+  let@ feature = get_feature ~client group_key feature_key in
   match feature with
-  | Types.Feature.Value f->let@ active=Schedule.is_schedule_feature_active feature in Ok(if active then f.value else default)
-  | _->Error `Unsupported_value_feature_type
+  | Types.Feature.Value value_feature ->
+      let@ is_active = Schedule.is_schedule_feature_active feature in
+      Ok (if is_active then value_feature.value else default)
+  | _ -> Error `Unsupported_value_feature_type
+;;

@@ -2,40 +2,42 @@ defmodule VexillaValidation do
   def check(ok, message),
     do: if(ok, do: :ok, else: raise(VexillaContractError, kind: "validation", message: message))
 
-  def obj(v) do
-    check(is_map(v) and not is_struct(v), "Expected a JSON object")
-    v
+  def obj(value) do
+    check(is_map(value) and not is_struct(value), "Expected a JSON object")
+    value
   end
 
-  def text(v, nonempty \\ false) do
-    check(is_binary(v) and (not nonempty or v != ""), "Expected a string")
-    v
+  def text(value, nonempty \\ false) do
+    check(is_binary(value) and (not nonempty or value != ""), "Expected a string")
+    value
   end
 
-  def number(v, integer \\ false) do
+  def number(value, integer \\ false) do
     check(
-      is_number(v) and (not integer or (abs(v) <= 9_007_199_254_740_991 and trunc(v) == v)),
+      is_number(value) and
+        (not integer or (abs(value) <= 9_007_199_254_740_991 and trunc(value) == value)),
       "Expected a finite number in integer bounds"
     )
 
-    v
+    value
   end
 
-  def tree(v) when is_binary(v), do: check(String.valid?(v), "Malformed Unicode string")
+  def tree(value) when is_binary(value),
+    do: check(String.valid?(value), "Malformed Unicode string")
 
-  def tree(v) when is_map(v),
+  def tree(value) when is_map(value),
     do:
-      Enum.each(v, fn {k, item} ->
+      Enum.each(value, fn {k, item} ->
         check(is_binary(k) and String.valid?(k), "Malformed Unicode key")
         tree(item)
       end)
 
-  def tree(v) when is_list(v), do: Enum.each(v, &tree/1)
+  def tree(value) when is_list(value), do: Enum.each(value, &tree/1)
   def tree(_), do: :ok
-  defp member(v, allowed), do: check(v in allowed, "Unsupported enum")
+  defp member(value, allowed), do: check(value in allowed, "Unsupported enum")
 
-  defp safe_id(v) do
-    id = text(v, true)
+  defp safe_id(value) do
+    id = text(value, true)
 
     check(
       id not in ["manifest", "config", ".", ".."] and
@@ -53,122 +55,134 @@ defmodule VexillaValidation do
     end)
   end
 
-  def schedule(v) do
-    tree(v)
-    s = obj(v)
-    Enum.each(["start", "end", "startTime", "endTime"], &number(s[&1], true))
-    member(s["timeType"], ["none", "start/end", "daily"])
-    check(VexillaCompatibility.timezone(text(s["timezone"], true)), "Invalid timezone")
-    v
+  def schedule(value) do
+    tree(value)
+    schedule = obj(value)
+    Enum.each(["start", "end", "startTime", "endTime"], &number(schedule[&1], true))
+    member(schedule["timeType"], ["none", "start/end", "daily"])
+    check(VexillaCompatibility.timezone(text(schedule["timezone"], true)), "Invalid timezone")
+    value
   end
 
-  def feature(v) do
-    tree(v)
-    f = obj(v)
-    text(f["name"])
-    text(f["featureId"], true)
-    member(f["scheduleType"], ["", "global", "environment"])
-    schedule(f["schedule"])
+  def feature(value) do
+    tree(value)
+    feature = obj(value)
+    text(feature["name"])
+    text(feature["featureId"], true)
+    member(feature["scheduleType"], ["", "global", "environment"])
+    schedule(feature["schedule"])
 
-    case f["featureType"] do
+    case feature["featureType"] do
       "toggle" ->
-        check(is_boolean(f["value"]), "Toggle must be boolean")
+        check(is_boolean(feature["value"]), "Toggle must be boolean")
 
       "gradual" ->
-        number(f["value"])
-        seed = number(f["seed"])
+        number(feature["value"])
+        seed = number(feature["seed"])
         check(seed > 0 and seed <= 1, "seed must satisfy 0 < seed <= 1")
 
       kind when kind in ["selective", "value"] ->
-        member(f["valueType"], ["string", "number"])
-        numeric = f["valueType"] == "number"
-        if numeric, do: member(f["numberType"], ["int", "float"])
-        item = fn v -> if numeric, do: number(v, f["numberType"] == "int"), else: text(v) end
+        member(feature["valueType"], ["string", "number"])
+        numeric = feature["valueType"] == "number"
+        if numeric, do: member(feature["numberType"], ["int", "float"])
+
+        item = fn value ->
+          if numeric, do: number(value, feature["numberType"] == "int"), else: text(value)
+        end
 
         if kind == "selective" do
-          check(is_list(f["value"]), "Selective must be array")
-          Enum.each(f["value"], item)
+          check(is_list(feature["value"]), "Selective must be array")
+          Enum.each(feature["value"], item)
         else
-          item.(f["value"])
+          item.(feature["value"])
         end
 
       _ ->
         check(false, "Unsupported featureType")
     end
 
-    v
+    value
   end
 
-  defp features(v) do
-    fields = obj(v)
+  defp features(value) do
+    fields = obj(value)
 
-    Enum.reduce(fields, %{}, fn {id, f}, aliases ->
-      feature(f)
-      check(f["featureId"] === id, "Feature map ID mismatch")
-      alias(aliases, id, f["name"])
+    Enum.reduce(fields, %{}, fn {id, feature}, aliases ->
+      feature(feature)
+      check(feature["featureId"] === id, "Feature map ID mismatch")
+      alias(aliases, id, feature["name"])
     end)
 
     fields
   end
 
-  def manifest(v) do
-    tree(v)
-    m = obj(v)
-    check(m["version"] == "v1", "Manifest version must be v1")
-    check(is_list(m["groups"]), "Groups must be array")
+  def manifest(value) do
+    tree(value)
+    manifest = obj(value)
+    check(manifest["version"] == "v1", "Manifest version must be v1")
+    check(is_list(manifest["groups"]), "Groups must be array")
 
-    Enum.reduce(m["groups"], {MapSet.new(), %{}}, fn raw, {ids, aliases} ->
-      g = obj(raw)
-      id = safe_id(g["groupId"])
+    Enum.reduce(manifest["groups"], {MapSet.new(), %{}}, fn raw, {ids, aliases} ->
+      group = obj(raw)
+      id = safe_id(group["groupId"])
       check(not MapSet.member?(ids, id), "Duplicate group ID")
-      {MapSet.put(ids, id), alias(aliases, id, text(g["name"]))}
+      {MapSet.put(ids, id), alias(aliases, id, text(group["name"]))}
     end)
 
-    v
+    value
   end
 
-  defp same(a, b, key) do
-    if Map.has_key?(a, key) != Map.has_key?(b, key), do: false, else: same_value(a[key], b[key])
+  defp same(left, right, key) do
+    if Map.has_key?(left, key) != Map.has_key?(right, key),
+      do: false,
+      else: same_value(left[key], right[key])
   end
 
-  defp same_value(a, b) when is_number(a) and is_number(b), do: a == b
-  defp same_value(a, b) when is_map(a) or is_list(a) or is_map(b) or is_list(b), do: false
-  defp same_value(a, b), do: a === b
+  defp same_value(left, right) when is_number(left) and is_number(right), do: left == right
 
-  def group(v) do
-    tree(v)
-    g = obj(v)
-    safe_id(g["groupId"])
-    text(g["name"])
-    check(obj(g["meta"])["version"] == "v1", "Group version must be v1")
-    defaults = features(g["features"])
+  defp same_value(left, right)
+       when is_map(left) or is_list(left) or is_map(right) or is_list(right),
+       do: false
 
-    Enum.reduce(obj(g["environments"]), %{}, fn {id, raw}, aliases ->
-      env = obj(raw)
-      check(text(env["environmentId"], true) === id, "Environment map ID mismatch")
-      aliases = alias(aliases, id, text(env["name"]))
-      values = features(env["features"])
+  defp same_value(left, right), do: left === right
+
+  def group(value) do
+    tree(value)
+    group = obj(value)
+    safe_id(group["groupId"])
+    text(group["name"])
+    check(obj(group["meta"])["version"] == "v1", "Group version must be v1")
+    defaults = features(group["features"])
+
+    Enum.reduce(obj(group["environments"]), %{}, fn {id, raw}, aliases ->
+      environment = obj(raw)
+      check(text(environment["environmentId"], true) === id, "Environment map ID mismatch")
+      aliases = alias(aliases, id, text(environment["name"]))
+      values = features(environment["features"])
 
       check(
         MapSet.new(Map.keys(values)) == MapSet.new(Map.keys(defaults)),
         "Incomplete environment features"
       )
 
-      Enum.each(values, fn {fid, f} ->
+      Enum.each(values, fn {feature_id, feature} ->
         Enum.each(
           ["name", "featureType", "valueType", "numberType"],
-          &check(same(f, defaults[fid], &1), "Environment feature identity/subtype mismatch")
+          &check(
+            same(feature, defaults[feature_id], &1),
+            "Environment feature identity/subtype mismatch"
+          )
         )
       end)
 
       aliases
     end)
 
-    v
+    value
   end
 
-  def decode(v) when is_binary(v) do
-    case Jason.decode(v) do
+  def decode(value) when is_binary(value) do
+    case Jason.decode(value) do
       {:ok, data} ->
         data
 
@@ -177,5 +191,5 @@ defmodule VexillaValidation do
     end
   end
 
-  def decode(v), do: v
+  def decode(value), do: value
 end

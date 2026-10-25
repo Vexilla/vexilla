@@ -29,24 +29,26 @@ defmodule Scheduler do
 
   defp day(value), do: Integer.floor_div(trunc(value), 86_400_000) * 86_400_000
 
-  def is_schedule_active_millis(s, mode, now) do
+  def is_schedule_active_millis(schedule, schedule_type, current_time) do
     cond do
-      mode == "" ->
+      schedule_type == "" ->
         true
 
-      now < day(s["start"]) or now > day(s["end"]) + 86_400_000 - 1 ->
+      current_time < day(schedule["start"]) or
+          current_time > day(schedule["end"]) + 86_400_000 - 1 ->
         false
 
-      s["timeType"] == "none" ->
+      schedule["timeType"] == "none" ->
         true
 
-      s["timeType"] == "start/end" ->
-        now >= day(s["start"]) + s["startTime"] and now <= day(s["end"]) + s["endTime"]
+      schedule["timeType"] == "start/end" ->
+        current_time >= day(schedule["start"]) + schedule["startTime"] and
+          current_time <= day(schedule["end"]) + schedule["endTime"]
 
       true ->
-        clock = Integer.mod(now, 86_400_000)
-        start = Integer.mod(trunc(s["startTime"]), 86_400_000)
-        finish = Integer.mod(trunc(s["endTime"]), 86_400_000)
+        clock = Integer.mod(current_time, 86_400_000)
+        start = Integer.mod(trunc(schedule["startTime"]), 86_400_000)
+        finish = Integer.mod(trunc(schedule["endTime"]), 86_400_000)
 
         if start <= finish,
           do: clock >= start and clock <= finish,
@@ -56,7 +58,7 @@ defmodule Scheduler do
 
   if Mix.env() == :test do
     def get_example_feature() do
-      now = Timex.now()
+      current_time = Timex.now()
 
       %{
         "name" => "foo",
@@ -64,11 +66,12 @@ defmodule Scheduler do
         "seed" => 0,
         "value" => 0,
         "schedule" => %{
-          "start" => Timex.to_unix(Timex.subtract(now, Duration.from_days(2))) * 1000,
-          "end" => Timex.to_unix(Timex.add(now, Duration.from_days(2))) * 1000,
+          "start" => Timex.to_unix(Timex.subtract(current_time, Duration.from_days(2))) * 1000,
+          "end" => Timex.to_unix(Timex.add(current_time, Duration.from_days(2))) * 1000,
           "timeType" => TimeType.start_end(),
-          "startTime" => Timex.to_unix(Timex.subtract(now, Duration.from_hours(2))) * 1000,
-          "endTime" => Timex.to_unix(Timex.add(now, Duration.from_hours(2))) * 1000
+          "startTime" =>
+            Timex.to_unix(Timex.subtract(current_time, Duration.from_hours(2))) * 1000,
+          "endTime" => Timex.to_unix(Timex.add(current_time, Duration.from_hours(2))) * 1000
         },
         "featureType" => FeatureType.toggle(),
         "scheduleType" => ScheduleType.global()

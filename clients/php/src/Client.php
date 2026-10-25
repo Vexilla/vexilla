@@ -7,6 +7,7 @@ class Client
 {
     private string $baseUrl;
     private string $environment;
+    private bool $showLogs;
     private $customInstanceHash;
     private ?Manifest $manifest = null;
     private array $groups = [];
@@ -17,7 +18,26 @@ class Client
     {
         $this->baseUrl = rtrim($baseUrl, '/');
         $this->environment = $environment;
+        $this->showLogs = $showLogs;
         $this->customInstanceHash = $customInstanceHash;
+    }
+    private function diagnoseOperation(string $operationName, callable $operation)
+    {
+        try {
+            $result = $operation();
+        } catch (\Throwable $error) {
+            $this->reportOperation($operationName, false);
+            throw $error;
+        }
+        $this->reportOperation($operationName, true);
+        return $result;
+    }
+    private function reportOperation(string $operationName, bool $succeeded) : void
+    {
+        if ($this->showLogs) {
+            $outcome = $succeeded ? 'success' : 'failure';
+            error_log('vexilla operation=' . $operationName . ' outcome=' . $outcome);
+        }
     }
     private function request(string $path, callable $callback)
     {
@@ -29,25 +49,29 @@ class Client
     }
     public function getManifest(callable $callback) : Manifest
     {
-        return Codec::manifest($this->request('manifest.json', $callback));
+        return $this->diagnoseOperation('manifest.fetch', function () use($callback) {
+            return Codec::manifest($this->request('manifest.json', $callback));
+        });
     }
     public function setManifest(Manifest $manifest) : void
     {
-        Validation::tree($manifest);
-        $snapshot = Codec::manifest(Codec::wire($manifest));
-        $aliases = [];
-        $surviving = [];
-        foreach ($snapshot->groups as $g) {
-            Validation::alias($aliases, $g->groupId, $g->name);
-            if (isset($this->groups[$g->groupId]) && $this->groups[$g->groupId]->name === $g->name) {
-                $surviving[$g->groupId] = $this->groups[$g->groupId];
+        $this->diagnoseOperation('manifest.install', function () use($manifest) {
+            Validation::tree($manifest);
+            $manifestSnapshot = Codec::manifest(Codec::wire($manifest));
+            $groupAliases = [];
+            $survivingGroups = [];
+            foreach ($manifestSnapshot->groups as $manifestGroup) {
+                Validation::alias($groupAliases, $manifestGroup->groupId, $manifestGroup->name);
+                if (isset($this->groups[$manifestGroup->groupId]) && $this->groups[$manifestGroup->groupId]->name === $manifestGroup->name) {
+                    $survivingGroups[$manifestGroup->groupId] = $this->groups[$manifestGroup->groupId];
+                }
             }
-        }
-        $this->manifest = $snapshot;
-        $this->groupLookupTable = $aliases;
-        $this->groups = $surviving;
-        $this->environmentLookupTable = array_intersect_key($this->environmentLookupTable, $surviving);
-        $this->featureLookupTable = array_intersect_key($this->featureLookupTable, $surviving);
+            $this->manifest = $manifestSnapshot;
+            $this->groupLookupTable = $groupAliases;
+            $this->groups = $survivingGroups;
+            $this->environmentLookupTable = array_intersect_key($this->environmentLookupTable, $survivingGroups);
+            $this->featureLookupTable = array_intersect_key($this->featureLookupTable, $survivingGroups);
+        });
     }
     public function syncManifest(callable $callback) : void
     {
@@ -65,8 +89,8 @@ class Client
         if ($this->manifest === null) {
             throw new ContractException('lookup', 'Manifest not installed');
         }
-        foreach ($this->manifest->groups as $g) {
-            if ($g->groupId === $group->groupId && $g->name === $group->name) {
+        foreach ($this->manifest->groups as $manifestGroup) {
+            if ($manifestGroup->groupId === $group->groupId && $manifestGroup->name === $group->name) {
                 return;
             }
         }
@@ -74,44 +98,48 @@ class Client
     }
     public function getFlags(string $groupNameOrId, callable $callback) : Group
     {
-        $id = $this->groupId($groupNameOrId);
-        $g = Codec::group($this->request($id . '.json', $callback));
-        $this->match($g);
-        Validation::check($g->groupId === $id, 'Fetched group differs from requested group');
-        return $g;
+        return $this->diagnoseOperation('group.fetch', function () use($groupNameOrId, $callback) {
+            $groupId = $this->groupId($groupNameOrId);
+            $fetchedGroup = Codec::group($this->request($groupId . '.json', $callback));
+            $this->match($fetchedGroup);
+            Validation::check($fetchedGroup->groupId === $groupId, 'Fetched group differs from requested group');
+            return $fetchedGroup;
+        });
     }
     public function setFlags(Group $flagGroup) : void
     {
-        Validation::tree($flagGroup);
-        $snapshot = Codec::group(Codec::wire($flagGroup));
-        $this->match($snapshot);
-        $envs = [];
-        $features = [];
-        foreach ($snapshot->environments as $id => $e) {
-            Validation::alias($envs, (string) $id, $e->name);
-        }
-        foreach ($snapshot->features as $id => $f) {
-            Validation::alias($features, (string) $id, $f->name);
-        }
-        $id = $snapshot->groupId;
-        $this->groups[$id] = $snapshot;
-        $this->environmentLookupTable[$id] = $envs;
-        $this->featureLookupTable[$id] = $features;
+        $this->diagnoseOperation('group.install', function () use($flagGroup) {
+            Validation::tree($flagGroup);
+            $groupSnapshot = Codec::group(Codec::wire($flagGroup));
+            $this->match($groupSnapshot);
+            $environmentAliases = [];
+            $featureAliases = [];
+            foreach ($groupSnapshot->environments as $environmentId => $environment) {
+                Validation::alias($environmentAliases, (string) $environmentId, $environment->name);
+            }
+            foreach ($groupSnapshot->features as $featureId => $feature) {
+                Validation::alias($featureAliases, (string) $featureId, $feature->name);
+            }
+            $groupId = $groupSnapshot->groupId;
+            $this->groups[$groupId] = $groupSnapshot;
+            $this->environmentLookupTable[$groupId] = $environmentAliases;
+            $this->featureLookupTable[$groupId] = $featureAliases;
+        });
     }
     public function syncFlags(string $groupNameOrId, callable $callback) : void
     {
         $this->setFlags($this->getFlags($groupNameOrId, $callback));
     }
-    private function feature(string $group, string $name) : Feature
+    private function feature(string $groupNameOrId, string $featureNameOrId) : Feature
     {
-        $id = $this->groupId($group);
-        $stored = $this->groups[$id] ?? null;
-        $env = $this->environmentLookupTable[$id][$this->environment] ?? null;
-        $fid = $this->featureLookupTable[$id][$name] ?? null;
-        if ($stored === null || $env === null || $fid === null) {
+        $groupId = $this->groupId($groupNameOrId);
+        $installedGroup = $this->groups[$groupId] ?? null;
+        $environmentId = $this->environmentLookupTable[$groupId][$this->environment] ?? null;
+        $featureId = $this->featureLookupTable[$groupId][$featureNameOrId] ?? null;
+        if ($installedGroup === null || $environmentId === null || $featureId === null) {
             throw new ContractException('lookup', 'Group, environment or feature not installed');
         }
-        return $stored->environments[$env]->features[$fid];
+        return $installedGroup->environments[$environmentId]->features[$featureId];
     }
     public function should(string $groupNameOrId, string $featureNameOrId) : bool
     {
@@ -131,28 +159,28 @@ class Client
     }
     public function shouldCustom(string $groupNameOrId, string $featureNameOrId, $customInstanceId) : bool
     {
-        $f = $this->feature($groupNameOrId, $featureNameOrId);
-        if ($f instanceof ValueFeature) {
+        $feature = $this->feature($groupNameOrId, $featureNameOrId);
+        if ($feature instanceof ValueFeature) {
             throw new ContractException('kind', 'Value feature requires a value operation');
         }
-        if ($f instanceof ToggleFeature) {
-            return Scheduler::isScheduledFeatureActive($f) && $f->value;
+        if ($feature instanceof ToggleFeature) {
+            return Scheduler::isScheduledFeatureActive($feature) && $feature->value;
         }
         Hasher::validateInstance($customInstanceId);
-        if (!Scheduler::isScheduledFeatureActive($f)) {
+        if (!Scheduler::isScheduledFeatureActive($feature)) {
             return false;
         }
-        if ($f instanceof GradualFeature) {
-            return Hasher::hashString(Hasher::instanceText($customInstanceId), $f->seed) < $f->value;
+        if ($feature instanceof GradualFeature) {
+            return Hasher::hashString(Hasher::instanceText($customInstanceId), $feature->seed) < $feature->value;
         }
-        if ($f instanceof SelectiveFeature) {
-            if ($f->valueType === 'string') {
-                return is_string($customInstanceId) && in_array($customInstanceId, $f->value, true);
+        if ($feature instanceof SelectiveFeature) {
+            if ($feature->valueType === 'string') {
+                return is_string($customInstanceId) && in_array($customInstanceId, $feature->value, true);
             }
             if (!is_int($customInstanceId) && !is_float($customInstanceId)) {
                 return false;
             }
-            foreach ($f->value as $v) {
+            foreach ($feature->value as $v) {
                 if ((float) $v === (float) $customInstanceId) {
                     return true;
                 }
@@ -163,19 +191,19 @@ class Client
     }
     public function value(string $groupNameOrId, string $featureNameOrId, $default)
     {
-        $f = $this->feature($groupNameOrId, $featureNameOrId);
-        if (!$f instanceof ValueFeature) {
+        $feature = $this->feature($groupNameOrId, $featureNameOrId);
+        if (!$feature instanceof ValueFeature) {
             throw new ContractException('kind', 'Expected value feature');
         }
-        return Scheduler::isScheduledFeatureActive($f) ? $f->value : $default;
+        return Scheduler::isScheduledFeatureActive($feature) ? $feature->value : $default;
     }
     private function typedValue(string $group, string $name, $default, string $class)
     {
-        $f = $this->feature($group, $name);
-        if (!$f instanceof $class) {
+        $feature = $this->feature($group, $name);
+        if (!$feature instanceof $class) {
             throw new ContractException('kind', 'Value subtype differs');
         }
-        return Scheduler::isScheduledFeatureActive($f) ? $f->value : $default;
+        return Scheduler::isScheduledFeatureActive($feature) ? $feature->value : $default;
     }
     public function valueString(string $groupNameOrId, string $featureNameOrId, string $default) : string
     {

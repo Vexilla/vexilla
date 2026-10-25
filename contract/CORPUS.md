@@ -4,6 +4,8 @@ Hash literals were cross-checked using Python UTF-8 bytes with arbitrary-precisi
 
 `compatibility.json` pins publisher alias examples and timezone compatibility data for Node 22.15.0 / ICU 76.1 and `case` 1.6.3. The identifier list was obtained from IANA zoneinfo names and aliases, filtered through that publisher's `Intl.DateTimeFormat` acceptance rule. Matching is case insensitive. UTC aliases and the separately specified fixed-offset grammar remain accepted. This data defines identifier compatibility; schedules still evaluate in UTC milliseconds. It does not add a timezone field or named-timezone evaluation.
 
+This file is the maintained compatibility source. `pnpm contract:compat:generate` produces all eleven SDK assets: eight JSON copies and the Lua, Swift, and OCaml representations. Commit those generated assets with source changes so native SDK builds and packages remain independent of the generator. `pnpm contract:compat:check` and the producer CI compatibility step verify the same outputs without repairing stale or missing files. Generated-file attributes and formatter exclusions keep these mechanical assets out of routine formatting and review noise.
+
 Native commands receive `VEXILLA_CONTRACT_DIR` and `VEXILLA_OBSERVATIONS_FILE`. They read the actual artifact bytes through the SDK's normal decoding/callback boundary, exercise direct ingestion too, and write this protocol only after the assertions succeed:
 
 ```json

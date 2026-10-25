@@ -10,6 +10,10 @@ Both `group.features` and every environment's `features` map contain complete ob
 
 Schedules require integer milliseconds for `start`, `end`, `startTime`, and `endTime`; zero represents an inactive default. Null dates are invalid. Keep the existing schedule enums (`""`, `global`, `environment`) and time enums (`none`, `start/end`, `daily`). Timezone labels follow the existing publisher format rule, including UTC aliases, IANA names, and supported fixed offsets. `contract/compatibility.json` pins compatibility data; SDK helpers must not depend on the host locale or timezone database. Labels retain UTC evaluation and do not add wall-clock/DST scheduling.
 
+Maintain compatibility data only in `contract/compatibility.json`. Run `pnpm contract:compat:generate` to update all eleven SDK assets, then commit the source and generated files together. These assets stay in Git so each SDK can build and package with its native toolchain independently of Node and the monorepo's generation scripts. Generated-file attributes and formatter exclusions identify the copies; do not edit or format them by hand. Temporary contract artifacts and build outputs remain ignored.
+
+`pnpm contract:compat:check` checks every generated asset without writing files and retains the existing Kotlin numeric-reference check. The producer CI compatibility step uses the same check; stale or missing assets fail with the paths and regeneration command. Generating test publications with `pnpm contract:generate` does not repair SDK assets.
+
 Numbers must be finite. Integer features must use JavaScript-safe integers, without fractional components. Numeric editor strings are decimal numbers, optionally with an exponent; conversion consumes the entire input. Booleans, missing values, partial strings such as `42oops`, and integer strings such as `42.5` are rejected. False, zero-valued feature data, empty strings, and empty lists remain valid. Seed zero is invalid because it collapses every instance hash to zero.
 
 Map keys must match embedded IDs. Manifest entries must match the group files. Every environment must contain exactly the group's feature IDs and subtype discriminators. Names and IDs, including normalized lookup aliases, must be unambiguous in their scope. Environment values, seeds, and schedules may differ. Group file names must be safe and must not overwrite `manifest.json` or `config.json`.
@@ -18,11 +22,12 @@ Compatible extra fields are accepted by the schemas. The publisher emits only pu
 
 ## Generate and validate
 
-Use Node 24 and pnpm 10.14.0 from the repository root:
+Use Node 24 and pnpm 10.24.0 from the repository root:
 
 ```sh
 pnpm install --frozen-lockfile --ignore-scripts
 pnpm --filter @vexilla/types check:generated
+pnpm contract:compat:check
 pnpm contract:generate
 pnpm contract:test:producer
 pnpm contract:test:gate
@@ -75,6 +80,10 @@ PRODUCER_RESULT=success CONSUMERS_RESULT=success pnpm contract:gate
 These local status arguments describe work you have actually run; they are not a substitute for the hosted required CI status. Configure branch protection to require **Required SDK JSON contract** in the calling workflow. Do not mark the OpenSpec implementation complete until the hosted matrix also succeeds.
 
 ## Shared evaluation and state rules
+
+Implement opt-in client diagnostics using the native `showLogs` / `show_logs` convention. Logging is disabled by default and records fetch/install outcomes, including failed refreshes, without changing results or exceptions. Never include instance IDs, feature values, credentials, full URLs, or raw callback errors in these events. Add a native regression proving that enabled logging reports outcomes, disabled logging is silent, and failures still reach the caller.
+
+Prefer descriptive domain-specific names and readable control flow in SDK implementations. Preserve distinctions between a group ID, an environment ID, a feature, its validated snapshot, and a lookup table. Do not compress multi-step validation or lifecycle operations merely to reduce source length. Generated compatibility data is exempt from source formatting changes.
 
 - FNV-1a hashes UTF-8 bytes with unsigned 32-bit wraparound after each multiplication. Do not normalize string IDs. Reject malformed Unicode scalar strings in all keys, values, compatible extras, and required string instance IDs before a decoder can replace them. Valid surrogate pairs and literal U+FFFD remain accepted. Numeric IDs use finite binary64 and ECMAScript number text (RFC 8785 section 3.2.2.3); an integral overload rejects IDs that would lose identity during conversion. Integer feature-value bounds are separate.
 - The gradual bucket is `((hash * seed) remainder 1000.0) / 1000.0`, with a binary64 multiplication before the remainder. Do not truncate, round, add a multiplier, or use `<=`; membership is exactly `bucket < value`. Finite thresholds outside `[0,1]` remain schema-valid.

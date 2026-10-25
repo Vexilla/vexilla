@@ -35,6 +35,28 @@ Go's `SetManifest` now returns an error that callers should handle. `Client.Inst
 
 ## Native API changes
 
+### Optional client diagnostics
+
+All eleven SDKs support opt-in manifest/group fetch and installation diagnostics. The default is disabled. Events identify the operation and success/failure without exposing instance IDs, feature values, credentials, full URLs, or raw callback errors. Errors still reach the caller and failed refreshes preserve their previous snapshots. JS safe wrappers also honor the logging preference while retaining their existing fallback values.
+
+| SDK | Enable diagnostics | Native destination |
+| --- | --- | --- |
+| JS/TS | `new VexillaClient(config, true)` | `console.log` / `console.warn` |
+| Python | `VexillaClient(..., show_logs=True)` | `logging.getLogger("vexilla_client.client")`; configure INFO to see successful operations |
+| Go | `NewClient(environment, baseURL, instanceID, true)` or `client.ShowLogs = true` | standard `log` logger |
+| Rust | `VexillaClient::new(...).with_show_logs(true)` | standard error |
+| C# | `new VexillaClientBase(..., showLogs: true)` | `Console.Error` |
+| Swift | `VexillaClient(..., showLogs: true)` | standard error |
+| Kotlin | `Client(..., showLogs = true)` | `java.util.logging` logger `dev.vexilla.Client` |
+| PHP | `new Client(baseUrl, environment, instanceId, true)` | `error_log` |
+| Elixir | `VexillaClient.create_config(base_url, environment, instance_id, true)` | `Logger`; configure INFO to see successful operations |
+| OCaml | `make_client ~show_logs:true ... ()` | standard error |
+| Lua | `Client.new({base_url = url, show_logs = true})` | standard error |
+
+The Rust builder and additional optional arguments preserve existing constructor calls. SDK implementations use descriptive domain names and expanded control flow. Alias normalization remains the pinned publisher-compatible convention; the JS client no longer calls `case` directly for lookup aliases.
+
+### Client models and typed APIs
+
 C# preserves its string constructor and typed value accessors, and also accepts numeric/missing default IDs through its object constructor. `ShouldCustom` and `Value` expose the common dynamic operations. Group defaults now retain their concrete feature subtype; direct setters validate full native models. Errors expose `ContractException.Kind` (`validation`, `lookup`, `kind`, `instance`, or `fetch`).
 
 Swift’s `setManifest` now throws, as `setFlags` already does. Decode aggregate publications with `try Manifest.decode(data:)` and `try Group.decode(data:)` instead of `JSONDecoder.decode`: Foundation otherwise merges canonically equivalent JSON keys and can round numbers differently. `StringMap` preserves byte-distinct IDs while retaining string subscripts and sequence iteration. Typed value methods remain available; the generic `value` operation supports the shared fallback behavior. Use `InstanceId` overloads for numeric or missing IDs.

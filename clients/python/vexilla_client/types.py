@@ -112,9 +112,13 @@ class GradualFeature(BaseFeature):
     @validator("seed", pre=True)
     def validate_seed(cls, seed):
         if isinstance(seed, bool) or not isinstance(seed, (int, float)):
-            raise ValueError("seed must be a number greater than 0 and less than or equal to 1")
+            raise ValueError(
+                "seed must be a number greater than 0 and less than or equal to 1"
+            )
         if not math.isfinite(seed) or not 0 < seed <= 1:
-            raise ValueError("seed must be a finite number greater than 0 and less than or equal to 1")
+            raise ValueError(
+                "seed must be a finite number greater than 0 and less than or equal to 1"
+            )
         return seed
 
 

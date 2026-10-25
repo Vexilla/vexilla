@@ -10,7 +10,7 @@
     "test:client": "node --import tsx src/test_client.ts",
     "test": "pnpm run \"/^test:.*/\"",
     "compile": "tsup && node --import tsx scripts/hack-dist-types.ts",
-    "test:contract": "node --import tsx --test test/contract.test.ts"
+    "test:contract": "node --import tsx --test test/*.test.ts"
   },
   "author": {
     "name": "Chris Griffing",
