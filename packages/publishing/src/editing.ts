@@ -3,10 +3,12 @@ import type {
   Group,
   VexillaEnvironment,
   VexillaFeature,
+  VexillaSchedule,
+} from "./types";
+import type {
   VexillaFeatureTypeString,
   VexillaInputType,
   VexillaNumberType,
-  VexillaSchedule,
 } from "@vexilla/types";
 export const defaultSchedule = (): VexillaSchedule => ({
   start: 0,

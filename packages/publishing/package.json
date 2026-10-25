@@ -9,7 +9,9 @@
     "test": "node --import tsx --test test/*.test.ts"
   },
   "dependencies": {
-    "@vexilla/types": "workspace:*"
+    "@vexilla/types": "workspace:*",
+    "ajv": "8.17.1",
+    "case": "^1.6.3"
   },
   "devDependencies": {
     "typescript": "^5.2.2",

@@ -8,8 +8,14 @@ defmodule VexillaClient.MixProject do
       elixir: "~> 1.15",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      description: "An elixir client for the Vexilla feature flag system",
+      description: "An Elixir client for the Vexilla feature flag system",
+      name: "Vexilla Client",
+      source_url: "https://github.com/Vexilla/vexilla",
+      homepage_url: "https://vexilla.dev",
+      docs: [main: "readme", extras: ["README.md", "LICENSE"], source_ref: System.get_env("RELEASE_REVISION", "main")],
       package: %{
+        name: "vexilla_client",
+        files: ["lib", "mix.exs", "README.md", "LICENSE", "CHANGELOG.md"],
         licenses: [
           "BUSL-1.1"
         ],
@@ -38,12 +44,12 @@ defmodule VexillaClient.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
+      {:ex_doc, ">= 0.0.0", only: [:dev, :docs], runtime: false},
       {:typed_struct, "~> 0.3.0", runtime: false},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:timex, "~> 3.0"},
-      {:httpoison, "~> 2.0", only: [:dev, :test]},
-      {:jason, "~> 1.4", only: [:dev, :test]},
+      {:httpoison, "~> 2.0"},
+      {:jason, "~> 1.4"},
       {:fnv1a, "~> 0.1.0"}
     ]
   end

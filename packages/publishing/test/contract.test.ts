@@ -9,8 +9,8 @@ import {
   createEnvironment,
   changeFeatureType,
 } from "../src";
-import { validatePublication, validateFeature } from "@vexilla/types";
-import type { Group } from "@vexilla/types";
+import { validatePublication, validateFeature } from "../src";
+import type { Group } from "../src";
 const source = JSON.parse(
   readFileSync(
     new URL("../../../contract/authoring.json", import.meta.url),

@@ -1,11 +1,17 @@
 import type {
-  VexillaClientConfig,
   VexillaGradualFeature,
   VexillaManifest,
-  PublishedGroup,
+  VexillaManifestGroup,
+  VexillaGroup,
   VexillaFeature,
-  PublishedEnvironment,
-} from "@vexilla/types";
+  VexillaEnvironment,
+  VexillaClientConfig,
+  FetchHook,
+} from "./types";
+import type {
+  LegacyManifest,
+  PublishedGroup as LegacyGroup,
+} from "./compatibility";
 
 import { hashString } from "./hasher";
 import {
@@ -14,8 +20,6 @@ import {
   createGroupLookupTable,
 } from "./utils/lookup_tables";
 import { isScheduledFeatureActive } from "./scheduling";
-
-type FetchHook<T> = (url: string) => Promise<T>;
 
 function validateSeed(seed: unknown): void {
   if (
@@ -37,7 +41,7 @@ export class VexillaClient {
   protected customInstanceHash = "";
 
   protected manifest: VexillaManifest;
-  protected flagGroups: Record<string, PublishedGroup> = {};
+  protected flagGroups: Record<string, VexillaGroup> = {};
   protected groupLookupTable: Record<string, string> = {};
   protected featureLookupTable: Record<string, Record<string, string>> = {};
   protected environmentLookupTable: Record<string, Record<string, string>> = {};
@@ -49,9 +53,11 @@ export class VexillaClient {
     this.customInstanceHash = config.customInstanceId;
   }
 
+  getManifest(fetchHook: FetchHook<VexillaManifest>): Promise<VexillaManifest>;
+  getManifest(fetchHook: FetchHook<LegacyManifest>): Promise<LegacyManifest>;
   async getManifest(
-    fetchHook: FetchHook<VexillaManifest>
-  ): Promise<VexillaManifest> {
+    fetchHook: FetchHook<LegacyManifest>
+  ): Promise<LegacyManifest> {
     try {
       const result = await fetchHook(`${this.baseUrl}/manifest.json`);
       return result;
@@ -61,20 +67,30 @@ export class VexillaClient {
     }
   }
 
-  async setManifest(manifest: VexillaManifest) {
-    this.manifest = manifest;
-    this.groupLookupTable = createGroupLookupTable(manifest.groups);
+  async setManifest(manifest: VexillaManifest | LegacyManifest) {
+    this.manifest = manifest as VexillaManifest;
+    this.groupLookupTable = createGroupLookupTable(
+      manifest.groups as VexillaManifestGroup[]
+    );
   }
 
-  async syncManifest(fetchHook: FetchHook<VexillaManifest>) {
+  async syncManifest(fetchHook: FetchHook<VexillaManifest | LegacyManifest>) {
     const manifest = await this.getManifest(fetchHook);
     this.setManifest(manifest);
   }
 
+  getFlags(
+    groupNameOrId: string,
+    fetchHook: FetchHook<VexillaGroup>
+  ): Promise<VexillaGroup>;
+  getFlags(
+    groupNameOrId: string,
+    fetchHook: FetchHook<LegacyGroup>
+  ): Promise<LegacyGroup>;
   async getFlags(
     groupNameOrId: string,
-    fetchHook: FetchHook<PublishedGroup>
-  ): Promise<PublishedGroup> {
+    fetchHook: FetchHook<LegacyGroup>
+  ): Promise<LegacyGroup> {
     if (!this.manifest) {
       throw new Error("Manifest is not fetched");
     }
@@ -84,13 +100,13 @@ export class VexillaClient {
       throw new Error("FlagGroup not found in manifest.");
     }
 
-    const flagsResponse: PublishedGroup = await fetchHook(
+    const flagsResponse: LegacyGroup = await fetchHook(
       `${this.baseUrl}/${groupId}.json`
     );
     return flagsResponse;
   }
 
-  setFlags(flags: PublishedGroup) {
+  setFlags(flags: VexillaGroup | LegacyGroup) {
     for (const features of [
       flags.features,
       ...Object.values(flags.environments).map((env) => env.features),
@@ -103,15 +119,20 @@ export class VexillaClient {
     }
     let groupId = this.groupLookupTable[flags.groupId];
 
-    this.featureLookupTable[groupId] = createFeatureLookupTable(flags.features);
+    this.featureLookupTable[groupId] = createFeatureLookupTable(
+      flags.features as Record<string, VexillaFeature>
+    );
     this.environmentLookupTable[groupId] = createEnvironmentLookupTable(
-      flags.environments
+      flags.environments as Record<string, VexillaEnvironment>
     );
 
-    this.flagGroups[groupId] = flags;
+    this.flagGroups[groupId] = flags as VexillaGroup;
   }
 
-  async syncFlags(groupNameOrId: string, fetchHook: FetchHook<PublishedGroup>) {
+  async syncFlags(
+    groupNameOrId: string,
+    fetchHook: FetchHook<VexillaGroup | LegacyGroup>
+  ) {
     if (!this.manifest) {
       throw new Error("Manifest is not fetched");
     }
@@ -216,8 +237,8 @@ export class VexillaClient {
     groupNameOrId: string,
     featureNameOrId: string
   ): {
-    environment: PublishedEnvironment;
-    group: PublishedGroup;
+    environment: VexillaEnvironment;
+    group: VexillaGroup;
     feature: VexillaFeature;
   } {
     const groupId = this.groupLookupTable[groupNameOrId];

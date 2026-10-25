@@ -1,0 +1,19 @@
+{
+  "name": "@vexilla/release-tools",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Pinned Release Please CLI and offline release fixtures",
+  "scripts": {
+    "test": "node --test *.test.cjs",
+    "check": "node check-release-config.cjs"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "dependencies": {
+    "release-please": "17.11.2"
+  },
+  "devDependencies": {
+    "yaml": "2.9.1"
+  }
+}

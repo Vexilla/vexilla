@@ -1,5 +1,5 @@
 import { changeFeatureType } from "../packages/publishing/src";
-import type { Group } from "@vexilla/types";
+import type { Group } from "../packages/publishing/src";
 /** Explicit corpus editing actions follow the same constructors as the UI. */
 export function applyContractActions(
   config: { groups: Group[] },

@@ -7,7 +7,7 @@ const crypto = require("node:crypto");
 const { spawnSync } = require("node:child_process");
 const {
   validatePublication,
-} = require("../../packages/types/dist/src/index.js");
+} = require("../../packages/publishing/dist/index.js");
 
 test("an incompatible artifact fails a real required SDK and cannot produce a success receipt", () => {
   const root = path.resolve(__dirname, "../..");

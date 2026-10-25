@@ -1,6 +1,5 @@
 // import _React from "react";
 // import { Button } from "@mantine/core";
-// import { AppState } from "@vexilla/types";
 
 // import { GithubLogo } from "../../logos/GithubLogo";
 

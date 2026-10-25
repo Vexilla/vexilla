@@ -1,4 +1,3 @@
-import { VexillaManifest } from "@vexilla/types";
 import { VexillaClient } from "./client";
 import axios from "axios";
 import { labelledAssert } from "./utils/testing";
@@ -9,7 +8,7 @@ import { labelledAssert } from "./utils/testing";
 
   const client = new VexillaClient(
     {
-      baseUrl: "http://localhost:3000",
+      baseUrl: `http://${process.env.TEST_SERVER_HOST || "localhost:3000"}`,
       environment: "dev",
       customInstanceId: uuid,
     },

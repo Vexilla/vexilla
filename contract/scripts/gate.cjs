@@ -50,7 +50,10 @@ function verifyArtifacts(dir) {
   }
   return metadata;
 }
-function checkGate(inventory, metadata, receipts, producer, consumers) {
+function checkGate(inventory, metadata, receipts, producer, consumers, expectedRevision) {
+  if (expectedRevision && metadata.revision !== expectedRevision) {
+    throw Error("Contract evidence is not from the approved revision");
+  }
   checkInventory(inventory);
   if (producer !== "success" || consumers !== "success") {
     throw Error(
@@ -94,7 +97,8 @@ if (require.main === module) {
     metadata,
     receipts,
     process.env.PRODUCER_RESULT,
-    process.env.CONSUMERS_RESULT
+    process.env.CONSUMERS_RESULT,
+    process.env.EXPECTED_REVISION
   );
   console.log(
     "Required producer and all ten SDK contracts passed for " +

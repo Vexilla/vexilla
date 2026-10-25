@@ -1,0 +1,96 @@
+name: SDK releases
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      sdk:
+        description: Recover one enabled SDK; creates no version or tag.
+        required: true
+        type: choice
+        options: [js, elixir, rust]
+      tag:
+        description: Existing approved stable component tag (for example client-js-v2.0.0).
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: sdk-release-orchestration-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  release:
+    if: github.event_name == 'push' && vars.SDK_RELEASES_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      candidates: ${{ steps.release.outputs.candidates }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+      - name: Validate reconciled baselines and activation
+        run: node scripts/releases/check-release-config.cjs --require-ready
+      - name: Create repository-scoped release bot token
+        id: bot
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        with:
+          app-id: ${{ vars.SDK_RELEASE_APP_ID }}
+          private-key: ${{ secrets.SDK_RELEASE_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+          permission-pull-requests: write
+      - run: npm ci --ignore-scripts --prefix scripts/releases
+      - name: Maintain release PRs and emit created component releases
+        id: release
+        run: node scripts/releases/orchestrate.cjs
+        env:
+          GH_TOKEN: ${{ steps.bot.outputs.token }}
+          SDK_RELEASE_BOT_LOGIN: ${{ vars.SDK_RELEASE_BOT_LOGIN }}
+          SDK_RELEASE_APP_SLUG: ${{ steps.bot.outputs.app-slug }}
+  candidates:
+    needs: release
+    if: >-
+      always() && !cancelled() && github.ref == 'refs/heads/main' &&
+      (needs.release.result == 'success' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.select.outputs.matrix }}
+      any: ${{ steps.select.outputs.any }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+      - run: node scripts/releases/check-release-config.cjs --require-ready
+      - name: Select only releases from this invocation, or one approved recovery tag
+        id: select
+        run: node scripts/releases/select-candidates.cjs
+        env:
+          SDK_RELEASES_ENABLED: ${{ vars.SDK_RELEASES_ENABLED }}
+          RELEASE_CANDIDATES: ${{ needs.release.outputs.candidates || '[]' }}
+          RECOVERY_SDK: ${{ inputs.sdk }}
+          RECOVERY_TAG: ${{ inputs.tag }}
+  publish:
+    needs: candidates
+    if: needs.candidates.outputs.any == 'true'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.candidates.outputs.matrix) }}
+    uses: ./.github/workflows/sdk-publish.yml
+    with:
+      sdk: ${{ matrix.sdk }}
+      tag: ${{ matrix.tag }}
+      revision: ${{ matrix.revision }}
+    permissions:
+      contents: read
+      pull-requests: read
+      id-token: write

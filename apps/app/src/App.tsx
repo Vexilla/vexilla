@@ -6,7 +6,7 @@ import { useSnapshot } from "valtio";
 import { set as lodashSet } from "lodash-es";
 import { Difference } from "microdiff";
 
-import { Group, ContractIssue } from "@vexilla/types";
+import { Group, ContractIssue } from "@vexilla/publishing";
 
 import { nanoid } from "./utils/nanoid";
 import { fetchersMap } from "./utils/fetchers.map";

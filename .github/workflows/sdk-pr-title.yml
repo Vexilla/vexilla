@@ -1,0 +1,28 @@
+name: SDK squash title
+
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened, edited, reopened, synchronize, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  sdk-squash-title:
+    runs-on: ubuntu-24.04
+    steps:
+      # Only trusted base code executes. PR text/files are fetched as data; the
+      # untrusted head is never checked out, installed or run in this workflow.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+      - name: Validate releasable squash title
+        run: node scripts/releases/pr-title.cjs
+        env:
+          GH_TOKEN: ${{ github.token }}

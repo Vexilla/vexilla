@@ -20,8 +20,5 @@
     "json-schema-to-typescript": "15.0.4",
     "tsx": "4.20.5"
   },
-  "dependencies": {
-    "ajv": "8.17.1",
-    "case": "^1.6.3"
-  }
+  "private": true
 }

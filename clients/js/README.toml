@@ -75,13 +75,13 @@ Fetches the manifest file for facilitating name->id lookups. Does not set the va
 
 - fetchHook `(url: string) => string`: A callback that is passed the url of the manifest file. You can bring your own http request library.
 
-###  `setManifest(manifest: Manifest): void`
+###  `setManifest(manifest: VexillaManifest): void`
 
 Sets a fetched manifest within the Client instance.
 
 #### Arguments
 
-- manifest `Manifest`: The manifest file to persist into the client. Usually fetched via `get_manifest`.
+- manifest `VexillaManifest`: The manifest file to persist into the client. Usually fetched via `get_manifest`.
 
 ### `async syncManifest(fetch: (url: string) => Promise<void>`
 
@@ -101,15 +101,13 @@ Fetches the flags for a specific flagGroup. Can use the ID or the name of the gr
 
 - fetch `(url: string) -> string`: A callback that is passed the url of the flag group file. You can bring your own http request library.
 
-### setFlags(groupName: string, flags: PublishedGroup)
+### setFlags(flags: VexillaGroup)
 
 Sets a fetched flag group within the Client instance.
 
 #### Arguments
 
-- group_id `string`: The ID or name of the flag group that you would like to set.
-
-- flags `FlagGroup`: The collection of flags you would like to set. Typically from a `getFlags` call. `syncFlags` wraps both functions to streamline the process.
+- flags `VexillaGroup`: The collection of flags you would like to set. Typically from a `getFlags` call. `syncFlags` wraps both functions to streamline the process.
 
 ### async syncFlags(fileName: string, fetch: Callback) -> void
 

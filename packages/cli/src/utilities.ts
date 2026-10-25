@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs-extra";
 import axios from "axios";
-import { PublishedGroup, VexillaFlags, VexillaManifest } from "@vexilla/types";
+import type { PublishedGroup, VexillaManifest } from "@vexilla/types";
 
 import { transformConstants } from "./transform";
 

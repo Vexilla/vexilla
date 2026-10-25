@@ -2,11 +2,11 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 dayjs.extend(utc);
 
-import {
+import type {
   VexillaFeature,
   VexillaSchedule,
   VexillaScheduleType,
-} from "@vexilla/types";
+} from "./types";
 
 export function isScheduledFeatureActive(feature: VexillaFeature) {
   return isScheduleActive(feature.schedule, feature.scheduleType);

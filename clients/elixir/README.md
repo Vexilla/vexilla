@@ -28,7 +28,7 @@ Using mix, install the package from hex.pm by adding the dependency to `mix.exs`
 defp deps do
   [
     ...
-    {:vexilla_client_elixir, "~> 0.1.0"}
+    {:vexilla_client, "~> 1.0"}
   ]
 ```
 
@@ -137,4 +137,4 @@ No sponsors yet. This could be a link and icon for **your** company here.
 
 Current Vexilla code is released under a combination of two licenses, the Business Source License (BSL) and the MIT License.
 
-Please see the [License file](../../../LICENSE) for more info.
+Please see the [License file](LICENSE) for more info.

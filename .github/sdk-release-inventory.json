@@ -1,0 +1,345 @@
+{
+  "schemaVersion": 1,
+  "repository": "Vexilla/vexilla",
+  "releasePlease": {
+    "version": "17.11.2",
+    "packageIntegrity": "sha512-we0+NgyHjvczxrilD6aujnRNuASd65Jem0dY5evevxSZvz8BnKnB/QRN3UzGA229fcV09lKCYbqeE9HgkXzGmA=="
+  },
+  "automation": {
+    "enabled": false,
+    "historyBoundary": null,
+    "reason": "Registry observations are recorded, but source baselines, initial aligned JS/types version, Rust local/registry discrepancy, account authorization and rollout checks require maintainer reconciliation before release PRs or publication."
+  },
+  "clients": [
+    {
+      "id": "js",
+      "directory": "clients/js",
+      "component": "client-js",
+      "releaseGroup": "js-types",
+      "releaseType": "node",
+      "enabled": true,
+      "tagTemplate": "client-js-v{version}",
+      "baseline": {
+        "verified": false,
+        "status": "blocked",
+        "registryVersion": "1.0.3",
+        "minimumAutomatedVersion": "2.0.0",
+        "publicTypeCompatibilityReviewed": false,
+        "licenseConfirmed": true,
+        "observedLicenseMetadata": "BSL-1.0",
+        "observedLicenseFile": "MIT",
+        "observedRepositoryLicense": "BUSL-1.1",
+        "sourceRevision": null,
+        "observedAt": "2026-10-23",
+        "observedOwner": "cmgriffing",
+        "evidence": "https://registry.npmjs.org/@vexilla%2fclient",
+        "reason": "Registry metadata has no gitHead; reconcile source history, review the protected subclass type incompatibility requiring first automated JS >=2.0.0, then align JS/types without downgrading JS. Public ownership does not prove current account or OIDC authority.",
+        "confirmedLicense": "BUSL-1.1"
+      },
+      "publish": {
+        "registry": "npm",
+        "package": "@vexilla/client",
+        "environment": "sdk-npm",
+        "definition": "npm",
+        "commands": {
+          "validate": ["pnpm", "--filter", "@vexilla/client", "test"],
+          "package": ["npm", "pack", "--json"],
+          "publish": [
+            "npm",
+            "publish",
+            "{verifiedTarball}",
+            "--access",
+            "public"
+          ]
+        },
+        "activationPrerequisites": [
+          "Verify package ownership and source baseline",
+          "Align JS/types versions and record the bootstrap SHA",
+          "Verify isolated runtime/declaration consumer",
+          "Configure npm trusted publishing for sdk-release.yml and sdk-npm",
+          "Complete full hosted contract and package checks"
+        ]
+      }
+    },
+    {
+      "id": "elixir",
+      "directory": "clients/elixir",
+      "component": "client-elixir",
+      "releaseGroup": "elixir",
+      "releaseType": "elixir",
+      "enabled": true,
+      "tagTemplate": "client-elixir-v{version}",
+      "baseline": {
+        "verified": false,
+        "status": "blocked",
+        "registryVersion": "1.0.1",
+        "sourceRevision": null,
+        "observedAt": "2026-10-23",
+        "observedOwner": "vexilla",
+        "evidence": "https://hex.pm/api/packages/vexilla_client",
+        "reason": "Package and version exist; archive/source correspondence, account authorization, and bootstrap history boundary remain unverified."
+      },
+      "publish": {
+        "registry": "hex",
+        "package": "vexilla_client",
+        "environment": "sdk-hex",
+        "definition": "hex",
+        "commands": {
+          "validate": ["mix", "test"],
+          "package": ["mix", "hex.build"],
+          "publish": ["mix", "hex.publish", "--yes"]
+        },
+        "activationPrerequisites": [
+          "Verify existing package ownership and source baseline",
+          "Fix production dependencies and verify clean production/docs consumers",
+          "Configure Hex workload identity for existing public package, sdk-release.yml and sdk-hex",
+          "Compare native rebuilt payload with verified candidate before upload",
+          "Complete full hosted contract and package checks"
+        ]
+      }
+    },
+    {
+      "id": "rust",
+      "directory": "clients/rust",
+      "component": "client-rust",
+      "releaseGroup": "rust",
+      "releaseType": "rust",
+      "enabled": true,
+      "tagTemplate": "client-rust-v{version}",
+      "baseline": {
+        "verified": false,
+        "status": "blocked",
+        "registryVersion": "1.0.0",
+        "localVersionObserved": "1.0.1",
+        "sourceRevision": null,
+        "observedAt": "2026-10-23",
+        "observedPublisher": "cmgriffing",
+        "evidence": "https://crates.io/api/v1/crates/vexilla_client",
+        "reason": "Latest registry stable is 1.0.0 while checkout is 1.0.1; maintainer must reconcile unpublished version/history and verify current ownership."
+      },
+      "publish": {
+        "registry": "crates.io",
+        "package": "vexilla_client",
+        "environment": "sdk-crates",
+        "definition": "cargo",
+        "commands": {
+          "validate": ["cargo", "test", "--locked"],
+          "package": ["cargo", "package", "--locked"],
+          "publish": ["cargo", "publish", "--locked"]
+        },
+        "activationPrerequisites": [
+          "Reconcile local 1.0.1 against registry 1.0.0 and record source/history baseline",
+          "Verify crate ownership",
+          "Configure crates.io trusted publishing for sdk-release.yml and sdk-crates",
+          "Compare native rebuilt payload with verified candidate before upload",
+          "Complete full hosted contract and package checks"
+        ]
+      }
+    },
+    {
+      "id": "go",
+      "directory": "clients/go",
+      "component": "client-go",
+      "releaseGroup": "go",
+      "releaseType": "go",
+      "enabled": false,
+      "tagTemplate": "clients/go/v{version}",
+      "publish": {
+        "registry": "proxy.golang.org",
+        "package": "github.com/vexilla/vexilla/clients/go",
+        "environment": "sdk-go",
+        "definition": "go-module",
+        "commands": {
+          "validate": ["go", "test", "./..."],
+          "package": ["go", "list", "-m", "-json"]
+        },
+        "activationPrerequisites": [
+          "Verify module source/version baseline and ownership",
+          "Implement reviewed directory-prefixed tag release with clients/go/v{version}",
+          "Verify proxy consumption at immutable tag",
+          "Add native Release Please strategy and publication/recovery implementation before enablement"
+        ]
+      }
+    },
+    {
+      "id": "python",
+      "directory": "clients/python",
+      "component": "client-python",
+      "releaseGroup": "python",
+      "releaseType": "python",
+      "enabled": false,
+      "tagTemplate": "client-python-v{version}",
+      "publish": {
+        "registry": "pypi",
+        "package": null,
+        "environment": "sdk-pypi",
+        "definition": "python-build",
+        "commands": {
+          "validate": ["python", "-m", "pytest"],
+          "package": ["python", "-m", "build"],
+          "publish": [
+            "python",
+            "-m",
+            "twine",
+            "upload",
+            "{verifiedDistributions}"
+          ]
+        },
+        "activationPrerequisites": [
+          "Add pyproject distribution metadata and choose/verify PyPI identity",
+          "Verify source baseline, wheel/sdist contents, clean consumer and trusted publishing",
+          "Add Release Please and publication/recovery implementation before enablement"
+        ]
+      }
+    },
+    {
+      "id": "php",
+      "directory": "clients/php",
+      "component": "client-php",
+      "releaseGroup": "php",
+      "releaseType": "php",
+      "enabled": false,
+      "tagTemplate": "client-php-v{version}",
+      "publish": {
+        "registry": "packagist",
+        "package": "vexilla/client",
+        "environment": "sdk-packagist",
+        "definition": "packagist",
+        "commands": {
+          "validate": ["composer", "test"],
+          "package": ["composer", "archive", "--format=zip"]
+        },
+        "activationPrerequisites": [
+          "Choose a monorepo subtree/distribution repository and tag strategy",
+          "Verify Packagist identity, ownership, source baseline and clean consumer",
+          "Implement Packagist metadata update and immutable source verification before enablement"
+        ]
+      }
+    },
+    {
+      "id": "swift",
+      "directory": "clients/swift",
+      "component": "client-swift",
+      "releaseGroup": "swift",
+      "releaseType": "simple",
+      "enabled": false,
+      "tagTemplate": null,
+      "publish": {
+        "registry": "swiftpm-or-cocoapods",
+        "package": "VexillaClient",
+        "environment": "sdk-swift",
+        "definition": "swift-package",
+        "commands": {
+          "validate": ["swift", "test"],
+          "package": ["swift", "package", "dump-package"]
+        },
+        "activationPrerequisites": [
+          "Choose SwiftPM/CocoaPods release and repository/tag strategy",
+          "Account for root Package.swift and correct pod metadata",
+          "Verify clean platform consumer, source baseline and registry identity",
+          "Implement native publication/recovery before enablement"
+        ]
+      }
+    },
+    {
+      "id": "kotlin",
+      "directory": "clients/kotlin",
+      "component": "client-kotlin",
+      "releaseGroup": "kotlin",
+      "releaseType": "java",
+      "enabled": false,
+      "tagTemplate": "client-kotlin-v{version}",
+      "publish": {
+        "registry": "maven-central",
+        "package": null,
+        "environment": "sdk-maven",
+        "definition": "maven",
+        "commands": {
+          "validate": ["./gradlew", "test"],
+          "package": ["./gradlew", "build"],
+          "publish": ["./gradlew", "publish"]
+        },
+        "activationPrerequisites": [
+          "Choose/verify Maven coordinates and ownership",
+          "Add publication, signing and credential configuration",
+          "Verify source baseline and isolated JVM consumer",
+          "Implement native versioning/publication/recovery before enablement"
+        ]
+      }
+    },
+    {
+      "id": "csharp",
+      "directory": "clients/csharp",
+      "component": "client-csharp",
+      "releaseGroup": "csharp",
+      "releaseType": "dotnet-yoshi",
+      "enabled": false,
+      "tagTemplate": "client-csharp-v{version}",
+      "publish": {
+        "registry": "nuget",
+        "package": null,
+        "environment": "sdk-nuget",
+        "definition": "nuget",
+        "commands": {
+          "validate": ["dotnet", "test"],
+          "package": [
+            "dotnet",
+            "pack",
+            "Vexilla.Client/Vexilla.Client.csproj",
+            "--configuration",
+            "Release"
+          ],
+          "publish": [
+            "dotnet",
+            "nuget",
+            "push",
+            "{verifiedPackage}",
+            "--source",
+            "https://api.nuget.org/v3/index.json"
+          ]
+        },
+        "activationPrerequisites": [
+          "Normalize package ID and conflicting Version/ReleaseVersion metadata",
+          "Verify NuGet ownership, source baseline and isolated consumer",
+          "Implement native versioning/publication/recovery before enablement"
+        ]
+      }
+    },
+    {
+      "id": "ocaml",
+      "directory": "clients/ocaml",
+      "component": "client-ocaml",
+      "releaseGroup": "ocaml",
+      "releaseType": "ocaml",
+      "enabled": false,
+      "tagTemplate": "client-ocaml-v{version}",
+      "publish": {
+        "registry": "opam",
+        "package": "vexilla_sdk",
+        "environment": "sdk-opam",
+        "definition": "opam",
+        "commands": {
+          "validate": ["opam", "exec", "--", "dune", "runtest"],
+          "package": ["opam", "exec", "--", "dune", "build", "@install"]
+        },
+        "activationPrerequisites": [
+          "Choose immutable source archive/checksum and opam submission strategy",
+          "Respect generated opam metadata from dune-project",
+          "Verify package identity, source baseline and clean opam consumer",
+          "Implement native versioning/publication/recovery before enablement"
+        ]
+      }
+    }
+  ],
+  "internalComponents": [
+    {
+      "id": "types",
+      "directory": "packages/types",
+      "component": "client-types",
+      "releaseGroup": "js-types",
+      "releaseType": "node",
+      "tagTemplate": "client-types-v{version}",
+      "publish": false
+    }
+  ]
+}

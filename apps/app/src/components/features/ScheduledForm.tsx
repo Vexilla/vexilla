@@ -28,7 +28,7 @@ import timezone from "dayjs/plugin/timezone";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-import { VexillaSchedule } from "@vexilla/types";
+import { VexillaSchedule } from "@vexilla/publishing";
 
 import { Icon } from "@iconify/react";
 import clockCircleBroken from "@iconify/icons-solar/clock-circle-broken";
