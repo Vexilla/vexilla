@@ -1,4 +1,4 @@
-import { VexillaSchedule } from "@vexilla/types";
+import type { VexillaSchedule } from "./types";
 import { isScheduleActive, isScheduleActiveWithNow } from "./scheduling";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";

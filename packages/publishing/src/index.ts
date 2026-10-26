@@ -3,8 +3,10 @@ import {
   issue,
   pointer,
   validatePublication,
-} from "@vexilla/types";
+} from "./validation";
 export * from "./editing";
+export * from "./types";
+export * from "./validation";
 export interface PublicationFile {
   filePath: string;
   content: string;

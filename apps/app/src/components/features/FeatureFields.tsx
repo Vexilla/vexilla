@@ -1,6 +1,6 @@
 import { defaultSchedule } from "@vexilla/publishing";
 import { TextInput, Switch, Alert, Button } from "@mantine/core";
-import type { VexillaFeature, VexillaSchedule } from "@vexilla/types";
+import type { VexillaFeature, VexillaSchedule } from "@vexilla/publishing";
 import { SelectiveList } from "./SelectiveList";
 import { ScheduledForm } from "./ScheduledForm";
 

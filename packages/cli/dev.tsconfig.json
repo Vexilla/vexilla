@@ -10,6 +10,7 @@
     "listFiles": true,
     "newLine": "LF",
     "noEmitOnError": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "resolveJsonModule": true
   }
 }

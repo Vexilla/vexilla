@@ -2,7 +2,7 @@ import type {
   VexillaFeature,
   VexillaSchedule,
   VexillaScheduleType,
-} from "@vexilla/types";
+} from "./types";
 
 const DAY = 86400000;
 const day = (timestamp: number) => Math.floor(timestamp / DAY) * DAY;

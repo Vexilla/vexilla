@@ -9,17 +9,19 @@
     "test:scheduling": "node --import tsx src/test_scheduling.ts",
     "test:client": "node --import tsx src/test_client.ts",
     "test": "pnpm run \"/^test:.*/\"",
-    "compile": "tsup && node --import tsx scripts/hack-dist-types.ts",
-    "test:contract": "node --import tsx --test test/*.test.ts"
+    "compile": "tsup",
+    "test:contract": "node --import tsx --test test/*.test.ts",
+    "check:package": "node scripts/check-package.cjs"
   },
   "author": {
     "name": "Chris Griffing",
     "email": "cmgriffing@gmail.com",
     "url": "https://chrisgriffing.com"
   },
-  "license": "BSL-1.0",
+  "license": "BUSL-1.1",
   "devDependencies": {
     "@types/node": "^14.14.13",
+    "@vexilla/publishing": "workspace:*",
     "@vexilla/types": "workspace:*",
     "axios": "^0.21.0",
     "husky": "^4.3.8",
@@ -52,10 +54,24 @@
     "splitting": false,
     "sourcemap": true,
     "clean": true,
-    "dts": true,
-    "dts-resolve": true,
+    "dts": {
+      "resolve": true
+    },
     "noExternal": [
-      "@vexilla/types"
+      "@vexilla/types",
+      "@vexilla/publishing"
     ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vexilla/vexilla.git",
+    "directory": "clients/js"
+  },
+  "homepage": "https://vexilla.dev",
+  "bugs": {
+    "url": "https://github.com/Vexilla/vexilla/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

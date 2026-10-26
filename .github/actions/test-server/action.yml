@@ -3,7 +3,7 @@ description: Serve this commit's SDK fixtures instead of a previously published 
 runs:
   using: composite
   steps:
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
       with:
         node-version: 24
     - name: Install test server dependencies
@@ -15,7 +15,7 @@ runs:
       working-directory: packages/test-server
       run: |
         log_file="$RUNNER_TEMP/vexilla-test-server.log"
-        npm start --workspaces=false > "$log_file" 2>&1 &
+        node --no-experimental-strip-types --require ts-node/register -e 'require("./index.ts")' > "$log_file" 2>&1 &
         server_pid=$!
         for _attempt in {1..30}; do
           if node -e 'fetch("http://localhost:3000/manifest.json").then(r => { if (!r.ok) { process.exit(1); } }).catch(() => process.exit(1))'; then

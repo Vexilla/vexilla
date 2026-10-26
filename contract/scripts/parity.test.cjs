@@ -5,7 +5,7 @@ const path = require("node:path");
 const { mutate, readVectors } = require("./vectors.cjs");
 const {
   validatePublication,
-} = require("../../packages/types/dist/src/index.js");
+} = require("../../packages/publishing/dist/index.js");
 const parity = require("../parity.json");
 const compatibility = require("../compatibility.json");
 

@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { Button, TextInput, Flex, Box } from "@mantine/core";
 
-import { VexillaEnvironment, VexillaFeature } from "@vexilla/types";
+import { VexillaEnvironment, VexillaFeature } from "@vexilla/publishing";
 import { useSnapshot } from "valtio";
 
 import { config } from "../../stores/config-valtio";

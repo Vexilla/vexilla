@@ -5,7 +5,7 @@ import type { HostingConfigS3 } from "./hosts/hosting-adapters/s3.adapter";
 import type { HostingConfigAzure } from "./hosts/hosting-adapters/azure.adapter";
 import type { HostingConfigGcloud } from "./hosts/hosting-adapters/gcloud.adapter";
 import type { HostingConfigFirebase } from "./hosts/hosting-adapters/firebase.adapter";
-import type { Group } from "@vexilla/types";
+import type { Group } from "@vexilla/publishing";
 
 export interface AppState {
   modifiedAt: number;

@@ -3,8 +3,10 @@ import { resolve } from "node:path";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { applyContractActions } from "../actions";
-import { serializePublication } from "../../packages/publishing/src";
-import { validatePublication } from "../../packages/types/src";
+import {
+  serializePublication,
+  validatePublication,
+} from "../../packages/publishing/src";
 const { mutate, readVectors } = require("./vectors.cjs");
 const root = resolve(__dirname, "../..");
 const input = JSON.parse(
@@ -74,12 +76,11 @@ writeFileSync(
   resolve(out, "metadata.json"),
   JSON.stringify(
     {
-      revision:
-        process.env.GITHUB_SHA ||
-        execFileSync("git", ["rev-parse", "HEAD"], {
-          cwd: root,
-          encoding: "utf8",
-        }).trim(),
+      // Recovery runs can check out an approved release older than GITHUB_SHA.
+      revision: execFileSync("git", ["rev-parse", "HEAD"], {
+        cwd: root,
+        encoding: "utf8",
+      }).trim(),
       referenceClock: 1735689600000,
       hashes,
       requiredCaseIds: readVectors(out)

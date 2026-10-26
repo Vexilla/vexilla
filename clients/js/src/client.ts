@@ -1,10 +1,11 @@
 import type {
   VexillaClientConfig,
   VexillaManifest,
-  PublishedGroup,
+  VexillaGroup,
   VexillaFeature,
-  PublishedEnvironment,
-} from "@vexilla/types";
+  VexillaEnvironment,
+  FetchHook,
+} from "./types";
 
 import { hashString } from "./hasher";
 import {
@@ -14,10 +15,13 @@ import {
 } from "./utils/lookup_tables";
 import { isScheduledFeatureActive } from "./scheduling";
 
-type FetchHook<T> = (url: string) => Promise<T>;
+import type {
+  LegacyManifest,
+  PublishedGroup as LegacyGroup,
+} from "./compatibility";
 
 import { VexillaError } from "./errors";
-import { isWellFormedUnicode } from "@vexilla/types";
+import { isWellFormedUnicode } from "@vexilla/publishing/dist/validation";
 import { validateGroupData, validateManifestData } from "./validation";
 
 function validInstance(value: unknown): asserts value is string | number {
@@ -39,28 +43,24 @@ export class VexillaClient {
   protected defaultInstanceId: string | number | undefined;
 
   protected manifest: VexillaManifest | undefined;
-  protected flagGroups: Record<string, PublishedGroup> = Object.create(null);
+  protected flagGroups: Record<string, VexillaGroup> = Object.create(null);
   protected groupLookupTable: Record<string, string> = Object.create(null);
   protected featureLookupTable: Record<string, Record<string, string>> =
     Object.create(null);
   protected environmentLookupTable: Record<string, Record<string, string>> =
     Object.create(null);
 
-  constructor(
-    config: Pick<
-      VexillaClientConfig,
-      "baseUrl" | "environment" | "customInstanceId"
-    >,
-    showLogs = false
-  ) {
+  constructor(config: VexillaClientConfig, showLogs = false) {
     this.showLogs = showLogs;
     this.baseUrl = config.baseUrl;
     this.environment = config.environment ?? "prod";
     this.defaultInstanceId = config.customInstanceId;
   }
 
+  getManifest(fetchHook: FetchHook<VexillaManifest>): Promise<VexillaManifest>;
+  getManifest(fetchHook: FetchHook<LegacyManifest>): Promise<LegacyManifest>;
   async getManifest(
-    fetchHook: FetchHook<VexillaManifest>
+    fetchHook: FetchHook<VexillaManifest | LegacyManifest>
   ): Promise<VexillaManifest> {
     let operationSucceeded = false;
     try {
@@ -83,7 +83,7 @@ export class VexillaClient {
     }
   }
 
-  async setManifest(manifest: VexillaManifest) {
+  async setManifest(manifest: VexillaManifest | LegacyManifest) {
     let operationSucceeded = false;
     try {
       validateManifestData(manifest);
@@ -110,14 +110,22 @@ export class VexillaClient {
     }
   }
 
-  async syncManifest(fetchHook: FetchHook<VexillaManifest>) {
+  async syncManifest(fetchHook: FetchHook<VexillaManifest | LegacyManifest>) {
     await this.setManifest(await this.getManifest(fetchHook));
   }
 
+  getFlags(
+    groupNameOrId: string,
+    fetchHook: FetchHook<VexillaGroup>
+  ): Promise<VexillaGroup>;
+  getFlags(
+    groupNameOrId: string,
+    fetchHook: FetchHook<LegacyGroup>
+  ): Promise<LegacyGroup>;
   async getFlags(
     groupNameOrId: string,
-    fetchHook: FetchHook<PublishedGroup>
-  ): Promise<PublishedGroup> {
+    fetchHook: FetchHook<VexillaGroup | LegacyGroup>
+  ): Promise<VexillaGroup> {
     let operationSucceeded = false;
     try {
       if (!this.manifest) {
@@ -152,7 +160,7 @@ export class VexillaClient {
     }
   }
 
-  setFlags(flags: PublishedGroup) {
+  setFlags(flags: VexillaGroup | LegacyGroup) {
     let operationSucceeded = false;
     try {
       if (!this.manifest) {
@@ -176,7 +184,10 @@ export class VexillaClient {
     }
   }
 
-  async syncFlags(groupNameOrId: string, fetchHook: FetchHook<PublishedGroup>) {
+  async syncFlags(
+    groupNameOrId: string,
+    fetchHook: FetchHook<VexillaGroup | LegacyGroup>
+  ) {
     this.setFlags(await this.getFlags(groupNameOrId, fetchHook));
   }
 
@@ -260,8 +271,8 @@ export class VexillaClient {
     groupNameOrId: string,
     featureNameOrId: string
   ): {
-    environment: PublishedEnvironment;
-    group: PublishedGroup;
+    environment: VexillaEnvironment;
+    group: VexillaGroup;
     feature: VexillaFeature;
   } {
     const groupId = this.groupLookupTable[groupNameOrId];

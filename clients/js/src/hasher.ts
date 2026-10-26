@@ -24,7 +24,7 @@ SOFTWARE.
 */
 
 const FNV32_OFFSET_BASIS = 2166136261;
-import { isWellFormedUnicode } from "@vexilla/types";
+import { isWellFormedUnicode } from "@vexilla/publishing/dist/validation";
 import { VexillaError } from "./errors";
 
 export function hashFnv32a(str: string): number {

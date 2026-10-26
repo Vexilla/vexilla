@@ -1,11 +1,11 @@
-import {
-  ManifestGroup,
-  PublishedEnvironment,
+import type {
+  VexillaManifestGroup,
+  VexillaEnvironment,
   VexillaFeature,
-} from "@vexilla/types";
+} from "../types";
 import { normalizeName } from "@vexilla/types";
 
-export function createGroupLookupTable(groups: ManifestGroup[]) {
+export function createGroupLookupTable(groups: VexillaManifestGroup[]) {
   const lookupTable: Record<string, string> = Object.create(null);
 
   groups.forEach(({ name, groupId }) => {
@@ -18,7 +18,7 @@ export function createGroupLookupTable(groups: ManifestGroup[]) {
 }
 
 export function createEnvironmentLookupTable(
-  environments: Record<string, PublishedEnvironment>
+  environments: Record<string, VexillaEnvironment>
 ) {
   const lookupTable: Record<string, string> = Object.create(null);
 

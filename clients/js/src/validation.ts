@@ -1,9 +1,8 @@
 import {
   validateManifest,
   validatePublication,
-  PublishedGroup,
-  VexillaManifest,
-} from "@vexilla/types";
+} from "@vexilla/publishing/dist/validation";
+import type { VexillaGroup, VexillaManifest } from "./types";
 import { VexillaError } from "./errors";
 
 function reject(issues: unknown[]) {
@@ -36,8 +35,8 @@ export function validateManifestData(
 export function validateGroupData(
   value: unknown,
   manifest: VexillaManifest
-): asserts value is PublishedGroup {
-  const id = (value as PublishedGroup)?.groupId;
+): asserts value is VexillaGroup {
+  const id = (value as VexillaGroup)?.groupId;
   const entry = manifest.groups.find((group) => group.groupId === id);
   if (!entry) {
     throw new VexillaError("validation", "Group is not listed in the manifest");

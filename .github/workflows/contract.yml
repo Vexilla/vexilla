@@ -1,6 +1,17 @@
 name: SDK JSON contract
 on:
   workflow_call:
+    inputs:
+      revision:
+        description: Exact approved release commit; defaults to the invoking revision for normal CI.
+        required: false
+        type: string
+        default: ""
+      artifact-prefix:
+        description: Isolate evidence when several SDK releases share one run.
+        required: false
+        type: string
+        default: sdk
 permissions:
   contents: read
 jobs:
@@ -9,9 +20,14 @@ jobs:
     outputs:
       matrix: ${{ steps.inventory.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.revision || github.sha }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: 10.24.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24
           cache: pnpm
@@ -28,9 +44,9 @@ jobs:
         run: |
           node -e 'require("./contract/scripts/gate.cjs").checkInventory(require("./contract/inventory.json"))'
           node -e 'console.log("matrix=" + JSON.stringify({include:require("./contract/inventory.json")}))' >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: sdk-contract
+          name: ${{ inputs.artifact-prefix }}-contract
           path: .contract-artifacts/*.json
           include-hidden-files: true
           if-no-files-found: error
@@ -42,20 +58,25 @@ jobs:
     runs-on: ${{ matrix.runner }}
     name: contract (${{ matrix.id }})
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.revision || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          name: sdk-contract
+          name: ${{ inputs.artifact-prefix }}-contract
           path: .contract-artifacts
       - if: matrix.id == 'js' || matrix.id == 'lua'
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: 10.24.0
       - if: matrix.id == 'js'
         run: pnpm install --frozen-lockfile --ignore-scripts --filter @vexilla/client...
       - if: matrix.id == 'js'
-        run: pnpm --filter @vexilla/types build
+        run: pnpm --filter @vexilla/types build && pnpm --filter @vexilla/publishing build
       - if: matrix.id == 'lua'
         run: pnpm install --frozen-lockfile --ignore-scripts --filter @vexilla/cli...
       - if: matrix.id == 'lua'
@@ -97,7 +118,7 @@ jobs:
       - if: matrix.id == 'php'
         run: composer install --no-interaction --prefer-dist --working-dir=clients/php
       - if: matrix.id == 'elixir'
-        uses: erlef/setup-beam@v1
+        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           otp-version: "26.2"
           elixir-version: "1.15.7"
@@ -138,9 +159,9 @@ jobs:
           esac
       - name: Verify native suites kept the shared artifacts unchanged
         run: node -e 'require("./contract/scripts/gate.cjs").verifyArtifacts(".contract-artifacts")'
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: contract-receipt-${{ matrix.id }}
+          name: ${{ inputs.artifact-prefix }}-receipt-${{ matrix.id }}
           path: .contract-artifacts/receipts/${{ matrix.id }}.json
           include-hidden-files: true
           if-no-files-found: error
@@ -150,20 +171,24 @@ jobs:
     needs: [producer, consumers]
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.revision || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          name: sdk-contract
+          name: ${{ inputs.artifact-prefix }}-contract
           path: .contract-artifacts
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          pattern: contract-receipt-*
+          pattern: ${{ inputs.artifact-prefix }}-receipt-*
           path: .contract-artifacts/receipts
           merge-multiple: true
       - run: node contract/scripts/gate.cjs
         env:
           PRODUCER_RESULT: ${{ needs.producer.result }}
           CONSUMERS_RESULT: ${{ needs.consumers.result }}
+          EXPECTED_REVISION: ${{ inputs.revision || github.sha }}

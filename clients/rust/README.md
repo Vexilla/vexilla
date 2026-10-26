@@ -25,7 +25,7 @@ To get started is easy. Follow these steps to get started with integration.
 Add the client to your imports.
 
 ```rust
-vexilla_client = "1.x.x"
+vexilla_client = "1.0"
 ```
 
 
@@ -302,4 +302,4 @@ No sponsors yet. This could be a link and icon for **your** company here.
 
 Current Vexilla code is released under a combination of two licenses, the Business Source License (BSL) and the MIT License.
 
-Please see the [License file](../../../LICENSE) for more info.
+Please see the [License file](LICENSE) for more info.

@@ -452,6 +452,9 @@ importers:
       '@types/node':
         specifier: ^14.14.13
         version: 14.18.63
+      '@vexilla/publishing':
+        specifier: workspace:*
+        version: link:../../packages/publishing
       '@vexilla/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -558,6 +561,12 @@ importers:
       '@vexilla/types':
         specifier: workspace:*
         version: link:../types
+      ajv:
+        specifier: 8.17.1
+        version: 8.17.1
+      case:
+        specifier: ^1.6.3
+        version: 1.6.3
     devDependencies:
       '@types/node':
         specifier: ^20.5.8
@@ -604,13 +613,6 @@ importers:
         version: 5.4.5
 
   packages/types:
-    dependencies:
-      ajv:
-        specifier: 8.17.1
-        version: 8.17.1
-      case:
-        specifier: ^1.6.3
-        version: 1.6.3
     devDependencies:
       json-schema-to-typescript:
         specifier: 15.0.4

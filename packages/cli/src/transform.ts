@@ -1,7 +1,7 @@
 import Case from "case";
 import mustache from "mustache";
 import type { Language } from "./types";
-import { Group, PublishedGroup } from "@vexilla/types";
+import type { PublishedGroup } from "@vexilla/types";
 import { templates } from "./templates";
 import { luaGroups } from "./lua";
 

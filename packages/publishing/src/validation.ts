@@ -1,10 +1,13 @@
-import { normalizeName, isCompatibleTimezone } from "./compatibility";
 import Ajv, { ErrorObject, ValidateFunction } from "ajv";
-import manifestSchema from "../schema/v1/manifest.json";
-import groupSchema from "../schema/v1/group.json";
-import featureSchema from "../schema/v1/feature.json";
-import scheduleSchema from "../schema/v1/schedule.json";
-import type { PublishedGroup, PublishedManifest } from "./published";
+import {
+  normalizeName,
+  isCompatibleTimezone,
+  manifestSchema,
+  groupSchema,
+  featureSchema,
+  scheduleSchema,
+} from "@vexilla/types";
+import type { PublishedGroup, PublishedManifest } from "@vexilla/types";
 
 export interface ContractIssue {
   path: string;

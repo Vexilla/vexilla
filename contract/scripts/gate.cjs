@@ -62,7 +62,10 @@ function verifyArtifacts(dir) {
   }
   return metadata;
 }
-function checkGate(inventory, metadata, receipts, producer, consumers) {
+function checkGate(inventory, metadata, receipts, producer, consumers, expectedRevision) {
+  if (expectedRevision && metadata.revision !== expectedRevision) {
+    throw Error("Contract evidence is not from the approved revision");
+  }
   checkInventory(inventory);
   if (producer !== "success" || consumers !== "success") {
     throw Error(
@@ -100,14 +103,12 @@ if (require.main === module) {
     process.env.VEXILLA_CONTRACT_DIR || path.join(root, ".contract-artifacts")
   );
   const metadata = verifyArtifacts(dir);
-  const revision =
-    process.env.GITHUB_SHA ||
-    require("node:child_process")
-      .execFileSync("git", ["rev-parse", "HEAD"], {
-        cwd: root,
-        encoding: "utf8",
-      })
-      .trim();
+  const revision = require("node:child_process")
+    .execFileSync("git", ["rev-parse", "HEAD"], {
+      cwd: root,
+      encoding: "utf8",
+    })
+    .trim();
   if (metadata.revision !== revision) {
     throw Error("Artifact source revision does not match this checkout");
   }
@@ -125,7 +126,8 @@ if (require.main === module) {
     metadata,
     receipts,
     process.env.PRODUCER_RESULT,
-    process.env.CONSUMERS_RESULT
+    process.env.CONSUMERS_RESULT,
+    process.env.EXPECTED_REVISION
   );
   console.log(
     "Required producer and all eleven SDK contracts passed for " +

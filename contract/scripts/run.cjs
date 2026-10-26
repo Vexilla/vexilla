@@ -23,12 +23,10 @@ fs.mkdirSync(receiptDir, { recursive: true });
 const receipt = path.join(receiptDir, sdk.id + ".json");
 fs.rmSync(receipt, { force: true });
 const metadata = verifyArtifacts(dir);
-const revision =
-  process.env.GITHUB_SHA ||
-  execFileSync("git", ["rev-parse", "HEAD"], {
-    cwd: root,
-    encoding: "utf8",
-  }).trim();
+const revision = execFileSync("git", ["rev-parse", "HEAD"], {
+  cwd: root,
+  encoding: "utf8",
+}).trim();
 if (metadata.revision !== revision) {
   throw Error("Artifact source revision does not match this checkout");
 }

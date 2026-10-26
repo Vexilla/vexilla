@@ -5,6 +5,11 @@ authors = ["Chris Griffing <cmgriffing@gmail.com>"]
 edition = "2018"
 description = "A Rust client for the Vexilla Feature Flag System"
 license = "BUSL-1.1"
+repository = "https://github.com/Vexilla/vexilla"
+homepage = "https://vexilla.dev"
+documentation = "https://docs.rs/vexilla_client"
+readme = "README.md"
+include = ["src/**/*.rs", "src/compatibility.json", "Cargo.toml", "Cargo.lock", "README.md", "LICENSE", "CHANGELOG.md"]
 
 
 [dependencies]
