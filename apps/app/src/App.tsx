@@ -6,7 +6,7 @@ import { useSnapshot } from "valtio";
 import { cloneDeep, set as lodashSet, unset as lodashUnset } from "lodash-es";
 import { Difference } from "microdiff";
 
-import { Group, ContractIssue } from "@vexilla/publishing";
+import { ContractIssue } from "@vexilla/publishing";
 
 import { nanoid } from "./utils/nanoid";
 import { fetchersMap } from "./utils/fetchers.map";
@@ -62,7 +62,7 @@ function App() {
     }
   }, [searchParams, openHostingConfigModal]);
 
-  const groups = config.groups;
+  const groups = configSnapshot.groups;
   const provider = configSnapshot.hosting.provider;
   const providerType = configSnapshot.hosting.providerType;
   const gitMethods = useMemo(() => {
@@ -252,15 +252,15 @@ function App() {
                 }
               }}
             />
-            <CustomList<Group>
+            <CustomList
               title="Feature Groups"
               itemType="Group"
               items={groups}
               getKey={(group) => group.groupId}
               showCount={true}
               onAdd={() => {
-                groups.push({
-                  name: `Group ${groups.length + 1}`,
+                config.groups.push({
+                  name: `Group ${config.groups.length + 1}`,
                   groupId: nanoid(),
                   features: {},
                   environments: {},
@@ -272,7 +272,7 @@ function App() {
                   itemType="Group"
                   linkPath={`/groups/${group.groupId}`}
                   onDelete={() => {
-                    const newGroups = groups.filter(
+                    const newGroups = config.groups.filter(
                       (_group) => _group.groupId !== group.groupId
                     );
                     config.groups = newGroups;

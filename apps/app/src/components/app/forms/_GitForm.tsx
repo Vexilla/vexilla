@@ -77,6 +77,9 @@ export function GitForm({
   errors?: string[];
 }>) {
   const hosting = config?.hosting as HostingConfigGitBase;
+  const configSnapshot = useSnapshot(config);
+  const hostingSnapshot =
+    configSnapshot.hosting as Readonly<HostingConfigGitBase>;
   const metadata = useSnapshot(remoteMetadata);
   const authority = useSnapshot(remoteReadAuthority);
   const [validationResult, setValidationResult] = useState({
@@ -102,8 +105,9 @@ export function GitForm({
         ].map((name) => ({ label: name, value: name }))
       : branches
           .filter((branch) => {
-            const prefix = hosting.branchNamePrefix || DEFAULT_BRANCH_PREFIX;
-            if (prefix && hosting.providerType === "git") {
+            const prefix =
+              hostingSnapshot.branchNamePrefix || DEFAULT_BRANCH_PREFIX;
+            if (prefix && hostingSnapshot.providerType === "git") {
               return !branch.name.startsWith(prefix);
             } else {
               return false;
@@ -114,11 +118,11 @@ export function GitForm({
             value: branch.name,
           }));
 
-  const validationContext = fetcher.getReadContextKey(config.hosting);
-  const validationReady = fetcher.isRepositoryReady(config.hosting);
+  const validationContext = fetcher.getReadContextKey(configSnapshot.hosting);
+  const validationReady = fetcher.isRepositoryReady(configSnapshot.hosting);
   const availabilityCurrent =
     isRemoteReadContextCurrent() &&
-    metadata.locationKey === gitLocationKey(config.hosting);
+    metadata.locationKey === gitLocationKey(configSnapshot.hosting);
   const initializationRequired =
     fetcher.usesReadPreparation &&
     availabilityCurrent &&
@@ -133,7 +137,7 @@ export function GitForm({
     !fetcher.usesReadPreparation &&
     validationCurrent &&
     !validationResult.error &&
-    !hosting.branchIsValid;
+    !hostingSnapshot.branchIsValid;
 
   useEffect(() => {
     let active = true;
@@ -203,16 +207,16 @@ export function GitForm({
           <TimelineItemTitle title="Git-specific Config" />
           <Flex direction="column" gap="0.5rem">
             <Switch
-              checked={hosting.shouldCreatePullRequest}
+              checked={hostingSnapshot.shouldCreatePullRequest}
               label="Create pull Request?"
               onChange={(event) => {
                 hosting.shouldCreatePullRequest = event.currentTarget.checked;
               }}
             />
-            {!!hosting.shouldCreatePullRequest && (
+            {!!hostingSnapshot.shouldCreatePullRequest && (
               <TextInput
                 label="Branch Name Prefix"
-                value={hosting.branchNamePrefix || ""}
+                value={hostingSnapshot.branchNamePrefix || ""}
                 required
                 onInput={(event) => {
                   hosting.branchNamePrefix = event.currentTarget.value;
@@ -317,9 +321,9 @@ export function GitForm({
               </Flex>
             )}
 
-          {Boolean(hosting.provider) &&
-            Boolean(hosting.repositoryId) &&
-            Boolean(hosting.targetBranch) &&
+          {Boolean(hostingSnapshot.provider) &&
+            Boolean(hostingSnapshot.repositoryId) &&
+            Boolean(hostingSnapshot.targetBranch) &&
             (initializationRequired ||
               initializationPending ||
               legacyInitializationRequired) && (

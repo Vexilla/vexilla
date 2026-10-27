@@ -85,6 +85,11 @@ export function ScheduledForm({
           label="Timezone"
           data={timezones}
           value={featureSchedule.timezone || "UTC"}
+          onChange={(timezone) => {
+            if (timezone) {
+              onChange({ ...featureSchedule, timezone });
+            }
+          }}
         />
         <Input.Label className="block mt-2">Specific times</Input.Label>
         <SegmentedControl

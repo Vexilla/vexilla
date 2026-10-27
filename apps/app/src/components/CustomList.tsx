@@ -19,7 +19,7 @@ import { CustomCard } from "./CustomCard";
 
 interface CustomListProps<T> {
   onAdd: () => void | Promise<void>;
-  items: T[];
+  items: readonly T[];
   title: string;
   listItem: (item: T) => ReactNode;
   getKey: (item: T) => string | number;
