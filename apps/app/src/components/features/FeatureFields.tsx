@@ -1,8 +1,24 @@
 import { defaultSchedule } from "@vexilla/publishing";
 import { TextInput, Switch, Alert, Button } from "@mantine/core";
 import type { VexillaFeature, VexillaSchedule } from "@vexilla/publishing";
+import type { VexillaScheduleType } from "@vexilla/types";
+import { useState, type ReactNode } from "react";
 import { SelectiveList } from "./SelectiveList";
 import { ScheduledForm } from "./ScheduledForm";
+
+function SavedSchedule({ children }: { children: ReactNode }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <details
+      className="mt-4"
+      open={expanded}
+      onToggle={(event) => setExpanded(event.currentTarget.open)}
+    >
+      <summary>Edit saved schedule</summary>
+      {expanded && children}
+    </details>
+  );
+}
 
 function NumericInput({
   feature,
@@ -34,11 +50,30 @@ export function FeatureFields({
   feature,
   onScheduleChange,
   expectedFeatureId,
+  scheduleType,
+  scheduleScope,
 }: {
   feature: VexillaFeature;
   expectedFeatureId?: string;
   onScheduleChange?: (schedule: VexillaSchedule) => void;
+  scheduleType: VexillaScheduleType;
+  scheduleScope: "group" | "environment";
 }) {
+  const scheduleIsActive =
+    (scheduleType === "global" && scheduleScope === "group") ||
+    (scheduleType === "environment" && scheduleScope === "environment");
+  const scheduleEditor = (
+    <>
+      <h5>Schedule dates and times</h5>
+      <ScheduledForm
+        featureSchedule={feature.schedule || defaultSchedule()}
+        onChange={(schedule) => {
+          feature.schedule = schedule;
+          onScheduleChange?.(schedule);
+        }}
+      />
+    </>
+  );
   return (
     <>
       {expectedFeatureId && feature.featureId !== expectedFeatureId && (
@@ -91,14 +126,13 @@ export function FeatureFields({
             }}
           />
         ))}
-      <h5>Schedule dates and times</h5>
-      <ScheduledForm
-        featureSchedule={feature.schedule || defaultSchedule()}
-        onChange={(schedule) => {
-          feature.schedule = schedule;
-          onScheduleChange?.(schedule);
-        }}
-      />
+      {scheduleIsActive ? (
+        scheduleEditor
+      ) : (
+        <SavedSchedule key={`${feature.featureId}-${scheduleType}`}>
+          {scheduleEditor}
+        </SavedSchedule>
+      )}
     </>
   );
 }

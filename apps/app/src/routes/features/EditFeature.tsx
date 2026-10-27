@@ -142,6 +142,8 @@ export function EditFeature() {
           key={`${featureId}-${feature.featureType}-${shape.valueType}-${shape.numberType}`}
           feature={feature}
           expectedFeatureId={featureId}
+          scheduleType={feature.scheduleType}
+          scheduleScope="group"
           onScheduleChange={(schedule) => {
             if (feature.scheduleType === "global") {
               environments.forEach((env) => {
@@ -171,6 +173,8 @@ export function EditFeature() {
             <FeatureFields
               feature={env.features[featureId]}
               expectedFeatureId={featureId}
+              scheduleType={feature.scheduleType}
+              scheduleScope="environment"
             />
           ) : (
             <Text c="red">
