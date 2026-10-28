@@ -133,6 +133,23 @@ const selectMode = (page: Page, name: string) =>
 const groupSection = (page: Page) => page.locator("#group-defaults");
 const environmentSection = (page: Page, index: number) =>
   page.locator(`#environment-${environmentIds[index]}`);
+async function expectNoScheduleControls(page: Page) {
+  await expect(
+    page.getByText("Edit saved schedule", { exact: true })
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Schedule dates and times", exact: true })
+  ).toHaveCount(0);
+  await expect(page.getByRole("textbox", { name: "Timezone" })).toHaveCount(0);
+  await expect(page.getByLabel("Start Time", { exact: true })).toHaveCount(0);
+  await expect(page.getByLabel("End Time", { exact: true })).toHaveCount(0);
+}
+async function navigateWithinEditor(page: Page, suffix: string) {
+  await page.evaluate((suffix) => {
+    window.history.pushState({}, "", `${window.location.pathname}${suffix}`);
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  }, suffix);
+}
 async function chooseTimezone(page: Page, section: Locator, timezone: string) {
   await section.getByRole("textbox", { name: "Timezone", exact: true }).click();
   await page.getByRole("option", { name: timezone, exact: true }).click();
@@ -166,17 +183,15 @@ test("a new unscheduled feature shows only its selected scope and resets saved-s
   await expect(
     page.getByRole("switch", { name: "Enabled", exact: true })
   ).toHaveCount(3);
-  await expect(
-    page.getByText("Edit saved schedule", { exact: true })
-  ).toHaveCount(3);
+  await expectNoScheduleControls(page);
+  await selectMode(page, "Global");
   const disclosure = environmentSection(page, 0).locator("summary");
   await disclosure.focus();
   await disclosure.press("Enter");
   await expect(
     environmentSection(page, 0).getByRole("textbox", { name: "Timezone" })
   ).toBeVisible();
-  await selectMode(page, "Global");
-  await expect(page.getByRole("textbox", { name: "Timezone" })).toHaveCount(1);
+  await expect(page.getByRole("textbox", { name: "Timezone" })).toHaveCount(2);
   await expect(
     groupSection(page).getByRole("textbox", { name: "Timezone" })
   ).toBeVisible();
@@ -188,7 +203,14 @@ test("a new unscheduled feature shows only its selected scope and resets saved-s
   await groupSection(page).locator("summary").click();
   await expect(page.getByRole("textbox", { name: "Timezone" })).toHaveCount(3);
   await selectMode(page, "None");
-  await expect(page.getByRole("textbox", { name: "Timezone" })).toHaveCount(0);
+  await expectNoScheduleControls(page);
+  await selectMode(page, "Global");
+  await expect(page.getByRole("textbox", { name: "Timezone" })).toHaveCount(1);
+  await expect(
+    environmentSection(page, 0).locator("details")
+  ).not.toHaveAttribute("open");
+  await selectMode(page, "None");
+  await expectNoScheduleControls(page);
   const saved = await savedGroup(page);
   const created = Object.values(saved.features)[0] as any;
   expect(created.scheduleType).toBe("");
@@ -202,18 +224,62 @@ test("a new unscheduled feature shows only its selected scope and resets saved-s
   });
 });
 
+for (const scheduleType of [
+  undefined,
+  null,
+  "",
+  "none",
+  "off",
+  "unsupported",
+]) {
+  test(`ordinary editing hides all schedule UI for scheduleType ${String(
+    scheduleType
+  )}`, async ({ page }) => {
+    const { local, group } = settings();
+    if (scheduleType === undefined) {
+      delete group.features[featureId].scheduleType;
+    } else {
+      group.features[featureId].scheduleType = scheduleType;
+    }
+    const before = structuredClone(group);
+    await openEditor(page, local);
+    await expectNoScheduleControls(page);
+    await expect(
+      page.getByRole("radiogroup", { name: "Schedule Type", exact: true })
+    ).toBeVisible();
+    await expect(
+      page.getByRole("switch", { name: "Enabled", exact: true })
+    ).toHaveCount(3);
+    expect(await savedGroup(page)).toEqual(before);
+    await groupSection(page).getByText("Enabled", { exact: true }).click();
+    await expect(
+      groupSection(page).getByRole("switch", { name: "Enabled" })
+    ).not.toBeChecked();
+    const after = await savedGroup(page);
+    expect(after.features[featureId].scheduleType).toBe(scheduleType);
+    expect(after.features[featureId].schedule).toEqual(
+      before.features[featureId].schedule
+    );
+    expect(after.environments).toEqual(before.environments);
+    await expectNoScheduleControls(page);
+  });
+}
+
 test("Global scheduling is available when the group has no environments", async ({
   page,
 }) => {
   const { local, group } = settings();
   group.environments = {};
   await openEditor(page, local);
-  await expect(page.getByRole("textbox", { name: "Timezone" })).toHaveCount(0);
+  await expectNoScheduleControls(page);
   await selectMode(page, "Global");
   await expect(
     groupSection(page).getByRole("textbox", { name: "Timezone" })
   ).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Timezone" })).toHaveCount(1);
+  await expect(
+    page.getByText("Edit saved schedule", { exact: true })
+  ).toHaveCount(0);
 });
 
 test("loading, revealing, mode changes, and reload preserve all saved schedules", async ({
@@ -224,24 +290,93 @@ test("loading, revealing, mode changes, and reload preserve all saved schedules"
   await openEditor(page, local);
   expect(await savedGroup(page)).toEqual(before);
   const schedules = await savedSchedules(page);
+  await expectNoScheduleControls(page);
+  await page.reload();
+  await expectNoScheduleControls(page);
+  expect(await savedGroup(page)).toEqual(before);
+  await selectMode(page, "Global");
   await environmentSection(page, 0).locator("summary").click();
   await expect(
     environmentSection(page, 0).getByLabel("Start Time", { exact: true })
   ).toBeVisible();
-  expect(await savedGroup(page)).toEqual(before);
-  await selectMode(page, "Global");
   expect(await savedSchedules(page)).toEqual(schedules);
   await selectMode(page, "Per Environment");
   expect(await savedSchedules(page)).toEqual(schedules);
+  await groupSection(page).locator("summary").click();
+  await expect(page.getByRole("textbox", { name: "Timezone" })).toHaveCount(3);
   await selectMode(page, "None");
+  await expectNoScheduleControls(page);
   expect(await savedSchedules(page)).toEqual(schedules);
   await page.reload();
   await expect(
     page.getByRole("radio", { name: "None", exact: true })
   ).toBeChecked();
-  await expect(page.getByRole("textbox", { name: "Timezone" })).toHaveCount(0);
+  await expectNoScheduleControls(page);
+  expect(await savedSchedules(page)).toEqual(schedules);
+  await selectMode(page, "Global");
+  await expect(page.getByRole("textbox", { name: "Timezone" })).toHaveCount(1);
+  await expect(
+    groupSection(page).getByLabel("Start Time", { exact: true })
+  ).toHaveValue("09:00");
+  await expect(
+    environmentSection(page, 0).locator("details")
+  ).not.toHaveAttribute("open");
+  await selectMode(page, "Per Environment");
+  await expect(page.getByRole("textbox", { name: "Timezone" })).toHaveCount(2);
+  await expect(
+    environmentSection(page, 0).getByLabel("Start Time", { exact: true })
+  ).toHaveValue("10:00");
+  await expect(
+    environmentSection(page, 1).getByLabel("Start Time", { exact: true })
+  ).toHaveValue("11:00");
+  await expect(groupSection(page).locator("details")).not.toHaveAttribute(
+    "open"
+  );
   expect(await savedSchedules(page)).toEqual(schedules);
 });
+
+for (const mode of ["Global", "Per Environment"]) {
+  test(`date-only schedules remain visible on false toggles in ${mode} mode`, async ({
+    page,
+  }) => {
+    const { local, group } = settings();
+    group.features[featureId].scheduleType =
+      mode === "Global" ? "global" : "environment";
+    for (const feature of [
+      group.features[featureId],
+      ...Object.values(group.environments).map(
+        (environment: any) => environment.features[featureId]
+      ),
+    ]) {
+      feature.value = false;
+      feature.schedule.timeType = "none";
+    }
+    const before = structuredClone(group);
+    await openEditor(page, local);
+    const active =
+      mode === "Global"
+        ? [groupSection(page)]
+        : environmentIds.map((_, index) => environmentSection(page, index));
+    for (const section of active) {
+      await expect(
+        section.getByRole("switch", { name: "Enabled" })
+      ).not.toBeChecked();
+      await expect(
+        section.getByRole("textbox", { name: "Timezone" })
+      ).toBeVisible();
+      await expect(section.locator("table")).toBeVisible();
+      await expect(
+        section.getByRole("radio", { name: "None", exact: true })
+      ).toBeChecked();
+    }
+    await expect(page.getByLabel("Start Time", { exact: true })).toHaveCount(0);
+    await expect(page.getByLabel("End Time", { exact: true })).toHaveCount(0);
+    await expect(
+      page.getByText("Edit saved schedule", { exact: true })
+    ).toHaveCount(mode === "Global" ? 2 : 1);
+    expect(await savedGroup(page)).toEqual(before);
+  });
+}
 
 test("explicit global edits copy independent schedules and subsequent environment edits stay local", async ({
   page,
@@ -318,16 +453,16 @@ test("publication repair reveals an inactive environment timezone and republishe
     .getByRole("link", { name: "Edit affected settings" })
     .click();
   await expect(page).toHaveURL(
-    new RegExp(`#environment-${environmentIds[0]}$`)
+    new RegExp(`\\?repair=schedule#environment-${environmentIds[0]}$`)
   );
   const section = environmentSection(page, 0);
-  await expect(section.getByRole("textbox", { name: "Timezone" })).toHaveCount(
-    0
-  );
-  await section.locator("summary").click();
   await expect(
     section.getByRole("textbox", { name: "Timezone" })
   ).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Timezone" })).toHaveCount(1);
+  await expect(
+    page.getByText("Edit saved schedule", { exact: true })
+  ).toHaveCount(0);
   expect(await savedSchedules(page)).toEqual(before);
   await chooseTimezone(page, section, "UTC");
   await expect(
@@ -345,6 +480,107 @@ test("publication repair reveals an inactive environment timezone and republishe
     )
     .toBe(1);
   expect((await savedGroup(page)).features[featureId].scheduleType).toBe("");
+});
+
+test("incomplete, unrelated, and malformed repair URLs hide disabled schedules", async ({
+  page,
+}) => {
+  const { local, group } = settings();
+  // An environment section alone is insufficient when its feature is absent.
+  delete group.environments[environmentIds[1]].features[featureId];
+  const before = structuredClone(group);
+  await openEditor(page, local);
+  for (const suffix of [
+    "?repair=schedule",
+    "#group-defaults",
+    "?repair=other#group-defaults",
+    "?repair=schedule#unknown",
+    "?repair=schedule#environment-missing",
+    "?repair=schedule#environment-",
+    `?repair=schedule#environment-${environmentIds[1]}`,
+    "?repair=schedule#%",
+    "?repair=schedule#%E0%A4%A",
+  ]) {
+    // Start with a valid open editor so each negative assertion also proves
+    // that navigation clears the previous repair visibility.
+    await navigateWithinEditor(page, "?repair=schedule#group-defaults");
+    await expect(
+      groupSection(page).getByRole("textbox", { name: "Timezone" })
+    ).toBeVisible();
+    await navigateWithinEditor(page, suffix);
+    await expectNoScheduleControls(page);
+    await expect(
+      groupSection(page).getByText("Enabled", { exact: true })
+    ).toBeVisible();
+    expect(await savedGroup(page)).toEqual(before);
+  }
+});
+
+test("repair visibility follows target, query changes, reload, and marker removal", async ({
+  page,
+}) => {
+  const { local, group } = settings();
+  const before = structuredClone(group);
+  await openEditor(page, local);
+  await page.evaluate(() => {
+    (window as any).__scheduleScrollTargets = [];
+    const scrollIntoView = Element.prototype.scrollIntoView;
+    Element.prototype.scrollIntoView = function (...args) {
+      (window as any).__scheduleScrollTargets.push(this.id);
+      scrollIntoView.apply(this, args);
+    };
+  });
+  await navigateWithinEditor(page, "?repair=schedule#group-defaults");
+  await expect(
+    groupSection(page).getByRole("textbox", { name: "Timezone" })
+  ).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Timezone" })).toHaveCount(1);
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__scheduleScrollTargets))
+    .toContain("group-defaults");
+  await navigateWithinEditor(
+    page,
+    `?repair=schedule#environment-${environmentIds[0]}`
+  );
+  await expect(
+    environmentSection(page, 0).getByRole("textbox", { name: "Timezone" })
+  ).toBeVisible();
+  await expect(
+    groupSection(page).getByRole("textbox", { name: "Timezone" })
+  ).toHaveCount(0);
+  await expect(page.getByRole("textbox", { name: "Timezone" })).toHaveCount(1);
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__scheduleScrollTargets))
+    .toContain(`environment-${environmentIds[0]}`);
+  // Change only the query, keeping the same fragment, then open repair again.
+  await navigateWithinEditor(
+    page,
+    `?repair=other#environment-${environmentIds[0]}`
+  );
+  await expectNoScheduleControls(page);
+  await page.evaluate(() => {
+    (window as any).__scheduleScrollTargets = [];
+  });
+  await navigateWithinEditor(
+    page,
+    `?repair=schedule#environment-${environmentIds[0]}`
+  );
+  await expect(
+    environmentSection(page, 0).getByRole("textbox", { name: "Timezone" })
+  ).toBeVisible();
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__scheduleScrollTargets))
+    .toContain(`environment-${environmentIds[0]}`);
+  expect(await savedGroup(page)).toEqual(before);
+  await page.reload();
+  await expect(
+    environmentSection(page, 0).getByRole("textbox", { name: "Timezone" })
+  ).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Timezone" })).toHaveCount(1);
+  expect(await savedGroup(page)).toEqual(before);
+  await navigateWithinEditor(page, `#environment-${environmentIds[0]}`);
+  await expectNoScheduleControls(page);
+  expect(await savedGroup(page)).toEqual(before);
 });
 
 for (const mode of ["Per Environment", "Global"]) {

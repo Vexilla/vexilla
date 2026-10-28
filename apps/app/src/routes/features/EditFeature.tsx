@@ -16,18 +16,27 @@ import { config } from "../../stores/config-valtio";
 import { PageLayout } from "../../components/PageLayout";
 import { FeatureFields } from "../../components/features/FeatureFields";
 
+function decodeSection(hash: string) {
+  try {
+    return decodeURIComponent(hash.slice(1));
+  } catch {
+    return undefined;
+  }
+}
+
 export function EditFeature() {
   const params = useParams();
   const location = useLocation();
+  const sectionId = decodeSection(location.hash);
+  const scheduleRepairSection =
+    new URLSearchParams(location.search).get("repair") === "schedule"
+      ? sectionId
+      : undefined;
   useEffect(() => {
-    try {
-      document
-        .getElementById(decodeURIComponent(location.hash.slice(1)))
-        ?.scrollIntoView();
-    } catch {
-      /* An invalid URL fragment has no repair target. */
+    if (sectionId) {
+      document.getElementById(sectionId)?.scrollIntoView();
     }
-  }, [location.hash]);
+  }, [sectionId, location.search, location.pathname]);
   useSnapshot(config);
   const navigate = useNavigate();
   const group = config.groups.find((g) => g.groupId === params.groupId);
@@ -144,6 +153,7 @@ export function EditFeature() {
           expectedFeatureId={featureId}
           scheduleType={feature.scheduleType}
           scheduleScope="group"
+          repairSchedule={scheduleRepairSection === "group-defaults"}
           onScheduleChange={(schedule) => {
             if (feature.scheduleType === "global") {
               environments.forEach((env) => {
@@ -175,6 +185,9 @@ export function EditFeature() {
               expectedFeatureId={featureId}
               scheduleType={feature.scheduleType}
               scheduleScope="environment"
+              repairSchedule={
+                scheduleRepairSection === `environment-${environmentId}`
+              }
             />
           ) : (
             <Text c="red">
