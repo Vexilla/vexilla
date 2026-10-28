@@ -63,7 +63,11 @@ async function openEditor(page: Page, local: any) {
         : { commit: { sha: "head" } },
     });
   });
-  await page.goto(`/groups/${group.groupId}/features/${id}`);
+  await page.goto(
+    `/groups/${encodeURIComponent(group.groupId)}/features/${encodeURIComponent(
+      id
+    )}`
+  );
   await page.evaluate(async () => {
     const { GitHubFetcher } = await import(
       "/src/components/app/forms/GithubForm.fetchers.ts"
@@ -207,3 +211,217 @@ test("legacy placeholder IDs stay unchanged until explicit feature and environme
     environment.features[id].seed
   );
 });
+
+function scheduleSettings() {
+  const { local, group } = oldSettings();
+  const id = "schedule /~ 50% ?# feature";
+  const environmentId = "schedule /~ 50% ?# environment";
+  const environment = structuredClone(
+    Object.values(group.environments)[0]
+  ) as any;
+  group.groupId = "schedule ~ 50% ?# group";
+  group.features = {
+    [id]: {
+      name: "Schedule repair feature",
+      featureId: id,
+      featureType: "toggle",
+      value: false,
+      scheduleType: "",
+      schedule: {
+        start: Date.UTC(2026, 10, 10),
+        end: Date.UTC(2026, 10, 15),
+        timezone: "UTC",
+        timeType: "daily",
+        startTime: 9 * 60 * 60 * 1000,
+        endTime: 17 * 60 * 60 * 1000,
+      },
+    },
+  };
+  environment.environmentId = environmentId;
+  environment.features = {
+    [id]: {
+      ...structuredClone(group.features[id]),
+      schedule: {
+        ...group.features[id].schedule,
+        start: Date.UTC(2026, 10, 11),
+        end: Date.UTC(2026, 10, 16),
+      },
+    },
+  };
+  group.environments = { [environmentId]: environment };
+  return { local, group, id, environmentId };
+}
+const pointer = (id: string) => id.replace(/~/g, "~0").replace(/\//g, "~1");
+const savedGroups = (page: Page) =>
+  page.evaluate(() => JSON.parse(localStorage.getItem("config")!).groups);
+const issueLink = (page: Page, path: string) =>
+  page
+    .getByText(path, { exact: true })
+    .locator("..")
+    .getByRole("link", { name: "Edit affected settings" });
+
+for (const scope of ["group", "environment"] as const) {
+  test(`publication opens only the ${scope} schedule repair with encoded IDs while None stays selected`, async ({
+    page,
+  }) => {
+    const { local, group, id, environmentId } = scheduleSettings();
+    const target =
+      scope === "group"
+        ? group.features[id]
+        : group.environments[environmentId].features[id];
+    target.schedule.timezone = "Invalid/Timezone";
+    const before = structuredClone(local.groups);
+    const writes = await openEditor(page, local);
+    await expect(
+      page.getByRole("textbox", { name: "Timezone", exact: true })
+    ).toHaveCount(0);
+    await publish(page);
+    const path = `/groups/${pointer(group.groupId)}${
+      scope === "environment" ? `/environments/${pointer(environmentId)}` : ""
+    }/features/${pointer(id)}/schedule/timezone`;
+    const sectionId =
+      scope === "group" ? "group-defaults" : `environment-${environmentId}`;
+    const route = `/groups/${encodeURIComponent(
+      group.groupId
+    )}/features/${encodeURIComponent(id)}?repair=schedule#${encodeURIComponent(
+      sectionId
+    )}`;
+    const link = issueLink(page, path);
+    await expect(link).toHaveAttribute("href", route);
+    expect(writes).toHaveLength(0);
+    expect(await captured(page)).toHaveLength(0);
+    expect(await savedGroups(page)).toEqual(before);
+    await link.click();
+    await expect(page).toHaveURL(`http://127.0.0.1:5173${route}`);
+    const section = page.locator("section").filter({
+      has: page.getByRole("heading", {
+        name:
+          scope === "group"
+            ? "Group defaults"
+            : group.environments[environmentId].name,
+        exact: true,
+      }),
+    });
+    await expect(
+      section.getByRole("textbox", { name: "Timezone", exact: true })
+    ).toBeVisible();
+    await expect(
+      page.getByRole("textbox", { name: "Timezone", exact: true })
+    ).toHaveCount(1);
+    await expect(
+      page.getByText("Edit saved schedule", { exact: true })
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("heading", {
+        name: "Schedule dates and times",
+        exact: true,
+      })
+    ).toHaveCount(1);
+    await expect(
+      page.getByRole("radio", { name: "None", exact: true }).first()
+    ).toBeChecked();
+    expect(await savedGroups(page)).toEqual(before);
+    await section
+      .getByRole("textbox", { name: "Timezone", exact: true })
+      .click();
+    await page.getByRole("option", { name: "UTC", exact: true }).click();
+    const expected = structuredClone(before);
+    const repaired =
+      scope === "group"
+        ? expected[0].features[id]
+        : expected[0].environments[environmentId].features[id];
+    repaired.schedule.timezone = "UTC";
+    expect(await savedGroups(page)).toEqual(expected);
+    await publish(page);
+    await expect.poll(async () => (await captured(page)).length).toBe(1);
+    const files = (await captured(page))[0];
+    const published = JSON.parse(
+      files.find((file) => file.filePath === `${group.groupId}.json`)!.content
+    );
+    expect(published.features[id].scheduleType).toBe("");
+    expect(
+      published.environments[environmentId].features[id].scheduleType
+    ).toBe("");
+    expect(published.features[id].schedule).toEqual(
+      expected[0].features[id].schedule
+    );
+    expect(published.environments[environmentId].features[id].schedule).toEqual(
+      expected[0].environments[environmentId].features[id].schedule
+    );
+  });
+}
+
+test("publication marks a missing schedule itself as repairable without initializing it on entry", async ({
+  page,
+}) => {
+  const { local, group, id } = scheduleSettings();
+  delete group.features[id].schedule;
+  const before = structuredClone(local.groups);
+  await openEditor(page, local);
+  await publish(page);
+  const link = issueLink(
+    page,
+    `/groups/${pointer(group.groupId)}/features/${pointer(id)}/schedule`
+  );
+  await expect(link).toHaveAttribute(
+    "href",
+    /\?repair=schedule#group-defaults$/
+  );
+  await link.click();
+  await expect(
+    page
+      .locator("#group-defaults")
+      .getByRole("textbox", { name: "Timezone", exact: true })
+  ).toBeVisible();
+  expect(await savedGroups(page)).toEqual(before);
+});
+
+for (const field of [
+  "seed",
+  "scheduleType",
+  "featureId",
+  "environmentId",
+] as const) {
+  test(`publication ${field} links stay ordinary when IDs contain schedule text`, async ({
+    page,
+  }) => {
+    const { local, group, id, environmentId } = scheduleSettings();
+    if (field === "seed") {
+      group.features[id].featureType = "gradual";
+      group.features[id].value = 1;
+      const feature = group.environments[environmentId].features[id];
+      feature.featureType = "gradual";
+      feature.value = 1;
+      feature.seed = 0.5;
+    } else if (field === "environmentId") {
+      group.environments[environmentId].environmentId = "legacy-placeholder";
+    } else {
+      group.features[id][field] =
+        field === "scheduleType" ? "off" : "legacy-placeholder";
+    }
+    const before = structuredClone(local.groups);
+    await openEditor(page, local);
+    await publish(page);
+    const path = `/groups/${pointer(group.groupId)}/${
+      field === "environmentId"
+        ? `environments/${pointer(environmentId)}/environmentId`
+        : `features/${pointer(id)}/${field}`
+    }`;
+    const link = issueLink(page, path);
+    await expect(link).not.toHaveAttribute("href", /repair=schedule/);
+    await link.click();
+    await expect(
+      page.getByRole("heading", {
+        name: field === "environmentId" ? "Edit Environment" : "Edit Feature",
+        exact: true,
+      })
+    ).toBeVisible();
+    await expect(
+      page.getByRole("textbox", { name: "Timezone", exact: true })
+    ).toHaveCount(0);
+    await expect(
+      page.getByText("Edit saved schedule", { exact: true })
+    ).toHaveCount(0);
+    expect(await savedGroups(page)).toEqual(before);
+  });
+}

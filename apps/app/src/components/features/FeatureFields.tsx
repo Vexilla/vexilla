@@ -52,13 +52,17 @@ export function FeatureFields({
   expectedFeatureId,
   scheduleType,
   scheduleScope,
+  repairSchedule = false,
 }: {
   feature: VexillaFeature;
   expectedFeatureId?: string;
   onScheduleChange?: (schedule: VexillaSchedule) => void;
   scheduleType: VexillaScheduleType;
   scheduleScope: "group" | "environment";
+  repairSchedule?: boolean;
 }) {
+  const schedulingEnabled =
+    scheduleType === "global" || scheduleType === "environment";
   const scheduleIsActive =
     (scheduleType === "global" && scheduleScope === "group") ||
     (scheduleType === "environment" && scheduleScope === "environment");
@@ -126,13 +130,13 @@ export function FeatureFields({
             }}
           />
         ))}
-      {scheduleIsActive ? (
+      {repairSchedule || scheduleIsActive ? (
         scheduleEditor
-      ) : (
+      ) : schedulingEnabled ? (
         <SavedSchedule key={`${feature.featureId}-${scheduleType}`}>
           {scheduleEditor}
         </SavedSchedule>
-      )}
+      ) : null}
     </>
   );
 }

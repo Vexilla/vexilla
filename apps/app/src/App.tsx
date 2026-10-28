@@ -6,7 +6,7 @@ import { useSnapshot } from "valtio";
 import { cloneDeep, set as lodashSet, unset as lodashUnset } from "lodash-es";
 import { Difference } from "microdiff";
 
-import { ContractIssue } from "@vexilla/publishing";
+import { ContractIssue, pointer } from "@vexilla/publishing";
 
 import { nanoid } from "./utils/nanoid";
 import { fetchersMap } from "./utils/fetchers.map";
@@ -102,10 +102,20 @@ function App() {
           const group = config.groups.find((g) => g.groupId === issue.groupId);
           const feature = group?.features[issue.featureId || ""];
           const environment = group?.environments[issue.environmentId || ""];
+          const schedulePath = `/groups/${pointer(issue.groupId || "")}${
+            issue.environmentId !== undefined
+              ? `/environments/${pointer(issue.environmentId)}`
+              : ""
+          }/features/${pointer(issue.featureId || "")}/schedule`;
+          const scheduleRepair =
+            issue.path === schedulePath ||
+            issue.path.startsWith(`${schedulePath}/`);
           const route = feature
             ? `/groups/${encodeURIComponent(
                 group!.groupId
-              )}/features/${encodeURIComponent(issue.featureId!)}#${
+              )}/features/${encodeURIComponent(issue.featureId!)}${
+                scheduleRepair ? "?repair=schedule" : ""
+              }#${
                 environment
                   ? encodeURIComponent(`environment-${issue.environmentId}`)
                   : "group-defaults"
