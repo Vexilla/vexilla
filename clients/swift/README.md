@@ -22,14 +22,14 @@ To get started is easy. Follow these steps to get started with integration.
 
 ### Installation
 
-Add the repository as a Swift Package dependency and select the `VexillaClient` library product.
+Add `https://github.com/vexilla/vexilla` as a Swift Package dependency and select the `VexillaClient` library product. The package manifest is at the repository root. It requires Swift 5.5 or later and supports macOS 10.15 or later.
 
 
 ### Setup
 
 You will need to create a Client within your app. This optionally takes in the `instanceId` for use with gradual rollout as well as Selective features.
 
-Fetch and install the manifest first, then sync each group you need. Getters validate without installing; setters install owned snapshots, and sync methods combine those steps.
+Fetch and install the manifest first, then sync each group you need. Getters validate without installing; setters install owned snapshots, and sync methods combine those steps. Declare the client with `var` because installation mutates it. The full example below imports the module and defines `fetch`. Replace the example URL, environment, group, feature names, and instance ID with your application's values.
 
 **Important Note**: All methods that make HTTP requests take in a callback for the request itself. This allows you to use your existing dependencies or standard library methods to keep this bundle smaller and less opinionated.
 
@@ -103,6 +103,32 @@ The process is simple but has several steps to get up and running. Please see ou
 
 ## API
 
+Import `VexillaClient`. Group and feature parameters accept names or IDs; evaluation uses the environment chosen at initialization.
+
+| Method | Behavior and return value |
+| --- | --- |
+| `VexillaClient(environment:baseUrl:instanceId:showLogs:)` | Creates an empty client. `instanceId` accepts a `String` or `InstanceId`; `showLogs` defaults to `false`. Numeric IDs use `.integer(Int64)` or `.number(Double)`. |
+| `getManifest(fetch:) async throws -> Manifest` | Fetches and validates `manifest.json` without installing it. |
+| `setManifest(manifest:) throws` | Mutates the client to install a validated manifest; removes installed groups whose ID/name no longer matches. |
+| `syncManifest(fetch:) async throws` | Fetches and installs the manifest. |
+| `getFlags(groupNameOrId:fetch:) async throws -> Group` | Fetches and validates `<groupId>.json` against the installed manifest without installing it. |
+| `setFlags(group:) throws` | Mutates the client to install a validated group matching the manifest. |
+| `syncFlags(groupNameOrId:fetch:) async throws` | Fetches and installs a group. |
+| `should(groupNameOrId:featureNameOrId:) throws -> Bool` | Evaluates a toggle, gradual, or selective feature using the configured instance ID. |
+| `shouldCustom(groupNameOrId:featureNameOrId:instanceId:) throws -> Bool` | Evaluates with an explicit `InstanceId`. |
+| `shouldCustomString(groupNameOrId:featureNameOrId:instanceId:) throws -> Bool` | Accepts a `String` instance ID. |
+| `shouldCustomInt(groupNameOrId:featureNameOrId:instanceId:) throws -> Bool` | Accepts an `Int32` instance ID; `shouldCustomInt64` accepts `Int64`. |
+| `shouldCustomFloat(groupNameOrId:featureNameOrId:instanceId:) throws -> Bool` | Accepts a `Float` instance ID; `shouldCustomFloat64` accepts `Double`. |
+| `value(groupNameOrId:featureNameOrId:defaultValue:) throws -> Any` | Returns the value feature's string, `Int64`, or `Double`, or the supplied `Any` default when its schedule is inactive. |
+| `valueString(groupNameOrId:featureNameOrId:defaultString:) throws -> String` | Reads a string value feature. |
+| `valueInt32(groupNameOrId:featureNameOrId:defaultInt32:) throws -> Int32` | Reads an integer value feature and throws if the result is outside `Int32`. |
+| `valueInt64(groupNameOrId:featureNameOrId:defaultInt64:) throws -> Int64` | Reads an integer value feature. |
+| `valueFloat(groupNameOrId:featureNameOrId:defaultFloat32:) throws -> Float` | Reads a floating-point value feature, converting its `Double` value to `Float`. |
+| `valueFloat64(groupNameOrId:featureNameOrId:defaultFloat64:) throws -> Double` | Reads a floating-point value feature. |
+
+Fetch adapters have type `(URL) async throws -> Data` and must return the original JSON bytes. Direct ingestion uses `try Manifest.decode(data:)` or `try Group.decode(data:)` before calling a setter. Getters return data; setters and sync methods return `Void` and mutate the client, so they cannot be chained.
+
+Use `try await` for fetch/sync operations and `try` for setters and evaluation. Failures throw `VexillaError`, whose `kind` identifies fetch, validation, lookup, feature-kind, or instance-ID errors. Invalid ingestion preserves the installed snapshot. A boolean `false` is a successful disabled/inactive result. Value defaults apply only outside the feature's schedule; lookup failures, wrong feature kinds, and wrong value subtypes throw. Active zero and empty-string values are returned unchanged.
 
 
 ## Generate Types (Optional)

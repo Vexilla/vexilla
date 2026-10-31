@@ -22,31 +22,47 @@ To get started is easy. Follow these steps to get started with integration.
 
 ### Installation
 
-Add the client to your imports.
+Add the module to your Go project:
+
+```sh
+go get github.com/vexilla/vexilla/clients/go
+```
+
+Import the client package:
 
 ```go
-import "github.com/vexilla/clients/go"
+import "github.com/vexilla/vexilla/clients/go/pkg/vexilla"
 ```
 
 
 ### Setup
 
-You will need to create a Client within your app. This optionally takes in the `CustomInstanceHash` for use with gradual rollout as well as Selective features.
+You will need to create a Client within your app. This optionally takes in the `InstanceId` for use with gradual rollout as well as Selective features.
 
-After creation, call `SyncFlags`. This can be chained from the constructor since it returns the client instance.
+Create a client with your environment, publication base URL, instance ID, and logging preference. Call `SyncManifest` before `SyncFlags` so the client can resolve group names. Both methods update the client and return an error; they do not return a client for chaining. Pass a fetch callback such as `http.Get` to each synchronization call.
+
+Replace the URL, environment, instance ID, and group/feature names below with values from your publication. These examples use the `Gradual` group from the repository fixtures.
+
 
 **Important Note**: All methods that make HTTP requests take in a callback for the request itself. This allows you to use your existing dependencies or standard library methods to keep this bundle smaller and less opinionated.
 
 ```go
-client := NewVexillaClient("dev", "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com", userId)
+client := vexilla.NewClient(
+    "dev",
+    "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com",
+    "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a",
+    false,
+)
 
-flags, err := client.SyncFlags("features.json")
-if err != nil {
-  tester.Fatal(err)
+if err := client.SyncManifest(http.Get); err != nil {
+    return err
 }
-
-client.SetFlags(flags)
+if err := client.SyncFlags("Gradual", http.Get); err != nil {
+    return err
+}
 ```
+
+This setup fragment belongs in a function returning `error`; the full example includes all imports and a `main` function.
 
 
 ### Usage
@@ -54,24 +70,64 @@ client.SetFlags(flags)
 Use the created client to check if a feature `Should` be on.
 
 ```go
-shouldGradual := client.should(FEATURE_NAME)
+enabled, err := client.Should("Gradual", "testingWorkingGradual")
+if err != nil {
+    return err
+}
+if enabled {
+    // Enable the feature.
+}
 ```
+
+A `false` result with a `nil` error is a successful evaluation of a disabled feature.
 
 
 ### Full Example
 
 ```go
-client := NewVexillaClient("dev", "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com", userId)
+package main
 
-flags, err := client.SyncFlags("features.json")
-if err != nil {
-  tester.Fatal(err)
+import (
+    "fmt"
+    "log"
+    "net/http"
+    "time"
+
+    "github.com/vexilla/vexilla/clients/go/pkg/vexilla"
+)
+
+func run() error {
+    client := vexilla.NewClient(
+        "dev",
+        "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com",
+        "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a",
+        false,
+    )
+    httpClient := &http.Client{Timeout: 10 * time.Second}
+
+    if err := client.SyncManifest(httpClient.Get); err != nil {
+        return fmt.Errorf("sync manifest: %w", err)
+    }
+    if err := client.SyncFlags("Gradual", httpClient.Get); err != nil {
+        return fmt.Errorf("sync group: %w", err)
+    }
+
+    enabled, err := client.Should("Gradual", "testingWorkingGradual")
+    if err != nil {
+        return fmt.Errorf("evaluate feature: %w", err)
+    }
+    if enabled {
+        fmt.Println("Feature enabled")
+    } else {
+        fmt.Println("Feature disabled")
+    }
+    return nil
 }
 
-client.SetFlags(flags)
-
-if client.Should(FEATURE_NAME) {
-  // Do the thing
+func main() {
+    if err := run(); err != nil {
+        log.Fatal(err)
+    }
 }
 ```
 
@@ -93,7 +149,28 @@ The process is simple but has several steps to get up and running. Please see ou
 
 ## API
 
-API
+Group, environment, and feature keys accept their publication IDs, names, or normalized names. Install the manifest and the relevant group before evaluating a feature.
+
+| Operation | Parameters and result |
+| --- | --- |
+| `NewClient(environment, baseURL, customInstanceHash, showLogs)` | Returns a `Client`. The first two arguments are strings, the instance is an `interface{}`, and logging is a boolean. Use a string, integer, or finite float instance for gradual/selective features. |
+| `client.GetManifest(fetch)` | Fetches and parses `manifest.json`; returns the manifest and an error without installing it. |
+| `client.SetManifest(manifest)` | Validates and installs a manifest snapshot, rebuilds aliases, and removes cached groups that no longer match. Returns an error. |
+| `client.SyncManifest(fetch)` | Fetches and installs the manifest; returns an error. |
+| `client.GetFlags(group, fetch)` | Resolves the group, fetches `<group-id>.json`, and validates it against the installed manifest. Returns the group and an error without installing it. |
+| `client.SetFlags(group)` | Validates and installs a group snapshot and its lookup tables. Requires a matching installed manifest; returns an error. |
+| `client.SyncFlags(group, fetch)` | Fetches and installs the named group; returns an error. |
+| `client.Should(group, feature)` | Returns `(bool, error)` for a toggle, gradual, or selective feature using the configured instance. |
+| `client.ShouldCustomString(group, feature, instance)` | Evaluates with a string instance; returns `(bool, error)`. |
+| `client.ShouldCustomInt(group, feature, instance)` | Evaluates with an `int64` instance; returns `(bool, error)`. |
+| `client.ShouldCustomFloat(group, feature, instance)` | Evaluates with a finite `float64` instance; returns `(bool, error)`. |
+| `client.ValueString(group, feature, defaultValue)` | Returns `(string, error)` for a string value feature. |
+| `client.ValueInt(group, feature, defaultValue)` | Returns `(int64, error)` for an integer value feature. |
+| `client.ValueFloat(group, feature, defaultValue)` | Returns `(float64, error)` for a float value feature. |
+
+The fetch callback has signature `func(url string) (*http.Response, error)`. The client reads and closes the response body, rejects non-2xx responses, and parses the original JSON. Supply transport timeouts through your HTTP client.
+
+Always check returned errors: fetch, JSON/validation, lookup, instance, and feature-kind errors do not mean that a feature is disabled. An inactive schedule produces `false, nil` for boolean evaluation or `defaultValue, nil` for value access. Value methods also return the supplied default alongside an error on lookup or kind failure; the default does not make that failure a successful operation. `SetManifest`, `SetFlags`, and sync methods update the client in place.
 
 
 ## Generate Types (Optional)

@@ -1,6 +1,6 @@
-# Vexilla Client - JS/TS
+# Vexilla Client - Python
 
-This is the JS/TS client library for Vexilla, a static file-based VCS-native feature flag system.
+This is the Python client library for Vexilla, a static file-based VCS-native feature flag system.
 
 ## Table of Contents
 
@@ -22,37 +22,39 @@ To get started is easy. Follow these steps to get started with integration.
 
 ### Installation
 
+Use the client from a source checkout of this repository. The client directory contains `vexilla_client/`, `Pipfile`, and `Pipfile.lock`, but no `pyproject.toml` or `setup.py` for installing a distribution.
 
-FOOOOOOO
-
-Using npm or yarn, install the package. Typescript types are shipped with it.
-
-```sh
-npm install --save @vexilla/client
-```
-
-or
+The checked-in Pipfile targets Python 3.6. With Pipenv and the matching interpreter available, install the locked dependencies from the repository root:
 
 ```sh
-yarn add @vexilla/client
+cd clients/python
+pipenv sync
 ```
+
+Save the full example as `example.py` in `clients/python`, then run `pipenv run python example.py`. Keeping that directory on Python's import path makes `from vexilla_client import VexillaClient` available. If using the client elsewhere, add the checkout's `clients/python` directory to `PYTHONPATH` and use the same dependency environment. The pinned dependencies include Pydantic 1.x, Arrow, and typing-extensions.
 
 
 ### Setup
 
-You will need to create a Client within your app. This optionally takes in the `customInstanceHash` for use with gradual rollout as well as Selective features.
+You will need to create a Client within your app. This optionally takes in the `custom_instance_id` for use with gradual rollout as well as Selective features.
 
-After creation, call `fetchFlags`. This can be chained from the constructor since it returns the client instance.
+Fetch and install the manifest first, then sync each group you need. Sync methods and setters mutate the existing client and return `None`; keep using the original client instead of assigning their return values. Getters fetch and validate without installing.
+
+Replace the base URL, environment, group/feature names, and instance ID with your publication and application values. These examples use groups from the repository's test fixtures.
 
 **Important Note**: All methods that make HTTP requests take in a callback for the request itself. This allows you to use your existing dependencies or standard library methods to keep this bundle smaller and less opinionated.
 
-```javascript
-this.client = new VexillaClient({
-  baseUrl: 'https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com',
-  environment: process.env.ENVIRONMENT,
-  customInstanceHash: userId
-});
-this.client.getFlags('features.json');
+```python
+from urllib.request import urlopen
+from vexilla_client import VexillaClient
+
+def fetch(url):
+    with urlopen(url, timeout=10) as response:
+        return response.read()
+
+client = VexillaClient("https://flags.example.com", "dev", "user-123")
+client.sync_manifest(fetch)
+client.sync_flags("Gradual", fetch)
 ```
 
 
@@ -60,32 +62,38 @@ this.client.getFlags('features.json');
 
 Use the created client to check if a feature `should` be on.
 
-```javascript
-client.should(FEATURE_NAME)
+```python
+enabled = client.should("Gradual", "testingWorkingGradual")
+if enabled:
+    print("Feature enabled")
 ```
 
 
 ### Full Example
 
-```javascript
-import { VexillaClient } from '@vexilla/client';
+```python
+from urllib.request import urlopen
+from vexilla_client import VexillaClient
 
-export class FeatureFlagsService {
-  private client;
+def fetch(url):
+    # Return original JSON bytes, without decoding to a dict.
+    with urlopen(url, timeout=10) as response:
+        return response.read()
 
-  constructor() {
-    this.client = new VexillaClient({
-      baseUrl: 'https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com',
-      environment: process.env.ENVIRONMENT,
-      customInstanceHash: userId
-    });
-    this.client.getFlags('features.json');
-  }
+client = VexillaClient(
+    "https://flags.example.com",
+    "dev",
+    "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a",
+)
+client.sync_manifest(fetch)
+client.sync_flags("Gradual", fetch)
 
-  should(featureName) {
-    return this.client?.should(featureName);
-  }
-}
+if client.should("Gradual", "testingWorkingGradual"):
+    print("Feature enabled")
+
+client.sync_flags("Value", fetch)
+title = client.value("Value", "String", "Default title")
+print(title)
 ```
 
 
@@ -106,7 +114,24 @@ The process is simple but has several steps to get up and running. Please see ou
 
 ## API
 
-API
+Import `VexillaClient` from `vexilla_client`. Group, environment, and feature identifiers accept published IDs or names. Install the manifest before fetching or installing groups, and install each group before evaluating its features.
+
+| Method | Behavior and return value |
+| --- | --- |
+| `VexillaClient(base_url, environment, custom_instance_id, show_logs=False)` | Creates a client for a publication URL and environment. The instance ID is used for gradual and selective features; `show_logs` enables Python logging diagnostics. |
+| `get_manifest(fetch)` | Fetches `manifest.json`, returning a validated `Manifest` model without installing it. |
+| `set_manifest(manifest)` | Validates and installs a `Manifest` model, removes groups no longer matching its IDs/names, and returns `None`. |
+| `sync_manifest(fetch)` | Fetches and installs the manifest, returning `None`. |
+| `get_flags(group_name_or_id, fetch)` | Fetches `<group-id>.json`, validates against the installed manifest, and returns a `Group` model without installing it. |
+| `set_flags(group)` | Validates and installs a `Group` model and its lookup tables, returning `None`. |
+| `sync_flags(group_name_or_id, fetch)` | Fetches and installs a group, returning `None`. |
+| `should(group_name_or_id, feature_name_or_id)` | Returns a boolean for a toggle, gradual, or selective feature using the configured instance ID. An inactive schedule returns `False`. |
+| `should_custom(group_name_or_id, feature_name_or_id, custom_instance_id)` | Evaluates a boolean feature using a string, integer, or finite float instance ID for this call. |
+| `value(group_name_or_id, feature_name_or_id, default_value)` | Returns an active value feature's string or number, or the supplied default when its schedule is inactive. |
+
+The fetch callback receives a URL and must return the original JSON as text or bytes, not a decoded dictionary. For direct ingestion, import `Manifest` and `Group` from `vexilla_client.types`, parse raw JSON with `Manifest.parse_raw(raw)` / `Group.parse_raw(raw)`, then call the setters.
+
+Callback exceptions become `FetchError` from `vexilla_client.client`. Invalid JSON or publication data raises parsing/validation errors. Missing groups, environments, or features raise lookup errors from `vexilla_client.exceptions`; invalid instance IDs raise `ValueError`. `should` on a value feature raises `InvalidShouldFeatureTypeError`, and `value` on a boolean feature raises `InvalidValueFeatureTypeError`. Defaults apply only to inactive value schedules, so lookup and kind errors still raise. Active zero and empty-string values are returned as stored. Failed validation leaves the previously installed snapshot intact.
 
 
 ## Generate Types (Optional)
@@ -118,7 +143,7 @@ We have created a tool to generate types for usage in your code. It will crawl y
 To use the tool, you can run it directly from NPM.
 
 ```
-npx vexilla types js REMOTE_JSON_URL
+npx vexilla types python REMOTE_JSON_URL
 ```
 
 ### Automatic Install Script
