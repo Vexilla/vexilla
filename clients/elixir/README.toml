@@ -1,84 +1,88 @@
 LanguageName = 'elixir'
 LanguageDisplayName = "Elixir"
 InstallInstructions = '''
-Using mix, install the package from hex.pm by adding the dependency to `mix.exs`.
+Add the `vexilla_client` dependency to your project's `mix.exs`:
 
 ```elixir
 defp deps do
   [
-    ...
-    {:vexilla_client_elixir, "~> 1.x.x"}
+    {:vexilla_client, "~> 1.0"}
   ]
+end
 ```
 
+Then run `mix deps.get`. The client requires Elixir 1.15 or later and includes HTTPoison and Jason dependencies, which the examples below use.
 '''
-CustomInstanceHash = "custom_instance_id"
-SyncFlags = "fetch_flags"
+CustomInstanceHash = "instance_id"
+SyncFlags = "sync_flags!"
+SetupDescription = '''The client is an immutable configuration map. Fetch and install the manifest first, then sync each group you need. Setters and sync functions return a new config: rebind it or thread it through a pipeline. Getters fetch and validate data without installing it; evaluation reads only the installed config.
+
+Replace the base URL, environment, group/feature names, and instance ID in these examples with your publication and application values. The examples use groups from the repository's test fixtures.'''
 SetupSnippet = '''
-
-The core part of how this library works is by creating a config to be passed around to various functions.
-
 ```elixir
 HTTPoison.start()
 
-
-server_host = "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com"
-environment = "dev"
-user_id = "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a"
+fetch = fn url -> HTTPoison.get!(url).body end
 
 config =
-  VexillaClient.create_config(
-    server_host,
-    environment,
-    user_id
-  )
-  |> VexillaClient.sync_manifest!(fn url ->
-    manifest_response = HTTPoison.get!(url)
-    Jason.decode!(manifest_response.body)
-  end)
-  |> VexillaClient.sync_flags!("Gradual", fn url ->
-    manifest_response = HTTPoison.get!(url)
-    Jason.decode!(manifest_response.body)
-  end)
+  VexillaClient.create_config("https://flags.example.com", "dev", "user-123")
+  |> VexillaClient.sync_manifest!(fetch)
+  |> VexillaClient.sync_flags!("Gradual", fetch)
 ```
 '''
-Should = "should?"
+Should = "should!"
 UsageSnippet = '''
 ```elixir
-should_gradual = VexillaClient.should?(config, "Gradual", "testingWorkingGradual")
+enabled = VexillaClient.should!(config, "Gradual", "testingWorkingGradual")
+
+if enabled do
+  IO.puts("Feature enabled")
+end
 ```
 '''
 Example = '''
 ```elixir
 HTTPoison.start()
 
-server_host = "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com"
-environment = "dev"
-user_id = "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a"
+# Return the original JSON body; the client decodes and validates it.
+fetch = fn url -> HTTPoison.get!(url).body end
 
 config =
   VexillaClient.create_config(
-    server_host,
-    environment,
-    user_id
+    "https://flags.example.com",
+    "dev",
+    "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a"
   )
-  |> VexillaClient.sync_manifest!(fn url ->
-    manifest_response = HTTPoison.get!(url)
-    Jason.decode!(manifest_response.body)
-  end)
-  |> VexillaClient.sync_flags!("Gradual", fn url ->
-    manifest_response = HTTPoison.get!(url)
-    Jason.decode!(manifest_response.body)
-  end)
+  |> VexillaClient.sync_manifest!(fetch)
+  |> VexillaClient.sync_flags!("Gradual", fetch)
 
-if VexillaClient.should?(config, "Gradual", "testingWorkingGradual") do
-  // Use the feature
+if VexillaClient.should!(config, "Gradual", "testingWorkingGradual") do
+  IO.puts("Feature enabled")
 end
 
+# Retain the returned config when installing another group.
+config = VexillaClient.sync_flags!(config, "Value", fetch)
+title = VexillaClient.value!(config, "Value", "String", "Default title")
+IO.puts(title)
 ```
 '''
-API='''
+API = '''
+All functions are in `VexillaClient`. Group, environment, and feature identifiers accept their published IDs or names. Install a manifest before fetching or installing groups, and install a group before evaluating its features.
 
-The full API documentation can be found at: [COMING SOON](https://hexdocs.pm/vexilla/Vexilla.html)
+| Function | Behavior and return value |
+| --- | --- |
+| `create_config(base_url, environment, instance_id, show_logs \\ false)` | Returns a config map. `base_url` hosts `manifest.json` and group JSON files; `environment` selects the environment. The instance ID is used for gradual and selective evaluation; strings and finite numbers are supported. `show_logs` enables operation diagnostics. |
+| `get_manifest!(config, fetch)` | Calls `fetch.(url)` for `manifest.json` and returns the validated manifest map without installing it. |
+| `set_manifest(config, manifest)` | Validates and installs a manifest map, returning a new config. Removes installed groups no longer matching the manifest's IDs and names. |
+| `sync_manifest!(config, fetch)` | Fetches and installs the manifest, returning a new config. |
+| `get_flags!(config, group_name_or_id, fetch)` | Fetches `<group-id>.json`, validates it against the manifest, and returns the group map without installing it. |
+| `set_flags(config, group)` | Validates and installs a group map, returning a new config with its lookup tables. |
+| `sync_flags!(config, group_name_or_id, fetch)` | Fetches and installs a group, returning a new config. |
+| `should!(config, group_name_or_id, feature_name_or_id)` | Returns a boolean for a toggle, gradual, or selective feature using the config's instance ID. An inactive schedule returns `false`. |
+| `should_custom!(config, group_name_or_id, feature_name_or_id, custom_instance_id)` | Evaluates a boolean feature with a string or numeric instance ID supplied for this call. |
+| `value!(config, group_name_or_id, feature_name_or_id, default_value)` | Returns an active value feature's string or number, or `default_value` when its schedule is inactive. |
 
+The fetch callback receives a URL and may return original JSON text or a decoded map with string keys. The examples use HTTPoison, but any HTTP library can supply this callback.
+
+Fetch failures, invalid publications, missing lookups, invalid instance IDs, and feature-kind mismatches raise `VexillaContractError` (with a `kind` and `message`). The setters also validate and can raise despite having no `!` suffix. Calling `should!` on a value feature or `value!` on a boolean feature raises a kind error. A value default applies only to an inactive schedule; it does not hide missing groups/features or validation errors. Active zero and empty-string values are returned as stored.
 '''

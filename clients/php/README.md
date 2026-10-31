@@ -33,7 +33,7 @@ composer require vexilla/client
 
 You will need to create a Client within your app. This optionally takes in the `customInstanceHash` for use with gradual rollout as well as Selective features.
 
-Fetch and install the manifest first, then sync each group you need. Getters validate without installing; setters install owned snapshots, and sync methods combine those steps.
+Fetch and install the manifest first, then sync each group you need. Getters validate without installing; setters install owned snapshots, and sync methods combine those steps. The full example below defines the `$fetch` callback. Replace the example URL, environment, group, feature names, and instance ID with your application's values.
 
 **Important Note**: All methods that make HTTP requests take in a callback for the request itself. This allows you to use your existing dependencies or standard library methods to keep this bundle smaller and less opinionated.
 
@@ -93,6 +93,27 @@ The process is simple but has several steps to get up and running. Please see ou
 
 ## API
 
+All methods below belong to `\Vexilla\Client`. Group and feature arguments accept names or IDs; evaluation uses the environment selected by the constructor.
+
+| Method | Behavior and return value |
+| --- | --- |
+| `new Client($baseUrl, $environment, $customInstanceHash = null, $showLogs = false)` | Creates a client with no installed data. Supply a string or finite numeric instance ID for gradual and selective features. |
+| `getManifest($callback): Manifest` | Fetches and validates `manifest.json` without installing it. |
+| `setManifest(Manifest $manifest): void` | Validates and installs a manifest snapshot; removes installed groups whose ID/name no longer matches. |
+| `syncManifest($callback): void` | Fetches and installs the manifest. |
+| `getFlags($groupNameOrId, $callback): Group` | Fetches and validates the group's `<groupId>.json` against the installed manifest, without installing it. |
+| `setFlags(Group $flagGroup): void` | Validates and installs a group snapshot that matches the installed manifest. |
+| `syncFlags($groupNameOrId, $callback): void` | Fetches and installs a group. |
+| `should($groupNameOrId, $featureNameOrId): bool` | Evaluates a toggle, gradual, or selective feature using the configured instance ID. |
+| `shouldCustom($groupNameOrId, $featureNameOrId, $customInstanceId): bool` | Evaluates with an explicit string or numeric instance ID. `shouldCustomString`, `shouldCustomInt`, and `shouldCustomFloat` expose the same three arguments and delegate to this method. |
+| `value($groupNameOrId, $featureNameOrId, $default)` | Returns a value feature's string, integer, or float value, or `$default` when its schedule is inactive. |
+| `valueString($groupNameOrId, $featureNameOrId, string $default): string` | Reads a string value feature. |
+| `valueInt($groupNameOrId, $featureNameOrId, int $default): int` | Reads an integer value feature. |
+| `valueFloat($groupNameOrId, $featureNameOrId, float $default): float` | Reads a floating-point value feature. |
+
+`Manifest` and `Group` are in `\Vexilla\Types`. Fetch callbacks receive a URL string and return original JSON text or decoded JSON objects. For manual ingestion, `\Vexilla\Codec::manifest($json)` and `\Vexilla\Codec::group($json)` produce the native objects accepted by the setters. Setters and sync methods mutate the client and return `void`; they cannot be chained.
+
+Operations throw `\Vexilla\ContractException` for fetch, validation, lookup, feature-kind, or instance-ID failures; inspect its `$kind` property for the category. Invalid ingestion leaves the previous installed snapshot intact. Boolean evaluation returns `false` for disabled or inactive features. Value methods use the default only when the schedule is inactive: missing groups/features and wrong feature kinds or value subtypes throw instead. Active `0` and `''` values are returned unchanged.
 
 
 ## Generate Types (Optional)
