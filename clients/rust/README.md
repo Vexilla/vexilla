@@ -22,63 +22,92 @@ To get started is easy. Follow these steps to get started with integration.
 
 ### Installation
 
-Add the client to your imports.
+Add these dependencies to your `Cargo.toml`:
 
-```rust
-vexilla_client = "1.0"
+```toml
+[dependencies]
+vexilla_client = "1.0.1"
+reqwest = { version = "0.10", features = ["blocking"] }
 ```
+
+The examples use `reqwest` for blocking HTTP requests, so your application needs it as a direct dependency. The client version above matches this repository's Cargo metadata.
 
 
 ### Setup
 
-You will need to create a Client within your app. This optionally takes in the `custom_instance_hash` for use with gradual rollout as well as Selective features.
+You will need to create a Client within your app. This optionally takes in the `instance_id` for use with gradual rollout as well as Selective features.
 
-After creation, call `sync_flags_blocking`. This can be chained from the constructor since it returns the client instance.
+Create a client with an environment name or ID, a publication base URL without a trailing slash, and an instance ID. To omit the default instance ID, pass `None::<String>` as the third argument; gradual and selective evaluations require an instance ID.
+
+Call `sync_manifest` before `sync_flags` for each group you need, then evaluate features. These blocking methods return `Result` values that must be handled before using the client; they do not return a client for chaining. Fetch callbacks return JSON text as `Result<String, VexillaError>`.
+
+Replace the URL, environment, instance ID, and group/feature names below with values from your publication. The setup and usage fragments belong in a function returning `Result`; `fetch_text` is defined in the full example.
+
 
 **Important Note**: All methods that make HTTP requests take in a callback for the request itself. This allows you to use your existing dependencies or standard library methods to keep this bundle smaller and less opinionated.
 
 ```rust
-let mut client = VexillaClient::new("dev", "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com", user_id);
+use vexilla_client::VexillaClient;
 
-client.sync_manifest(|url| reqwest::blocking::get(url).unwrap().text().unwrap());
+let instance_id = "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a";
+let mut client = VexillaClient::new("dev", "https://flags.example.com", instance_id);
 
-client
-  .sync_flags("Scheduled", |url| {
-      reqwest::blocking::get(url).unwrap().text().unwrap()
-  })
-  .unwrap();
+client.sync_manifest(fetch_text)?;
+client.sync_flags("Checkout", fetch_text)?;
 ```
 
 
 ### Usage
 
-Use the created client to check if a feature `Should` be on.
+Use the created client to check if a feature `should` be on.
 
 ```rust
-let should_show_feature = client.should(FEATURE_NAME)
+let enabled = client.should("Checkout", "newCheckout")?;
+if enabled {
+    println!("Feature enabled");
+} else {
+    println!("Feature disabled");
+}
 ```
+
+`Ok(false)` means evaluation succeeded and the feature is disabled. `Err(...)` is an evaluation failure, propagated here with `?`.
 
 
 ### Full Example
 
 ```rust
-let environment = "dev"
-let server_host = "https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com"
-let user_id = "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a"
-let mut client = VexillaClient::new(environment, server_host, user_id);
+use vexilla_client::types::VexillaError;
+use vexilla_client::VexillaClient;
 
-client.sync_manifest(|url| reqwest::blocking::get(url).unwrap().text().unwrap());
+fn fetch_text(url: &str) -> Result<String, VexillaError> {
+    reqwest::blocking::get(url)
+        .map_err(|error| VexillaError::Fetch(error.to_string()))?
+        .error_for_status()
+        .map_err(|error| VexillaError::Fetch(error.to_string()))?
+        .text()
+        .map_err(|error| VexillaError::Fetch(error.to_string()))
+}
 
-client
-  .sync_flags("Scheduled", |url| {
-      reqwest::blocking::get(url).unwrap().text().unwrap()
-  })
-  .unwrap();
+fn main() -> Result<(), VexillaError> {
+    let environment = "dev";
+    let base_url = "https://flags.example.com";
+    let instance_id = "b7e91cc5-ec76-4ec3-9c1c-075032a13a1a";
+    let mut client = VexillaClient::new(environment, base_url, instance_id);
 
-if client.should(FEATURE_NAME) {
-  // Do the thing
+    client.sync_manifest(fetch_text)?;
+    client.sync_flags("Checkout", fetch_text)?;
+
+    if client.should("Checkout", "newCheckout")? {
+        println!("Feature enabled");
+    } else {
+        println!("Feature disabled");
+    }
+
+    Ok(())
 }
 ```
+
+Transport, unsuccessful HTTP status, and response-body errors become `VexillaError::Fetch`. Synchronization and evaluation errors propagate from `main`, producing a nonzero exit status instead of the disabled-feature message.
 
 
 ## What are Feature Flags?
@@ -98,154 +127,81 @@ The process is simple but has several steps to get up and running. Please see ou
 
 ## API
 
-### `pub fn new( environment: &'static str, base_url: &'static str, instance_id: &'static str) -> VexillaClient`
+The full API documentation can be found at [docs.rs/vexilla_client](https://docs.rs/vexilla_client).
 
-Returns a new instance of the Vexilla client
+Import `VexillaClient` and `InstanceId` from `vexilla_client`; `VexillaError`, `Manifest`, and `FlagGroup` are in `vexilla_client::types`. Signatures below spell out `Result<T, VexillaError>` rather than the implementation's internal result alias.
 
-#### Arguments
+Fetch callbacks have the signature `impl FnOnce(&str) -> Result<String, VexillaError>`: they receive the full URL and return JSON text, not a response object or decoded JSON. The client parses and validates the text. Getters fetch and validate without installing data; setters install validated data; sync methods perform both steps. Install the manifest before installing groups and install each required group before evaluation.
 
-- environment `&'static str`: The name or ID of the environment you are targeting. This will be used in the lookups of flags and their config.
+Group, environment, and feature lookups accept IDs, names, and normalized names. The constructor's environment and base URL, feature arguments of type `impl Into<&'static str>`, and string defaults require static strings, such as string literals. Group arguments are `&str`.
 
-- base_url `&'static str`: The base URL where your JSON files are stored. When fetching flags Vexilla will append the coerced file name to the url. No trailing slash.
+### `pub fn new(environment: impl Into<&'static str>, base_url: impl Into<&'static str>, instance_id: impl Into<InstanceId>) -> Self`
 
-- instance_id `&'static str`: The ID, often for a user, to use by default for determining gradual flags and selective flags.
+Creates an unsynchronized client. `environment` selects the environment to evaluate. `base_url` is the publication URL without a trailing slash; the client appends `/manifest.json` or `/<group-id>.json`.
 
-### `pub fn get_manifest(&self, fetch: Callback) -> Result<Manifest>`
+The default `instance_id` supports `&str`, `String`, `i64`, `f64`, and `Option<String>` conversions, or an explicit `InstanceId`. Pass `None::<String>` or `InstanceId::Missing` to omit it. Toggle features do not require an instance ID; gradual and selective evaluations return `InvalidInstanceId` when it is missing or invalid. Numeric instance IDs must be finite and exactly representable as binary64; selective string and number IDs remain distinct.
 
-Fetches the manifest file for facilitating name->id lookups. Does not set the value on the client. You would need to call `set_manifest` after. Alternatively, you can use `sync_manifest` to do both steps with less code.
+### `pub fn with_show_logs(self, show_logs: bool) -> Self`
 
-#### Arguments
+Enables or disables diagnostic events for fetch and install operations. Logging is off by default; enabled events go to standard error. This configuration method returns the client and can be chained from `new`.
 
-- fetch `fn(url: &str) -> String`: A callback that is passed the url of the manifest file. You can bring your own http request library.
+### `pub fn get_manifest(&self, fetch: impl FnOnce(&str) -> Result<String, VexillaError>) -> Result<Manifest, VexillaError>`
 
-### `pub fn set_manifest(&mut self, manifest: Manifest)`
+Fetches and validates `manifest.json` without installing it. Pass the returned manifest to `set_manifest`, or use `sync_manifest`.
 
-Sets a fetched manifest within the Client instance.
+### `pub fn set_manifest(&mut self, manifest: Manifest) -> Result<(), VexillaError>`
 
-#### Arguments
+Validates and installs the manifest and updates group lookup aliases. Installed groups whose identity changed are removed. An invalid replacement returns an error without replacing the current manifest.
 
-- manifest `Manifest`: The manifest file to persist into the client. Usually fetched via `get_manifest`.
+### `pub fn sync_manifest(&mut self, fetch: impl FnOnce(&str) -> Result<String, VexillaError>) -> Result<bool, VexillaError>`
 
-### `pub fn sync_manifest(&mut self, fetch: Callback)`
+Fetches, validates, and installs the manifest. Returns `Ok(true)` on success; the boolean indicates successful installation, not feature evaluation.
 
-Fetches and sets the manifest within the client to facilitate name->Id lookups.
+### `pub fn get_flags(&self, group: &str, fetch: impl FnOnce(&str) -> Result<String, VexillaError>) -> Result<FlagGroup, VexillaError>`
 
-#### Arguments
+Resolves `group` through the installed manifest and fetches its JSON file. Validates its data and identity against the manifest without installing it. Pass the returned group to `set_flags`, or use `sync_flags`.
 
-- fetch `fn(url: &str) -> String`: A callback that is passed the url of the manifest file. You can bring your own http request library.
+### `pub fn set_flags(&mut self, flags: FlagGroup) -> Result<bool, VexillaError>`
 
-### `pub fn get_flags(&self, file_name: &str, fetch: Callback) -> VexillaResult<FlagGroup>`
+Validates and installs an owned group using its embedded ID, replacing its feature and environment lookup aliases. Takes one argument; no separate group ID is needed. Returns `Ok(true)` on success.
 
-Fetches the flags for a specific flag_group. Can use the ID or the name of the group for the lookup.
+### `pub fn sync_flags(&mut self, group: &str, fetch: impl FnOnce(&str) -> Result<String, VexillaError>) -> Result<(), VexillaError>`
 
-#### Arguments
+Fetches, validates, and installs the requested group. Returns `Ok(())` on success.
 
-- file_name `&str`: The Name or ID of the flag group you would like to fetch.
+### `pub fn should(&self, group: &str, feature: impl Into<&'static str>) -> Result<bool, VexillaError>`
 
-- fetch `fn(url: &str) -> String`: A callback that is passed the url of the flag group file. You can bring your own http request library.
+Evaluates a toggle, gradual, or selective feature in the configured environment, using the default instance ID when needed. With valid data and any required instance ID, returns `Ok(false)` outside an active schedule. Missing installed data, failed lookups, invalid instance IDs, and using a value feature return errors; they are not treated as disabled features.
 
-### `pub fn set_flags(&mut self, group_id: &str, flags: FlagGroup)`
+### `pub fn should_custom(&self, group: &str, feature: impl Into<&'static str>, id: impl Into<InstanceId>) -> Result<bool, VexillaError>`
 
-Sets a fetched flag group within the Client instance.
+Evaluates a boolean feature with a per-call instance ID instead of the configured default. Supports the same conversions as `new`; gradual and selective evaluations validate the ID before use.
 
-#### Arguments
+### `pub fn should_custom_str(&self, group: &str, feature: impl Into<&'static str>, id: &str) -> Result<bool, VexillaError>`
 
-- group_id `&str`: The ID or name of the flag group that you would like to set.
+Evaluates with a string instance ID. Useful for selective features that target a team or other group instead of an individual user.
 
-- flags `FlagGroup`: The collection of flags you would like to set. Typically from a `get_flags` call. `sync_flags` wraps both functions to streamline the process.
+### `pub fn should_custom_int(&self, group: &str, feature: impl Into<&'static str>, id: i64) -> Result<bool, VexillaError>`
 
-### pub fn sync_flags(&mut self, file_name: &str, fetch: Callback) -> VexillaResult<(), VexillaError>
+Evaluates with an integer instance ID. The integer must be exactly representable as binary64.
 
-Fetches and sets the flag group within the client to facilitate name->Id lookups.
+### `pub fn should_custom_float(&self, group: &str, feature: impl Into<&'static str>, id: f64) -> Result<bool, VexillaError>`
 
-#### Arguments
+Evaluates with a finite binary64 instance ID.
 
-- file_name `&str`: The Name or ID of the flag group you would like to fetch.
+### `pub fn value_str(&self, group: &str, key: impl Into<&'static str>, default: &'static str) -> Result<String, VexillaError>`
 
-- fetch `fn(url: &str) -> String`: A callback that is passed the url of the flag group file. You can bring your own http request library.
+Reads a string value feature in the configured environment. Returns the supplied default outside its active schedule and preserves an active empty string.
 
-### pub fn should(&self, group_id: &'static str, feature_name: &'static str) -> VexillaResult<bool>
+### `pub fn value_int(&self, group: &str, key: impl Into<&'static str>, default: i64) -> Result<i64, VexillaError>`
 
-Checks if a toggle, gradual, or selective flag should be enabled. Other methods exist for other flag types, such as value.
+Reads an integer value feature, returning the default outside its active schedule and preserving active zero.
 
-#### Arguments
+### `pub fn value_float(&self, group: &str, key: impl Into<&'static str>, default: f64) -> Result<f64, VexillaError>`
 
-- group_id `&str`: The ID or name of the flag group that you would like to check.
+Reads a float value feature, returning the default outside its active schedule and preserving active zero.
 
-- feature_name `&str`: The ID or name of the feature flag that you would like to check.
-
-### pub fn should_custom_str(&self, group_id: &str, feature_name: &str, custom_id: &str) -> VexillaResult<bool>
-
-Similar to the `should` method, but allows passing a custom string for use in the same way `custom_hash_id` is used from the contructor. This can be especially useful for Selective flags that target groups instead of individual user IDs.
-
-#### Arguments
-
-- group_id `&str`: The ID or name of the flag group that you would like to check.
-
-- feature_name `&str`: The ID or name of the feature flag that you would like to check.
-
-custom_id `&str`: The custom string you would like to evaluate in a gradual check or selective check.
-
-### pub fn should_custom_int(&self, group_id: &str, feature_name: &str, custom_id: i64) -> VexillaResult<bool>
-
-Similar to the `should` method, but allows passing a custom integer for use in the same way `custom_hash_id` is used from the contructor. This can be especially useful for Selective flags that target groups instead of individual user IDs.
-
-#### Arguments
-
-- group_id `&str`: The ID or name of the flag group that you would like to check.
-
-- feature_name `&str`: The ID or name of the feature flag that you would like to check.
-
-custom_id `i64`: The custom integer you would like to evaluate in a gradual check or selective check.
-
-### pub fn should_custom_float(&self, group_id: &str, feature_name: &str, custom_id: f64) -> VexillaResult<bool>
-
-Similar to the `should` method, but allows passing a custom float for use in the same way `custom_hash_id` is used from the contructor. This can be especially useful for Selective flags that target groups instead of individual user IDs.
-
-#### Arguments
-
-- group_id `&str`: The ID or name of the flag group that you would like to check.
-
-- feature_name `&str`: The ID or name of the feature flag that you would like to check.
-
-custom_id `f64`: The custom float you would like to evaluate in a gradual check or selective check.
-
-### pub fn value_str(&self, group_id: &str, feature_name: &str, default: &'static str) -> VexillaResult<String>
-
-Gets a string value based on environment. Can be useful for things like pricing and subscription plans.
-
-#### Arguments
-
-- group_id `&str`: The ID or name of the flag group that you would like to check.
-
-- feature_name `&str`: The ID or name of the feature flag that you would like to check.
-
-- default `&str`: The default string value if the flag is off via scheduling or cannot be fetched.
-
-### pub fn value_int(&self, group_id: &str, feature_name: &str, default: i64) -> VexillaResult<i64>
-
-Gets an integer value based on environment. Can be useful for things like pricing and subscription plans.
-
-#### Arguments
-
-- group_id `&str`: The ID or name of the flag group that you would like to check.
-
-- feature_name `&str`: The ID or name of the feature flag that you would like to check.
-
-- default `i64`: The default integer value if the flag is off via scheduling or cannot be fetched.
-
-### pub fn value_float(&self, group_id: &str, feature_name: &str, default: f64) -> VexillaResult<f64>
-
-Gets a float value based on environment. Can be useful for things like pricing and subscription plans.
-
-#### Arguments
-
-- group_id `&str`: The ID or name of the flag group that you would like to check.
-
-- feature_name `&str`: The ID or name of the feature flag that you would like to check.
-
-- default `f64`: The default float value if the flag is off via scheduling or cannot be fetched.
-
+Value defaults apply only outside an active schedule. Missing groups, environments, or features and incompatible feature/value types return `Err(VexillaError)`; a failed fetch does not turn a value read into a default. Rust has no safe fallback variants of these methods. Handle errors explicitly with `?`, `match`, or your application's chosen fallback policy.
 
 
 ## Generate Types (Optional)
@@ -302,4 +258,4 @@ No sponsors yet. This could be a link and icon for **your** company here.
 
 Current Vexilla code is released under a combination of two licenses, the Business Source License (BSL) and the MIT License.
 
-Please see the [License file](LICENSE) for more info.
+Please see the [License file](../../../LICENSE) for more info.
