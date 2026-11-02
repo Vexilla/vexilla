@@ -1,0 +1,122 @@
+name: SDK credential-free preflight
+on:
+  workflow_dispatch:
+    inputs:
+      revision:
+        description: Full immutable source commit SHA to verify; this does not authorize publication.
+        required: true
+        type: string
+      sdks:
+        description: Comma-separated package checks (js,rust or js,elixir,rust); all eleven contracts always run.
+        required: true
+        type: string
+        default: js,rust
+permissions:
+  contents: read
+jobs:
+  select:
+    runs-on: ubuntu-24.04
+    outputs:
+      revision: ${{ steps.select.outputs.revision }}
+      matrix: ${{ steps.select.outputs.matrix }}
+      sdks: ${{ steps.select.outputs.sdks }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.16.0
+      - id: select
+        run: node scripts/releases/preflight.cjs select
+        env:
+          PREFLIGHT_REVISION: ${{ inputs.revision }}
+          PREFLIGHT_SDKS: ${{ inputs.sdks }}
+  contract:
+    needs: select
+    uses: ./.github/workflows/contract.yml
+    with:
+      revision: ${{ needs.select.outputs.revision }}
+      artifact-prefix: sdk-preflight
+    permissions:
+      contents: read
+  package:
+    needs: [select, contract]
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.select.outputs.matrix) }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.select.outputs.revision }}
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          path: .release-tools
+          persist-credentials: false
+      - uses: ./.release-tools/.github/actions/sdk-verify
+        with:
+          sdk: ${{ matrix.sdk }}
+          revision: ${{ needs.select.outputs.revision }}
+          contract-prefix: sdk-preflight
+          tools-directory: .release-tools
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: sdk-preflight-package-${{ matrix.sdk }}
+          path: release-artifacts/*
+          if-no-files-found: error
+          retention-days: 90
+  evidence:
+    needs: [select, contract, package]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.select.outputs.revision }}
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          path: .release-tools
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.16.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: sdk-preflight-contract
+          path: .contract-artifacts
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: sdk-preflight-receipt-*
+          path: .contract-artifacts/receipts
+          merge-multiple: true
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: sdk-preflight-package-js
+          path: preflight-packages/js
+        if: contains(needs.select.outputs.sdks, 'js')
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: sdk-preflight-package-rust
+          path: preflight-packages/rust
+        if: contains(needs.select.outputs.sdks, 'rust')
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: sdk-preflight-package-elixir
+          path: preflight-packages/elixir
+        if: contains(needs.select.outputs.sdks, 'elixir')
+      - name: Validate complete immutable readiness evidence
+        run: node .release-tools/scripts/releases/preflight.cjs evidence
+        env:
+          PREFLIGHT_REVISION: ${{ needs.select.outputs.revision }}
+          PREFLIGHT_SDKS: ${{ needs.select.outputs.sdks }}
+          PREFLIGHT_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: sdk-preflight-evidence
+          path: preflight-evidence.json
+          if-no-files-found: error
+          retention-days: 90

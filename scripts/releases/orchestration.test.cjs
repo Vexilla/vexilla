@@ -27,24 +27,48 @@ const later = "c".repeat(40);
 async function repository(sdk = "js") {
   const state = readReleaseState();
   const components = [
-    ...state.inventory.clients.filter((c) => c.enabled),
+    ...state.inventory.clients.filter((c) =>
+      ["js", "rust", "elixir"].includes(c.id)
+    ),
     ...state.inventory.internalComponents,
   ];
+  state.config.plugins = [
+    {
+      type: "linked-versions",
+      groupName: "js-types",
+      components: ["client-js", "client-types"],
+      merge: true,
+    },
+  ];
+  for (const c of components) {
+    c.release.managed = true;
+    if (c.baseline) {
+      c.publish.enabled = true;
+    }
+    state.config.packages[c.directory] = {
+      "release-type": c.releaseType,
+      component: c.component,
+      ...(c.id === "elixir" ? { "package-name": "vexilla_client" } : {}),
+    };
+  }
   state.manifest = Object.fromEntries(
     components.map((c) => [c.directory, "2.0.0"])
   );
   state.config["bootstrap-sha"] = baseline;
   state.inventory.automation = { enabled: true, historyBoundary: baseline };
-  for (const c of state.inventory.clients.filter((c) => c.enabled)) {
+  for (const c of state.inventory.clients.filter((c) => c.release.managed)) {
     Object.assign(c.baseline, {
       verified: true,
       ownershipVerified: true,
       publicTypeCompatibilityReviewed: true,
       licenseConfirmed: true,
       sourceRevision: baseline,
+      adoptionSourceRevision: revision,
       registryVersion: "2.0.0",
       manifestVersion: "2.0.0",
     });
+    c.publish.trustVerified = true;
+    c.publish.preflightVerified = true;
   }
   const dir = components.find((c) => c.id === sdk).directory;
   const source = `${dir}/${
@@ -96,9 +120,10 @@ async function repository(sdk = "js") {
       : []),
     {
       sha: revision,
-      message: `fix(${sdk}): repair SDK`,
+      message: r.commitMessage || `fix(${sdk}): repair SDK`,
       files: r.changedFiles,
     },
+    ...(r.additionalCommits || []),
     { sha: baseline, message: "chore: baseline", files: [] },
   ];
   const write = (method, args) => r.writes.push({ method, ...args });
@@ -403,14 +428,18 @@ test("stale event defers PR changes without reverting live main files", async (t
   setEvent(t);
   const r = await repository();
   r.head = later;
-  const candidates = await orchestrate({
+  const { candidates } = await orchestrate({
     github: r.github,
     state: r.state,
     Manifest,
   });
   assert.deepEqual(candidates, []);
   assert.deepEqual(r.writes, []);
-  assert.equal(r.parentReads, 1, "a superseded snapshot must not be retried");
+  assert.equal(
+    r.parentReads,
+    1,
+    "only the changed group checks its parent and a superseded snapshot must not be retried"
+  );
 });
 
 test("main advancing during file updates defers PR changes before any write", async (t) => {
@@ -422,7 +451,8 @@ test("main advancing during file updates defers PR changes before any write", as
     }
   };
   assert.deepEqual(
-    await orchestrate({ github: r.github, state: r.state, Manifest }),
+    (await orchestrate({ github: r.github, state: r.state, Manifest }))
+      .candidates,
     []
   );
   assert.deepEqual(r.writes, []);
@@ -494,7 +524,7 @@ test("already created native publication candidates survive superseded PR mainte
       r.head = later;
     }
   };
-  const candidates = await orchestrate({
+  const { candidates } = await orchestrate({
     github: r.github,
     state: r.state,
     Manifest,
@@ -508,15 +538,125 @@ test("already created native publication candidates survive superseded PR mainte
   );
 });
 
-test("unrelated repository errors still fail PR maintenance", async (t) => {
+test("repository errors are visible group failures without unauthorized writes", async (t) => {
   setEvent(t);
   const r = await repository();
   r.afterRead = () => {
     throw Error("repository unavailable");
   };
-  await assert.rejects(
-    orchestrate({ github: r.github, state: r.state, Manifest }),
-    /repository unavailable/
+  const result = await orchestrate({
+    github: r.github,
+    state: r.state,
+    Manifest,
+  });
+  assert(result.failures.length > 0);
+  assert(
+    result.failures.every((f) => /repository unavailable/.test(f.message))
   );
+  assert.deepEqual(r.writes, []);
+});
+
+test("approved Rust candidate survives a later JS major-policy rejection", async (t) => {
+  setEvent(t);
+  const r = await repository("rust");
+  await (await Manifest.fromManifest(r.github, "main")).createPullRequests();
+  r.merged = r.open.map((pr) => ({ ...pr, sha: revision }));
+  r.open = [];
+  r.state.manifest["clients/rust"] = "2.0.1";
+  r.changedFiles = ["clients/js/package.json"];
+  r.commitMessage = "feat(js)!: require a new client API";
+  r.writes.length = 0;
+  const result = await orchestrate({
+    github: r.github,
+    state: r.state,
+    Manifest,
+  });
+  assert.deepEqual(result.candidates, [
+    { sdk: "rust", tag: "client-rust-v2.0.1", revision },
+  ]);
+  assert.equal(result.failures.length, 1);
+  assert.equal(result.failures[0].group, "js-types");
+  assert.equal(result.failures[0].phase, "proposals");
+  assert.match(result.failures[0].message, /configured major 2/);
+  assert.deepEqual(
+    r.writes.map((w) => w.method),
+    ["createRelease"]
+  );
+  const { selectCandidates } = require("./select-candidates.cjs");
+  assert.deepEqual(
+    selectCandidates(r.state.inventory, result.candidates),
+    result.candidates
+  );
+});
+
+test("JS override failure leaves an approved Rust candidate and an unrelated native proposal eligible", async (t) => {
+  setEvent(t);
+  const r = await repository("rust");
+  await (await Manifest.fromManifest(r.github, "main")).createPullRequests();
+  r.merged = r.open.map((pr) => ({ ...pr, sha: revision }));
+  r.open = [];
+  r.state.manifest["clients/rust"] = "2.0.1";
+  r.changedFiles = ["clients/js/package.json"];
+  r.commitMessage = "fix(js): repair client\n\nRelease-As: 2.0.0";
+  r.additionalCommits = [
+    {
+      sha: "f".repeat(40),
+      message: "fix(elixir): repair an independently managed consumer",
+      files: ["clients/elixir/lib/client.ex"],
+    },
+  ];
+  r.writes.length = 0;
+  const result = await orchestrate({
+    github: r.github,
+    state: r.state,
+    Manifest,
+  });
+  assert.deepEqual(result.candidates, [
+    { sdk: "rust", tag: "client-rust-v2.0.1", revision },
+  ]);
+  assert.deepEqual(
+    result.failures.map((f) => [f.group, f.phase]),
+    [["js-types", "proposals"]]
+  );
+  assert.match(result.failures[0].message, /Release-As overrides/);
+  assert.equal(r.open.length, 1);
+  assert.match(r.open[0].branch, /components--client-elixir/);
+  assert(
+    result.outcomes.some(
+      (o) =>
+        o.group === "elixir" &&
+        o.phase === "proposals" &&
+        o.status === "success"
+    )
+  );
+});
+
+test("zero managed groups return empty outcomes without invoking Release Please", async () => {
+  const state = readReleaseState();
+  state.inventory.automation.enabled = true;
+  const result = await orchestrate({
+    github: {},
+    state,
+    Manifest: {
+      fromManifest() {
+        throw Error("dormant state invoked Release Please");
+      },
+    },
+  });
+  assert.deepEqual(result, { candidates: [], failures: [], outcomes: [] });
+});
+
+test("enabling publication selects no historical backlog without a new approved release", async (t) => {
+  setEvent(t);
+  const r = await repository("rust");
+  r.changedFiles = [];
+  r.commitMessage = "chore: enable Rust publishing";
+  const result = await orchestrate({
+    github: r.github,
+    state: r.state,
+    Manifest,
+  });
+  assert.deepEqual(result.candidates, []);
+  assert.deepEqual(result.failures, []);
   assert.deepEqual(r.writes, []);
 });

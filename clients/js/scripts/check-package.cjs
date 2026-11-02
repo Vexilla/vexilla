@@ -13,7 +13,7 @@ assert.ok(
   artifact && fs.statSync(artifact).isFile(),
   "Usage: node scripts/check-package.cjs <candidate.tgz> [--baseline]"
 );
-const root = path.resolve(__dirname, "../../..");
+const root = path.resolve(process.env.SDK_SOURCE_ROOT || path.resolve(__dirname, "../../.."));
 const fixtures = path.resolve(__dirname, "../test/package-consumer");
 const consumer = fs.mkdtempSync(
   path.join(os.tmpdir(), "vexilla-npm-consumer-")

@@ -4,17 +4,17 @@
 const fs = require("node:fs");
 const { readReleaseState } = require("./check-release-config.cjs");
 const { hasSharedJsReleaseInput } = require("./release-inputs.cjs");
+const { managedComponents } = require("./release-policy.cjs");
 
 function validatePullRequest(
   { title, body = "", files },
   inventory = readReleaseState().inventory
 ) {
-  const directories = [
-    ...inventory.clients.filter((c) => c.enabled),
-    ...inventory.internalComponents,
-  ].map((c) => `${c.directory}/`);
+  const directories = managedComponents(inventory).map(
+    (c) => `${c.directory}/`
+  );
   if (
-    !hasSharedJsReleaseInput(files) &&
+    !hasSharedJsReleaseInput(files, inventory) &&
     !files.some((file) => directories.some((dir) => file.startsWith(dir)))
   ) {
     return { relevant: false };

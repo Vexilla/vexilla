@@ -27,6 +27,7 @@ jobs:
       pull-requests: write
     outputs:
       candidates: ${{ steps.release.outputs.candidates }}
+      failures: ${{ steps.release.outputs.failures }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -51,9 +52,27 @@ jobs:
         id: release
         run: node scripts/releases/orchestrate.cjs
         env:
+          SDK_RELEASES_ENABLED: ${{ vars.SDK_RELEASES_ENABLED }}
           GH_TOKEN: ${{ steps.bot.outputs.token }}
           SDK_RELEASE_BOT_LOGIN: ${{ vars.SDK_RELEASE_BOT_LOGIN }}
           SDK_RELEASE_APP_SLUG: ${{ steps.bot.outputs.app-slug }}
+  outcomes:
+    name: SDK release policy outcomes
+    needs: release
+    if: always() && !cancelled() && github.event_name == 'push' && vars.SDK_RELEASES_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+      - name: Fail visibly for rejected groups while independent candidates continue
+        run: node scripts/releases/report-outcomes.cjs
+        env:
+          RELEASE_JOB_RESULT: ${{ needs.release.result }}
+          RELEASE_FAILURES: ${{ needs.release.outputs.failures || '[]' }}
   candidates:
     needs: release
     if: >-
@@ -79,6 +98,7 @@ jobs:
           RELEASE_CANDIDATES: ${{ needs.release.outputs.candidates || '[]' }}
           RECOVERY_SDK: ${{ inputs.sdk }}
           RECOVERY_TAG: ${{ inputs.tag }}
+          GH_TOKEN: ${{ github.token }}
   publish:
     needs: candidates
     if: needs.candidates.outputs.any == 'true'

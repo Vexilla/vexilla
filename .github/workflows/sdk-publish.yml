@@ -26,13 +26,14 @@ jobs:
     outputs:
       revision: ${{ steps.identity.outputs.revision }}
       version: ${{ steps.identity.outputs.version }}
+      policy-revision: ${{ steps.identity.outputs.policy-revision }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 24
+          node-version: 24.16.0
       - run: node scripts/releases/check-release-config.cjs --require-ready
       - name: Verify tag, release, maintainer merge, and immutable manifests
         id: identity
@@ -43,10 +44,13 @@ jobs:
           RELEASE_REVISION: ${{ inputs.revision }}
           SDK_RELEASE_BOT_LOGIN: ${{ vars.SDK_RELEASE_BOT_LOGIN }}
           GH_TOKEN: ${{ github.token }}
+          SDK_RELEASES_ENABLED: ${{ vars.SDK_RELEASES_ENABLED }}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: release-identity-${{ inputs.sdk }}-${{ inputs.tag }}
-          path: release-identity.json
+          path: |
+            release-identity.json
+            current-policy.json
           if-no-files-found: error
   contract:
     needs: identity
@@ -64,62 +68,24 @@ jobs:
         with:
           ref: ${{ needs.identity.outputs.revision }}
           persist-credentials: false
-      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          version: 10.24.0
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: 24
+          ref: ${{ needs.identity.outputs.policy-revision }}
+          path: .release-tools
+          persist-credentials: false
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: release-identity-${{ inputs.sdk }}-${{ inputs.tag }}
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      - uses: ./.release-tools/.github/actions/sdk-verify
         with:
-          name: release-${{ inputs.sdk }}-contract
-          path: .contract-artifacts
-      - uses: ./.github/actions/test-server
-      - if: inputs.sdk == 'elixir'
-        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
-        with:
-          otp-version: "26.2"
-          elixir-version: "1.15.7"
-      - if: inputs.sdk == 'elixir'
-        working-directory: clients/elixir
-        run: |
-          mix local.hex --force
-          mix local.rebar --force
-          mix deps.get --check-locked
-          mix test
-        env:
-          TEST_SERVER_HOST: localhost:3000
-          VEXILLA_CONTRACT_DIR: ${{ github.workspace }}/.contract-artifacts
-      - if: inputs.sdk == 'rust'
-        run: |
-          rustup toolchain install stable --profile minimal
-          cargo test --locked --manifest-path clients/rust/Cargo.toml
-        env:
-          TEST_SERVER_HOST: localhost:3000
-          VEXILLA_CONTRACT_DIR: ${{ github.workspace }}/.contract-artifacts
-      - if: inputs.sdk == 'js'
-        run: |
-          pnpm install --frozen-lockfile --ignore-scripts --filter @vexilla/client...
-          pnpm --filter @vexilla/types build
-          pnpm --filter @vexilla/publishing build
-          pnpm --filter @vexilla/client test
-          pnpm --filter @vexilla/client compile
-          mkdir -p release-artifacts
-          npm pack ./clients/js --ignore-scripts --json --pack-destination release-artifacts
-          node clients/js/scripts/check-package.cjs "$GITHUB_WORKSPACE"/release-artifacts/*.tgz
-        env:
-          TEST_SERVER_HOST: localhost:3000
-          VEXILLA_CONTRACT_DIR: ${{ github.workspace }}/.contract-artifacts
-      - if: inputs.sdk != 'js'
-        run: python3 scripts/releases/package-native.py "$SDK" --revision "$REVISION" --output release-artifacts
-        env:
-          SDK: ${{ inputs.sdk }}
-          REVISION: ${{ needs.identity.outputs.revision }}
+          sdk: ${{ inputs.sdk }}
+          revision: ${{ needs.identity.outputs.revision }}
+          contract-prefix: release-${{ inputs.sdk }}
+          tools-directory: .release-tools
       - name: Record verified candidate identity and digests
-        run: node scripts/releases/candidate.cjs create release-identity.json release-artifacts
+        run: node .release-tools/scripts/releases/candidate.cjs create release-identity.json release-artifacts
+        env:
+          SDK_RELEASES_ENABLED: ${{ vars.SDK_RELEASES_ENABLED }}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: sdk-candidate-${{ inputs.sdk }}-${{ inputs.tag }}
@@ -140,34 +106,61 @@ jobs:
         with:
           ref: ${{ needs.identity.outputs.revision }}
           persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.identity.outputs.policy-revision }}
+          path: .release-tools
+          persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 24
+          node-version: 24.16.0
+      - name: Install the reviewed OIDC-capable npm CLI
+        run: npm install --global npm@12.2.1 --ignore-scripts --no-audit --no-fund
       - name: Revalidate release approval before registry credentials
-        run: node scripts/releases/release-identity.cjs
+        run: node .release-tools/scripts/releases/release-identity.cjs
         env:
           SDK: ${{ inputs.sdk }}
           RELEASE_TAG: ${{ inputs.tag }}
           RELEASE_REVISION: ${{ needs.identity.outputs.revision }}
           SDK_RELEASE_BOT_LOGIN: ${{ vars.SDK_RELEASE_BOT_LOGIN }}
           GH_TOKEN: ${{ github.token }}
+          SDK_RELEASES_ENABLED: ${{ vars.SDK_RELEASES_ENABLED }}
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: sdk-candidate-${{ inputs.sdk }}-${{ inputs.tag }}
           path: release-artifacts
       - name: Verify immutable candidate bytes
-        run: node scripts/releases/candidate.cjs verify release-identity.json release-artifacts
+        run: node .release-tools/scripts/releases/candidate.cjs verify release-identity.json release-artifacts
+        env:
+          SDK_RELEASES_ENABLED: ${{ vars.SDK_RELEASES_ENABLED }}
+      - name: Recheck current stop controls immediately before registry credentials
+        run: node .release-tools/scripts/releases/release-identity.cjs
+        env:
+          SDK: ${{ inputs.sdk }}
+          RELEASE_TAG: ${{ inputs.tag }}
+          RELEASE_REVISION: ${{ needs.identity.outputs.revision }}
+          SDK_RELEASE_BOT_LOGIN: ${{ vars.SDK_RELEASE_BOT_LOGIN }}
+          GH_TOKEN: ${{ github.token }}
+          SDK_RELEASES_ENABLED: ${{ vars.SDK_RELEASES_ENABLED }}
       - if: inputs.sdk == 'rust'
         id: crates
         uses: rust-lang/crates-io-auth-action@3268eb413133e2960fa4ae0e963ca76380c54cd9 # v1.0.6
       - if: inputs.sdk == 'rust'
-        run: node scripts/releases/publish-native.cjs rust --receipt release-artifacts/receipt.json
+        run: node .release-tools/scripts/releases/publish-native.cjs rust --receipt release-artifacts/receipt.json
         env:
           CARGO_REGISTRY_TOKEN: ${{ steps.crates.outputs.token }}
+          GH_TOKEN: ${{ github.token }}
+          SDK_RELEASES_ENABLED: ${{ vars.SDK_RELEASES_ENABLED }}
       - if: inputs.sdk == 'elixir'
-        run: node scripts/releases/publish-native.cjs elixir --receipt release-artifacts/receipt.json
+        run: node .release-tools/scripts/releases/publish-native.cjs elixir --receipt release-artifacts/receipt.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SDK_RELEASES_ENABLED: ${{ vars.SDK_RELEASES_ENABLED }}
       - if: inputs.sdk == 'js'
-        run: node scripts/releases/publish-npm.cjs release-artifacts release-identity.json
+        run: node .release-tools/scripts/releases/publish-npm.cjs release-artifacts release-identity.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SDK_RELEASES_ENABLED: ${{ vars.SDK_RELEASES_ENABLED }}
   summary:
     if: always()
     needs: [identity, contract, package, publish]

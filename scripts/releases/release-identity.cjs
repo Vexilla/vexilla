@@ -2,18 +2,20 @@ const fs = require("node:fs");
 const path = require("node:path");
 const root = path.resolve(__dirname, "../..");
 const stable = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
+const {
+  publicationClient,
+  assertPolicyVersion,
+} = require("./release-policy.cjs");
+const {
+  githubRequest,
+  currentPolicy,
+  authorizePolicy,
+  decodeFile,
+} = require("./current-policy.cjs");
 function clientFor(inventory, sdk) {
-  const client = inventory.clients.find((c) => c.id === sdk);
-  if (
-    !client ||
-    client.enabled !== true ||
-    !["js", "elixir", "rust"].includes(sdk)
-  ) {
-    throw Error("SDK is not enabled for publishing: " + sdk);
-  }
-  return client;
+  return publicationClient(inventory, sdk);
 }
-function parseTag(client, tag) {
+function parseTag(client, tag, inventory) {
   const prefix = client.component + "-v";
   if (
     typeof tag !== "string" ||
@@ -31,11 +33,14 @@ function parseTag(client, tag) {
       );
     }
   }
+  if (inventory) {
+    assertPolicyVersion(inventory, client, version, { firstRelease: false });
+  }
   return version;
 }
 function readManifest(
   client,
-  read = (file) => fs.readFileSync(path.join(root, file), "utf8")
+  read = (file) => fs.readFileSync(path.join(process.cwd(), file), "utf8")
 ) {
   const dir = client.directory;
   if (client.id === "js") {
@@ -112,33 +117,20 @@ function validateApproval(
     pr: pr.number,
   };
 }
-async function githubRequest(route, token = process.env.GH_TOKEN) {
-  if (!token) {
-    throw Error("GH_TOKEN is required to verify release approval");
-  }
-  const res = await fetch("https://api.github.com" + route, {
-    headers: {
-      authorization: "Bearer " + token,
-      accept: "application/vnd.github+json",
-      "X-GitHub-Api-Version": "2022-11-28",
-    },
-    signal: AbortSignal.timeout(30000),
-  });
-  if (!res.ok) {
-    throw Error(`GitHub verification failed (${res.status}) for ${route}`);
-  }
-  return res.json();
-}
 async function verifyRelease(
   inventory,
   sdk,
   tag,
   requestedRevision,
   request = githubRequest,
-  expectedBot = process.env.SDK_RELEASE_BOT_LOGIN
+  expectedBot = process.env.SDK_RELEASE_BOT_LOGIN,
+  policyRevision
 ) {
   const client = clientFor(inventory, sdk);
-  parseTag(client, tag); // Reject untrusted refs before contacting APIs.
+  parseTag(client, tag, inventory); // Reject untrusted refs before contacting APIs.
+  if (!/^[a-f0-9]{40}$/.test(policyRevision || "")) {
+    throw Error("Missing current policy revision");
+  }
   const base = "/repos/" + inventory.repository;
   const release = await request(
     base + "/releases/tags/" + encodeURIComponent(tag)
@@ -208,6 +200,28 @@ async function verifyRelease(
   if (!["ahead", "identical"].includes(comparison.status)) {
     throw Error("Release is not on main");
   }
+  const taggedInventory = JSON.parse(
+    decodeFile(
+      await request(
+        base + "/contents/.github/sdk-release-inventory.json?ref=" + revision
+      ),
+      "tagged inventory"
+    )
+  );
+  const sourceClient = taggedInventory.clients?.find((c) => c.id === sdk);
+  // Tagged participation flags are historical facts, not authorization. Identity
+  // fields must still match the currently supported immutable registry route.
+  if (
+    !sourceClient ||
+    taggedInventory.repository !== inventory.repository ||
+    ["id", "directory", "component", "tagTemplate"].some(
+      (field) => sourceClient[field] !== client[field]
+    ) ||
+    sourceClient.publish?.package !== client.publish.package ||
+    sourceClient.publish?.registry !== client.publish.registry
+  ) {
+    throw Error("Tagged source and current policy package identity disagree");
+  }
   const filename =
     client.directory +
     { js: "/package.json", elixir: "/mix.exs", rust: "/Cargo.toml" }[sdk];
@@ -226,6 +240,20 @@ async function verifyRelease(
   ) {
     throw Error("Tag, package, and manifest disagree");
   }
+  const managedVersions = JSON.parse(
+    decodeFile(
+      await request(
+        base + "/contents/.release-please-manifest.json?ref=" + revision
+      ),
+      "tagged management manifest"
+    )
+  );
+  if (
+    managedVersions[client.directory] !== identity.version ||
+    (sdk === "js" && managedVersions["packages/types"] !== identity.version)
+  ) {
+    throw Error("Tag and managed version manifest disagree");
+  }
   if (sdk === "js") {
     const types = await request(
       base + "/contents/packages/types/package.json?ref=" + revision
@@ -237,7 +265,7 @@ async function verifyRelease(
       throw Error("JS/types linked versions disagree");
     }
   }
-  return identity;
+  return { ...identity, sourceRevision: revision, policyRevision };
 }
 module.exports = {
   root,
@@ -251,15 +279,21 @@ module.exports = {
 };
 if (require.main === module) {
   (async () => {
-    const inventory = require("../../.github/sdk-release-inventory.json");
-    if (inventory.repository !== process.env.GITHUB_REPOSITORY) {
-      throw Error("Repository identity mismatch");
-    }
+    const policy = await currentPolicy();
+    const inventory = policy.inventory;
     const identity = await verifyRelease(
       inventory,
       process.env.SDK,
       process.env.RELEASE_TAG,
-      process.env.RELEASE_REVISION
+      process.env.RELEASE_REVISION,
+      githubRequest,
+      process.env.SDK_RELEASE_BOT_LOGIN,
+      policy.policyRevision
+    );
+    authorizePolicy(policy, identity.sdk, identity.version);
+    fs.writeFileSync(
+      "current-policy.json",
+      JSON.stringify(policy, null, 2) + "\n"
     );
     fs.writeFileSync(
       "release-identity.json",
@@ -267,7 +301,7 @@ if (require.main === module) {
     );
     fs.appendFileSync(
       process.env.GITHUB_OUTPUT,
-      `revision=${identity.revision}\nversion=${identity.version}\n`
+      `revision=${identity.revision}\nversion=${identity.version}\npolicy-revision=${identity.policyRevision}\n`
     );
   })().catch((error) => {
     console.error(error.message);

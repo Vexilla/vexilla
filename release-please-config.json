@@ -7,31 +7,6 @@
   "tag-separator": "-",
   "prerelease": false,
   "group-pull-request-title-pattern": "chore${scope}: release js-types libraries",
-  "plugins": [
-    {
-      "type": "linked-versions",
-      "groupName": "js-types",
-      "components": ["client-js", "client-types"],
-      "merge": true
-    }
-  ],
-  "packages": {
-    "clients/js": {
-      "release-type": "node",
-      "component": "client-js"
-    },
-    "packages/types": {
-      "release-type": "node",
-      "component": "client-types"
-    },
-    "clients/elixir": {
-      "release-type": "elixir",
-      "package-name": "vexilla_client",
-      "component": "client-elixir"
-    },
-    "clients/rust": {
-      "release-type": "rust",
-      "component": "client-rust"
-    }
-  }
+  "plugins": [],
+  "packages": {}
 }
