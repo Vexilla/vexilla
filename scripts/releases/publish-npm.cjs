@@ -2,6 +2,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 const { digest, checkCandidate } = require("./candidate.cjs");
+const { authorizeCurrent } = require("./current-policy.cjs");
 async function registryState(candidate, bytes, request = fetch) {
   const response = await request(
     "https://registry.npmjs.org/" +
@@ -29,7 +30,14 @@ async function registryState(candidate, bytes, request = fetch) {
   }
   return "matching";
 }
-async function publish(candidate, directory, request = fetch, upload) {
+async function publish(
+  candidate,
+  directory,
+  request = fetch,
+  upload,
+  authorize = authorizeCurrent
+) {
+  await authorize(candidate.sdk, candidate.version);
   const bytes = fs.readFileSync(path.join(directory, candidate.artifact));
   if ((await registryState(candidate, bytes, request)) === "matching") {
     return "already published; integrity matches";
@@ -45,6 +53,7 @@ async function publish(candidate, directory, request = fetch, upload) {
   if (process.env.NODE_AUTH_TOKEN || process.env.NPM_TOKEN) {
     throw Error("Long-lived npm credentials are forbidden in this workflow");
   }
+  await authorize(candidate.sdk, candidate.version); // Recheck current stop policy before npm requests OIDC.
   let failure;
   try {
     await upload();
@@ -67,36 +76,42 @@ if (require.main === module) {
     const candidate = JSON.parse(
       fs.readFileSync(path.join(directory, "candidate.json"))
     );
-    checkCandidate(
+    const policy = await authorizeCurrent(candidate.sdk, candidate.version);
+    checkCandidate(candidate, identity, directory, policy.inventory);
+    let publicationPolicy = policy;
+    const outcome = await publish(
       candidate,
-      identity,
       directory,
-      require("../../.github/sdk-release-inventory.json")
-    );
-    const outcome = await publish(candidate, directory, fetch, async () => {
-      const result = spawnSync(
-        "npm",
-        [
-          "publish",
-          path.join(directory, candidate.artifact),
-          "--ignore-scripts",
-          "--access",
-          "public",
-          "--registry=https://registry.npmjs.org",
-        ],
-        { stdio: "inherit" }
-      );
-      if (result.status !== 0) {
-        throw Error(
-          "npm publish failed; check trusted publisher workflow sdk-release.yml and environment sdk-npm"
+      fetch,
+      async () => {
+        const result = spawnSync(
+          "npm",
+          [
+            "publish",
+            path.join(directory, candidate.artifact),
+            "--ignore-scripts",
+            "--access",
+            "public",
+            "--registry=https://registry.npmjs.org",
+          ],
+          { stdio: "inherit" }
         );
+        if (result.status !== 0) {
+          throw Error(
+            "npm publish failed; check trusted publisher workflow sdk-release.yml and environment sdk-npm"
+          );
+        }
+      },
+      async (sdk, version) => {
+        publicationPolicy = await authorizeCurrent(sdk, version);
+        return publicationPolicy;
       }
-    });
+    );
     console.log(outcome);
     if (process.env.GITHUB_STEP_SUMMARY) {
       fs.appendFileSync(
         process.env.GITHUB_STEP_SUMMARY,
-        `\nRegistry: npm ${outcome}\n`
+        `\nRegistry: npm ${outcome}\nSource revision: ${candidate.revision}; current authorization policy: ${publicationPolicy.policyRevision}\n`
       );
     }
   })().catch((error) => {

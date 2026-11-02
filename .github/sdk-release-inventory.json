@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "repository": "Vexilla/vexilla",
   "releasePlease": {
     "version": "17.11.2",
@@ -7,8 +7,21 @@
   },
   "automation": {
     "enabled": false,
-    "historyBoundary": null,
-    "reason": "Registry observations are recorded, but source baselines, initial aligned JS/types version, Rust local/registry discrepancy, account authorization and rollout checks require maintainer reconciliation before release PRs or publication."
+    "historyBoundary": "8b4d80c05abec38d953f38b6bf59ff96462939fa",
+    "reason": "JS/types and Rust source/history adoption is maintainer-approved. Release generation and every publisher remain stopped pending deployed hosted preflight, account/configuration evidence and separately authorized activation. Elixir remains unmanaged pending Hex access.",
+    "reportedConfiguration": {
+      "reportedBy": "maintainer",
+      "githubAppConfigured": true,
+      "acceptedConfigurationEvidence": false,
+      "appCreatedReleasePRChecksObserved": false
+    },
+    "adoptionApproval": {
+      "approvedBy": "maintainer",
+      "approvedAt": "2026-11-02",
+      "sourceRevision": "9bd974df2efe1693b142fed184c42785565119d7",
+      "historyBoundary": "8b4d80c05abec38d953f38b6bf59ff96462939fa",
+      "evidence": "docs/sdk-release-adoption.md"
+    }
   },
   "clients": [
     {
@@ -17,24 +30,33 @@
       "component": "client-js",
       "releaseGroup": "js-types",
       "releaseType": "node",
-      "enabled": true,
       "tagTemplate": "client-js-v{version}",
       "baseline": {
-        "verified": false,
-        "status": "blocked",
+        "verified": true,
+        "status": "adopted",
         "registryVersion": "1.0.3",
         "minimumAutomatedVersion": "2.0.0",
-        "publicTypeCompatibilityReviewed": false,
+        "publicTypeCompatibilityReviewed": true,
         "licenseConfirmed": true,
         "observedLicenseMetadata": "BSL-1.0",
         "observedLicenseFile": "MIT",
         "observedRepositoryLicense": "BUSL-1.1",
         "sourceRevision": null,
-        "observedAt": "2026-10-23",
+        "observedAt": "2026-11-02",
         "observedOwner": "cmgriffing",
         "evidence": "https://registry.npmjs.org/@vexilla%2fclient",
-        "reason": "Registry metadata has no gitHead; reconcile source history, review the protected subclass type incompatibility requiring first automated JS >=2.0.0, then align JS/types without downgrading JS. Public ownership does not prove current account or OIDC authority.",
-        "confirmedLicense": "BUSL-1.1"
+        "reason": "Maintainer accepted the verified npm 1.0.3 artifact comparison, unknown exact original publication SHA, public type migration and BUSL-1.1 intent for first 2.0.0 adoption. Historical sourceRevision remains unknown; reviewed adoption source is recorded separately.",
+        "confirmedLicense": "BUSL-1.1",
+        "archiveSha256": "831cf21dad3ff26c7b5265de54bd452c4e76a1b6e92e15e634599276cdb9c822",
+        "archiveUrl": "https://registry.npmjs.org/@vexilla/client/-/client-1.0.3.tgz",
+        "adoptionSourceRevision": "9bd974df2efe1693b142fed184c42785565119d7",
+        "registryIntegrity": "sha512-GlyS08NeFipDO+Q5pFUUVc1fDXu0b9DzVnjqmfQ7pVGARrEYwBzLITrHoM2dHvYb6EMhsxDKovvaDsmZhGX9jg==",
+        "deprecated": null,
+        "manifestVersion": "1.0.3",
+        "adoptionApprovedBy": "maintainer",
+        "adoptionApprovedAt": "2026-11-02",
+        "artifactComparisonAccepted": true,
+        "historicalSourceUncertaintyAccepted": true
       },
       "publish": {
         "registry": "npm",
@@ -58,7 +80,20 @@
           "Verify isolated runtime/declaration consumer",
           "Configure npm trusted publishing for sdk-release.yml and sdk-npm",
           "Complete full hosted contract and package checks"
-        ]
+        ],
+        "enabled": false,
+        "reportedConfiguration": {
+          "reportedBy": "maintainer",
+          "configured": true,
+          "acceptedTrustEvidence": false,
+          "authenticationObserved": false,
+          "publicationObserved": false
+        }
+      },
+      "release": {
+        "managed": true,
+        "firstReleaseTarget": "2.0.0",
+        "managementSeed": "1.0.3"
       }
     },
     {
@@ -67,17 +102,20 @@
       "component": "client-elixir",
       "releaseGroup": "elixir",
       "releaseType": "elixir",
-      "enabled": true,
       "tagTemplate": "client-elixir-v{version}",
       "baseline": {
         "verified": false,
         "status": "blocked",
         "registryVersion": "1.0.1",
-        "sourceRevision": null,
-        "observedAt": "2026-10-23",
+        "sourceRevision": "d62e8aad7b36ef4b3dc7ea5e5a15c604677fcf8a",
+        "observedAt": "2026-11-02",
         "observedOwner": "vexilla",
         "evidence": "https://hex.pm/api/packages/vexilla_client",
-        "reason": "Package and version exist; archive/source correspondence, account authorization, and bootstrap history boundary remain unverified."
+        "reason": "Published archive/source correspondence is recorded; reviewed adoption source/history boundary and account authorization remain pending. Hex workload identity configuration returns 404.",
+        "archiveSha256": "7f1d6690687cf0a68cb9166dda5aee6b63a5f4d85a09c3dc6e52b36ef2ed9b45",
+        "archiveUrl": "https://repo.hex.pm/tarballs/vexilla_client-1.0.1.tar",
+        "adoptionSourceRevision": null,
+        "retirement": null
       },
       "publish": {
         "registry": "hex",
@@ -95,7 +133,21 @@
           "Configure Hex workload identity for existing public package, sdk-release.yml and sdk-hex",
           "Compare native rebuilt payload with verified candidate before upload",
           "Complete full hosted contract and package checks"
-        ]
+        ],
+        "enabled": false,
+        "reportedConfiguration": {
+          "reportedBy": "maintainer",
+          "configured": false,
+          "acceptedTrustEvidence": false,
+          "authenticationObserved": false,
+          "publicationObserved": false,
+          "blocker": "Package workload identity configuration returns HTTP 404; external Hex enablement is unresolved."
+        }
+      },
+      "release": {
+        "managed": false,
+        "firstReleaseTarget": "2.0.0",
+        "managementSeed": "1.0.1"
       }
     },
     {
@@ -104,18 +156,25 @@
       "component": "client-rust",
       "releaseGroup": "rust",
       "releaseType": "rust",
-      "enabled": true,
       "tagTemplate": "client-rust-v{version}",
       "baseline": {
-        "verified": false,
-        "status": "blocked",
+        "verified": true,
+        "status": "adopted",
         "registryVersion": "1.0.0",
         "localVersionObserved": "1.0.1",
-        "sourceRevision": null,
-        "observedAt": "2026-10-23",
+        "sourceRevision": "67480837e705ab1acf6f8ddf5f2e7c00cf7e940c",
+        "observedAt": "2026-11-02",
         "observedPublisher": "cmgriffing",
         "evidence": "https://crates.io/api/v1/crates/vexilla_client",
-        "reason": "Latest registry stable is 1.0.0 while checkout is 1.0.1; maintainer must reconcile unpublished version/history and verify current ownership."
+        "reason": "Maintainer accepted published registry 1.0.0 source correspondence and the unpublished local 1.0.1 working seed with accumulated changes for first 2.0.0 adoption. No published 1.0.1 is asserted.",
+        "archiveSha256": "87e537f80240ba852e2a1f65a0246aa6d633cdf67a8c3b49133f01db7e096b14",
+        "archiveUrl": "https://static.crates.io/crates/vexilla_client/vexilla_client-1.0.0.crate",
+        "adoptionSourceRevision": "9bd974df2efe1693b142fed184c42785565119d7",
+        "yanked": false,
+        "localVersionPublished": false,
+        "manifestVersion": "1.0.1",
+        "adoptionApprovedBy": "maintainer",
+        "adoptionApprovedAt": "2026-11-02"
       },
       "publish": {
         "registry": "crates.io",
@@ -133,7 +192,20 @@
           "Configure crates.io trusted publishing for sdk-release.yml and sdk-crates",
           "Compare native rebuilt payload with verified candidate before upload",
           "Complete full hosted contract and package checks"
-        ]
+        ],
+        "enabled": false,
+        "reportedConfiguration": {
+          "reportedBy": "maintainer",
+          "configured": true,
+          "acceptedTrustEvidence": false,
+          "authenticationObserved": false,
+          "publicationObserved": false
+        }
+      },
+      "release": {
+        "managed": true,
+        "firstReleaseTarget": "2.0.0",
+        "managementSeed": "1.0.1"
       }
     },
     {
@@ -142,7 +214,6 @@
       "component": "client-go",
       "releaseGroup": "go",
       "releaseType": "go",
-      "enabled": false,
       "tagTemplate": "clients/go/v{version}",
       "publish": {
         "registry": "proxy.golang.org",
@@ -158,7 +229,11 @@
           "Implement reviewed directory-prefixed tag release with clients/go/v{version}",
           "Verify proxy consumption at immutable tag",
           "Add native Release Please strategy and publication/recovery implementation before enablement"
-        ]
+        ],
+        "enabled": false
+      },
+      "release": {
+        "managed": false
       }
     },
     {
@@ -167,7 +242,6 @@
       "component": "client-python",
       "releaseGroup": "python",
       "releaseType": "python",
-      "enabled": false,
       "tagTemplate": "client-python-v{version}",
       "publish": {
         "registry": "pypi",
@@ -189,7 +263,11 @@
           "Add pyproject distribution metadata and choose/verify PyPI identity",
           "Verify source baseline, wheel/sdist contents, clean consumer and trusted publishing",
           "Add Release Please and publication/recovery implementation before enablement"
-        ]
+        ],
+        "enabled": false
+      },
+      "release": {
+        "managed": false
       }
     },
     {
@@ -198,7 +276,6 @@
       "component": "client-php",
       "releaseGroup": "php",
       "releaseType": "php",
-      "enabled": false,
       "tagTemplate": "client-php-v{version}",
       "publish": {
         "registry": "packagist",
@@ -213,7 +290,11 @@
           "Choose a monorepo subtree/distribution repository and tag strategy",
           "Verify Packagist identity, ownership, source baseline and clean consumer",
           "Implement Packagist metadata update and immutable source verification before enablement"
-        ]
+        ],
+        "enabled": false
+      },
+      "release": {
+        "managed": false
       }
     },
     {
@@ -222,7 +303,6 @@
       "component": "client-swift",
       "releaseGroup": "swift",
       "releaseType": "simple",
-      "enabled": false,
       "tagTemplate": null,
       "publish": {
         "registry": "swiftpm-or-cocoapods",
@@ -238,7 +318,11 @@
           "Account for root Package.swift and correct pod metadata",
           "Verify clean platform consumer, source baseline and registry identity",
           "Implement native publication/recovery before enablement"
-        ]
+        ],
+        "enabled": false
+      },
+      "release": {
+        "managed": false
       }
     },
     {
@@ -247,7 +331,6 @@
       "component": "client-kotlin",
       "releaseGroup": "kotlin",
       "releaseType": "java",
-      "enabled": false,
       "tagTemplate": "client-kotlin-v{version}",
       "publish": {
         "registry": "maven-central",
@@ -264,7 +347,11 @@
           "Add publication, signing and credential configuration",
           "Verify source baseline and isolated JVM consumer",
           "Implement native versioning/publication/recovery before enablement"
-        ]
+        ],
+        "enabled": false
+      },
+      "release": {
+        "managed": false
       }
     },
     {
@@ -273,7 +360,6 @@
       "component": "client-csharp",
       "releaseGroup": "csharp",
       "releaseType": "dotnet-yoshi",
-      "enabled": false,
       "tagTemplate": "client-csharp-v{version}",
       "publish": {
         "registry": "nuget",
@@ -302,7 +388,11 @@
           "Normalize package ID and conflicting Version/ReleaseVersion metadata",
           "Verify NuGet ownership, source baseline and isolated consumer",
           "Implement native versioning/publication/recovery before enablement"
-        ]
+        ],
+        "enabled": false
+      },
+      "release": {
+        "managed": false
       }
     },
     {
@@ -311,7 +401,6 @@
       "component": "client-ocaml",
       "releaseGroup": "ocaml",
       "releaseType": "ocaml",
-      "enabled": false,
       "tagTemplate": "client-ocaml-v{version}",
       "publish": {
         "registry": "opam",
@@ -327,7 +416,11 @@
           "Respect generated opam metadata from dune-project",
           "Verify package identity, source baseline and clean opam consumer",
           "Implement native versioning/publication/recovery before enablement"
-        ]
+        ],
+        "enabled": false
+      },
+      "release": {
+        "managed": false
       }
     }
   ],
@@ -339,7 +432,15 @@
       "releaseGroup": "js-types",
       "releaseType": "node",
       "tagTemplate": "client-types-v{version}",
-      "publish": false
+      "publish": false,
+      "release": {
+        "managed": true,
+        "firstReleaseTarget": "2.0.0",
+        "managementSeed": "1.0.3"
+      }
     }
-  ]
+  ],
+  "versionPolicy": {
+    "major": 2
+  }
 }

@@ -24,14 +24,10 @@
       "release-type": "node",
       "component": "client-types"
     },
-    "clients/elixir": {
-      "release-type": "elixir",
-      "package-name": "vexilla_client",
-      "component": "client-elixir"
-    },
     "clients/rust": {
       "release-type": "rust",
       "component": "client-rust"
     }
-  }
+  },
+  "bootstrap-sha": "8b4d80c05abec38d953f38b6bf59ff96462939fa"
 }

@@ -1,1 +1,5 @@
-{}
+{
+  "clients/js": "1.0.3",
+  "packages/types": "1.0.3",
+  "clients/rust": "1.0.1"
+}

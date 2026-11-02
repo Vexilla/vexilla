@@ -5,6 +5,11 @@ const fs = require("node:fs");
 const assert = require("node:assert/strict");
 const { applyReleaseInputs } = require("./release-inputs.cjs");
 const {
+  managedComponents,
+  publishingClients,
+  assertPolicyVersion,
+} = require("./release-policy.cjs");
+const {
   releaseSnapshot,
   SupersededSnapshot,
 } = require("./release-snapshot.cjs");
@@ -41,10 +46,7 @@ function assertStablePullRequests(pullRequests, state) {
       );
     }
     if (state) {
-      const components = [
-        ...state.inventory.clients.filter((c) => c.enabled),
-        ...state.inventory.internalComponents,
-      ];
+      const components = managedComponents(state.inventory);
       for (const entry of pr.body.releaseData) {
         const component = components.find(
           (c) => c.component === entry.component
@@ -54,6 +56,9 @@ function assertStablePullRequests(pullRequests, state) {
           `Release PR has unmanaged component ${entry.component}`
         );
         const version = entry.version.toString();
+        assertPolicyVersion(state.inventory, component, version, {
+          currentVersion: state.manifest[component.directory],
+        });
         assertMinimumVersion(component, version);
         assert(
           compareVersions(version, state.manifest[component.directory]) > 0,
@@ -69,10 +74,7 @@ function assertStablePullRequests(pullRequests, state) {
 }
 
 function assertReleaseCandidates(releases, inventory, manifestVersions) {
-  const components = [
-    ...inventory.clients.filter((c) => c.enabled),
-    ...inventory.internalComponents,
-  ];
+  const components = managedComponents(inventory);
   for (const release of releases) {
     const component = components.find((c) => c.directory === release.path);
     assert(
@@ -81,6 +83,7 @@ function assertReleaseCandidates(releases, inventory, manifestVersions) {
     );
     const version = release.tag.version.toString();
     assert(STABLE.test(version), `Unsupported release version: ${version}`);
+    assertPolicyVersion(inventory, component, version, { firstRelease: false });
     assertMinimumVersion(component, version);
     if (manifestVersions) {
       assert.equal(
@@ -116,13 +119,16 @@ function assertReleaseCandidates(releases, inventory, manifestVersions) {
 
 function publicationCandidates(releases, inventory) {
   return releases.filter(Boolean).flatMap((release) => {
-    const sdk = inventory.clients.find(
-      (client) => client.enabled && client.directory === release.path
+    const sdk = publishingClients(inventory).find(
+      (client) => client.directory === release.path
     );
     if (!sdk) {
       return [];
     }
     assert(STABLE.test(release.version), "Publication version must be stable");
+    assertPolicyVersion(inventory, sdk, release.version, {
+      firstRelease: false,
+    });
     assertMinimumVersion(sdk, release.version);
     assert.equal(
       release.tagName,
@@ -133,63 +139,148 @@ function publicationCandidates(releases, inventory) {
   });
 }
 
-async function orchestrate({ github, state, Manifest }) {
-  validateConfig({ ...state, requireReady: true });
-  // Read configuration from the same reviewed checkout as the inventory. Native
-  // manifests are read at the workflow revision so a later main push cannot
-  // replace the version/package content used by this invocation.
-  const scm = applyReleaseInputs(
-    releaseSnapshot(github, process.env.GITHUB_SHA)
-  );
-  scm.getFileJson = async (name, ref) => {
-    if (ref === "main" && name === "release-please-config.json") {
-      return state.config;
-    }
-    if (ref === "main" && name === ".release-please-manifest.json") {
-      return state.manifest;
-    }
-    return github.getFileJson(name, ref);
+// Scope the pinned manifest to one independent group. JS/types keep their
+// linked plugin; no other group can participate in or fail that proposal.
+function groupState(state, components) {
+  const directories = new Set(components.map((c) => c.directory));
+  return {
+    inventory: {
+      ...state.inventory,
+      clients: state.inventory.clients.map((client) => ({
+        ...client,
+        release: {
+          ...client.release,
+          managed: client.release.managed && directories.has(client.directory),
+        },
+        publish: {
+          ...client.publish,
+          enabled: client.publish.enabled && directories.has(client.directory),
+        },
+      })),
+      internalComponents: state.inventory.internalComponents.map(
+        (component) => ({
+          ...component,
+          release: {
+            ...component.release,
+            managed:
+              component.release.managed && directories.has(component.directory),
+          },
+        })
+      ),
+    },
+    config: {
+      ...state.config,
+      packages: Object.fromEntries(
+        Object.entries(state.config.packages).filter(([directory]) =>
+          directories.has(directory)
+        )
+      ),
+      plugins: components.some((c) => c.id === "js")
+        ? state.config.plugins
+        : [],
+    },
+    manifest: Object.fromEntries(
+      Object.entries(state.manifest).filter(([directory]) =>
+        directories.has(directory)
+      )
+    ),
   };
-  const manifest = await Manifest.fromManifest(
-    scm,
-    "main",
-    undefined,
-    undefined,
-    {
-      // A deferred refresh must not leave another PR mutation running in parallel.
-      sequentialCalls: true,
-    }
-  );
-  const releases = await manifest.buildReleases();
-  assertReleaseCandidates(releases, state.inventory, state.manifest);
-  // Freeze checked candidates: createReleases must not re-read an unchecked
-  // override or a newly merged PR between validation and the write.
-  manifest.buildReleases = async () => releases;
-  const created = await manifest.createReleases();
-  const candidates = publicationCandidates(created, state.inventory);
+}
+
+function writeOutcomes(result) {
   if (process.env.GITHUB_OUTPUT) {
     fs.appendFileSync(
       process.env.GITHUB_OUTPUT,
-      `candidates=${JSON.stringify(candidates)}\n`
+      `candidates=${JSON.stringify(result.candidates)}\n` +
+        `failures=${JSON.stringify(result.failures)}\n`
     );
   }
-  try {
-    const pullRequests = await manifest.buildPullRequests();
-    assertStablePullRequests(pullRequests, state);
-    manifest.buildPullRequests = async () => pullRequests;
-    await manifest.createPullRequests();
-  } catch (error) {
-    if (!(error instanceof SupersededSnapshot)) {
-      throw error;
+}
+
+async function orchestrate({ github, state, Manifest }) {
+  // Structural corruption is fatal before any registry/release mutation.
+  validateConfig({ ...state, requireReady: true });
+  const result = { candidates: [], failures: [], outcomes: [] };
+  const groups = new Map();
+  for (const component of managedComponents(state.inventory)) {
+    if (!groups.has(component.releaseGroup)) {
+      groups.set(component.releaseGroup, []);
     }
-    // Already-created tags still need publication even when their following PR
-    // refresh was superseded. A failed job would discard these candidates.
-    console.log(error.message);
+    groups.get(component.releaseGroup).push(component);
   }
-  return candidates;
+  const manifests = [];
+  const failed = (group, phase, error) => {
+    result.failures.push({ group, phase, message: error.message });
+    result.outcomes.push({ group, phase, status: "failed" });
+  };
+  for (const [group, components] of groups) {
+    try {
+      const scoped = groupState(state, components);
+      const scm = applyReleaseInputs(
+        releaseSnapshot(github, process.env.GITHUB_SHA),
+        scoped.inventory
+      );
+      scm.getFileJson = async (name, ref) => {
+        if (ref === "main" && name === "release-please-config.json") {
+          return scoped.config;
+        }
+        if (ref === "main" && name === ".release-please-manifest.json") {
+          return scoped.manifest;
+        }
+        return github.getFileJson(name, ref);
+      };
+      const manifest = await Manifest.fromManifest(
+        scm,
+        "main",
+        undefined,
+        undefined,
+        { sequentialCalls: true }
+      );
+      const releases = await manifest.buildReleases();
+      assertReleaseCandidates(releases, state.inventory, state.manifest);
+      manifest.buildReleases = async () => releases;
+      const created = await manifest.createReleases();
+      result.candidates.push(
+        ...publicationCandidates(created, state.inventory)
+      );
+      result.outcomes.push({ group, phase: "releases", status: "success" });
+      manifests.push({ group, manifest });
+    } catch (error) {
+      failed(group, "releases", error);
+    }
+  }
+  for (const { group, manifest } of manifests) {
+    try {
+      const pullRequests = await manifest.buildPullRequests();
+      assertStablePullRequests(pullRequests, state);
+      manifest.buildPullRequests = async () => pullRequests;
+      await manifest.createPullRequests();
+      result.outcomes.push({ group, phase: "proposals", status: "success" });
+    } catch (error) {
+      if (error instanceof SupersededSnapshot) {
+        result.outcomes.push({
+          group,
+          phase: "proposals",
+          status: "deferred",
+          message: error.message,
+        });
+      } else {
+        failed(group, "proposals", error);
+      }
+    }
+  }
+  // Group diagnostics are consumed by a separate required job. Returning a
+  // structured failure here lets successful candidates reach their own gates.
+  writeOutcomes(result);
+  return result;
 }
 
 async function main() {
+  assert.equal(
+    process.env.SDK_RELEASES_ENABLED,
+    "true",
+    "SDK_RELEASES_ENABLED must permit release generation"
+  );
   const state = readReleaseState(ROOT);
   validateConfig({ ...state, requireReady: true });
   assert.equal(process.env.GITHUB_REPOSITORY, state.inventory.repository);
@@ -224,10 +315,8 @@ async function main() {
     token: process.env.GH_TOKEN,
     defaultBranch: "main",
   });
-  const candidates = await orchestrate({ github, state, Manifest });
-  console.log(
-    `Created ${candidates.length} SDK publication candidates; maintained release PRs.`
-  );
+  const result = await orchestrate({ github, state, Manifest });
+  console.log(JSON.stringify(result, null, 2));
 }
 
 if (require.main === module) {
@@ -241,4 +330,5 @@ module.exports = {
   assertReleaseCandidates,
   publicationCandidates,
   orchestrate,
+  groupState,
 };

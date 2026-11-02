@@ -9,10 +9,10 @@ release PRs. See [SDK releases](sdk-releases.md) for orchestration and activatio
 
 Read-only public API and archive inspection on 2026-10-23 established:
 
-| Registry | Published stable version | Current public owner | Source evidence | Registry SHA256 |
-| --- | --- | --- | --- | --- |
-| Hex, `hexpm/vexilla_client` | 1.0.1, 2024-06-15 | `vexilla` (`hello@vexilla.dev`); release publisher `cmgriffing` | Every archived file matches `clients/elixir` at `d62e8aad7b36ef4b3dc7ea5e5a15c604677fcf8a` byte for byte | `7f1d6690687cf0a68cb9166dda5aee6b63a5f4d85a09c3dc6e52b36ef2ed9b45` |
-| crates.io, `vexilla_client` | 1.0.0, 2024-05-09 | GitHub user `cmgriffing` | Archive `.cargo_vcs_info.json`: revision `67480837e705ab1acf6f8ddf5f2e7c00cf7e940c`, path `clients/rust` | `87e537f80240ba852e2a1f65a0246aa6d633cdf67a8c3b49133f01db7e096b14` |
+| Registry                    | Published stable version | Current public owner                                            | Source evidence                                                                                          | Registry SHA256                                                    |
+| --------------------------- | ------------------------ | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Hex, `hexpm/vexilla_client` | 1.0.1, 2024-06-15        | `vexilla` (`hello@vexilla.dev`); release publisher `cmgriffing` | Every archived file matches `clients/elixir` at `d62e8aad7b36ef4b3dc7ea5e5a15c604677fcf8a` byte for byte | `7f1d6690687cf0a68cb9166dda5aee6b63a5f4d85a09c3dc6e52b36ef2ed9b45` |
+| crates.io, `vexilla_client` | 1.0.0, 2024-05-09        | GitHub user `cmgriffing`                                        | Archive `.cargo_vcs_info.json`: revision `67480837e705ab1acf6f8ddf5f2e7c00cf7e940c`, path `clients/rust` | `87e537f80240ba852e2a1f65a0246aa6d633cdf67a8c3b49133f01db7e096b14` |
 
 The Rust checkout manifest is 1.0.1, ahead of its published baseline. No version
 was changed or published by this audit. The initial release history must account
@@ -109,13 +109,13 @@ envelope. Digest and identity checks run before registry authentication.
 The existing `vexilla` package owner needs full owner access and two-factor
 authentication. Open `vexilla_client` → **Workload identities**, and configure:
 
-| Field | Value |
-| --- | --- |
-| Repository owner | `Vexilla` |
-| Repositories | `vexilla` |
-| Workflow filename | `sdk-release.yml` |
-| GitHub environment | `sdk-hex` |
-| Package | Public `hexpm/vexilla_client` |
+| Field              | Value                         |
+| ------------------ | ----------------------------- |
+| Repository owner   | `Vexilla`                     |
+| Repositories       | `vexilla`                     |
+| Workflow filename  | `sdk-release.yml`             |
+| GitHub environment | `sdk-hex`                     |
+| Package            | Public `hexpm/vexilla_client` |
 
 Trust names the actual calling workflow, `sdk-release.yml`, even though its
 publisher job is implemented in reusable `sdk-publish.yml`. A public repository
@@ -142,12 +142,12 @@ documentation](https://hex.pm/docs/workload-identity).
 The existing `cmgriffing` crate owner configures `vexilla_client` → **Settings** →
 **Trusted Publishing** → **Add** → **GitHub**:
 
-| Field | Value |
-| --- | --- |
-| Repository owner | `Vexilla` |
-| Repository name | `vexilla` |
+| Field             | Value             |
+| ----------------- | ----------------- |
+| Repository owner  | `Vexilla`         |
+| Repository name   | `vexilla`         |
 | Workflow filename | `sdk-release.yml` |
-| Environment | `sdk-crates` |
+| Environment       | `sdk-crates`      |
 
 Create `sdk-crates` with the same `main` deployment restrictions and release-PR
 approval policy. The publishing job invokes the pinned official
@@ -193,3 +193,11 @@ The mocked native publisher tests cover absent uploads, lost responses,
 conflicting packages/docs, HTTP lookup failures, missing trust, artifact
 corruption and docs-only recovery. They perform no real network calls or
 registry writes.
+
+## Shared preflight and current policy
+
+`.github/actions/sdk-verify` runs the same native tests, packaging, isolated consumers and Elixir docs checks from credential-free `sdk-preflight.yml` and approved `sdk-publish.yml`. Preflight accepts a full SHA and includes all eleven contract receipts even when Elixir is unmanaged. It records Node 24.16.0/npm 12.2.1 and actual native toolchain versions, package receipts and archive digests as readiness evidence, with no OIDC permission, registry secrets or publication environments. It never creates an upload candidate.
+
+Approved publication repeats those checks at the exact merged source SHA, using a separate current-policy tooling checkout. `candidate.json` identifies `kind: sdk-release-candidate`, source revision and policy revision and binds fresh verification receipts and bytes. Before credentials, current main must still permit automation, that SDK's management/publication and the exact stable policy major. A stopped historical tag can be deliberately recovered after current enablement; an old enabled tag cannot bypass a current stop. Enabling a publisher does not replay its backlog.
+
+Hex workload identity access returning 404 remains a maintainer-reported external dependency. Elixir is therefore unmanaged and publication-disabled; the full contract consumer and optional preflight/docs checks remain available. App/npm/crates setup is maintainer-reported configuration, not proof of authentication or publication. Follow [the staged checklist](sdk-release-adoption.md) before enabling any publisher; no previously successful publication is required to attempt the first approved release.

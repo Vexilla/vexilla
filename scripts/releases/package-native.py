@@ -20,7 +20,7 @@ import tarfile
 import tempfile
 from urllib.parse import unquote, urlsplit
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(os.environ.get("SDK_SOURCE_ROOT", Path(__file__).resolve().parents[2])).resolve()
 PACKAGE = "vexilla_client"
 STABLE = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$")
 

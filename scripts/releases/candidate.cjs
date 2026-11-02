@@ -1,12 +1,22 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const crypto = require("node:crypto");
-const { execFileSync } = require("node:child_process");
 const { clientFor, readManifest, parseTag } = require("./release-identity.cjs");
 const digest = (bytes, algorithm = "sha256", encoding = "hex") =>
   crypto.createHash(algorithm).update(bytes).digest(encoding);
 function checkCandidate(candidate, identity, directory, inventory) {
   const client = clientFor(inventory, identity.sdk);
+  if (
+    candidate.kind !== "sdk-release-candidate" ||
+    !/^[a-f0-9]{40}$/.test(candidate.policyRevision || "") ||
+    !/^[a-f0-9]{40}$/.test(identity.policyRevision || "") ||
+    candidate.sourceRevision !== candidate.revision ||
+    identity.sourceRevision !== identity.revision
+  ) {
+    throw Error(
+      "Candidate requires approved release source and current policy identities"
+    );
+  }
   for (const field of ["sdk", "package", "version", "tag", "revision"]) {
     if (candidate[field] !== identity[field]) {
       throw Error("Candidate identity mismatch: " + field);
@@ -14,7 +24,7 @@ function checkCandidate(candidate, identity, directory, inventory) {
   }
   if (
     candidate.package !== client.publish.package ||
-    parseTag(client, candidate.tag) !== candidate.version ||
+    parseTag(client, candidate.tag, inventory) !== candidate.version ||
     !/^[a-f0-9]{40}$/.test(candidate.revision)
   ) {
     throw Error("Invalid candidate identity");
@@ -54,6 +64,29 @@ function checkCandidate(candidate, identity, directory, inventory) {
   }
   return candidate;
 }
+function verifiedPackageFiles(identity, directory) {
+  const verification = JSON.parse(
+    fs.readFileSync(path.join(directory, "verification.json"), "utf8")
+  );
+  require("./preflight.cjs").checkPackage(
+    verification,
+    identity.sdk,
+    identity.revision,
+    directory
+  );
+  for (const field of ["package", "version"]) {
+    if (verification[field] !== identity[field]) {
+      throw Error("Package verification identity mismatch: " + field);
+    }
+  }
+  return {
+    verification,
+    files: [
+      "verification.json",
+      ...verification.files.map((file) => file.name),
+    ],
+  };
+}
 function createCandidate(identity, directory, inventory) {
   const client = clientFor(inventory, identity.sdk);
   const manifest = readManifest(client);
@@ -63,12 +96,8 @@ function createCandidate(identity, directory, inventory) {
   ) {
     throw Error("Checked-out manifest disagrees with approved identity");
   }
-  if (
-    execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim() !==
-    identity.revision
-  ) {
-    throw Error("Packaging checkout is not the approved release revision");
-  }
+  require("./preflight.cjs").source(identity.revision, identity.sdk);
+  const packageEvidence = verifiedPackageFiles(identity, directory);
   let artifact, files, verification;
   if (identity.sdk === "js") {
     const artifacts = fs
@@ -109,9 +138,14 @@ function createCandidate(identity, directory, inventory) {
     }
     verification = { ...receipt.verification, native: true };
   }
+  files = [...new Set([...files, ...packageEvidence.files])];
+  if (artifact !== packageEvidence.verification.artifact) {
+    throw Error("Verified artifact differs from approved package");
+  }
   const candidate = {
     ...identity,
     schemaVersion: 1,
+    kind: "sdk-release-candidate",
     artifact,
     verification,
     files: files.map((name) => ({
@@ -128,7 +162,7 @@ function createCandidate(identity, directory, inventory) {
     const lines = [
       `\n### Verified ${candidate.sdk} candidate`,
       `Package: ${candidate.package}@${candidate.version}`,
-      `Tag: ${candidate.tag}; revision: ${candidate.revision}`,
+      `Tag: ${candidate.tag}; source revision: ${candidate.revision}; authorization policy: ${candidate.policyRevision}`,
       ...candidate.files.map((file) => `${file.name}: SHA256 ${file.sha256}`),
     ];
     fs.appendFileSync(
@@ -138,11 +172,22 @@ function createCandidate(identity, directory, inventory) {
   }
   return candidate;
 }
-module.exports = { digest, checkCandidate, createCandidate };
+module.exports = {
+  digest,
+  checkCandidate,
+  createCandidate,
+  verifiedPackageFiles,
+};
 if (require.main === module) {
   const [mode, identityFile, directory] = process.argv.slice(2);
   const identity = JSON.parse(fs.readFileSync(identityFile));
-  const inventory = require("../../.github/sdk-release-inventory.json");
+  const policy = JSON.parse(fs.readFileSync("current-policy.json", "utf8"));
+  require("./current-policy.cjs").authorizePolicy(
+    policy,
+    identity.sdk,
+    identity.version
+  );
+  const inventory = policy.inventory;
   const candidate =
     mode === "create"
       ? createCandidate(identity, directory, inventory)
