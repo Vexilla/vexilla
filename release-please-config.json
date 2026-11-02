@@ -7,6 +7,27 @@
   "tag-separator": "-",
   "prerelease": false,
   "group-pull-request-title-pattern": "chore${scope}: release js-types libraries",
-  "plugins": [],
-  "packages": {}
+  "plugins": [
+    {
+      "type": "linked-versions",
+      "groupName": "js-types",
+      "components": ["client-js", "client-types"],
+      "merge": true
+    }
+  ],
+  "packages": {
+    "clients/js": {
+      "release-type": "node",
+      "component": "client-js"
+    },
+    "packages/types": {
+      "release-type": "node",
+      "component": "client-types"
+    },
+    "clients/rust": {
+      "release-type": "rust",
+      "component": "client-rust"
+    }
+  },
+  "bootstrap-sha": "8b4d80c05abec38d953f38b6bf59ff96462939fa"
 }

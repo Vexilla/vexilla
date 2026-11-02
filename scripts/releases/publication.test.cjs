@@ -23,21 +23,29 @@ const {
   authorizePolicy,
   authorizeCurrent,
 } = require("./current-policy.cjs");
-const { readReleaseState } = require("./check-release-config.cjs");
+const {
+  readReleaseState,
+  validateConfig,
+} = require("./check-release-config.cjs");
 const sha = "a".repeat(40);
 const policySha = "b".repeat(40);
 function policyFixture() {
   const state = structuredClone(readReleaseState());
+  state.config.packages = {};
+  state.manifest = {};
   state.inventory.automation = { enabled: true, historyBoundary: policySha };
   state.config["bootstrap-sha"] = policySha;
   for (const component of [
     ...state.inventory.clients,
     ...state.inventory.internalComponents,
   ]) {
-    if (!["js", "types", "rust"].includes(component.id)) {
+    component.release.managed = ["js", "types", "rust"].includes(component.id);
+    if (component.publish) {
+      component.publish.enabled = false;
+    }
+    if (!component.release.managed) {
       continue;
     }
-    component.release.managed = true;
     state.manifest[component.directory] = "2.0.0";
     state.config.packages[component.directory] = {
       "release-type": component.releaseType,
@@ -680,4 +688,24 @@ test("candidate creation requires complete fresh shared package evidence and bin
   writeReceipt(receipt);
   fs.writeFileSync(path.join(dir, "client.tgz"), "different package");
   assert.throws(() => verifiedPackageFiles(identity, dir), /digest mismatch/);
+});
+
+test("accepted management cannot authorize publication while the global inventory stop remains set", async (t) => {
+  const stopped = policyFixture();
+  stopped.inventory.automation.enabled = false;
+  stopped.inventory.automation.reason =
+    "Reviewed adoption remains globally stopped";
+  assert.equal(validateConfig(stopped).ready, false);
+  const { candidate, dir } = candidateFixture(t);
+  await assert.rejects(
+    () =>
+      publishNpm(
+        candidate,
+        dir,
+        async () => assert.fail("stopped adoption contacted npm"),
+        async () => assert.fail("stopped adoption uploaded a package"),
+        async (sdk, version) => authorizePolicy(stopped, sdk, version, "true")
+      ),
+    /Reviewed adoption remains globally stopped/
+  );
 });

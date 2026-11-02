@@ -27,7 +27,7 @@ annotations. Protected `manifest`, `flagGroups`, and `getActualItems` also use
 the strict SDK models. Candidate fixtures check the canonical API and retained
 compatibility names; they do not establish compatibility for arbitrary
 protected-member overrides. The first automated JS/types release remains
-exactly **2.0.0** under the shared major-2 policy, pending maintainer compatibility review. Later 2.x minor/patch releases remain independent from native SDKs. See [the adoption checklist](../../../../docs/sdk-release-adoption.md).
+exactly **2.0.0** under the shared major-2 policy, with maintainer compatibility review accepted on 2026-11-02. Later 2.x minor/patch releases remain independent from native SDKs. See [the adoption checklist](../../../../docs/sdk-release-adoption.md).
 
 Run the checks against an already packed candidate:
 

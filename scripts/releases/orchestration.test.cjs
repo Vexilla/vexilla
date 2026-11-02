@@ -7,7 +7,11 @@ const path = require("node:path");
 const { GitHub, Manifest, setLogger } = require("release-please");
 const { Octokit } = require("@octokit/rest");
 const { FileNotFoundError } = require("release-please/build/src/errors");
-const { readReleaseState, ROOT } = require("./check-release-config.cjs");
+const {
+  readReleaseState,
+  validateConfig,
+  ROOT,
+} = require("./check-release-config.cjs");
 const { orchestrate, assertReleaseCandidates } = require("./orchestrate.cjs");
 const {
   releaseSnapshot,
@@ -26,6 +30,9 @@ const later = "c".repeat(40);
 // Manifest, PR parsers, GitHub iterators/updaters and code-suggester execute.
 async function repository(sdk = "js") {
   const state = readReleaseState();
+  // Fixture participation is explicit, independent of stopped production adoption.
+  state.config.packages = {};
+  state.manifest = {};
   const components = [
     ...state.inventory.clients.filter((c) =>
       ["js", "rust", "elixir"].includes(c.id)
@@ -633,7 +640,22 @@ test("JS override failure leaves an approved Rust candidate and an unrelated nat
 
 test("zero managed groups return empty outcomes without invoking Release Please", async () => {
   const state = readReleaseState();
-  state.inventory.automation.enabled = true;
+  // Production may have accepted managed SDKs; this case deliberately models
+  // a wholly dormant inventory rather than inheriting production switches.
+  for (const component of [
+    ...state.inventory.clients,
+    ...state.inventory.internalComponents,
+  ]) {
+    component.release.managed = false;
+    if (component.publish) {
+      component.publish.enabled = false;
+    }
+  }
+  state.inventory.automation = { enabled: true, historyBoundary: null };
+  state.config.packages = {};
+  state.config.plugins = [];
+  delete state.config["bootstrap-sha"];
+  state.manifest = {};
   const result = await orchestrate({
     github: {},
     state,
@@ -658,5 +680,31 @@ test("enabling publication selects no historical backlog without a new approved 
   });
   assert.deepEqual(result.candidates, []);
   assert.deepEqual(result.failures, []);
+  assert.deepEqual(r.writes, []);
+});
+
+test("accepted managed adoption validates while the global stop prevents release generation", async () => {
+  const r = await repository("rust");
+  r.state.inventory.automation.enabled = false;
+  r.state.inventory.automation.reason =
+    "Reviewed adoption remains globally stopped";
+  assert.equal(validateConfig(r.state).ready, false);
+  let generationCalls = 0;
+  await assert.rejects(
+    () =>
+      orchestrate({
+        github: r.github,
+        state: r.state,
+        Manifest: {
+          fromManifest() {
+            generationCalls++;
+            throw Error("generation reached stopped adoption");
+          },
+        },
+      }),
+    /Reviewed adoption remains globally stopped/
+  );
+  assert.equal(generationCalls, 0);
+  assert.deepEqual(r.reads, []);
   assert.deepEqual(r.writes, []);
 });

@@ -16,6 +16,14 @@ const {
 } = require("./release-policy.cjs");
 const { validatePullRequest } = require("./pr-title.cjs");
 const { applyReleaseInputs } = require("./release-inputs.cjs");
+const {
+  acceptedBoundary,
+  acceptedSource,
+  observedHistory,
+  preparedInput,
+  buildAdoptionPullRequests,
+  verifyFirstAdoption,
+} = require("./check-adoption.cjs");
 const state = readReleaseState();
 const boundary = "b".repeat(40);
 const adoption = "a".repeat(40);
@@ -24,10 +32,40 @@ const quiet = Object.fromEntries(
 );
 setLogger(quiet);
 
+// Synthetic inactive cases must not depend on which production SDKs have
+// completed adoption. Keep their config, manifest and switches consistent.
+function dormantState() {
+  const dormant = structuredClone(state);
+  dormant.inventory.automation.enabled = false;
+  dormant.inventory.automation.historyBoundary = null;
+  dormant.config.packages = {};
+  dormant.config.plugins = [];
+  delete dormant.config["bootstrap-sha"];
+  dormant.manifest = {};
+  for (const component of [
+    ...dormant.inventory.clients,
+    ...dormant.inventory.internalComponents,
+  ]) {
+    component.release.managed = false;
+    if (component.publish) {
+      component.publish.enabled = false;
+      component.publish.trustVerified = false;
+      component.publish.preflightVerified = false;
+    }
+    if (component.baseline) {
+      component.baseline.verified = false;
+      component.baseline.ownershipVerified = false;
+      component.baseline.artifactComparisonAccepted = false;
+      component.baseline.historicalSourceUncertaintyAccepted = false;
+    }
+  }
+  return dormant;
+}
+
 // Every accepted field below is synthetic fixture evidence, never production
 // adoption. In particular no network authority is inferred from these booleans.
 function managedState(ids = ["js", "rust"], versions = {}) {
-  const ready = structuredClone(state);
+  const ready = dormantState();
   ready.inventory.automation = { enabled: true, historyBoundary: boundary };
   ready.config["bootstrap-sha"] = boundary;
   for (const component of [
@@ -73,6 +111,7 @@ function managedState(ids = ["js", "rust"], versions = {}) {
   return ready;
 }
 function mockScm(commits, current, { releases = true } = {}) {
+  const historyBoundary = current.inventory.automation.historyBoundary;
   const fileContent = (name) => {
     let parsedContent = fs.readFileSync(path.join(ROOT, name), "utf8");
     const component = managedComponents(current.inventory).find((c) =>
@@ -86,7 +125,7 @@ function mockScm(commits, current, { releases = true } = {}) {
     return {
       parsedContent,
       content: Buffer.from(parsedContent).toString("base64"),
-      sha: boundary,
+      sha: historyBoundary,
     };
   };
   return {
@@ -110,7 +149,7 @@ function mockScm(commits, current, { releases = true } = {}) {
             tagName: `${component.component}-v${
               current.manifest[component.directory]
             }`,
-            sha: boundary,
+            sha: historyBoundary,
           };
         }
       }
@@ -124,7 +163,7 @@ function mockScm(commits, current, { releases = true } = {}) {
         };
       }
       yield {
-        sha: boundary,
+        sha: historyBoundary,
         message: "chore: synthetic reviewed boundary",
         files: [],
       };
@@ -160,7 +199,7 @@ function applyUpdates(pr, current, nativeFile) {
   );
 }
 
-test("production is schema v2, wholly stopped, and uses exact pinned Release Please", () => {
+test("production release generation and publication stay stopped with exact pinned Release Please", () => {
   assert.equal(VERSION, "17.11.2");
   const lock = require("./package-lock.json");
   assert.equal(lock.packages["node_modules/release-please"].version, VERSION);
@@ -169,11 +208,86 @@ test("production is schema v2, wholly stopped, and uses exact pinned Release Ple
     state.inventory.releasePlease.packageIntegrity
   );
   assert.equal(validateConfig(state).ready, false);
-  assert.deepEqual(managedComponents(state.inventory), []);
+  assert.equal(state.inventory.automation.enabled, false);
   assert.deepEqual(publishingClients(state.inventory), []);
   assert.throws(
     () => validateConfig({ ...state, requireReady: true }),
-    /Registry observations/
+    /Release automation is disabled|adoption|activation|Registry observations/
+  );
+});
+
+test("actual accepted production seeds and history require the prepared breaking input to propose exactly 2.0.0", async () => {
+  assert.equal(state.inventory.automation.historyBoundary, acceptedBoundary);
+  assert.equal(state.config["bootstrap-sha"], acceptedBoundary);
+  // Reconstruct accepted initial bookkeeping from its explicit seeds. A real
+  // release PR may already advance the current manifest to 2.0.0; that must not
+  // erase this first-adoption regression or make the release PR's checks fail.
+  const initial = structuredClone(state);
+  initial.manifest = Object.fromEntries(
+    managedComponents(initial.inventory).map((component) => [
+      component.directory,
+      component.release.managementSeed,
+    ])
+  );
+  assert.deepEqual(initial.manifest, {
+    "clients/js": "1.0.3",
+    "packages/types": "1.0.3",
+    "clients/rust": "1.0.1",
+  });
+  for (const client of state.inventory.clients.filter(
+    (c) => c.release.managed
+  )) {
+    assert.equal(client.baseline.adoptionSourceRevision, acceptedSource);
+  }
+  assert.deepEqual(
+    await buildAdoptionPullRequests({
+      state: initial,
+      commits: observedHistory,
+    }),
+    [],
+    "The actual docs/ci commits contain no releasable breaking input"
+  );
+  const proposals = await buildAdoptionPullRequests({
+    state: initial,
+    commits: [preparedInput, ...observedHistory],
+  });
+  assert.deepEqual(verifyFirstAdoption(proposals, initial), {
+    "client-rust": "2.0.0",
+    "client-js": "2.0.0",
+    "client-types": "2.0.0",
+  });
+  assert.equal(proposals.length, 2);
+  for (const proposal of proposals) {
+    const update = proposal.updates.find(
+      (entry) => entry.path === ".release-please-manifest.json"
+    );
+    assert(update, "Generated adoption PR must update management versions");
+    const versions = JSON.parse(
+      update.updater.updateContent(JSON.stringify(initial.manifest))
+    );
+    for (const entry of proposal.body.releaseData) {
+      const component = managedComponents(state.inventory).find(
+        (c) => c.component === entry.component
+      );
+      assert.equal(versions[component.directory], "2.0.0");
+      assert(
+        proposal.updates.some(
+          (item) => item.path === `${component.directory}/CHANGELOG.md`
+        )
+      );
+      const native = component.id === "rust" ? "Cargo.toml" : "package.json";
+      assert.match(
+        applyUpdates(proposal, state, `${component.directory}/${native}`),
+        /2\.0\.0/
+      );
+    }
+  }
+  const rustProposal = proposals.find((pr) =>
+    pr.body.releaseData.some((entry) => entry.component === "client-rust")
+  );
+  assert.match(
+    applyUpdates(rustProposal, state, "clients/rust/Cargo.lock"),
+    /name = "vexilla_client"\nversion = "2\.0\.0"/
   );
 });
 
@@ -196,10 +310,11 @@ test("JS/Rust management requires no unverified inactive Elixir evidence and per
 });
 
 test("zero managed SDKs is valid with no implicit packages, versions, or history", () => {
-  assert.deepEqual(state.config.packages, {});
-  assert.deepEqual(state.config.plugins, []);
-  assert.deepEqual(state.manifest, {});
-  assert.deepEqual(validateConfig(state).components, []);
+  const dormant = dormantState();
+  assert.deepEqual(dormant.config.packages, {});
+  assert.deepEqual(dormant.config.plugins, []);
+  assert.deepEqual(dormant.manifest, {});
+  assert.deepEqual(validateConfig(dormant).components, []);
 });
 
 test("partial JS/types management, mismatched versions, unmanaged publication, and dormant routes fail", () => {
@@ -213,7 +328,7 @@ test("partial JS/types management, mismatched versions, unmanaged publication, a
   const unlinked = managedState();
   unlinked.manifest["packages/types"] = "1.0.0";
   assert.throws(() => validateConfig(unlinked), /management seed|aligned/);
-  const noManagement = structuredClone(state);
+  const noManagement = dormantState();
   noManagement.inventory.clients[0].publish.enabled = true;
   assert.throws(() => validateConfig(noManagement), /must be managed/);
   for (const id of [
@@ -225,7 +340,7 @@ test("partial JS/types management, mismatched versions, unmanaged publication, a
     "csharp",
     "ocaml",
   ]) {
-    const broken = structuredClone(state);
+    const broken = dormantState();
     broken.inventory.clients.find((c) => c.id === id).release.managed = true;
     assert.throws(
       () => validateConfig(broken),
@@ -594,7 +709,7 @@ test("PR title relevance follows management and preserves squash breaking intent
         title: "Shared input while all inactive",
         files: ["packages/publishing/src/validation.ts"],
       },
-      state.inventory
+      dormantState().inventory
     ).relevant,
     false
   );

@@ -1,17 +1,23 @@
-# Pending major-2 adoption
+# Approved major-2 adoption
 
-The first automated Rust release targets exactly 2.0.0. Its truthful working
-seed is unpublished local 1.0.1; crates.io's published baseline remains 1.0.0
-from source 67480837e705ab1acf6f8ddf5f2e7c00cf7e940c. Do not silently downgrade the
-manifest or invent a published 1.0.1.
+The maintainer approved Rust adoption on 2026-11-02. The first automated release
+targets exactly 2.0.0 from unpublished local working seed 1.0.1. The crates.io
+published baseline remains 1.0.0 from historical source
+67480837e705ab1acf6f8ddf5f2e7c00cf7e940c; no published 1.0.1 is asserted.
 
-The intentional common-major transition includes accumulated contract parity,
+The reviewed adoption source is 9bd974df2efe1693b142fed184c42785565119d7. The
+approved fixed shared history boundary is
+8b4d80c05abec38d953f38b6bf59ff96462939fa. The breaking adoption commit containing
+this note supplies the releasable input after that boundary.
+
+This intentional common-major transition includes accumulated contract parity,
 strict validation, hashing/scheduling/number handling, public API changes, the
-compatibility asset, locked dependencies and the reviewed native package allowlist,
-BUSL-1.1 license and isolated consumer. Minor/patch versions remain independent
-from JS after adoption; the JSON wire format remains v1.
+compatibility asset, locked dependencies, native package allowlists, BUSL-1.1
+license and the isolated consumer. The maintainer accepted those accumulated
+changes and the truthful unpublished seed without downgrading the manifest.
+Minor/patch versions remain independent from JS after adoption; the JSON wire
+format remains v1.
 
-Review [the adoption checklist](../../docs/sdk-release-adoption.md) and commit
-reviewed SDK inputs after the accepted fixed history boundary with a breaking
-Conventional Commit title. Management, publication and final source acceptance
-remain pending; this note is not a registry release.
+Release generation and registry publication remain disabled pending hosted
+preflight, account/trust evidence and separate activation. See
+[the adoption checklist](../../docs/sdk-release-adoption.md).

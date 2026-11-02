@@ -7,13 +7,20 @@
   },
   "automation": {
     "enabled": false,
-    "historyBoundary": null,
-    "reason": "Registry observations are recorded; accepted source adoption, shared history boundary, ownership/trust evidence and hosted preflight remain pending. All SDKs stay unmanaged and publication-disabled until their prerequisites are accepted.",
+    "historyBoundary": "8b4d80c05abec38d953f38b6bf59ff96462939fa",
+    "reason": "JS/types and Rust source/history adoption is maintainer-approved. Release generation and every publisher remain stopped pending deployed hosted preflight, account/configuration evidence and separately authorized activation. Elixir remains unmanaged pending Hex access.",
     "reportedConfiguration": {
       "reportedBy": "maintainer",
       "githubAppConfigured": true,
       "acceptedConfigurationEvidence": false,
       "appCreatedReleasePRChecksObserved": false
+    },
+    "adoptionApproval": {
+      "approvedBy": "maintainer",
+      "approvedAt": "2026-11-02",
+      "sourceRevision": "9bd974df2efe1693b142fed184c42785565119d7",
+      "historyBoundary": "8b4d80c05abec38d953f38b6bf59ff96462939fa",
+      "evidence": "docs/sdk-release-adoption.md"
     }
   },
   "clients": [
@@ -25,11 +32,11 @@
       "releaseType": "node",
       "tagTemplate": "client-js-v{version}",
       "baseline": {
-        "verified": false,
-        "status": "blocked",
+        "verified": true,
+        "status": "adopted",
         "registryVersion": "1.0.3",
         "minimumAutomatedVersion": "2.0.0",
-        "publicTypeCompatibilityReviewed": false,
+        "publicTypeCompatibilityReviewed": true,
         "licenseConfirmed": true,
         "observedLicenseMetadata": "BSL-1.0",
         "observedLicenseFile": "MIT",
@@ -38,13 +45,18 @@
         "observedAt": "2026-11-02",
         "observedOwner": "cmgriffing",
         "evidence": "https://registry.npmjs.org/@vexilla%2fclient",
-        "reason": "Registry metadata has no gitHead. Accept explicit artifact comparison and historical-source uncertainty, review public type migration, and record distinct adoption source/history before management. BUSL-1.1 intent is confirmed; current ownership/trust acceptance remains pending.",
+        "reason": "Maintainer accepted the verified npm 1.0.3 artifact comparison, unknown exact original publication SHA, public type migration and BUSL-1.1 intent for first 2.0.0 adoption. Historical sourceRevision remains unknown; reviewed adoption source is recorded separately.",
         "confirmedLicense": "BUSL-1.1",
         "archiveSha256": "831cf21dad3ff26c7b5265de54bd452c4e76a1b6e92e15e634599276cdb9c822",
         "archiveUrl": "https://registry.npmjs.org/@vexilla/client/-/client-1.0.3.tgz",
-        "adoptionSourceRevision": null,
+        "adoptionSourceRevision": "9bd974df2efe1693b142fed184c42785565119d7",
         "registryIntegrity": "sha512-GlyS08NeFipDO+Q5pFUUVc1fDXu0b9DzVnjqmfQ7pVGARrEYwBzLITrHoM2dHvYb6EMhsxDKovvaDsmZhGX9jg==",
-        "deprecated": null
+        "deprecated": null,
+        "manifestVersion": "1.0.3",
+        "adoptionApprovedBy": "maintainer",
+        "adoptionApprovedAt": "2026-11-02",
+        "artifactComparisonAccepted": true,
+        "historicalSourceUncertaintyAccepted": true
       },
       "publish": {
         "registry": "npm",
@@ -79,7 +91,7 @@
         }
       },
       "release": {
-        "managed": false,
+        "managed": true,
         "firstReleaseTarget": "2.0.0",
         "managementSeed": "1.0.3"
       }
@@ -146,20 +158,23 @@
       "releaseType": "rust",
       "tagTemplate": "client-rust-v{version}",
       "baseline": {
-        "verified": false,
-        "status": "blocked",
+        "verified": true,
+        "status": "adopted",
         "registryVersion": "1.0.0",
         "localVersionObserved": "1.0.1",
         "sourceRevision": "67480837e705ab1acf6f8ddf5f2e7c00cf7e940c",
         "observedAt": "2026-11-02",
         "observedPublisher": "cmgriffing",
         "evidence": "https://crates.io/api/v1/crates/vexilla_client",
-        "reason": "Registry 1.0.0 archive/source correspondence is recorded; local 1.0.1 is unpublished. Reviewed accumulated changes, adoption source/history boundary and current ownership/trust acceptance remain pending.",
+        "reason": "Maintainer accepted published registry 1.0.0 source correspondence and the unpublished local 1.0.1 working seed with accumulated changes for first 2.0.0 adoption. No published 1.0.1 is asserted.",
         "archiveSha256": "87e537f80240ba852e2a1f65a0246aa6d633cdf67a8c3b49133f01db7e096b14",
         "archiveUrl": "https://static.crates.io/crates/vexilla_client/vexilla_client-1.0.0.crate",
-        "adoptionSourceRevision": null,
+        "adoptionSourceRevision": "9bd974df2efe1693b142fed184c42785565119d7",
         "yanked": false,
-        "localVersionPublished": false
+        "localVersionPublished": false,
+        "manifestVersion": "1.0.1",
+        "adoptionApprovedBy": "maintainer",
+        "adoptionApprovedAt": "2026-11-02"
       },
       "publish": {
         "registry": "crates.io",
@@ -188,7 +203,7 @@
         }
       },
       "release": {
-        "managed": false,
+        "managed": true,
         "firstReleaseTarget": "2.0.0",
         "managementSeed": "1.0.1"
       }
@@ -419,7 +434,7 @@
       "tagTemplate": "client-types-v{version}",
       "publish": false,
       "release": {
-        "managed": false,
+        "managed": true,
         "firstReleaseTarget": "2.0.0",
         "managementSeed": "1.0.3"
       }

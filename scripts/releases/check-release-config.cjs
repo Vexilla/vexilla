@@ -271,7 +271,7 @@ if (require.main === module) {
     });
     console.log(
       `Release configuration valid; automation ${
-        result.ready ? "enabled" : "blocked pending verified adoption"
+        result.ready ? "enabled" : "stopped"
       }.`
     );
   } catch (error) {
