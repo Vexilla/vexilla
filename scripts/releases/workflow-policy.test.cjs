@@ -9,6 +9,36 @@ const workflow = (name) =>
 const uses = (job, action) =>
   job.steps.filter((step) => step.uses?.startsWith(action + "@"));
 
+test("docs-only PRs schedule the full required contract check on every eligible update", () => {
+  const pr = workflow("pr");
+  assert(
+    pr.on.pull_request,
+    "The required check must run for PR events, including forks"
+  );
+  for (const event of ["opened", "edited", "reopened", "synchronize"]) {
+    assert(pr.on.pull_request.types.includes(event), `Missing PR event: ${event}`);
+  }
+  for (const filter of ["paths", "paths-ignore"]) {
+    assert.equal(
+      pr.on.pull_request[filter],
+      undefined,
+      `Required PR checks must not be skipped by ${filter}`
+    );
+  }
+  const contract = pr.jobs["sdk-json-contract"];
+  assert.equal(contract.uses, "./.github/workflows/contract.yml");
+  assert.equal(
+    contract.if,
+    undefined,
+    "Every eligible PR must run the full contract gate"
+  );
+  assert.equal(
+    contract.needs,
+    undefined,
+    "Unrelated jobs must not skip the required contract gate"
+  );
+});
+
 test("every contract checkout and final evidence gate bind the requested revision", () => {
   const contract = workflow("contract");
   assert(contract.on.workflow_call.inputs.revision);

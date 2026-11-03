@@ -6,9 +6,9 @@
     "packageIntegrity": "sha512-we0+NgyHjvczxrilD6aujnRNuASd65Jem0dY5evevxSZvz8BnKnB/QRN3UzGA229fcV09lKCYbqeE9HgkXzGmA=="
   },
   "automation": {
-    "enabled": false,
+    "enabled": true,
     "historyBoundary": "8b4d80c05abec38d953f38b6bf59ff96462939fa",
-    "reason": "JS/types and Rust source/history adoption is maintainer-approved. Release generation and every publisher remain stopped pending deployed hosted preflight, account/configuration evidence and separately authorized activation. Elixir remains unmanaged pending Hex access.",
+    "reason": "Generation-only rollout: reviewed JS/types and Rust source/history and hosted preflight are verified. SDK_RELEASES_ENABLED remains the external stop until deliberate activation. Every registry publisher remains disabled pending ownership/trust evidence, real App-created PR checks and separate publication approval. Elixir remains unmanaged pending Hex access.",
     "reportedConfiguration": {
       "reportedBy": "maintainer",
       "githubAppConfigured": true,
@@ -21,6 +21,18 @@
       "sourceRevision": "9bd974df2efe1693b142fed184c42785565119d7",
       "historyBoundary": "8b4d80c05abec38d953f38b6bf59ff96462939fa",
       "evidence": "docs/sdk-release-adoption.md"
+    },
+    "preflightEvidence": {
+      "revision": "136a8091bbb582b29f1386818883dfa6177c1a0b",
+      "workflow": ".github/workflows/sdk-preflight.yml",
+      "runUrl": "https://github.com/Vexilla/vexilla/actions/runs/41549688344",
+      "runAttempt": 1,
+      "sdks": ["js", "rust"],
+      "contractSDKCount": 11,
+      "result": "success",
+      "evidenceFile": "docs/release-evidence/sdk-preflight-41549688344.json",
+      "evidenceSha256": "6bac1f08b118642fcc9872fdb1b435cc1343a2e9a40b6199dadba7057b6d1515",
+      "publicationAuthorized": false
     }
   },
   "clients": [
@@ -88,6 +100,14 @@
           "acceptedTrustEvidence": false,
           "authenticationObserved": false,
           "publicationObserved": false
+        },
+        "preflightVerified": true,
+        "preflightEvidence": {
+          "runUrl": "https://github.com/Vexilla/vexilla/actions/runs/41549688344",
+          "runAttempt": 1,
+          "revision": "136a8091bbb582b29f1386818883dfa6177c1a0b",
+          "evidenceFile": "docs/release-evidence/sdk-preflight-41549688344.json",
+          "evidenceSha256": "6bac1f08b118642fcc9872fdb1b435cc1343a2e9a40b6199dadba7057b6d1515"
         }
       },
       "release": {
@@ -200,6 +220,14 @@
           "acceptedTrustEvidence": false,
           "authenticationObserved": false,
           "publicationObserved": false
+        },
+        "preflightVerified": true,
+        "preflightEvidence": {
+          "runUrl": "https://github.com/Vexilla/vexilla/actions/runs/41549688344",
+          "runAttempt": 1,
+          "revision": "136a8091bbb582b29f1386818883dfa6177c1a0b",
+          "evidenceFile": "docs/release-evidence/sdk-preflight-41549688344.json",
+          "evidenceSha256": "6bac1f08b118642fcc9872fdb1b435cc1343a2e9a40b6199dadba7057b6d1515"
         }
       },
       "release": {
