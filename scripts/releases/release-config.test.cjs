@@ -199,7 +199,7 @@ function applyUpdates(pr, current, nativeFile) {
   );
 }
 
-test("production release generation and publication stay stopped with exact pinned Release Please", () => {
+test("production generation policy is ready while registry publication remains disabled", () => {
   assert.equal(VERSION, "17.11.2");
   const lock = require("./package-lock.json");
   assert.equal(lock.packages["node_modules/release-please"].version, VERSION);
@@ -207,12 +207,17 @@ test("production release generation and publication stay stopped with exact pinn
     lock.packages["node_modules/release-please"].integrity,
     state.inventory.releasePlease.packageIntegrity
   );
-  assert.equal(validateConfig(state).ready, false);
-  assert.equal(state.inventory.automation.enabled, false);
+  assert.equal(validateConfig({ ...state, requireReady: true }).ready, true);
+  assert.equal(state.inventory.automation.enabled, true);
   assert.deepEqual(publishingClients(state.inventory), []);
+  const stopped = structuredClone(state);
+  stopped.inventory.automation.enabled = false;
+  stopped.inventory.automation.reason =
+    "Reviewed generation remains globally stopped";
+  assert.equal(validateConfig(stopped).ready, false);
   assert.throws(
-    () => validateConfig({ ...state, requireReady: true }),
-    /Release automation is disabled|adoption|activation|Registry observations/
+    () => validateConfig({ ...stopped, requireReady: true }),
+    /Reviewed generation remains globally stopped/
   );
 });
 

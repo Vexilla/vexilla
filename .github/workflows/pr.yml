@@ -9,8 +9,6 @@ on:
       - edited
       - reopened
       - synchronize
-    paths-ignore:
-      - "**.md"
 
 jobs:
   sdk-json-contract:

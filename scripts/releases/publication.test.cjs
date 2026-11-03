@@ -511,6 +511,55 @@ test("current publisher and global stops override historical enabled release pol
     /SDK_RELEASES_ENABLED/
   );
 });
+test("generation-only policy cannot select, recover, or authorize a registry upload", async (t) => {
+  const generationOnly = policyFixture();
+  for (const sdk of generationOnly.inventory.clients) {
+    sdk.publish.enabled = false;
+    sdk.publish.trustVerified = false;
+    sdk.publish.preflightVerified = false;
+    if (sdk.baseline) {
+      sdk.baseline.ownershipVerified = false;
+    }
+  }
+  assert.equal(
+    validateConfig({ ...generationOnly, requireReady: true }).ready,
+    true
+  );
+  const approved = [
+    { sdk: "js", tag, revision: sha },
+    { sdk: "rust", tag: "client-rust-v2.0.0", revision: sha },
+  ];
+  assert.deepEqual(selectCandidates(generationOnly.inventory, approved), []);
+  for (const candidate of approved) {
+    assert.throws(
+      () =>
+        selectCandidates(
+          generationOnly.inventory,
+          [],
+          candidate.sdk,
+          candidate.tag
+        ),
+      /enabled for publishing/
+    );
+    assert.throws(
+      () => authorizePolicy(generationOnly, candidate.sdk, "2.0.0", "true"),
+      /enabled for publishing/
+    );
+  }
+  const { candidate, dir } = candidateFixture(t);
+  await assert.rejects(
+    () =>
+      publishNpm(
+        candidate,
+        dir,
+        async () => assert.fail("generation-only policy contacted npm"),
+        async () => assert.fail("generation-only policy uploaded a package"),
+        async (sdk, version) =>
+          authorizePolicy(generationOnly, sdk, version, "true")
+      ),
+    /enabled for publishing/
+  );
+});
 test("recovery and automatic selection reject an older major under the current reviewed policy", async () => {
   const next = structuredClone(policy);
   next.inventory.versionPolicy.major = 3;
