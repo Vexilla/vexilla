@@ -199,7 +199,7 @@ function applyUpdates(pr, current, nativeFile) {
   );
 }
 
-test("production generation policy is ready while registry publication remains disabled", () => {
+test("production JS and Rust publishers are ready with exact pinned Release Please", () => {
   assert.equal(VERSION, "17.11.2");
   const lock = require("./package-lock.json");
   assert.equal(lock.packages["node_modules/release-please"].version, VERSION);
@@ -209,7 +209,10 @@ test("production generation policy is ready while registry publication remains d
   );
   assert.equal(validateConfig({ ...state, requireReady: true }).ready, true);
   assert.equal(state.inventory.automation.enabled, true);
-  assert.deepEqual(publishingClients(state.inventory), []);
+  assert.deepEqual(
+    publishingClients(state.inventory).map((client) => client.id).sort(),
+    ["js", "rust"]
+  );
   const stopped = structuredClone(state);
   stopped.inventory.automation.enabled = false;
   stopped.inventory.automation.reason =

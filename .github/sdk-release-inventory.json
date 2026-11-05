@@ -8,12 +8,13 @@
   "automation": {
     "enabled": true,
     "historyBoundary": "8b4d80c05abec38d953f38b6bf59ff96462939fa",
-    "reason": "Generation-only rollout: reviewed JS/types and Rust source/history and hosted preflight are verified. SDK_RELEASES_ENABLED remains the external stop until deliberate activation. Every registry publisher remains disabled pending ownership/trust evidence, real App-created PR checks and separate publication approval. Elixir remains unmanaged pending Hex access.",
+    "reason": "JS and Rust publisher activation: source/history adoption, hosted preflight and real App-created release PR checks are verified; the maintainer confirmed package ownership and exact trusted publisher settings. Final uploads require an approved release merge and fresh verification. Elixir remains unmanaged pending Hex access.",
     "reportedConfiguration": {
       "reportedBy": "maintainer",
       "githubAppConfigured": true,
-      "acceptedConfigurationEvidence": false,
-      "appCreatedReleasePRChecksObserved": false
+      "acceptedConfigurationEvidence": true,
+      "appCreatedReleasePRChecksObserved": true,
+      "evidence": "docs/sdk-release-adoption.md#publisher-activation-2026-11-05"
     },
     "adoptionApproval": {
       "approvedBy": "maintainer",
@@ -45,6 +46,10 @@
       "tagTemplate": "client-js-v{version}",
       "baseline": {
         "verified": true,
+        "ownershipVerified": true,
+        "ownershipVerifiedBy": "maintainer",
+        "ownershipVerifiedAt": "2026-11-05",
+        "ownershipEvidence": "docs/sdk-release-adoption.md#publisher-activation-2026-11-05",
         "status": "adopted",
         "registryVersion": "1.0.3",
         "minimumAutomatedVersion": "2.0.0",
@@ -93,13 +98,23 @@
           "Configure npm trusted publishing for sdk-release.yml and sdk-npm",
           "Complete full hosted contract and package checks"
         ],
-        "enabled": false,
+        "enabled": true,
         "reportedConfiguration": {
           "reportedBy": "maintainer",
           "configured": true,
-          "acceptedTrustEvidence": false,
+          "acceptedTrustEvidence": true,
           "authenticationObserved": false,
           "publicationObserved": false
+        },
+        "trustVerified": true,
+        "trustEvidence": {
+          "acceptedBy": "maintainer",
+          "acceptedAt": "2026-11-05",
+          "basis": "Maintainer confirmation of exact account-side trusted publisher settings",
+          "repository": "Vexilla/vexilla",
+          "workflow": "sdk-release.yml",
+          "environment": "sdk-npm",
+          "evidence": "docs/sdk-release-adoption.md#publisher-activation-2026-11-05"
         },
         "preflightVerified": true,
         "preflightEvidence": {
@@ -179,6 +194,10 @@
       "tagTemplate": "client-rust-v{version}",
       "baseline": {
         "verified": true,
+        "ownershipVerified": true,
+        "ownershipVerifiedBy": "maintainer",
+        "ownershipVerifiedAt": "2026-11-05",
+        "ownershipEvidence": "docs/sdk-release-adoption.md#publisher-activation-2026-11-05",
         "status": "adopted",
         "registryVersion": "1.0.0",
         "localVersionObserved": "1.0.1",
@@ -213,13 +232,23 @@
           "Compare native rebuilt payload with verified candidate before upload",
           "Complete full hosted contract and package checks"
         ],
-        "enabled": false,
+        "enabled": true,
         "reportedConfiguration": {
           "reportedBy": "maintainer",
           "configured": true,
-          "acceptedTrustEvidence": false,
+          "acceptedTrustEvidence": true,
           "authenticationObserved": false,
           "publicationObserved": false
+        },
+        "trustVerified": true,
+        "trustEvidence": {
+          "acceptedBy": "maintainer",
+          "acceptedAt": "2026-11-05",
+          "basis": "Maintainer confirmation of exact account-side trusted publisher settings",
+          "repository": "Vexilla/vexilla",
+          "workflow": "sdk-release.yml",
+          "environment": "sdk-crates",
+          "evidence": "docs/sdk-release-adoption.md#publisher-activation-2026-11-05"
         },
         "preflightVerified": true,
         "preflightEvidence": {

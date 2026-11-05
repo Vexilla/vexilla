@@ -1,6 +1,6 @@
 # SDK major-2 adoption record and activation checklist
 
-The maintainer approved the proposed JS/Rust source/history adoption choices on 2026-11-02 and committed the implementation at `9bd974df2efe1693b142fed184c42785565119d7`. Management is now prepared for JS/types and Rust. The generation-only policy is prepared; repository variable `SDK_RELEASES_ENABLED` still stops execution until deliberate activation, and every publisher remains disabled. No registry authentication or release mutation is implied by source adoption or preflight readiness.
+The maintainer approved the proposed JS/Rust source/history adoption choices on 2026-11-02 and committed the implementation at `9bd974df2efe1693b142fed184c42785565119d7`. Management is now prepared for JS/types and Rust. Generation-only activation is complete through PR #71. The publisher-activation policy below enables JS/npm and Rust/crates.io after maintainer-confirmed ownership and trust; it takes effect when reviewed and merged to main. Runtime registry authentication and publication remain unobserved.
 
 ## Accepted source and history
 
@@ -17,7 +17,7 @@ The npm 1.0.3 sourcemap contains five original source files. All five exactly ma
 | Management seed        | Both 1.0.3                                 | Unpublished 1.0.1                          | 1.0.1                                       |
 | First target           | Exactly 2.0.0                              | Exactly 2.0.0                              | Exactly 2.0.0 while policy remains 2        |
 | Adoption source        | `9bd974df2efe1693b142fed184c42785565119d7` | `9bd974df2efe1693b142fed184c42785565119d7` | Pending reviewed later adoption             |
-| Management/publication | Managed; publication stopped               | Managed; publication stopped               | Unmanaged; publication stopped; Hex pending |
+| Management/publication | Managed; publication enabled by policy               | Managed; publication enabled by policy               | Unmanaged; publication stopped; Hex pending |
 
 ## Recorded management acceptance
 
@@ -25,16 +25,16 @@ The npm 1.0.3 sourcemap contains five original source files. All five exactly ma
 - Rust retains published registry 1.0.0 with known historical provenance and accepted unpublished local 1.0.1 plus accumulated changes. No downgrade or invented registry release is recorded.
 - JS and Rust baselines record `verified: true`, full `adoptionSourceRevision`, reviewed management seed/version and dated maintainer acceptance. This source/history acceptance does not mark ownership, OIDC configuration, hosted preflight or publication successful.
 - `release.managed: true` selects JS/types and Rust. Release Please packages, linked plugin and management manifest match exactly, with versions 1.0.3/1.0.3/1.0.1. The accepted boundary is recorded identically in inventory and `bootstrap-sha`.
-- The generation-only policy sets `automation.enabled: true`, while external `SDK_RELEASES_ENABLED` remains false until explicit activation. Every `publish.enabled` stays false. Elixir remains unmanaged and retains its seed, target and adoption history pending Hex and its own evidence.
+- PR #71 enabled generation policy with all publishers disabled; real release PRs #72 and #73 now exist and have passed their contract checks. This publisher-activation policy enables only JS and Rust. Elixir remains unmanaged and retains its seed, target and adoption history pending Hex and its own evidence.
 - The separate breaking adoption input retains reviewed notes under `clients/js/ADOPTION.md`, `clients/rust/ADOPTION.md`, and `clients/elixir/ADOPTION.md`. It is verified through the pinned generator without creating real release PRs or tags.
 
 ## Hosted verification and configuration evidence
 
 Run **SDK credential-free preflight** at the final immutable adoption SHA with `js,rust`. Accept its run URL and attempt, all eleven contract receipts, selected package/consumer/toolchain receipts and digests. `sdk-preflight-evidence` is not a release candidate. A final approved release must repeat these checks at the exact merged revision.
 
-Hosted preflight succeeded at exact merged source `136a8091bbb582b29f1386818883dfa6177c1a0b`: [run 41549688344](https://github.com/Vexilla/vexilla/actions/runs/41549688344), attempt 1. All eleven contract/native consumers and the JS/Rust package/isolated-consumer jobs passed. Downloaded receipts, source SHA and package bytes were independently revalidated against [the original hosted evidence](release-evidence/sdk-preflight-41549688344.json). Its SHA256 is `6bac1f08b118642fcc9872fdb1b435cc1343a2e9a40b6199dadba7057b6d1515`; [the evidence index](release-evidence/README.md) records scope and actual toolchains. Each selected publisher records preflight readiness separately from still-unverified ownership/trust and runtime authentication.
+Hosted preflight succeeded at exact merged source `136a8091bbb582b29f1386818883dfa6177c1a0b`: [run 41549688344](https://github.com/Vexilla/vexilla/actions/runs/41549688344), attempt 1. All eleven contract/native consumers and the JS/Rust package/isolated-consumer jobs passed. Downloaded receipts, source SHA and package bytes were independently revalidated against [the original hosted evidence](release-evidence/sdk-preflight-41549688344.json). Its SHA256 is `6bac1f08b118642fcc9872fdb1b435cc1343a2e9a40b6199dadba7057b6d1515`; [the evidence index](release-evidence/README.md) records scope and actual toolchains. Each selected publisher records preflight readiness separately from the maintainer-confirmed ownership/trust below and from runtime authentication, which remains unobserved.
 
-The maintainer reports that the App and npm/crates.io trust are configured. Independent GitHub inspection on 2026-11-02 found:
+The following table preserves the configuration observations from the 2026-11-02 generation-only preparation. The publisher-activation record below supersedes the pending App-check and npm/crates ownership/trust items:
 
 | Check                 | Observation                                                                                              | Remaining action                                                                                    |
 | --------------------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
@@ -49,12 +49,27 @@ The maintainer reports that the App and npm/crates.io trust are configured. Inde
 
 No prior successful registry publication is required to permit a first approved publication. Record ownership and trust as accepted configuration evidence, then record actual authentication and publication only when the final approved run observes them.
 
+## Publisher activation (2026-11-05)
+
+The maintainer confirmed package ownership and the exact account-side trusted publisher setup in the SDK publishing task. This is accepted maintainer configuration evidence; the account settings were not independently inspected by this change.
+
+| Registry package | Repository | Calling workflow | Environment |
+| ---------------- | ---------- | ---------------- | ----------- |
+| npm `@vexilla/client` | `Vexilla/vexilla` | `sdk-release.yml` | `sdk-npm` |
+| crates.io `vexilla_client` | `Vexilla/vexilla` | `sdk-release.yml` | `sdk-crates` |
+
+The inventory records `baseline.ownershipVerified`, `publish.trustVerified` and the confirmation date/evidence for JS and Rust, then sets their `publish.enabled` flags to true. Private types never publish; Elixir and every other registry route remain disabled. The accepted source/history boundary, management seeds and original hosted preflight evidence are unchanged.
+
+The App generated [JS/types release PR #72](https://github.com/Vexilla/vexilla/pull/72) and [Rust release PR #73](https://github.com/Vexilla/vexilla/pull/73), both proposing 2.0.0. The JS [PR Test run](https://github.com/Vexilla/vexilla/actions/runs/41561274513), attempt 1, and Rust [PR Test rerun](https://github.com/Vexilla/vexilla/actions/runs/41561294164/attempts/2) succeeded, including all eleven SDK contracts and the required gate. Rust's first PR run failed in an app browser test; the unchanged revision passed on rerun. These observations establish App-created PR checks, not registry authentication.
+
+`authenticationObserved` and `publicationObserved` remain false for both registries. Enabling this policy does not replay historical tags or upload a package by itself. Final approved release merges still require fresh contracts, package inspection, isolated consumers, current-policy authorization and OIDC authentication. Recheck npm's direct `npm publish` permission and its two-day unused-configuration expiry just before the first release merge.
+
 ## Separately authorized activation
 
-1. Source/history and hosted adoption preflight above are verified. Exact publishing ownership/trust and runtime outcomes remain separate. The selected publishers stay disabled while the first real App-created release PRs are checked.
-2. Review and pass CI for this **generation-only** change. Set repository variable `SDK_RELEASES_ENABLED=true` immediately before deliberately merging it, leaving every publisher disabled. Its main push triggers generation under `automation.enabled: true`. Confirm actual App-authored release PRs receive all required checks; a variable edit alone triggers no workflow.
-3. Verify the first JS/types and Rust PRs propose exactly 2.0.0 and update manifests, locks and changelogs. Enable each publisher only after its ownership, exact trust, preflight and environment prerequisites are accepted. Confirm npm direct-publish permission and any first-use trust expiry in account settings.
-4. Deliberately review/merge each PR. Require fresh final contract/native/package/consumer checks at its exact approved SHA and inspect final policy/source identities and registry outcomes. Do not substitute preflight bytes.
+1. Source/history adoption, hosted preflight and the real App-created release PR contract checks are complete. The maintainer has confirmed the exact registry ownership/trust settings above.
+2. Review this JS/Rust publisher-activation change and merge it after its required checks pass. Keep repository variable `SDK_RELEASES_ENABLED=true` for release execution. Merging this configuration alone creates no registry upload and scans no historical backlog.
+3. Refresh release PRs #72 and #73 against the new main and wait for their required checks. Keep their generated titles unchanged because release parsing uses those titles.
+4. Deliberately merge the JS release PR, inspect the final verification/publication run and confirm npm 2.0.0, then repeat for Rust/crates.io 2.0.0. The final run rechecks the exact approved source and current policy; prior preflight bytes are not release candidates.
 5. Stop new runs with `SDK_RELEASES_ENABLED=false`; stop in-flight authorization through a current-main inventory stop or per-publisher disablement and deliberate cancellation where needed. Recover only an exact existing approved current-major tag; no backlog replay, replacement releases, moved tags or token fallback.
 
 Elixir joins independently after Hex access and its adoption/docs/preflight evidence are accepted, preserving this same boundary and its retained history. If policy has moved to 3 before then, its old 2.0.0 target/1.x seed require a revised adoption design; changing a flag or relabeling the target is insufficient.
