@@ -8,7 +8,7 @@
   "automation": {
     "enabled": true,
     "historyBoundary": "8b4d80c05abec38d953f38b6bf59ff96462939fa",
-    "reason": "JS and Rust publisher activation: source/history adoption, hosted preflight and real App-created release PR checks are verified; the maintainer confirmed package ownership and exact trusted publisher settings. Final uploads require an approved release merge and fresh verification. Elixir remains unmanaged pending Hex access.",
+    "reason": "JS and Rust publication remains enabled. This policy proposes Elixir source/history adoption and release generation after Hex workload identity setup; Elixir registry publication remains disabled until a separate publisher-activation review. Final uploads require an approved release merge and fresh verification.",
     "reportedConfiguration": {
       "reportedBy": "maintainer",
       "githubAppConfigured": true,
@@ -139,17 +139,23 @@
       "releaseType": "elixir",
       "tagTemplate": "client-elixir-v{version}",
       "baseline": {
-        "verified": false,
-        "status": "blocked",
+        "verified": true,
+        "status": "adoption-proposed",
+        "ownershipVerified": true,
+        "ownershipVerifiedBy": "maintainer",
+        "ownershipVerifiedAt": "2026-11-06",
+        "ownershipEvidence": "docs/sdk-release-adoption.md#elixir-generation-activation-2026-11-06",
         "registryVersion": "1.0.1",
         "sourceRevision": "d62e8aad7b36ef4b3dc7ea5e5a15c604677fcf8a",
-        "observedAt": "2026-11-02",
+        "observedAt": "2026-11-06",
         "observedOwner": "vexilla",
+        "observedOwners": ["cmgriffing", "vexilla"],
         "evidence": "https://hex.pm/api/packages/vexilla_client",
-        "reason": "Published archive/source correspondence is recorded; reviewed adoption source/history boundary and account authorization remain pending. Hex workload identity configuration returns 404.",
+        "reason": "Hex 1.0.1 archive and all six library/manifest files were reverified against the historical source. This policy proposes adoption of the accumulated Elixir changes at immutable source 5a98e333e80ed5a88a76984514081e8cebd0fa32, with unchanged shared boundary and truthful 1.0.1 seed, for first 2.0.0. Maintainer review and merge of this policy accepts that source/history scope; registry publication stays disabled.",
         "archiveSha256": "7f1d6690687cf0a68cb9166dda5aee6b63a5f4d85a09c3dc6e52b36ef2ed9b45",
         "archiveUrl": "https://repo.hex.pm/tarballs/vexilla_client-1.0.1.tar",
-        "adoptionSourceRevision": null,
+        "adoptionSourceRevision": "5a98e333e80ed5a88a76984514081e8cebd0fa32",
+        "manifestVersion": "1.0.1",
         "retirement": null
       },
       "publish": {
@@ -172,15 +178,33 @@
         "enabled": false,
         "reportedConfiguration": {
           "reportedBy": "maintainer",
-          "configured": false,
-          "acceptedTrustEvidence": false,
+          "configured": true,
+          "acceptedTrustEvidence": true,
           "authenticationObserved": false,
           "publicationObserved": false,
-          "blocker": "Package workload identity configuration returns HTTP 404; external Hex enablement is unresolved."
+          "blocker": "Registry publication remains disabled pending the generated Elixir release PR checks and a separate publisher-activation review."
+        },
+        "trustVerified": true,
+        "trustEvidence": {
+          "acceptedBy": "maintainer",
+          "acceptedAt": "2026-11-06",
+          "basis": "Maintainer confirmed the saved Hex workload identity values and GitHub environment; sdk-hex was independently verified to allow only main",
+          "repository": "Vexilla/vexilla",
+          "workflow": "sdk-release.yml",
+          "environment": "sdk-hex",
+          "evidence": "docs/sdk-release-adoption.md#elixir-generation-activation-2026-11-06"
+        },
+        "preflightVerified": true,
+        "preflightEvidence": {
+          "runUrl": "https://github.com/Vexilla/vexilla/actions/runs/42311132598",
+          "runAttempt": 1,
+          "revision": "5a98e333e80ed5a88a76984514081e8cebd0fa32",
+          "evidenceFile": "docs/release-evidence/sdk-preflight-42311132598.json",
+          "evidenceSha256": "6d457c8e940f039b441fe4dc8b76fe62650817cd285cb37fd9a67d1a24cc0062"
         }
       },
       "release": {
-        "managed": false,
+        "managed": true,
         "firstReleaseTarget": "2.0.0",
         "managementSeed": "1.0.1"
       }

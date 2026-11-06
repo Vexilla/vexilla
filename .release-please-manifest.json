@@ -1,5 +1,6 @@
 {
   "clients/js": "2.0.0",
   "packages/types": "2.0.0",
-  "clients/rust": "2.0.0"
+  "clients/rust": "2.0.0",
+  "clients/elixir": "1.0.1"
 }
