@@ -36,17 +36,25 @@ function npmDiagnostics(log) {
     // Multiline response bodies repeat the same event ID and log prefix.
     // Only the first physical line is an npm-authored diagnostic message.
     const event = line.match(/^\d+ /)?.[0];
-    if (!event || events.has(event)) continue;
+    if (!event || events.has(event)) {
+      continue;
+    }
     events.add(event);
     const version = line.match(/^\d+ info using (npm|node)@v?(\d+\.\d+\.\d+)$/);
-    if (version) result[version[1]] = version[2];
+    if (version) {
+      result[version[1]] = version[2];
+    }
     const status = line.match(
       /^\d+ http fetch POST ([1-5]\d\d) https:\/\/registry\.npmjs\.org\/-\/npm\/v1\/oidc\/token\/exchange\/package\/\S+ /
     );
-    if (status) result.exchangeHttpStatus = Number(status[1]);
+    if (status) {
+      result.exchangeHttpStatus = Number(status[1]);
+    }
     const message = line.match(/^\d+ (?:verbose|silly) oidc (.*)$/)?.[1];
     const stage = stages.find(([prefix]) => message?.startsWith(prefix));
-    if (stage) result.oidc = stage[1];
+    if (stage) {
+      result.oidc = stage[1];
+    }
   }
   return result;
 }
