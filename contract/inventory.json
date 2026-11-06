@@ -40,7 +40,7 @@
     "id": "swift",
     "directory": ".",
     "command": ["swift", "test", "--filter", "ContractTests"],
-    "runner": "macos-14"
+    "runner": "macos-15"
   },
   {
     "id": "kotlin",
