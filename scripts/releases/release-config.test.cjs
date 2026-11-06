@@ -8,6 +8,7 @@ const {
   ROOT,
   readReleaseState,
   validateConfig,
+  compareVersions,
 } = require("./check-release-config.cjs");
 const {
   managedComponents,
@@ -16,6 +17,7 @@ const {
 } = require("./release-policy.cjs");
 const { validatePullRequest } = require("./pr-title.cjs");
 const { applyReleaseInputs } = require("./release-inputs.cjs");
+const { groupState } = require("./orchestrate.cjs");
 const {
   acceptedBoundary,
   acceptedSource,
@@ -210,7 +212,9 @@ test("production JS and Rust publishers are ready with exact pinned Release Plea
   assert.equal(validateConfig({ ...state, requireReady: true }).ready, true);
   assert.equal(state.inventory.automation.enabled, true);
   assert.deepEqual(
-    publishingClients(state.inventory).map((client) => client.id).sort(),
+    publishingClients(state.inventory)
+      .map((client) => client.id)
+      .sort(),
     ["js", "rust"]
   );
   const stopped = structuredClone(state);
@@ -224,13 +228,97 @@ test("production JS and Rust publishers are ready with exact pinned Release Plea
   );
 });
 
-test("actual accepted production seeds and history require the prepared breaking input to propose exactly 2.0.0", async () => {
+test("production delayed Elixir adoption preserves released versions and proposes only its first 2.0.0", async () => {
+  const releasedVersions = Object.fromEntries(
+    ["clients/js", "packages/types", "clients/rust"].map((directory) => [
+      directory,
+      state.manifest[directory],
+    ])
+  );
+  for (const version of Object.values(releasedVersions)) {
+    assert.equal(
+      Number(version.split(".")[0]),
+      state.inventory.versionPolicy.major
+    );
+    assert(compareVersions(version, "2.0.0") >= 0);
+  }
+  const elixir = state.inventory.clients.find(
+    (client) => client.id === "elixir"
+  );
+  assert.equal(elixir.release.managed, true);
+  assert.equal(elixir.release.managementSeed, "1.0.1");
+  assert.equal(elixir.release.firstReleaseTarget, "2.0.0");
+  assert.equal(elixir.publish.enabled, false);
+  assert.deepEqual(state.config.packages[elixir.directory], {
+    "release-type": "elixir",
+    component: "client-elixir",
+    "package-name": "vexilla_client",
+  });
+
+  const initial = groupState(structuredClone(state), [elixir]);
+  // Preserve this regression when the generated Elixir release PR advances its
+  // manifest. Already released JS/Rust groups are outside this adoption check.
+  initial.manifest[elixir.directory] = elixir.release.managementSeed;
+  assert.equal(initial.inventory.automation.historyBoundary, acceptedBoundary);
+  assert.equal(initial.config["bootstrap-sha"], acceptedBoundary);
+  assert.deepEqual(initial.manifest, { "clients/elixir": "1.0.1" });
+  const proposals = await buildAdoptionPullRequests({
+    state: initial,
+    // Captured subject and paths from actual merged adoption commit #70.
+    // CI's shallow checkout need not contain the historical commit object.
+    commits: [
+      {
+        sha: "136a8091bbb582b29f1386818883dfa6177c1a0b",
+        message: "feat(sdk)!: adopt the shared major-2 SDK contract (#70)",
+        files: [
+          "clients/js/ADOPTION.md",
+          "clients/rust/ADOPTION.md",
+          "clients/elixir/ADOPTION.md",
+        ],
+      },
+      ...observedHistory,
+    ],
+    revision: elixir.baseline.adoptionSourceRevision,
+  });
+  assert.deepEqual(verifyFirstAdoption(proposals, initial), {
+    "client-elixir": "2.0.0",
+  });
+  assert.equal(proposals.length, 1);
+  assert.match(proposals[0].headRefName, /components--client-elixir$/);
+  assert.deepEqual(proposals[0].updates.map((update) => update.path).sort(), [
+    ".release-please-manifest.json",
+    "clients/elixir/CHANGELOG.md",
+    "clients/elixir/mix.exs",
+  ]);
+  assert.match(
+    applyUpdates(proposals[0], initial, "clients/elixir/mix.exs"),
+    /version: "2\.0\.0"/
+  );
+  const manifestUpdate = proposals[0].updates.find(
+    (update) => update.path === ".release-please-manifest.json"
+  );
+  assert.deepEqual(
+    JSON.parse(
+      manifestUpdate.updater.updateContent(
+        JSON.stringify({ ...state.manifest, "clients/elixir": "1.0.1" })
+      )
+    ),
+    { ...releasedVersions, "clients/elixir": "2.0.0" }
+  );
+});
+
+test("historical accepted JS/Rust seeds require the prepared breaking input to propose exactly 2.0.0", async () => {
   assert.equal(state.inventory.automation.historyBoundary, acceptedBoundary);
   assert.equal(state.config["bootstrap-sha"], acceptedBoundary);
   // Reconstruct accepted initial bookkeeping from its explicit seeds. A real
   // release PR may already advance the current manifest to 2.0.0; that must not
   // erase this first-adoption regression or make the release PR's checks fail.
-  const initial = structuredClone(state);
+  const initial = groupState(
+    structuredClone(state),
+    managedComponents(state.inventory).filter((component) =>
+      ["js", "types", "rust"].includes(component.id)
+    )
+  );
   initial.manifest = Object.fromEntries(
     managedComponents(initial.inventory).map((component) => [
       component.directory,
@@ -242,7 +330,7 @@ test("actual accepted production seeds and history require the prepared breaking
     "packages/types": "1.0.3",
     "clients/rust": "1.0.1",
   });
-  for (const client of state.inventory.clients.filter(
+  for (const client of initial.inventory.clients.filter(
     (c) => c.release.managed
   )) {
     assert.equal(client.baseline.adoptionSourceRevision, acceptedSource);
