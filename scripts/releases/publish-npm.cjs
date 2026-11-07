@@ -185,7 +185,9 @@ async function publish(
     // Only an absent version reaches here; integrity, HTTP and network
     // failures propagate immediately. Request time counts toward the deadline.
     const delay = Math.min(5000, deadline - now());
-    if (delay > 0) await sleep(delay);
+    if (delay > 0) {
+      await sleep(delay);
+    }
   }
   throw (
     failure ||

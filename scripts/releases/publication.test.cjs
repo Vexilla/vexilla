@@ -337,11 +337,17 @@ function npmIdentity(t, configured = true) {
   };
   for (const [key, value] of Object.entries(values)) {
     const saved = process.env[key];
-    if (value === undefined) delete process.env[key];
-    else process.env[key] = value;
+    if (value === undefined) {
+      delete process.env[key];
+    } else {
+      process.env[key] = value;
+    }
     t.after(() => {
-      if (saved === undefined) delete process.env[key];
-      else process.env[key] = saved;
+      if (saved === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = saved;
+      }
     });
   }
 }
@@ -425,7 +431,9 @@ test("npm waits for exact registry integrity after one upload, including a lost 
               ++lookups < 3 ? response(404) : matching(candidate, bytes),
             async () => {
               uploads++;
-              if (lostResponse) throw Error("lost upload response");
+              if (lostResponse) {
+                throw Error("lost upload response");
+              }
             },
             async () => {},
             {
@@ -482,7 +490,9 @@ test("npm confirmation stops at five minutes including request time and preserve
               },
               async () => {
                 uploads++;
-                if (lostResponse) throw uploadFailure;
+                if (lostResponse) {
+                  throw uploadFailure;
+                }
               },
               async () => {},
               {
