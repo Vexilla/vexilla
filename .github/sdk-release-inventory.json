@@ -8,7 +8,7 @@
   "automation": {
     "enabled": true,
     "historyBoundary": "8b4d80c05abec38d953f38b6bf59ff96462939fa",
-    "reason": "JS and Rust publication remains enabled. This policy proposes Elixir source/history adoption and release generation after Hex workload identity setup; Elixir registry publication remains disabled until a separate publisher-activation review. Final uploads require an approved release merge and fresh verification.",
+    "reason": "JS, Elixir and Rust publication is enabled by reviewed policy after accepted source/history, package ownership, trusted publisher setup, hosted preflight and generated release PR checks. Final uploads require an approved release merge and fresh verification; private types and other registry routes never publish.",
     "reportedConfiguration": {
       "reportedBy": "maintainer",
       "githubAppConfigured": true,
@@ -140,7 +140,10 @@
       "tagTemplate": "client-elixir-v{version}",
       "baseline": {
         "verified": true,
-        "status": "adoption-proposed",
+        "status": "adopted",
+        "adoptionApprovedBy": "maintainer",
+        "adoptionApprovedAt": "2026-11-06",
+        "adoptionApprovalEvidence": "https://github.com/Vexilla/vexilla/pull/76",
         "ownershipVerified": true,
         "ownershipVerifiedBy": "maintainer",
         "ownershipVerifiedAt": "2026-11-06",
@@ -151,7 +154,7 @@
         "observedOwner": "vexilla",
         "observedOwners": ["cmgriffing", "vexilla"],
         "evidence": "https://hex.pm/api/packages/vexilla_client",
-        "reason": "Hex 1.0.1 archive and all six library/manifest files were reverified against the historical source. This policy proposes adoption of the accumulated Elixir changes at immutable source 5a98e333e80ed5a88a76984514081e8cebd0fa32, with unchanged shared boundary and truthful 1.0.1 seed, for first 2.0.0. Maintainer review and merge of this policy accepts that source/history scope; registry publication stays disabled.",
+        "reason": "The maintainer accepted the accumulated Elixir source/history scope at immutable source 5a98e333e80ed5a88a76984514081e8cebd0fa32 by merging PR #76. Hex 1.0.1 archive/source correspondence, the shared boundary and truthful 1.0.1 seed are preserved for first 2.0.0. Package ownership/trust confirmation, successful hosted preflight and generated release PR checks are recorded separately from unobserved registry authentication/publication.",
         "archiveSha256": "7f1d6690687cf0a68cb9166dda5aee6b63a5f4d85a09c3dc6e52b36ef2ed9b45",
         "archiveUrl": "https://repo.hex.pm/tarballs/vexilla_client-1.0.1.tar",
         "adoptionSourceRevision": "5a98e333e80ed5a88a76984514081e8cebd0fa32",
@@ -175,14 +178,14 @@
           "Compare native rebuilt payload with verified candidate before upload",
           "Complete full hosted contract and package checks"
         ],
-        "enabled": false,
+        "enabled": true,
         "reportedConfiguration": {
           "reportedBy": "maintainer",
           "configured": true,
           "acceptedTrustEvidence": true,
           "authenticationObserved": false,
           "publicationObserved": false,
-          "blocker": "Registry publication remains disabled pending the generated Elixir release PR checks and a separate publisher-activation review."
+          "releasePRChecksObserved": true
         },
         "trustVerified": true,
         "trustEvidence": {
@@ -201,6 +204,14 @@
           "revision": "5a98e333e80ed5a88a76984514081e8cebd0fa32",
           "evidenceFile": "docs/release-evidence/sdk-preflight-42311132598.json",
           "evidenceSha256": "6d457c8e940f039b441fe4dc8b76fe62650817cd285cb37fd9a67d1a24cc0062"
+        },
+        "activationEvidence": {
+          "evidence": "docs/sdk-release-adoption.md#hex-publisher-activation-2026-11-06",
+          "releasePullRequest": "https://github.com/Vexilla/vexilla/pull/77",
+          "releaseRevision": "7980f20660250aac278d9b4a02f4096cfbeffada",
+          "checksRunUrl": "https://github.com/Vexilla/vexilla/actions/runs/42314141427",
+          "runAttempt": 1,
+          "result": "success"
         }
       },
       "release": {

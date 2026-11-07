@@ -1,12 +1,13 @@
 # Elixir major-2 adoption scope
 
-This policy proposes release management for Elixir after the maintainer confirmed
-Hex workload identity setup on 2026-11-06. Reviewing and merging its activation PR
-accepts this source/history scope. Registry publication remains disabled pending
-a separate publisher-activation review and the generated release PR checks.
+The maintainer accepted this Elixir source/history scope by merging generation
+PR #76 after confirming Hex workload identity setup on 2026-11-06. Hosted preflight
+and the generated Elixir 2.0.0 release PR #77 passed their checks. The separate
+publisher policy enables Hex uploads only after an approved release merge and
+fresh source, contract, package, production-consumer and documentation verification.
 
 The published baseline and truthful working seed are 1.0.1. The first automated
-release targets exactly 2.0.0. Its proposed adoption source is immutable revision
+release targets exactly 2.0.0. Its accepted adoption source is immutable revision
 5a98e333e80ed5a88a76984514081e8cebd0fa32. The historical Hex 1.0.1 source remains
 d62e8aad7b36ef4b3dc7ea5e5a15c604677fcf8a; these revisions serve different purposes.
 

@@ -1,6 +1,6 @@
 # SDK major-2 adoption record and activation checklist
 
-The maintainer approved the proposed JS/Rust source/history adoption choices on 2026-11-02 and committed the implementation at `9bd974df2efe1693b142fed184c42785565119d7`. Management is now prepared for JS/types and Rust. Generation-only activation is complete through PR #71. The publisher-activation policy below enables JS/npm and Rust/crates.io after maintainer-confirmed ownership and trust. The dated Elixir record below proposes its later source/history adoption and release generation while keeping Hex publication disabled. Historical observations remain dated; configuration confirmation does not establish runtime authentication or publication.
+The maintainer approved the proposed JS/Rust source/history adoption choices on 2026-11-02 and committed the implementation at `9bd974df2efe1693b142fed184c42785565119d7`. Generation-only activation completed through PR #71 and JS/Rust publisher activation through PR #74. Elixir adoption and generation were accepted by merging PR #76; the separate Hex publisher policy below follows its successful preflight and release PR checks. Historical observations remain dated; configuration confirmation does not establish runtime authentication or publication.
 
 ## Accepted source and history
 
@@ -10,14 +10,14 @@ This recent boundary deliberately excludes accumulated historical changes from R
 
 The npm 1.0.3 sourcemap contains five original source files. All five exactly match both repository revisions `eb15bb1fd7e59e889f501dd5334c65c670562d55` and `fd5f8c864c11c9ef7bbd447cc9ace17678844319`. This narrows source correspondence but cannot identify the exact publication commit: registry `gitHead` is absent, multiple commits contain identical sources, and build/declaration inputs extend beyond the sourcemap. Keep `baseline.sourceRevision: null`. The maintainer explicitly accepted artifact-based correspondence and this historical-source limitation. `artifactComparisonAccepted` and `historicalSourceUncertaintyAccepted` are recorded without substituting the boundary or adoption SHA for the unknown original source.
 
-| Fact                   | JS/types                                   | Rust                                       | Proposed Elixir adoption                    |
+| Fact                   | JS/types                                   | Rust                                       | Accepted Elixir adoption                    |
 | ---------------------- | ------------------------------------------ | ------------------------------------------ | ------------------------------------------- |
 | Registry baseline      | JS 1.0.3; types private                    | 1.0.0                                      | 1.0.1                                       |
 | Historical source      | Exact npm commit unresolved                | `67480837e705ab1acf6f8ddf5f2e7c00cf7e940c` | `d62e8aad7b36ef4b3dc7ea5e5a15c604677fcf8a`  |
 | Management seed        | Both 1.0.3                                 | Unpublished 1.0.1                          | 1.0.1                                       |
 | First target           | Exactly 2.0.0                              | Exactly 2.0.0                              | Exactly 2.0.0 while policy remains 2        |
-| Adoption source        | `9bd974df2efe1693b142fed184c42785565119d7` | `9bd974df2efe1693b142fed184c42785565119d7` | Proposed `5a98e333e80ed5a88a76984514081e8cebd0fa32` |
-| Management/publication | Managed; publication enabled by policy               | Managed; publication enabled by policy               | Management proposed for review; publication stopped |
+| Adoption source        | `9bd974df2efe1693b142fed184c42785565119d7` | `9bd974df2efe1693b142fed184c42785565119d7` | `5a98e333e80ed5a88a76984514081e8cebd0fa32` |
+| Management/publication | Managed; publication enabled by policy               | Managed; publication enabled by policy               | Managed; publication enabled by separate Hex policy |
 
 ## Recorded management acceptance
 
@@ -80,7 +80,15 @@ Public metadata and the archive were rechecked on 2026-11-06: latest stable rema
 
 Credential-free Elixir preflight succeeded at the proposed immutable source: [run 42311132598](https://github.com/Vexilla/vexilla/actions/runs/42311132598), attempt 1. All 16 jobs passed, including eleven SDK contract consumers and Elixir's tests, package, isolated production consumer and documentation. Downloaded contract receipts and actual package/docs bytes were independently revalidated against [the unchanged hosted evidence](release-evidence/sdk-preflight-42311132598.json), SHA256 `6d457c8e940f039b441fe4dc8b76fe62650817cd285cb37fd9a67d1a24cc0062`. The archive truthfully identifies the pre-major working version 1.0.1; it is readiness evidence, not an approved upload candidate.
 
-The policy adds Elixir to release management with truthful seed 1.0.1 and first target exactly 2.0.0. It preserves shared boundary `8b4d80c05abec38d953f38b6bf59ff96462939fa`, the existing breaking Elixir input, and JS/private-types/Rust 2.0.0 bookkeeping. It changes no native package version or tag. Elixir's `publish.enabled` stays false. Merge after adoption review and successful preflight to generate the Elixir release PR; review its native version/changelog and hosted checks, then separately enable the Hex publisher before deliberately merging that release PR.
+PR #76 merged as `03d61e8a4266cdc8cf40bf9c6d7443296766083d`, accepting this source/history scope and adding Elixir release management with truthful seed 1.0.1 and first target exactly 2.0.0. It preserved shared boundary `8b4d80c05abec38d953f38b6bf59ff96462939fa`, the existing breaking input, and JS/private-types/Rust 2.0.0 bookkeeping. That generation-only step kept Elixir publication disabled; the next dated record describes its separate activation.
+
+## Hex publisher activation (2026-11-06)
+
+The release App created [PR #77](https://github.com/Vexilla/vexilla/pull/77), `chore(main): release client-elixir 2.0.0`. At exact head `7980f20660250aac278d9b4a02f4096cfbeffada`, its only changes are Elixir's native version, changelog and management manifest. The [PR Test run](https://github.com/Vexilla/vexilla/actions/runs/42314141427), attempt 1, passed all 20 jobs, including all eleven SDK contracts and native Elixir tests; release fixtures and the title check also passed. The release PR remains unmerged.
+
+Together with accepted adoption through PR #76, maintainer-confirmed package ownership/workload identity settings, independently verified `sdk-hex` main-only environment restrictions and retained hosted preflight evidence, these checks satisfy the Hex publisher activation prerequisites. This policy enables only Elixir's additional publisher flag. Existing JS/Rust policy, private types, dormant routes, seeds, native package versions, tags and the shared boundary remain unchanged. `authenticationObserved` and `publicationObserved` stay false until the first approved final run proves them.
+
+Review and merge the Hex publisher-activation PR before release PR #77. Let the App refresh #77 against main and wait for its required checks, then deliberately merge #77 to authorize publication. The final workflow repeats all contracts, native package/production/docs checks, approval/current-policy checks and OIDC authentication at the exact approved source. Enabling this policy alone uploads nothing and replays no historical tags. Staged Publishing is outside the implemented direct-publication route; no stored Hex key is needed.
 
 ## Historical JS/Rust activation sequence
 
