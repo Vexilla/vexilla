@@ -1,4 +1,5 @@
 import { test, expect, Page, Route } from "@playwright/test";
+import { record } from "./support/record.cjs";
 
 const repoA = {
   id: 10,
@@ -48,11 +49,19 @@ const readState = (page: Page) =>
       })
     );
   });
-const changeHosting = (page: Page, fields: Record<string, unknown>) =>
-  page.evaluate(async (fields) => {
-    const { config } = await import("/src/stores/config-valtio.ts");
-    Object.assign(config.hosting, fields);
-  }, fields);
+const changeHosting = async (page: Page, fields: Record<string, unknown>) => {
+  record("changeHosting.begin");
+  let succeeded = false;
+  try {
+    await page.evaluate(async (fields) => {
+      const { config } = await import("/src/stores/config-valtio.ts");
+      Object.assign(config.hosting, fields);
+    }, fields);
+    succeeded = true;
+  } finally {
+    record("changeHosting.end", { succeeded });
+  }
+};
 async function mockGitHub(
   page: Page,
   options: {
@@ -409,6 +418,7 @@ test("installation switching clears selection and ignores late repository discov
     intercept: async (route) => {
       if (route.request().url().includes("/installations/1/repositories")) {
         delayed = true;
+        record("held-request.intercepted");
         await waiting;
         await route.fulfill({ json: { repositories: [repoA] } });
         return true;
@@ -426,6 +436,7 @@ test("installation switching clears selection and ignores late repository discov
   await expect
     .poll(async () => (await readState(page)).config.hosting.repositoryId)
     .toBe("20");
+  record("held-request.release");
   release();
   await expect
     .poll(async () => (await readState(page)).remoteMetadata.remoteModifiedAt)
@@ -504,6 +515,7 @@ for (const replacement of ["repository", "branch", "token"] as const) {
               : url.includes("/repo-a/branches/main");
           if (url.includes("/branches/") && old && !delayed) {
             delayed = true;
+            record("held-request.intercepted");
             await gate;
             await route.fulfill(
               stale401
@@ -537,6 +549,7 @@ for (const replacement of ["repository", "branch", "token"] as const) {
         .toBe(50);
       const current = await readState(page);
       expect(current.config.groups).toEqual(initial.groups);
+      record("held-request.release");
       release();
       // Wait for the old response to be consumed, including the rest of a successful read.
       await expect
@@ -573,6 +586,7 @@ test("a late old tree cannot replace an existing branch's valid empty tree", asy
     intercept: async (route) => {
       if (route.request().url().endsWith("/git/trees/head-main")) {
         delayed = true;
+        record("held-request.intercepted");
         await gate;
         await route.fulfill({ json: { tree: [{ path: "README.md" }] } });
         return true;
@@ -592,6 +606,7 @@ test("a late old tree cannot replace an existing branch's valid empty tree", asy
       requests.includes("/repos/owner-a/repo-a/git/trees/head-release")
     )
     .toBe(true);
+  record("held-request.release");
   release();
   await expect
     .poll(async () => (await readState(page)).remoteMetadata.status)
@@ -1175,6 +1190,7 @@ test("reload rechecks an empty repository despite saved branch validity and a re
         new URL(route.request().url()).pathname.endsWith("/branches")
       ) {
         delayed = true;
+        record("held-request.intercepted");
         await discovery.waiting;
       }
       return false;
@@ -1244,6 +1260,7 @@ for (const stale401 of [false, true]) {
         }
         holdNextProbe = false;
         delayed = true;
+        record("held-request.intercepted");
         await old.waiting;
         await route.fulfill(
           stale401
