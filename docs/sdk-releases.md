@@ -71,6 +71,8 @@ Final jobs recheck current-main stop controls immediately before credential acqu
 
 Publishers verify candidate digests and upload exactly those bytes. Only HTTP 404 means a registry version is absent. Lookup/authentication/network failures fail, and existing versions succeed only when authoritative integrity matches. Lost responses are reconciled by those same digests. Recovery never overwrites packages, moves tags, yanks versions or silently bumps a version. Hex docs can recover independently after the immutable package matches.
 
+npm can accept an upload before the version is publicly visible. After one upload attempt, the publisher waits up to five minutes while the exact version returns HTTP 404, then requires the same authoritative integrity match. It does not repeat the upload during that wait. Conflicting bytes and other lookup failures fail immediately. If visibility times out, inspect npm's processing status and the public registry before recovering the same approved tag.
+
 ## Future Elixir and major transitions
 
 Hex workload identity setup, the main-only `sdk-hex` environment, adoption through PR #76, credential-free preflight and generated release PR #77 checks are recorded. The separate publisher policy enables the Hex route; merge it before deliberately approving the release through #77. The existing seed and shared boundary stay unchanged. Staged Publishing would require explicit approval/reconciliation support in the native publisher; the current route expects direct public release and docs visibility. No stored Hex API key is needed.
