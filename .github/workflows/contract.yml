@@ -40,9 +40,13 @@ jobs:
       - run: pnpm --filter app exec playwright install --with-deps chromium
       - run: pnpm --filter app test:browser-diagnostics
       - run: pnpm --filter app test:browser
-      - name: Collect hosted flake evidence without trace timing effects
+      - name: Collect hosted flake evidence from cold full suites
         if: github.ref_name == 'kepler/feat/fix-playwright-browser-flake'
-        run: pnpm --filter app test:browser --workers=2 --repeat-each=30 --grep 'late .* from old|a late old tree' --trace=off
+        run: |
+          for sample in 1 2 3 4 5 6 7 8 9 10; do
+            echo "Cold browser sample $sample of 10"
+            pnpm --filter app test:browser --workers=2 --trace=off || exit "$?"
+          done
       - name: Upload browser diagnostics
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
