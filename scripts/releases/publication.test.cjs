@@ -328,6 +328,23 @@ const matching = (candidate, bytes) =>
     version: candidate.version,
     dist: { integrity: "sha512-" + digest(bytes, "sha512", "base64") },
   });
+function npmIdentity(t, configured = true) {
+  const values = {
+    ACTIONS_ID_TOKEN_REQUEST_URL: configured ? "test" : undefined,
+    ACTIONS_ID_TOKEN_REQUEST_TOKEN: configured ? "test" : undefined,
+    NODE_AUTH_TOKEN: undefined,
+    NPM_TOKEN: undefined,
+  };
+  for (const [key, value] of Object.entries(values)) {
+    const saved = process.env[key];
+    if (value === undefined) delete process.env[key];
+    else process.env[key] = value;
+    t.after(() => {
+      if (saved === undefined) delete process.env[key];
+      else process.env[key] = saved;
+    });
+  }
+}
 test("registry absence differs from lookup failures and conflicts", async (t) => {
   const { candidate, bytes } = candidateFixture(t);
   assert.equal(
@@ -389,6 +406,179 @@ test("lost upload response reconciles exact registry payload; same version never
       throw Error("must not upload");
     }
   );
+});
+test("npm waits for exact registry integrity after one upload, including a lost upload response", async (t) => {
+  npmIdentity(t);
+  for (const lostResponse of [false, true]) {
+    await t.test(
+      lostResponse ? "lost response" : "successful upload",
+      async (t) => {
+        const { candidate, dir, bytes } = candidateFixture(t);
+        let lookups = 0;
+        let uploads = 0;
+        let elapsed = 0;
+        assert.equal(
+          await publishNpm(
+            candidate,
+            dir,
+            async () =>
+              ++lookups < 3 ? response(404) : matching(candidate, bytes),
+            async () => {
+              uploads++;
+              if (lostResponse) throw Error("lost upload response");
+            },
+            async () => {},
+            {
+              now: () => elapsed,
+              sleep: async (ms) => {
+                elapsed += ms;
+              },
+            }
+          ),
+          "published; integrity verified"
+        );
+        assert.equal(uploads, 1);
+        assert.equal(lookups, 3);
+        assert(elapsed > 0 && elapsed <= 300000);
+      }
+    );
+  }
+});
+test("npm confirmation stops at five minutes including request time and preserves upload diagnostics", async (t) => {
+  npmIdentity(t);
+  for (const lostResponse of [false, true]) {
+    await t.test(
+      lostResponse ? "lost response" : "successful upload",
+      async (t) => {
+        const { candidate, dir } = candidateFixture(t);
+        const uploadFailure = Error(
+          "lost upload response; sanitized diagnostics"
+        );
+        let uploads = 0;
+        let elapsed = 0;
+        let requestTimeout;
+        t.mock.method(AbortSignal, "timeout", (ms) => {
+          requestTimeout = ms;
+          return new AbortController().signal;
+        });
+        await assert.rejects(
+          () =>
+            publishNpm(
+              candidate,
+              dir,
+              async () => {
+                if (uploads) {
+                  assert(
+                    elapsed < 300000,
+                    "lookup started after confirmation deadline"
+                  );
+                  assert(
+                    requestTimeout > 0 &&
+                      requestTimeout <= Math.min(30000, 300000 - elapsed)
+                  );
+                  elapsed += 10000;
+                }
+                return response(404);
+              },
+              async () => {
+                uploads++;
+                if (lostResponse) throw uploadFailure;
+              },
+              async () => {},
+              {
+                now: () => elapsed,
+                sleep: async (ms) => {
+                  elapsed += ms;
+                },
+              }
+            ),
+          (error) =>
+            lostResponse
+              ? error === uploadFailure
+              : /absent after five minutes/.test(error.message)
+        );
+        assert.equal(uploads, 1);
+        assert.equal(elapsed, 300000);
+        assert(
+          requestTimeout < 30000,
+          "last lookup must use the remaining budget"
+        );
+      }
+    );
+  }
+});
+test("npm confirmation fails immediately on conflicts, HTTP errors and network failures", async (t) => {
+  npmIdentity(t);
+  for (const [name, terminal, expected] of [
+    [
+      "conflicting integrity",
+      () => response(200, {}),
+      /conflicting or unverifiable integrity/,
+    ],
+    ...[401, 403, 429, 500].map((status) => [
+      `HTTP ${status}`,
+      () => response(status),
+      new RegExp(`HTTP ${status}`),
+    ]),
+    [
+      "network failure",
+      () => {
+        throw Error("network failed");
+      },
+      /network failed/,
+    ],
+  ]) {
+    await t.test(name, async (t) => {
+      const { candidate, dir } = candidateFixture(t);
+      let lookups = 0;
+      let uploads = 0;
+      let sleeps = 0;
+      await assert.rejects(
+        () =>
+          publishNpm(
+            candidate,
+            dir,
+            async () => (++lookups <= 2 ? response(404) : terminal()),
+            async () => {
+              uploads++;
+            },
+            async () => {},
+            {
+              now: () => 0,
+              sleep: async () => {
+                sleeps++;
+              },
+            }
+          ),
+        expected
+      );
+      assert.equal(uploads, 1);
+      assert.equal(lookups, 3);
+      assert.equal(sleeps, 1, "only the preceding 404 should be retried");
+    });
+  }
+});
+test("matching npm versions return without credentials, upload or confirmation waits", async (t) => {
+  npmIdentity(t, false);
+  const { candidate, dir, bytes } = candidateFixture(t);
+  let policyChecks = 0;
+  assert.equal(
+    await publishNpm(
+      candidate,
+      dir,
+      async () => matching(candidate, bytes),
+      async () => assert.fail("existing version must not be uploaded"),
+      async () => {
+        policyChecks++;
+      },
+      {
+        now: () => assert.fail("existing match must not enter confirmation"),
+        sleep: async () => assert.fail("existing match must not wait"),
+      }
+    ),
+    "already published; integrity matches"
+  );
+  assert.equal(policyChecks, 1);
 });
 test("missing trust fails before upload; expired artifacts must be rebuilt and verified", async (t) => {
   const { candidate, dir, identity } = candidateFixture(t);

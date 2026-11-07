@@ -98,13 +98,18 @@ function uploadNpm(artifact, run = spawnSync) {
     fs.rmSync(logs, { recursive: true, force: true });
   }
 }
-async function registryState(candidate, bytes, request = fetch) {
+async function registryState(
+  candidate,
+  bytes,
+  request = fetch,
+  timeoutMs = 30000
+) {
   const response = await request(
     "https://registry.npmjs.org/" +
       encodeURIComponent(candidate.package) +
       "/" +
       candidate.version,
-    { signal: AbortSignal.timeout(30000) }
+    { signal: AbortSignal.timeout(timeoutMs) }
   );
   if (response.status === 404) {
     return "absent";
@@ -130,7 +135,11 @@ async function publish(
   directory,
   request = fetch,
   upload,
-  authorize = authorizeCurrent
+  authorize = authorizeCurrent,
+  {
+    now = () => performance.now(),
+    sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+  } = {}
 ) {
   await authorize(candidate.sdk, candidate.version);
   const bytes = fs.readFileSync(path.join(directory, candidate.artifact));
@@ -155,12 +164,34 @@ async function publish(
   } catch (error) {
     failure = error;
   }
-  // An upload can succeed while its response is lost. Only registry integrity proves success.
-  if ((await registryState(candidate, bytes, request)) === "matching") {
-    return "published; integrity verified";
+  // npm can accept an upload before its version endpoint exposes it. This
+  // also reconciles a lost upload response without ever uploading twice.
+  const deadline = now() + 5 * 60 * 1000;
+  for (
+    let remaining = deadline - now();
+    remaining > 0;
+    remaining = deadline - now()
+  ) {
+    if (
+      (await registryState(
+        candidate,
+        bytes,
+        request,
+        Math.ceil(Math.min(30000, remaining))
+      )) === "matching"
+    ) {
+      return "published; integrity verified";
+    }
+    // Only an absent version reaches here; integrity, HTTP and network
+    // failures propagate immediately. Request time counts toward the deadline.
+    const delay = Math.min(5000, deadline - now());
+    if (delay > 0) await sleep(delay);
   }
   throw (
-    failure || Error("npm upload returned without a matching registry artifact")
+    failure ||
+    Error(
+      "npm registry artifact remained absent after five minutes; retry the same approved release later"
+    )
   );
 }
 module.exports = { registryState, publish, npmDiagnostics, uploadNpm };
