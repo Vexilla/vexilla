@@ -20,8 +20,9 @@ async function temporaryDirectory(t) {
 async function writeZip(file, entries) {
   const zip = new yazl.ZipFile();
   const written = pipeline(zip.outputStream, createWriteStream(file));
-  for (const [name, text] of Object.entries(entries))
+  for (const [name, text] of Object.entries(entries)) {
     zip.addBuffer(Buffer.from(text), name);
+  }
   zip.end();
   await written;
 }
@@ -29,16 +30,22 @@ async function writeZip(file, entries) {
 async function readZip(file) {
   return new Promise((resolve, reject) => {
     yauzl.open(file, { lazyEntries: true }, (error, zip) => {
-      if (error) return reject(error);
+      if (error) {
+        return reject(error);
+      }
       const entries = {};
       zip.on("error", reject);
       zip.on("end", () => resolve(entries));
       zip.on("entry", (entry) =>
         zip.openReadStream(entry, async (error, stream) => {
-          if (error) return reject(error);
+          if (error) {
+            return reject(error);
+          }
           try {
             const buffers = [];
-            for await (const buffer of stream) buffers.push(buffer);
+            for await (const buffer of stream) {
+              buffers.push(buffer);
+            }
             entries[entry.fileName] = Buffer.concat(buffers).toString("utf8");
             zip.readEntry();
           } catch (error) {

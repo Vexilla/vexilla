@@ -55,9 +55,11 @@ test("reporter correlates teardown and Vite reloads without persisting output or
     assert.equal(events.at(-1).status, "failed");
     assert.ok(events.every((e) => e.time && Number.isFinite(e.monotonicMs)));
   } finally {
-    if (previous === undefined)
+    if (previous === undefined) {
       delete process.env.VEXILLA_BROWSER_DIAGNOSTICS_DIR;
-    else process.env.VEXILLA_BROWSER_DIAGNOSTICS_DIR = previous;
+    } else {
+      process.env.VEXILLA_BROWSER_DIAGNOSTICS_DIR = previous;
+    }
     fs.rmSync(directory, { recursive: true, force: true });
   }
 });

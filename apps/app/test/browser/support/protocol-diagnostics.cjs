@@ -34,12 +34,17 @@ for (const file of fs.readdirSync(path.join(appRoot, "src"), {
 }
 
 function safeURL(value) {
-  if (value === "about:blank") return value;
-  if (typeof value !== "string") return "[redacted-url]";
+  if (value === "about:blank") {
+    return value;
+  }
+  if (typeof value !== "string") {
+    return "[redacted-url]";
+  }
   try {
     const url = new URL(value);
-    if (url.protocol !== "http:" && url.protocol !== "https:")
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
       return "[redacted-url]";
+    }
     // URL.origin excludes userinfo. Queries, fragments and external paths can
     // contain OAuth codes, credentials, repository names, or arbitrary values.
     const local = ["127.0.0.1", "localhost", "[::1]"].includes(url.hostname);
@@ -71,7 +76,9 @@ function enumeration(value, allowed) {
   return allowed.includes(value) ? value : "other";
 }
 function stackFrames(stack, depth = 0) {
-  if (!stack || depth > 3) return [];
+  if (!stack || depth > 3) {
+    return [];
+  }
   return [
     ...(Array.isArray(stack.callFrames)
       ? stack.callFrames.slice(0, 12).map((frame) => ({
@@ -154,7 +161,9 @@ function projectEvent(method, params = {}) {
         ]),
       };
     case "Network.requestWillBeSent":
-      if (params.type !== "Document") return null;
+      if (params.type !== "Document") {
+        return null;
+      }
       return {
         frameId: id(params.frameId),
         loaderId: id(params.loaderId),
@@ -181,7 +190,9 @@ function projectEvent(method, params = {}) {
       try {
         const payload = JSON.parse(params.response?.payloadData);
         // Vite's reload path and error payload can contain arbitrary strings.
-        if (payload?.type === "full-reload") return { type: "full-reload" };
+        if (payload?.type === "full-reload") {
+          return { type: "full-reload" };
+        }
       } catch {}
       return null;
     case "Inspector.detached":
@@ -214,8 +225,9 @@ function projectEvent(method, params = {}) {
 }
 
 function classifyError(error) {
-  if (error?.type === "closed" || error?.type === "crashed")
+  if (error?.type === "closed" || error?.type === "crashed") {
     return `session-${error.type}`;
+  }
   const message = typeof error?.message === "string" ? error.message : "";
   for (const [text, reason] of [
     ["Promise was collected", "promise-collected"],
@@ -227,14 +239,18 @@ function classifyError(error) {
     ["Inspected target navigated or closed", "target-navigated-or-closed"],
     ["Object reference chain is too long", "serialization-depth"],
     ["Object couldn't be returned by value", "serialization-value"],
-  ])
-    if (message.includes(text)) return reason;
+  ]) {
+    if (message.includes(text)) {
+      return reason;
+    }
+  }
   return "unclassified-redacted";
 }
 
 function isHostingMutation(method, params) {
-  if (method !== "Runtime.callFunctionOn" && method !== "Runtime.evaluate")
+  if (method !== "Runtime.callFunctionOn" && method !== "Runtime.evaluate") {
     return false;
+  }
   const source =
     method === "Runtime.evaluate"
       ? params?.expression
@@ -246,7 +262,9 @@ function isHostingMutation(method, params) {
 }
 
 function instrument(CRSession, record) {
-  if (CRSession.prototype[installation]) return;
+  if (CRSession.prototype[installation]) {
+    return;
+  }
   const send = CRSession.prototype.send;
   const onMessage = CRSession.prototype._onMessage;
   const dispose = CRSession.prototype.dispose;
@@ -266,18 +284,24 @@ function instrument(CRSession, record) {
   CRSession.prototype.send = function (method, params) {
     const sessionId = id(this._sessionId);
     const mutation = isHostingMutation(method, params);
-    if (mutation) emit("changeHosting.start", { sessionId });
+    if (mutation) {
+      emit("changeHosting.start", { sessionId });
+    }
     const result = send.call(this, method, params);
     // Observe the original promise, returning it unchanged. This handler is
     // registered before crExecutionContext's rewriteError masks CDP failures.
     if (method === "Runtime.callFunctionOn" || method === "Runtime.evaluate") {
       result.then(
         () => {
-          if (mutation) emit("changeHosting.complete", { sessionId });
+          if (mutation) {
+            emit("changeHosting.complete", { sessionId });
+          }
         },
         (error) => {
           emit(`${method}.error`, { sessionId, reason: classifyError(error) });
-          if (mutation) emit("changeHosting.failed", { sessionId });
+          if (mutation) {
+            emit("changeHosting.failed", { sessionId });
+          }
         }
       );
     }
@@ -286,8 +310,9 @@ function instrument(CRSession, record) {
   CRSession.prototype._onMessage = function (message) {
     if (!message.id) {
       const projected = projectEvent(message.method, message.params);
-      if (projected !== null)
+      if (projected !== null) {
         emit(message.method, { sessionId: id(this._sessionId), ...projected });
+      }
     }
     return onMessage.call(this, message);
   };

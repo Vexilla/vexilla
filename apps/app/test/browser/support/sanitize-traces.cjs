@@ -48,23 +48,31 @@ function projectTrace(text) {
   const calls = new Set();
   let hasContext = false;
   const id = (value) => {
-    if (typeof value !== "string" && typeof value !== "number")
+    if (typeof value !== "string" && typeof value !== "number") {
       return undefined;
-    if (!identifiers.has(value))
+    }
+    if (!identifiers.has(value)) {
       identifiers.set(value, `id@${identifiers.size}`);
+    }
     return identifiers.get(value);
   };
   const number = (value) => (Number.isFinite(value) ? value : 0);
   const projected = [];
   for (const line of text.split("\n")) {
-    if (!line.trim()) continue;
+    if (!line.trim()) {
+      continue;
+    }
     const event = JSON.parse(line);
-    if (!event || typeof event !== "object") continue;
+    if (!event || typeof event !== "object") {
+      continue;
+    }
     let safe;
     if (event.type === "context-options") {
       // The repository pins Playwright 1.56.1, whose trace format is version 8.
       // Reject future formats rather than accidentally retaining new payload fields.
-      if (event.version !== 8) throw new Error("Unsupported trace format");
+      if (event.version !== 8) {
+        throw new Error("Unsupported trace format");
+      }
       hasContext = true;
       safe = {
         type: "context-options",
@@ -90,7 +98,9 @@ function projectTrace(text) {
       }
     } else if (event.type === "before") {
       const callId = id(event.callId);
-      if (!callId) continue;
+      if (!callId) {
+        continue;
+      }
       calls.add(event.callId);
       const known =
         methodMetainfo.has(`${event.class}.${event.method}`) ||
@@ -116,7 +126,9 @@ function projectTrace(text) {
         callId: id(event.callId),
         endTime: number(event.endTime),
       };
-      if (event.error) safe.error = classifiedError(event.error);
+      if (event.error) {
+        safe.error = classifiedError(event.error);
+      }
     } else if (
       event.type === "event" &&
       lifecycleEvents.has(`${event.class}.${event.method}`)
@@ -130,16 +142,22 @@ function projectTrace(text) {
         params: { pageId: id(event.params?.pageId) },
       };
     }
-    if (safe) projected.push(JSON.stringify(safe));
+    if (safe) {
+      projected.push(JSON.stringify(safe));
+    }
   }
-  if (!hasContext) throw new Error("Missing trace context");
+  if (!hasContext) {
+    throw new Error("Missing trace context");
+  }
   return projected.join("\n") + "\n";
 }
 
 function readTraceEntries(file) {
   return new Promise((resolve, reject) => {
     yauzl.open(file, { lazyEntries: true }, (error, zip) => {
-      if (error) return reject(error);
+      if (error) {
+        return reject(error);
+      }
       const entries = [];
       const fail = (error) => {
         zip.close();
@@ -148,12 +166,18 @@ function readTraceEntries(file) {
       zip.on("error", fail);
       zip.on("end", () => resolve(entries));
       zip.on("entry", (entry) => {
-        if (!entry.fileName.endsWith(".trace")) return zip.readEntry();
+        if (!entry.fileName.endsWith(".trace")) {
+          return zip.readEntry();
+        }
         zip.openReadStream(entry, async (error, stream) => {
-          if (error) return fail(error);
+          if (error) {
+            return fail(error);
+          }
           try {
             const buffers = [];
-            for await (const buffer of stream) buffers.push(buffer);
+            for await (const buffer of stream) {
+              buffers.push(buffer);
+            }
             // Entry names, including source paths, are also untrusted data.
             entries.push(projectTrace(Buffer.concat(buffers).toString("utf8")));
             zip.readEntry();
@@ -171,7 +195,9 @@ async function sanitizeZip(file) {
   const temporary = `${file}.${randomUUID()}.sanitized`;
   try {
     const entries = await readTraceEntries(file);
-    if (!entries.length) throw new Error("Missing trace entries");
+    if (!entries.length) {
+      throw new Error("Missing trace entries");
+    }
     const zip = new yazl.ZipFile();
     const written = pipeline(
       zip.outputStream,
@@ -210,7 +236,9 @@ async function sanitizeTraces(directory) {
     try {
       await fs.access(directory);
     } catch (error) {
-      if (error.code === "ENOENT") return;
+      if (error.code === "ENOENT") {
+        return;
+      }
       throw error;
     }
     await visit(directory);

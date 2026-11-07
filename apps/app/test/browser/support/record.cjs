@@ -4,7 +4,9 @@ const path = require("node:path");
 // Only callers that project onto known diagnostic fields may use this sink.
 function record(event, data = {}) {
   const directory = process.env.VEXILLA_BROWSER_DIAGNOSTICS_DIR;
-  if (!directory) return;
+  if (!directory) {
+    return;
+  }
   fs.mkdirSync(directory, { recursive: true });
   fs.appendFileSync(
     path.join(directory, `events-${process.pid}.jsonl`),

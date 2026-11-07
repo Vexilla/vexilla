@@ -16,7 +16,9 @@ function testFields(test, result) {
 // persist raw output, evaluate arguments, assertion values, or test titles.
 function viteOutput(chunk, stream) {
   const text = chunk.toString().replace(/\x1b\[[0-9;]*m/g, "");
-  if (!text.includes("[WebServer]")) return;
+  if (!text.includes("[WebServer]")) {
+    return;
+  }
   const events = [
     ["forced-optimization", /Forced re-optimization of dependencies/],
     ["ready", /VITE v[\d.]+\s+ready/],

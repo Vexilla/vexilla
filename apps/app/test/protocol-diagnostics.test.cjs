@@ -181,8 +181,9 @@ test("protocol errors use fixed classifications rather than arbitrary messages",
     ["Inspected target navigated or closed", "target-navigated-or-closed"],
     ["Object reference chain is too long", "serialization-depth"],
     ["Object couldn't be returned by value", "serialization-value"],
-  ])
+  ]) {
     assert.equal(classifyError(new Error(`${message}: ${secret}`)), reason);
+  }
   assert.equal(
     classifyError({ type: "closed", message: secret }),
     "session-closed"
