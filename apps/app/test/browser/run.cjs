@@ -1,12 +1,12 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { spawn } = require("node:child_process");
-const { record } = require("./support/record.cjs");
+const { record, prepareRunDirectory } = require("./support/record.cjs");
 
 async function main() {
-  const directory = path.resolve(__dirname, "../../test-results/diagnostics");
-  fs.rmSync(directory, { recursive: true, force: true });
-  fs.mkdirSync(directory, { recursive: true });
+  const directory = prepareRunDirectory(
+    path.resolve(__dirname, "../../test-results/diagnostics")
+  );
   process.env.VEXILLA_BROWSER_DIAGNOSTICS_DIR = directory;
   const preload = path.join(__dirname, "support/preload.cjs");
   record("run.begin", { nodeVersion: process.versions.node });

@@ -1,6 +1,14 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
+function prepareRunDirectory(root, preserve = Boolean(process.env.CI)) {
+  if (!preserve) {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+  fs.mkdirSync(root, { recursive: true });
+  return fs.mkdtempSync(path.join(root, "run-"));
+}
+
 // Only callers that project onto known diagnostic fields may use this sink.
 function record(event, data = {}) {
   const directory = process.env.VEXILLA_BROWSER_DIAGNOSTICS_DIR;
@@ -26,4 +34,4 @@ function record(event, data = {}) {
   );
 }
 
-module.exports = { record };
+module.exports = { record, prepareRunDirectory };
