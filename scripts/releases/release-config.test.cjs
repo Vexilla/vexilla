@@ -18,6 +18,7 @@ const {
 const { validatePullRequest } = require("./pr-title.cjs");
 const { applyReleaseInputs } = require("./release-inputs.cjs");
 const { groupState } = require("./orchestrate.cjs");
+const { authorizePolicy } = require("./current-policy.cjs");
 const {
   acceptedBoundary,
   acceptedSource,
@@ -201,7 +202,7 @@ function applyUpdates(pr, current, nativeFile) {
   );
 }
 
-test("production JS and Rust publishers are ready with exact pinned Release Please", () => {
+test("production Elixir, JS, and Rust publishers are ready with exact pinned Release Please", () => {
   assert.equal(VERSION, "17.11.2");
   const lock = require("./package-lock.json");
   assert.equal(lock.packages["node_modules/release-please"].version, VERSION);
@@ -215,7 +216,7 @@ test("production JS and Rust publishers are ready with exact pinned Release Plea
     publishingClients(state.inventory)
       .map((client) => client.id)
       .sort(),
-    ["js", "rust"]
+    ["elixir", "js", "rust"]
   );
   const stopped = structuredClone(state);
   stopped.inventory.automation.enabled = false;
@@ -225,6 +226,49 @@ test("production JS and Rust publishers are ready with exact pinned Release Plea
   assert.throws(
     () => validateConfig({ ...stopped, requireReady: true }),
     /Reviewed generation remains globally stopped/
+  );
+});
+
+test("enabled Hex authorization retains source, ownership, trust, preflight, and stop gates", () => {
+  // An immutable policy fixture uses the actual production configuration;
+  // authorization itself performs no registry or GitHub requests.
+  const policy = { ...structuredClone(state), policyRevision: adoption };
+  assert.equal(authorizePolicy(policy, "elixir", "2.0.0", "true").id, "elixir");
+  for (const [section, field, expected] of [
+    ["baseline", "verified", /Unverified elixir source\/registry baseline/],
+    [
+      "baseline",
+      "adoptionSourceRevision",
+      /Unverified elixir adoption source revision/,
+    ],
+    ["baseline", "ownershipVerified", /Unverified elixir publishing authority/],
+    [
+      "publish",
+      "trustVerified",
+      /Unverified elixir trusted publisher configuration/,
+    ],
+    ["publish", "preflightVerified", /Unverified elixir hosted preflight/],
+  ]) {
+    const revoked = structuredClone(policy);
+    revoked.inventory.clients.find((client) => client.id === "elixir")[section][
+      field
+    ] = false;
+    assert.throws(
+      () => authorizePolicy(revoked, "elixir", "2.0.0", "true"),
+      expected
+    );
+  }
+  const stopped = structuredClone(policy);
+  stopped.inventory.automation.enabled = false;
+  stopped.inventory.automation.reason =
+    "Reviewed Hex publishing remains globally stopped";
+  assert.throws(
+    () => authorizePolicy(stopped, "elixir", "2.0.0", "true"),
+    /Reviewed Hex publishing remains globally stopped/
+  );
+  assert.throws(
+    () => authorizePolicy(policy, "elixir", "2.0.0", "false"),
+    /SDK_RELEASES_ENABLED/
   );
 });
 
@@ -248,7 +292,6 @@ test("production delayed Elixir adoption preserves released versions and propose
   assert.equal(elixir.release.managed, true);
   assert.equal(elixir.release.managementSeed, "1.0.1");
   assert.equal(elixir.release.firstReleaseTarget, "2.0.0");
-  assert.equal(elixir.publish.enabled, false);
   assert.deepEqual(state.config.packages[elixir.directory], {
     "release-type": "elixir",
     component: "client-elixir",
