@@ -101,7 +101,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
   publish:
     needs: candidates
-    if: needs.candidates.outputs.any == 'true'
+    if: >-
+      ${{ !cancelled() &&
+      needs.candidates.result == 'success' &&
+      needs.candidates.outputs.any == 'true' }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.candidates.outputs.matrix) }}

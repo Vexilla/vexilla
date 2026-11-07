@@ -1,6 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
+const vm = require("node:vm");
 const yaml = require("yaml");
 const workflow = (name) =>
   yaml.parse(
@@ -16,7 +17,10 @@ test("docs-only PRs schedule the full required contract check on every eligible 
     "The required check must run for PR events, including forks"
   );
   for (const event of ["opened", "edited", "reopened", "synchronize"]) {
-    assert(pr.on.pull_request.types.includes(event), `Missing PR event: ${event}`);
+    assert(
+      pr.on.pull_request.types.includes(event),
+      `Missing PR event: ${event}`
+    );
   }
   for (const filter of ["paths", "paths-ignore"]) {
     assert.equal(
@@ -141,6 +145,103 @@ test("independent publishers do not cancel each other; recovery cannot create re
     "elixir",
     "rust",
   ]);
+});
+
+test("recovery publishers survive a skipped release ancestor while retaining candidate and cancellation gates", () => {
+  const release = workflow("sdk-release");
+  const { selectCandidates } = require("./select-candidates.cjs");
+  const inventory = require("../../.github/sdk-release-inventory.json");
+  const tag = "client-js-v2.0.0";
+  const recovery = selectCandidates(inventory, [], "js", tag);
+  assert.deepEqual(recovery, [{ sdk: "js", tag, revision: "" }]);
+  const automatic = selectCandidates(inventory, [
+    { sdk: "js", tag, revision: "a".repeat(40) },
+  ]);
+
+  // Evaluate the actual workflow's restricted boolean/comparison/status
+  // expression, not a duplicate of its predicate. GitHub adds success() when
+  // no status function is present, and skipped ancestors make that false.
+  const condition = release.jobs.publish.if
+    .trim()
+    .replace(/^\$\{\{\s*|\s*\}\}$/g, "");
+  const hasStatusFunction = /\b(?:always|cancelled|failure|success)\s*\(/.test(
+    condition
+  );
+  const expression = hasStatusFunction
+    ? condition
+    : `success() && (${condition})`;
+  for (const {
+    name,
+    releaseResult,
+    candidatesResult,
+    candidates,
+    cancelled = false,
+    expected,
+  } of [
+    {
+      name: "manual recovery",
+      releaseResult: "skipped",
+      candidatesResult: "success",
+      candidates: recovery,
+      expected: true,
+    },
+    {
+      name: "ordinary release push",
+      releaseResult: "success",
+      candidatesResult: "success",
+      candidates: automatic,
+      expected: true,
+    },
+    {
+      name: "cancelled recovery",
+      releaseResult: "skipped",
+      candidatesResult: "success",
+      candidates: recovery,
+      cancelled: true,
+      expected: false,
+    },
+    {
+      name: "failed selector",
+      releaseResult: "skipped",
+      candidatesResult: "failure",
+      candidates: recovery,
+      expected: false,
+    },
+    {
+      name: "skipped selector",
+      releaseResult: "skipped",
+      candidatesResult: "skipped",
+      candidates: recovery,
+      expected: false,
+    },
+    {
+      name: "empty selector output",
+      releaseResult: "skipped",
+      candidatesResult: "success",
+      candidates: [],
+      expected: false,
+    },
+  ]) {
+    const ancestors = [releaseResult, candidatesResult];
+    const actual = vm.runInNewContext(
+      expression,
+      {
+        needs: {
+          candidates: {
+            result: candidatesResult,
+            outputs: { any: String(candidates.length > 0) },
+          },
+        },
+        always: () => true,
+        cancelled: () => cancelled,
+        success: () =>
+          !cancelled && ancestors.every((result) => result === "success"),
+        failure: () => ancestors.includes("failure"),
+      },
+      { timeout: 1000 }
+    );
+    assert.equal(actual, expected, name);
+  }
 });
 
 test("group failures produce a failing outcome diagnostic without discarding independent candidates", () => {
