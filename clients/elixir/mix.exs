@@ -6,7 +6,7 @@ defmodule VexillaClient.MixProject do
 
     [
       app: :vexilla_client,
-      version: "1.0.1",
+      version: "2.0.0",
       elixir: "~> 1.15",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
