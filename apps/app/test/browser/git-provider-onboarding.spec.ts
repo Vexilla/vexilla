@@ -1,4 +1,5 @@
 import { test, expect, Page, Route } from "@playwright/test";
+import { record } from "./support/record.cjs";
 
 type Provider = "gitlab" | "bitbucket";
 const repositories = [
@@ -433,6 +434,7 @@ for (const provider of ["gitlab", "bitbucket"] as const) {
             const path = new URL(route.request().url()).pathname;
             if (!delayed && path.endsWith("/branches/main")) {
               delayed = true;
+              record("held-request.intercepted");
               await gate;
               await route.fulfill(
                 stale401
@@ -472,6 +474,7 @@ for (const provider of ["gitlab", "bitbucket"] as const) {
           )
           .toBe(50);
         const active = await readState(page);
+        record("held-request.release");
         release();
         await expect.poll(() => delivered).toBe(true);
         if (!stale401) {
@@ -516,6 +519,7 @@ for (const provider of ["gitlab", "bitbucket"] as const) {
             : url.pathname.endsWith("/branches/main");
         if (validation && !delayed) {
           delayed = true;
+          record("held-request.intercepted");
           await gate;
           await route.fulfill({
             json:
@@ -544,6 +548,7 @@ for (const provider of ["gitlab", "bitbucket"] as const) {
     await expect(
       page.getByText("This repo or branch is empty.", { exact: true })
     ).toBeVisible();
+    record("held-request.release");
     release();
     expect((await readState(page)).config.hosting.branchIsValid).toBe(false);
     assertClean(requests, errors);
@@ -620,6 +625,7 @@ for (const provider of ["gitlab", "bitbucket"] as const) {
             !delayed
           ) {
             delayed = true;
+            record("held-request.intercepted");
             await gate;
             await route.fulfill(
               stale401
@@ -666,6 +672,7 @@ for (const provider of ["gitlab", "bitbucket"] as const) {
           async () => (await readState(page)).remoteMetadata.remoteModifiedAt
         )
         .toBe(50);
+      record("held-request.release");
       release();
       await expect.poll(() => delivered).toBe(true);
       expect((await readState(page)).config.hosting).toMatchObject({
@@ -695,6 +702,7 @@ for (const stale401 of [false, true]) {
         const path = new URL(route.request().url()).pathname;
         if (path === "/2.0/repositories/work") {
           delayed = true;
+          record("held-request.intercepted");
           await gate;
           await route.fulfill(
             stale401
@@ -738,6 +746,7 @@ for (const stale401 of [false, true]) {
     await expect
       .poll(async () => (await readState(page)).config.hosting.repositoryId)
       .toBe("repo-b");
+    record("held-request.release");
     release();
     await expect.poll(() => delivered).toBe(true);
     await expect

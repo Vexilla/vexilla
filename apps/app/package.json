@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "test:config": "node --import tsx --test test/config-state.test.ts test/github-reads.test.ts test/git-provider-reads.test.ts test/remote-baseline.test.ts test/repository-initialization.test.ts test/github-writes.test.ts test/git-provider-writes.test.ts",
     "test:publication": "node --import tsx --test test/publication.test.ts",
-    "test:browser": "playwright test"
+    "test:browser": "node test/browser/run.cjs",
+    "test:browser-diagnostics": "node --test test/*diagnostics.test.cjs test/sanitize-traces.test.cjs"
   },
   "dependencies": {
     "@azure/storage-blob": "^12.18.0",

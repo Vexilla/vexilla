@@ -38,7 +38,18 @@ jobs:
       - run: pnpm contract:test:producer
       - run: pnpm contract:test:gate
       - run: pnpm --filter app exec playwright install --with-deps chromium
+      - run: pnpm --filter app test:browser-diagnostics
       - run: pnpm --filter app test:browser
+      - name: Upload browser diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ${{ inputs.artifact-prefix }}-browser-diagnostics-${{ github.run_attempt }}
+          # Raw Playwright output is excluded even if the runner is interrupted
+          # before trace sanitization finishes.
+          path: apps/app/test-results/diagnostics
+          include-hidden-files: true
+          if-no-files-found: warn
       - run: pnpm --filter @vexilla/client compile && pnpm --filter app build
       - id: inventory
         run: |
